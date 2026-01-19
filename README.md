@@ -63,7 +63,7 @@ Tested with:
 3. Search for "Viessmann Climate Devices"
 4. Follow the setup wizard:
    - You will be asked to enter your **Client ID** (from Viessmann Developer Portal)
-   - Leave Client Secret empty (PKCE flow)
+   - **Client Secret**: Enter any dummy value (e.g., `123`) since we use PKCE, but the field cannot be empty.
    - Perform the OAuth login to authorize with your Viessmann account
 
 ---
