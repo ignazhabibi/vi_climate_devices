@@ -1,4 +1,4 @@
-# Viessmann Climate Devices – Home Assistant Integration
+#Viessmann Climate Devices
 
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
@@ -7,7 +7,7 @@ A custom Home Assistant integration for Viessmann heating systems using the offi
 
 ## Features
 
-- **Automatic Device Discovery**: Detects all connected Viessmann devices (heat pumps, gas boilers, solar systems)
+- **Automatic Device Discovery**: Detects connected Viessmann devices (heat pumps, gas boilers...)
 - **Sensors**: Temperature, pressure, energy consumption, SCOP, and diagnostic data
 - **Controls**: Target temperatures, operation modes, heating curves
 - **Switches**: One-time DHW charge, hygiene function
@@ -17,13 +17,7 @@ A custom Home Assistant integration for Viessmann heating systems using the offi
 ## Supported Devices
 
 Tested with:
-- Vitocal 200-A / 252-A / 300-G (Heat Pumps)
-- Vitodens 050-W / 200-W / 300-W (Gas Boilers)
-- Solar thermal systems
-
-Other Viessmann devices using the IoT API should also work.
-
----
+- Vitocal 250A (real installation) und mock data of other devices
 
 ## Installation
 
@@ -55,22 +49,15 @@ Other Viessmann devices using the IoT API should also work.
 
 ---
 
-## Configuration
-
-### Step 1: Add Application Credentials
-
-1. Go to **Settings** → **Devices & Services** → **Application Credentials**
-2. Click **Add Application Credentials**
-3. Select "Viessmann Climate Devices"
-4. Enter your **Client ID** from the Viessmann Developer Portal
-5. Leave Client Secret empty (PKCE flow)
-
-### Step 2: Add the Integration
+### Configuration
 
 1. Go to **Settings** → **Devices & Services**
 2. Click **Add Integration**
 3. Search for "Viessmann Climate Devices"
-4. Follow the OAuth login flow to authorize with your Viessmann account
+4. Follow the setup wizard:
+   - You will be asked to enter your **Client ID** (from Viessmann Developer Portal)
+   - Leave Client Secret empty (PKCE flow)
+   - Perform the OAuth login to authorize with your Viessmann account
 
 ---
 
@@ -92,6 +79,11 @@ All entities are grouped under their respective device and support German and En
 ## Troubleshooting
 
 ### Common Issues
+
+**"Invalid Grant" or "Bad Request" during Login**
+This is often a timing issue with the OAuth code. 
+- **Solution:** Simply try the login process again. It usually works on the second attempt.
+- Ensure your browser clock is synchronized.
 
 **"Invalid redirect URI"**
 - Ensure `https://my.home-assistant.io/redirect/oauth` is added in Viessmann Developer Portal
