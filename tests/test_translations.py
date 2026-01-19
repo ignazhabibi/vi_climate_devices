@@ -1,23 +1,24 @@
 import json
 import os
+
 import pytest
 
+from custom_components.vi_climate_devices.binary_sensor import (
+    BINARY_SENSOR_TEMPLATES,
+    BINARY_SENSOR_TYPES,
+)
+from custom_components.vi_climate_devices.number import NUMBER_TEMPLATES, NUMBER_TYPES
 from custom_components.vi_climate_devices.sensor import (
-    SENSOR_TYPES,
     SENSOR_TEMPLATES,
+    SENSOR_TYPES,
     ANALYTICS_Types,
 )
-from custom_components.vi_climate_devices.binary_sensor import (
-    BINARY_SENSOR_TYPES,
-    BINARY_SENSOR_TEMPLATES,
-)
-from custom_components.vi_climate_devices.number import NUMBER_TYPES, NUMBER_TEMPLATES
 
 
 def load_json(path):
     if not os.path.exists(path):
         return {}
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 

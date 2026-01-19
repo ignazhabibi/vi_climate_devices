@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import dataclasses
 import logging
 import re
+from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -14,9 +15,9 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN
 from .coordinator import ViClimateDataUpdateCoordinator
@@ -30,10 +31,11 @@ class ViClimateBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 
 # Dynamic Templates
+# Pre-compiled regex patterns for better performance
 BINARY_SENSOR_TEMPLATES = [
     # Circulation Pumps (heating.circuits.N.circulation.pump)
     {
-        "pattern": r"^heating\.circuits\.(\d+)\.circulation\.pump$",
+        "pattern": re.compile(r"^heating\.circuits\.(\d+)\.circulation\.pump$"),
         "description": BinarySensorEntityDescription(
             key="placeholder",
             translation_key="circulation_pump",  # Generic key with {index}
@@ -42,7 +44,7 @@ BINARY_SENSOR_TEMPLATES = [
     },
     # Frost Protection (heating.circuits.N.frostprotection)
     {
-        "pattern": r"^heating\.circuits\.(\d+)\.frostprotection$",
+        "pattern": re.compile(r"^heating\.circuits\.(\d+)\.frostprotection$"),
         "description": BinarySensorEntityDescription(
             key="placeholder",
             translation_key="frost_protection",
@@ -51,7 +53,7 @@ BINARY_SENSOR_TEMPLATES = [
     },
     # Compressors Active (heating.compressors.N.active)
     {
-        "pattern": r"^heating\.compressors\.(\d+)\.active$",
+        "pattern": re.compile(r"^heating\.compressors\.(\d+)\.active$"),
         "description": BinarySensorEntityDescription(
             key="placeholder",
             translation_key="compressor_active",  # Generic key with {index}
@@ -60,7 +62,7 @@ BINARY_SENSOR_TEMPLATES = [
     },
     # Crankcase Heater (heating.compressors.N.heater.crankcase)
     {
-        "pattern": r"^heating\.compressors\.(\d+)\.heater\.crankcase$",
+        "pattern": re.compile(r"^heating\.compressors\.(\d+)\.heater\.crankcase$"),
         "description": BinarySensorEntityDescription(
             key="placeholder",
             translation_key="compressor_crankcase_heater",
@@ -70,7 +72,7 @@ BINARY_SENSOR_TEMPLATES = [
     },
     # Evaporator Base Heater (heating.evaporators.N.heater.base)
     {
-        "pattern": r"^heating\.evaporators\.(\d+)\.heater\.base$",
+        "pattern": re.compile(r"^heating\.evaporators\.(\d+)\.heater\.base$"),
         "description": BinarySensorEntityDescription(
             key="placeholder",
             translation_key="evaporator_base_heater",
@@ -115,6 +117,30 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
 }
 
 
+def _get_binary_sensor_entity_description(
+    feature_name: str,
+) -> tuple[BinarySensorEntityDescription, dict[str, str] | None] | None:
+    """Find a matching entity description for a dynamic feature name.
+
+    Returns:
+        tuple: (description, translation_placeholders) or None
+    """
+    for template in BINARY_SENSOR_TEMPLATES:
+        match = template["pattern"].match(feature_name)
+        if match:
+            index = match.group(1)
+            base_desc: BinarySensorEntityDescription = template["description"]
+
+            # Clone and Format
+            new_desc = dataclasses.replace(
+                base_desc,
+                key=feature_name,
+                translation_key=base_desc.translation_key,
+            )
+            return new_desc, {"index": index}
+    return None
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -136,39 +162,19 @@ async def async_setup_entry(
                             coordinator, map_key, feature.name, description
                         )
                     )
-                else:
-                    # Check templates
-                    for template in BINARY_SENSOR_TEMPLATES:
-                        match = re.match(template["pattern"], feature.name)
-                        if match:
-                            index = match.group(1)
-                            # Create specific description
-                            base_desc: BinarySensorEntityDescription = template[
-                                "description"
-                            ]
-
-                            # Clone and Format
-                            import dataclasses
-
-                            # key is placeholder, can just assume feature.name (unique per device)
-                            # translation_key needs format
-
-                            new_desc = dataclasses.replace(
-                                base_desc,
-                                key=feature.name,
-                                translation_key=base_desc.translation_key,  # Use generic key as is
-                            )
-
-                            entities.append(
-                                ViClimateBinarySensor(
-                                    coordinator,
-                                    map_key,
-                                    feature.name,
-                                    new_desc,
-                                    translation_placeholders={"index": index},
-                                )
-                            )
-                            break
+                elif match_result := _get_binary_sensor_entity_description(
+                    feature.name
+                ):
+                    description, placeholders = match_result
+                    entities.append(
+                        ViClimateBinarySensor(
+                            coordinator,
+                            map_key,
+                            feature.name,
+                            description,
+                            translation_placeholders=placeholders,
+                        )
+                    )
 
     async_add_entities(entities)
 

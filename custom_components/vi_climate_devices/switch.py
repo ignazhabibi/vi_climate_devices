@@ -2,22 +2,21 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.switch import (
+    SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
-    SwitchDeviceClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.device_registry import DeviceInfo
-
 from vi_api_client import Feature
 
 from .const import DOMAIN
@@ -69,7 +68,9 @@ async def async_setup_entry(
             for feature in device.features:
                 if feature.name in SWITCH_TYPES:
                     desc = SWITCH_TYPES[feature.name]
-                    entities.append(ViClimateSwitch(coordinator, map_key, feature, desc))
+                    entities.append(
+                        ViClimateSwitch(coordinator, map_key, feature, desc)
+                    )
 
     async_add_entities(entities)
 
@@ -162,66 +163,80 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
         self.async_write_ha_state()
 
         try:
-            client = self.coordinator.client
-            _LOGGER.debug(
-                "ViClimateSwitch: Setting state to %s for entity '%s' (Feature: %s)",
-                target_state,
-                self.entity_id,
-                self._feature_name,
-            )
-
-            # Logic: Prefer explicit boolean setters (setActive, setEnabled)
-            # Then fallback to action commands (activate/deactivate, enable/disable)
-
-            # --- PATH A: setEnabled (e.g. hygiene) ---
-            if "setEnabled" in feat.commands:
-                cmd_def = feat.commands["setEnabled"]
-                target_param = "enabled"
-                # Dynamic Param Resolution
-                if target_param not in cmd_def.params and len(cmd_def.params) == 1:
-                    target_param = list(cmd_def.params.keys())[0]
-
-                await client.execute_command(
-                    feat, "setEnabled", {target_param: target_state}
-                )
-
-            # --- PATH B: setActive (e.g. oneTimeCharge) ---
-            elif "setActive" in feat.commands:
-                cmd_def = feat.commands["setActive"]
-                target_param = "active"
-                # Dynamic Param Resolution
-                if target_param not in cmd_def.params and len(cmd_def.params) == 1:
-                    target_param = list(cmd_def.params.keys())[0]
-
-                await client.execute_command(
-                    feat, "setActive", {target_param: target_state}
-                )
-
-            # --- PATH C: Action Commands (True) ---
-            elif target_state:
-                if "enable" in feat.commands:
-                    await client.execute_command(feat, "enable", {})
-                elif "activate" in feat.commands:
-                    await client.execute_command(feat, "activate", {})
-                else:
-                    raise HomeAssistantError(
-                        f"No suitable command found to TURN ON. Available: {list(feat.commands.keys())}"
-                    )
-
-            # --- PATH D: Action Commands (False) ---
-            else:  # target_state is False
-                if "disable" in feat.commands:
-                    await client.execute_command(feat, "disable", {})
-                elif "deactivate" in feat.commands:
-                    await client.execute_command(feat, "deactivate", {})
-                else:
-                    raise HomeAssistantError(
-                        f"No suitable command found to TURN OFF. Available: {list(feat.commands.keys())}"
-                    )
-
+            await self._execute_command(feat, target_state)
         except Exception as e:
             # Revert optimistic update
             if old_value is not None:
                 feat.properties[key]["value"] = old_value
                 self.async_write_ha_state()
             raise HomeAssistantError(f"Failed to switch {target_state}: {e}") from e
+
+    async def _execute_command(self, feat: Feature, target_state: bool) -> None:
+        """Determine and execute the correct command for the feature."""
+        client = self.coordinator.client
+        _LOGGER.debug(
+            "ViClimateSwitch: Setting state to %s for entity '%s' (Feature: %s)",
+            target_state,
+            self.entity_id,
+            self._feature_name,
+        )
+
+        # Logic: Prefer explicit boolean setters (setActive, setEnabled)
+        # Then fallback to action commands (activate/deactivate, enable/disable)
+
+        # --- PATH A: setEnabled (e.g. hygiene) ---
+        if "setEnabled" in feat.commands:
+            cmd_def = feat.commands["setEnabled"]
+            await self._execute_param_command(
+                feat, "setEnabled", "enabled", cmd_def, target_state
+            )
+            return
+
+        # --- PATH B: setActive (e.g. oneTimeCharge) ---
+        if "setActive" in feat.commands:
+            cmd_def = feat.commands["setActive"]
+            await self._execute_param_command(
+                feat, "setActive", "active", cmd_def, target_state
+            )
+            return
+
+        # --- PATH C: Action Commands (True) ---
+        if target_state:
+            if "enable" in feat.commands:
+                await client.execute_command(feat, "enable", {})
+            elif "activate" in feat.commands:
+                await client.execute_command(feat, "activate", {})
+            else:
+                available = list(feat.commands.keys())
+                raise HomeAssistantError(
+                    f"No suitable command found to TURN ON. Available: {available}"
+                )
+            return
+
+        # --- PATH D: Action Commands (False) ---
+        if "disable" in feat.commands:
+            await client.execute_command(feat, "disable", {})
+        elif "deactivate" in feat.commands:
+            await client.execute_command(feat, "deactivate", {})
+        else:
+            available = list(feat.commands.keys())
+            raise HomeAssistantError(
+                f"No suitable command found to TURN OFF. Available: {available}"
+            )
+
+    async def _execute_param_command(
+        self,
+        feat: Feature,
+        command_name: str,
+        default_param: str,
+        cmd_def,
+        value: bool,
+    ) -> None:
+        """Helper to execute simple boolean property commands."""
+        client = self.coordinator.client
+        target_param = default_param
+        # Dynamic Param Resolution
+        if target_param not in cmd_def.params and len(cmd_def.params) == 1:
+            target_param = next(iter(cmd_def.params.keys()))
+
+        await client.execute_command(feat, command_name, {target_param: value})

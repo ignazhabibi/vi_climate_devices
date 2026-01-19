@@ -1,10 +1,12 @@
 """Test ViClimate Switch."""
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
-from custom_components.vi_climate_devices.switch import ViClimateSwitch, SWITCH_TYPES
 from homeassistant.core import HomeAssistant
 from vi_api_client import Feature
+
+from custom_components.vi_climate_devices.switch import SWITCH_TYPES, ViClimateSwitch
 
 
 @pytest.mark.asyncio

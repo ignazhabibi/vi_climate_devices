@@ -1,8 +1,10 @@
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
-from custom_components.vi_climate_devices.select import ViClimateSelect, SELECT_TYPES
 from homeassistant.core import HomeAssistant
 from vi_api_client import Feature
+
+from custom_components.vi_climate_devices.select import SELECT_TYPES, ViClimateSelect
 
 
 @pytest.mark.asyncio

@@ -2,18 +2,17 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.const import EntityCategory
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.device_registry import DeviceInfo
-
 from vi_api_client import Feature
 
 from .const import DOMAIN
@@ -61,7 +60,9 @@ async def async_setup_entry(
             for feature in device.features:
                 if feature.name in SELECT_TYPES:
                     desc = SELECT_TYPES[feature.name]
-                    entities.append(ViClimateSelect(coordinator, map_key, feature, desc))
+                    entities.append(
+                        ViClimateSelect(coordinator, map_key, feature, desc)
+                    )
 
     async_add_entities(entities)
 
@@ -114,7 +115,7 @@ class ViClimateSelect(CoordinatorEntity, SelectEntity):
 
         # Simple dynamic fallback if param name mismatch
         if not param and len(cmd.params) == 1:
-            inferred = list(cmd.params.keys())[0]
+            inferred = next(iter(cmd.params.keys()))
             param = cmd.params[inferred]
             # Update param name for execution later
             self._param_name = inferred
@@ -181,7 +182,9 @@ class ViClimateSelect(CoordinatorEntity, SelectEntity):
         try:
             client = self.coordinator.client
             _LOGGER.debug(
-                "ViClimateSelect: Setting option %s for entity %s", option, self.entity_id
+                "ViClimateSelect: Setting option %s for entity %s",
+                option,
+                self.entity_id,
             )
             await client.execute_command(
                 feat, self._command_name, {self._param_name: option}

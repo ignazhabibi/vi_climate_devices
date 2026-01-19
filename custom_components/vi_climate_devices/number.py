@@ -2,25 +2,24 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
 import logging
-from typing import Any
 import re
+from dataclasses import dataclass, replace
+from typing import Any
 
 from homeassistant.components.number import (
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
-    NumberDeviceClass,
     NumberMode,
 )
-from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.device_registry import DeviceInfo
-
 from vi_api_client import Feature
 
 from .const import DOMAIN
@@ -35,9 +34,8 @@ class ViClimateNumberEntityDescription(NumberEntityDescription):
 
     param_name: str | None = None
     command_name: str | None = None
-    property_name: str | None = (
-        None  # Optional: logic name to read from properties if different from param_name
-    )
+    property_name: str | None = None
+    # Optional: logic name to read from properties if different from param_name
 
 
 # Definition maps: feature_name -> List of descriptions
@@ -47,7 +45,8 @@ NUMBER_TEMPLATES = [
         "pattern": r"^heating\.circuits\.(\d+)\.heating\.curve$",
         "descriptions": [
             ViClimateNumberEntityDescription(
-                key="heating.circuits.{}.heating.curve.slope",  # Placeholder {} for format
+                key="heating.circuits.{}.heating.curve.slope",
+                # Placeholder {} for format
                 translation_key="heating_curve_slope",  # Generic key
                 icon="mdi:slope-uphill",
                 param_name="slope",
@@ -70,14 +69,18 @@ NUMBER_TEMPLATES = [
     },
     {
         # Matches: comfort, normal, reduced, eco, comfortCooling, comfortHeating, etc.
-        "pattern": r"^heating\.circuits\.(\d+)\.operating\.programs\.((?:comfort|normal|reduced|eco)(?:Cooling|Heating|))$",
+        "pattern": (
+            r"^heating\.circuits\.(\d+)\.operating\.programs\."
+            r"((?:comfort|normal|reduced|eco)(?:Cooling|Heating|))$"
+        ),
         "descriptions": [
             ViClimateNumberEntityDescription(
                 key="heating.circuits.{}.operating.programs.{}.temperature",
                 translation_key="heating_circuit_program_temperature",
                 icon="mdi:thermometer",
                 param_name="temperature",
-                property_name="temperature",  # Read from the 'temperature' property of the program feature
+                # Read from the 'temperature' property of the program feature
+                property_name="temperature",
                 command_name="setTemperature",
                 mode=NumberMode.BOX,
                 entity_category=EntityCategory.CONFIG,
@@ -146,8 +149,9 @@ async def async_setup_entry(
 
     if coordinator.data:
         for map_key, device in coordinator.data.items():
-            # Iterate hierarchically over features (NOT flat) to access commands and complex properties
             for feature in device.features:
+                # Iterate hierarchically over features (NOT flat) to access commands
+                # and complex properties
                 if feature.name in NUMBER_TYPES:
                     descriptions = NUMBER_TYPES[feature.name]
                     for desc in descriptions:
@@ -159,9 +163,13 @@ async def async_setup_entry(
                     for template in NUMBER_TEMPLATES:
                         match = re.match(template["pattern"], feature.name)
                         if match:
-                            # Handle multiple capture groups (up to 2 supported for now: index, program)
-                            # Pattern 1: ^heating\.circuits\.(\d+)\.heating\.curve$ -> groups=(0,)
-                            # Pattern 2: ^heating\.circuits\.(\d+)\.operating\.programs\.(\w+)\.temperature$ -> groups=(0, 'comfort')
+                            # Handle multiple capture groups (up to 2: index, program)
+                            # Pattern 1: ^heating\.circuits\.(\d+)\.heating\.curve$
+                            # -> (0,)
+                            # Pattern 2:
+                            # ^heating\.circuits\.(\d+)\.operating\.programs\.(\w+)
+                            # \.temperature$
+                            # -> (0, 'comfort')
 
                             groups = match.groups()
                             index = groups[0]
@@ -169,26 +177,39 @@ async def async_setup_entry(
 
                             for base_desc in template["descriptions"]:
                                 # Clone and Format
-                                # key format: "heating.circuits.{}.heating.curve.slope" -> "heating.circuits.0.heating.curve.slope"
-                                # key format: "heating.circuits.{}.operating.programs.{}.temperature" -> "heating.circuits.0.operating.programs.comfort.temperature"
+                                # key format:
+                                # "heating.circuits.{}.heating.curve.slope"
+                                # -> "heating.circuits.0.heating.curve.slope"
+                                # key format:
+                                # "heating.circuits.{}.operating.programs.{}.
+                                # temperature"
+                                # ->
+                                # "heating.circuits.0.operating.programs.comfort.
+                                # temperature"
                                 if program:
                                     program_snake = re.sub(
                                         r"(?<!^)(?=[A-Z])", "_", program
                                     ).lower()
-                                    specific_trans_key = f"heating_circuit_program_{program_snake}_temperature"
+                                    specific_trans_key = (
+                                        "heating_circuit_program_"
+                                        f"{program_snake}_temperature"
+                                    )
 
                                     new_trans_key = specific_trans_key
                                     new_key = base_desc.key.format(index, program)
                                     placeholders = {
+                                        # Program removed from placeholder if specific
+                                        # key
                                         "index": index
-                                    }  # Program removed from placeholder if we use specific key
+                                    }
                                 else:
                                     new_key = base_desc.key.format(index)
                                     placeholders = {"index": index}
                                     new_trans_key = base_desc.translation_key
 
                                 # translation_key generic is kept as is
-                                # new_trans_key = base_desc.translation_key  <-- REMOVED because it overwrote the specific key logic
+                                # new_trans_key = base_desc.translation_key
+                                # <-- REMOVED due to logic override
 
                                 new_desc = replace(
                                     base_desc,
@@ -256,12 +277,15 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
         if self._param_name in cmd.params:
             return
 
-        # 2. Dynamic Resolution: If command has only 1 parameter, assume that is the one we want to control.
-        # This handles cases like 'setTemperature' needing 'targetTemperature' when we identified it as 'temperature'
+        # 2. Dynamic Resolution: If command has only 1 parameter,
+        # assume that is the one we want to control.
+        # This handles cases like 'setTemperature' needing 'targetTemperature'
+        # when we identified it as 'temperature'
         if len(cmd.params) == 1:
-            inferred = list(cmd.params.keys())[0]
+            inferred = next(iter(cmd.params.keys()))
             _LOGGER.debug(
-                "Inferred command parameter '%s' for entity %s (configured '%s') on command %s",
+                "Inferred command parameter '%s' for entity %s "
+                "(configured '%s') on command %s",
                 inferred,
                 self._feature_name,  # entity_id is None at init
                 self._param_name,
@@ -270,7 +294,8 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
             self._command_param_name = inferred
         else:
             _LOGGER.warning(
-                "Could not resolve command parameter for %s. Configured: '%s', Command '%s' has params: %s",
+                "Could not resolve command parameter for %s. "
+                "Configured: '%s', Command '%s' has params: %s",
                 self._feature_name,  # entity_id is None at init
                 self._param_name,
                 self._command_name,
@@ -305,12 +330,14 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
     @property
     def feature_data(self) -> Feature | None:
         """Get latest feature data from coordinator."""
-        # We need to re-fetch the feature object from the coordinator to get updated values
+        # We need to re-fetch the feature object from the coordinator to get
+        # updated values
         device = self.coordinator.data.get(self._map_key)
         if not device:
             return None
         # Searching in .features list.
         # Since we stored top-level feature name, we can find it.
+        # But wait, device.features is a list. We need to find by name.
         # But wait, device.features is a list. We need to find by name.
         return next((f for f in device.features if f.name == self._feature_name), None)
 
@@ -389,15 +416,14 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
         for param in cmd_def.params:
             if param == target_param:
                 payload[param] = value
+            elif param in feat.properties:
+                payload[param] = feat.properties[param].get("value")
             else:
-                if param in feat.properties:
-                    payload[param] = feat.properties[param].get("value")
-                else:
-                    _LOGGER.warning(
-                        "Parameter %s required for command %s but not found in properties.",
-                        param,
-                        self._command_name,
-                    )
+                _LOGGER.warning(
+                    "Parameter %s required for command %s but not found in properties.",
+                    param,
+                    self._command_name,
+                )
 
         _LOGGER.debug(
             "ViClimateNumber: Executing command '%s' for entity '%s' with payload: %s",

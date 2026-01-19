@@ -1,18 +1,21 @@
 """Tests for the Viessmann Heat number platform."""
 
-from unittest.mock import MagicMock, AsyncMock, patch
+import dataclasses
+import re
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 from homeassistant.core import HomeAssistant
-
-from custom_components.vi_climate_devices.coordinator import ViClimateDataUpdateCoordinator
-from custom_components.vi_climate_devices.number import (
-    ViClimateNumber,
-    NUMBER_TYPES,
-    NUMBER_TEMPLATES,
-)
-import re
-import dataclasses
 from vi_api_client import Feature
+
+from custom_components.vi_climate_devices.coordinator import (
+    ViClimateDataUpdateCoordinator,
+)
+from custom_components.vi_climate_devices.number import (
+    NUMBER_TEMPLATES,
+    NUMBER_TYPES,
+    ViClimateNumber,
+)
 
 
 @pytest.mark.asyncio

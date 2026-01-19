@@ -1,6 +1,7 @@
 import pytest
 from vi_api_client import MockViClient
 
+
 @pytest.fixture
 def mock_client():
     """Return a mock client for testing."""

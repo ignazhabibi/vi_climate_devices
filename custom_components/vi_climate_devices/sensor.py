@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import dataclasses
 import logging
-from dataclasses import dataclass
 import re
+from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,22 +15,21 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    UnitOfTemperature,
-    UnitOfEnergy,
     PERCENTAGE,
     EntityCategory,
-    UnitOfPressure,
-    UnitOfVolumeFlowRate,
+    UnitOfEnergy,
     UnitOfPower,
+    UnitOfPressure,
+    UnitOfTemperature,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.device_registry import DeviceInfo
-
 
 from .const import DOMAIN
-from .coordinator import ViClimateDataUpdateCoordinator, ViClimateAnalyticsCoordinator
+from .coordinator import ViClimateAnalyticsCoordinator, ViClimateDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,10 +43,13 @@ class ViClimateSensorEntityDescription(SensorEntityDescription):
 
 # Dynamic Templates for repeated features (index N)
 # Pattern is a regex. Description translation_key expects {} for the index.
+# Pre-compiled regex patterns for better performance
 SENSOR_TEMPLATES = [
     # Heating Circuits Supply Temperature
     {
-        "pattern": r"^heating\.circuits\.(\d+)\.sensors\.temperature\.supply$",
+        "pattern": re.compile(
+            r"^heating\.circuits\.(\d+)\.sensors\.temperature\.supply$"
+        ),
         "description": SensorEntityDescription(
             key="placeholder",
             translation_key="heating_circuit_supply_temperature",  # Generic key
@@ -57,7 +60,7 @@ SENSOR_TEMPLATES = [
     },
     # Burners Modulation
     {
-        "pattern": r"^heating\.burners\.(\d+)\.modulation$",
+        "pattern": re.compile(r"^heating\.burners\.(\d+)\.modulation$"),
         "description": SensorEntityDescription(
             key="placeholder",
             translation_key="burner_modulation",  # Generic key
@@ -68,7 +71,7 @@ SENSOR_TEMPLATES = [
     },
     # Burners Statistics
     {
-        "pattern": r"^heating\.burners\.(\d+)\.statistics\.starts$",
+        "pattern": re.compile(r"^heating\.burners\.(\d+)\.statistics\.starts$"),
         "description": SensorEntityDescription(
             key="placeholder",
             translation_key="burner_starts",
@@ -78,7 +81,7 @@ SENSOR_TEMPLATES = [
         ),
     },
     {
-        "pattern": r"^heating\.burners\.(\d+)\.statistics\.hours$",
+        "pattern": re.compile(r"^heating\.burners\.(\d+)\.statistics\.hours$"),
         "description": SensorEntityDescription(
             key="placeholder",
             translation_key="burner_hours",
@@ -91,7 +94,7 @@ SENSOR_TEMPLATES = [
     },
     # Compressors Statistics
     {
-        "pattern": r"^heating\.compressors\.(\d+)\.statistics\.hours$",
+        "pattern": re.compile(r"^heating\.compressors\.(\d+)\.statistics\.hours$"),
         "description": SensorEntityDescription(
             key="placeholder",
             translation_key="compressor_hours",  # Generic key
@@ -103,7 +106,7 @@ SENSOR_TEMPLATES = [
         ),
     },
     {
-        "pattern": r"^heating\.compressors\.(\d+)\.statistics\.starts$",
+        "pattern": re.compile(r"^heating\.compressors\.(\d+)\.statistics\.starts$"),
         "description": SensorEntityDescription(
             key="placeholder",
             translation_key="compressor_starts",  # Generic key
@@ -114,7 +117,7 @@ SENSOR_TEMPLATES = [
     },
     # Compressor Phase (text sensor)
     {
-        "pattern": r"^heating\.compressors\.(\d+)\.phase$",
+        "pattern": re.compile(r"^heating\.compressors\.(\d+)\.phase$"),
         "description": SensorEntityDescription(
             key="placeholder",
             translation_key="compressor_phase",
@@ -124,7 +127,9 @@ SENSOR_TEMPLATES = [
     },
     # Compressor Pressure Inlet
     {
-        "pattern": r"^heating\.compressors\.(\d+)\.sensors\.pressure\.inlet$",
+        "pattern": re.compile(
+            r"^heating\.compressors\.(\d+)\.sensors\.pressure\.inlet$"
+        ),
         "description": SensorEntityDescription(
             key="placeholder",
             translation_key="compressor_inlet_pressure",
@@ -137,7 +142,9 @@ SENSOR_TEMPLATES = [
     },
     # Compressor Temperature - Inlet
     {
-        "pattern": r"^heating\.compressors\.(\d+)\.sensors\.temperature\.inlet$",
+        "pattern": re.compile(
+            r"^heating\.compressors\.(\d+)\.sensors\.temperature\.inlet$"
+        ),
         "description": SensorEntityDescription(
             key="placeholder",
             translation_key="compressor_inlet_temperature",
@@ -149,7 +156,9 @@ SENSOR_TEMPLATES = [
     },
     # Compressor Temperature - Motor Chamber
     {
-        "pattern": r"^heating\.compressors\.(\d+)\.sensors\.temperature\.motorChamber$",
+        "pattern": re.compile(
+            r"^heating\.compressors\.(\d+)\.sensors\.temperature\.motorChamber$"
+        ),
         "description": SensorEntityDescription(
             key="placeholder",
             translation_key="compressor_motor_temperature",
@@ -161,7 +170,9 @@ SENSOR_TEMPLATES = [
     },
     # Compressor Temperature - Oil
     {
-        "pattern": r"^heating\.compressors\.(\d+)\.sensors\.temperature\.oil$",
+        "pattern": re.compile(
+            r"^heating\.compressors\.(\d+)\.sensors\.temperature\.oil$"
+        ),
         "description": SensorEntityDescription(
             key="placeholder",
             translation_key="compressor_oil_temperature",
@@ -173,7 +184,9 @@ SENSOR_TEMPLATES = [
     },
     # Compressor Temperature - Outlet
     {
-        "pattern": r"^heating\.compressors\.(\d+)\.sensors\.temperature\.outlet$",
+        "pattern": re.compile(
+            r"^heating\.compressors\.(\d+)\.sensors\.temperature\.outlet$"
+        ),
         "description": SensorEntityDescription(
             key="placeholder",
             translation_key="compressor_outlet_temperature",
@@ -185,7 +198,7 @@ SENSOR_TEMPLATES = [
     },
     # Compressor Speed - Current
     {
-        "pattern": r"^heating\.compressors\.(\d+)\.speed\.current$",
+        "pattern": re.compile(r"^heating\.compressors\.(\d+)\.speed\.current$"),
         "description": SensorEntityDescription(
             key="placeholder",
             translation_key="compressor_speed_current",
@@ -197,7 +210,7 @@ SENSOR_TEMPLATES = [
     },
     # Compressor Speed - Setpoint
     {
-        "pattern": r"^heating\.compressors\.(\d+)\.speed\.setpoint$",
+        "pattern": re.compile(r"^heating\.compressors\.(\d+)\.speed\.setpoint$"),
         "description": SensorEntityDescription(
             key="placeholder",
             translation_key="compressor_speed_setpoint",
@@ -209,7 +222,7 @@ SENSOR_TEMPLATES = [
     },
     # Inverters Power
     {
-        "pattern": r"^heating\.inverters\.(\d+)\.sensors\.power\.output$",
+        "pattern": re.compile(r"^heating\.inverters\.(\d+)\.sensors\.power\.output$"),
         "description": SensorEntityDescription(
             key="placeholder",
             translation_key="inverter_power_output",  # Generic key
@@ -220,7 +233,7 @@ SENSOR_TEMPLATES = [
     },
     # Fans (primary circuit)
     {
-        "pattern": r"^heating\.primaryCircuit\.fans\.(\d+)\.current$",
+        "pattern": re.compile(r"^heating\.primaryCircuit\.fans\.(\d+)\.current$"),
         "description": SensorEntityDescription(
             key="placeholder",
             translation_key="fan_speed",
@@ -232,7 +245,9 @@ SENSOR_TEMPLATES = [
     },
     # Economizer Temperature
     {
-        "pattern": r"^heating\.economizers\.(\d+)\.sensors\.temperature\.liquid$",
+        "pattern": re.compile(
+            r"^heating\.economizers\.(\d+)\.sensors\.temperature\.liquid$"
+        ),
         "description": SensorEntityDescription(
             key="placeholder",
             translation_key="economizer_liquid_temperature",
@@ -244,7 +259,9 @@ SENSOR_TEMPLATES = [
     },
     # Evaporator Temperatures
     {
-        "pattern": r"^heating\.evaporators\.(\d+)\.sensors\.temperature\.liquid$",
+        "pattern": re.compile(
+            r"^heating\.evaporators\.(\d+)\.sensors\.temperature\.liquid$"
+        ),
         "description": SensorEntityDescription(
             key="placeholder",
             translation_key="evaporator_liquid_temperature",
@@ -255,7 +272,9 @@ SENSOR_TEMPLATES = [
         ),
     },
     {
-        "pattern": r"^heating\.evaporators\.(\d+)\.sensors\.temperature\.overheat$",
+        "pattern": re.compile(
+            r"^heating\.evaporators\.(\d+)\.sensors\.temperature\.overheat$"
+        ),
         "description": SensorEntityDescription(
             key="placeholder",
             translation_key="evaporator_overheat_temperature",
@@ -538,6 +557,30 @@ ANALYTICS_Types: dict[str, SensorEntityDescription] = {
 }
 
 
+def _get_sensor_entity_description(
+    feature_name: str,
+) -> tuple[SensorEntityDescription, dict[str, str] | None] | None:
+    """Find a matching entity description for a dynamic feature name.
+
+    Returns:
+        tuple: (description, translation_placeholders) or None
+    """
+    for template in SENSOR_TEMPLATES:
+        match = template["pattern"].match(feature_name)
+        if match:
+            index = match.group(1)
+            base_desc: SensorEntityDescription = template["description"]
+
+            # Clone and Format
+            new_desc = dataclasses.replace(
+                base_desc,
+                key=feature_name,
+                translation_key=base_desc.translation_key,
+            )
+            return new_desc, {"index": index}
+    return None
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -561,38 +604,17 @@ async def async_setup_entry(
                     entities.append(
                         ViClimateSensor(coordinator, map_key, feature.name, description)
                     )
-                else:
-                    # Check templates
-                    for template in SENSOR_TEMPLATES:
-                        match = re.match(template["pattern"], feature.name)
-                        if match:
-                            index = match.group(1)
-                            # Create specific description
-                            base_desc: SensorEntityDescription = template["description"]
-
-                            # Clone and Format for this specific instance
-                            # Note: dataclasses.replace is used to clone
-                            import dataclasses
-
-                            key = feature.name
-                            # translation_key is generic now, keeping base_desc.translation_key
-
-                            new_desc = dataclasses.replace(
-                                base_desc,
-                                key=key,
-                                translation_key=base_desc.translation_key,
-                            )
-
-                            entities.append(
-                                ViClimateSensor(
-                                    coordinator,
-                                    map_key,
-                                    feature.name,
-                                    new_desc,
-                                    translation_placeholders={"index": index},
-                                )
-                            )
-                            break  # Found a match, stop looking matching templates
+                elif match_result := _get_sensor_entity_description(feature.name):
+                    description, placeholders = match_result
+                    entities.append(
+                        ViClimateSensor(
+                            coordinator,
+                            map_key,
+                            feature.name,
+                            description,
+                            translation_placeholders=placeholders,
+                        )
+                    )
 
     # --- 2. Analytics Sensors ---
     # Analytics data is stored nested: { "gateway_device": { "feature": Feature } }
@@ -600,14 +622,15 @@ async def async_setup_entry(
         heating_devices = []
 
         # 1. Identify heating devices (Mirroring coordinator logic)
-        for device in coordinator.data.values():
-            d_type = getattr(device, "device_type", "unknown")
-            if d_type == "heating":
-                heating_devices.append(device)
+        heating_devices = [
+            d
+            for d in coordinator.data.values()
+            if getattr(d, "device_type", "unknown") == "heating"
+        ]
 
         # Fallback
         if not heating_devices and len(coordinator.data) == 1:
-            heating_devices.append(list(coordinator.data.values())[0])
+            heating_devices.append(next(iter(coordinator.data.values())))
 
         if heating_devices:
             for heating_device in heating_devices:
@@ -616,7 +639,7 @@ async def async_setup_entry(
                     heating_device.id,
                     heating_device.gateway_serial,
                 )
-                for feature_name, description in ANALYTICS_Types.items():
+                for _feature_name, description in ANALYTICS_Types.items():
                     entities.append(
                         ViClimateConsumptionSensor(
                             analytics_coordinator, heating_device, description
@@ -648,7 +671,7 @@ class ViClimateSensor(CoordinatorEntity, SensorEntity):
 
         device = coordinator.data.get(map_key)
 
-        # Unique ID: gateway-device-key (key is unique per sensor, feature_name might be shared)
+        # Unique ID: gateway-device-key
         self._attr_unique_id = f"{device.gateway_serial}-{device.id}-{description.key}"
         self._attr_has_entity_name = True
 

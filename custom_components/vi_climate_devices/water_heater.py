@@ -6,22 +6,21 @@ import logging
 from typing import Any
 
 from homeassistant.components.water_heater import (
+    STATE_ECO,
+    STATE_GAS,
+    STATE_HEAT_PUMP,
+    STATE_OFF,
+    STATE_PERFORMANCE,
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
-    STATE_ECO,
-    STATE_PERFORMANCE,
-    STATE_OFF,
-    STATE_HEAT_PUMP,
-    STATE_GAS,
 )
-from homeassistant.const import UnitOfTemperature, ATTR_TEMPERATURE
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.device_registry import DeviceInfo
-
 from vi_api_client import Feature
 
 from .const import DOMAIN
@@ -72,8 +71,8 @@ async def async_setup_entry(
     if coordinator.data:
         for map_key, device in coordinator.data.items():
             # Check if we have the main target temperature feature
-            # We treat the generic DHW capability as dependent on having a target temp control
-            # AND a mode control, though mode might be optional?
+            # We treat the generic DHW capability as dependent on having
+            # a target temp control AND a mode control.
             # Let's verify essential features exist.
 
             # Find features by name in the device list
@@ -137,9 +136,12 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
         if not device:
             return None
         # Search flat list for efficiency if available, or normal list
-        # features_flat is usually available on device object in this integration context
+        # features_flat is usually available in this integration context
         if hasattr(device, "features_flat"):
-            return next((f for f in device.features_flat if f.name == name), None)
+            return next(
+                (f for f in device.features_flat if f.name == name),
+                None,
+            )
         return next((f for f in device.features if f.name == name), None)
 
     def _update_constraints(self, feature: Feature):
@@ -154,8 +156,8 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
                 self._attr_min_temp = float(constraints["min"])
             if "max" in constraints:
                 self._attr_max_temp = float(constraints["max"])
-            # Precision/Step is not a standard attribute of WaterHeaterEntity in base class,
-            # but HA might respect 'precision' property or we handle it internally.
+            # Precision/Step is not a standard attribute of WaterHeaterEntity matches
+            # base class, but HA might respect 'precision' property.
 
     # --- Properties ---
 
@@ -292,7 +294,8 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
             else None
         )
 
-        # Optimistic update (store Viessmann mode, our property maps it back to HA state)
+        # Optimistic update
+        # (store Viessmann mode, our property maps it back to HA state)
         if "value" in feat.properties:
             feat.properties["value"]["value"] = viessmann_mode
         self.async_write_ha_state()

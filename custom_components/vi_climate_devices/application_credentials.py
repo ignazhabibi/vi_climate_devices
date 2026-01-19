@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+
 from homeassistant.components.application_credentials import (
     AuthorizationServer,
     ClientCredential,
@@ -11,7 +12,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     AbstractOAuth2Implementation,
     LocalOAuth2ImplementationWithPkce,
 )
-
 from vi_api_client.const import ENDPOINT_AUTHORIZE, ENDPOINT_TOKEN
 
 _LOGGER = logging.getLogger(__name__)

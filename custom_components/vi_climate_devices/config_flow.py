@@ -1,15 +1,20 @@
 """Config flow for Viessmann Climate Devices integration."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any
 
 from homeassistant.helpers import config_entry_oauth2_flow
-
 from vi_api_client.const import DEFAULT_SCOPES
+
 from .const import DOMAIN
 
-class OAuth2FlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN):
+
+class OAuth2FlowHandler(
+    config_entry_oauth2_flow.AbstractOAuth2FlowHandler,
+    domain=DOMAIN,
+):
     """Config flow to handle Viessmann Climate Devices OAuth2 authentication."""
 
     DOMAIN = DOMAIN

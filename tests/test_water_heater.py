@@ -1,24 +1,26 @@
 """Tests for ViClimate water heater entities."""
 
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.components.water_heater import (
     WaterHeaterEntityFeature,
-    ATTR_OPERATION_MODE,
 )
+from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
+from vi_api_client import MockViClient
 
+from custom_components.vi_climate_devices import water_heater
 from custom_components.vi_climate_devices.const import DOMAIN
-from custom_components.vi_climate_devices.coordinator import ViClimateDataUpdateCoordinator
+from custom_components.vi_climate_devices.coordinator import (
+    ViClimateDataUpdateCoordinator,
+)
 from custom_components.vi_climate_devices.water_heater import (
     STATE_ECO,
+    STATE_GAS,
     STATE_OFF,
     STATE_PERFORMANCE,
-    STATE_GAS,
 )
-from vi_api_client import Feature, MockViClient
 
 
 @pytest.fixture
@@ -96,7 +98,6 @@ async def test_water_heater_creation(hass: HomeAssistant, mock_water_heater_clie
     hass.data[DOMAIN][entry.entry_id] = {"data": coordinator}
 
     # Manually load the platform
-    from custom_components.vi_climate_devices import water_heater
 
     async_add_entities = MagicMock()
     await water_heater.async_setup_entry(hass, entry, async_add_entities)
@@ -141,7 +142,8 @@ async def test_water_heater_commands(hass: HomeAssistant, mock_water_heater_clie
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {"data": coordinator}
 
-    from custom_components.vi_climate_devices import water_heater
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {"data": coordinator}
 
     async_add_entities = MagicMock()
     await water_heater.async_setup_entry(hass, entry, async_add_entities)
