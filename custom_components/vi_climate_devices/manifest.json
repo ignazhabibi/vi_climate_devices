@@ -1,0 +1,19 @@
+{
+  "domain": "vi_climate_devices",
+  "name": "Viessmann Climate Devices",
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": [
+    "application_credentials"
+  ],
+  "documentation": "https://github.com/ignazhabibi/vi_climate_devices",
+  "iot_class": "cloud_polling",
+  "loggers": [
+    "custom_components.vi_climate_devices",
+    "vi_api_client"
+  ],
+  "requirements": [
+    "vi_api_client @ git+https://github.com/ignazhabibi/vi_api_client.git@v0.1.6"
+  ],
+  "version": "0.1.3"
+}

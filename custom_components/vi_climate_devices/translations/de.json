@@ -1,0 +1,318 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Verbinde mit Viessmann Heat",
+                "description": "Klicke auf den Link unten, um dich bei Viessmann anzumelden."
+            }
+        },
+        "abort": {
+            "already_configured": "Konto ist bereits konfiguriert",
+            "reauth_successful": "Erneute Authentifizierung war erfolgreich"
+        }
+    },
+    "entity": {
+        "number": {
+            "heating_curve_slope": {
+                "name": "Steigung Heizkurve Heizkreis {index}"
+            },
+            "heating_curve_shift": {
+                "name": "Verschiebung Heizkurve Heizkreis {index}"
+            },
+            "dhw_hysteresis_on": {
+                "name": "Einschalthysterese Warmwasser"
+            },
+            "dhw_hysteresis_off": {
+                "name": "Ausschalthysterese Warmwasser"
+            },
+            "dhw_target_temperature": {
+                "name": "Warmwasser Solltemperatur"
+            },
+            "heating_circuit_program_temperature": {
+                "name": "Heizkreis {index} {program} Temperatur"
+            },
+            "heating_circuit_program_comfort_temperature": {
+                "name": "Heizkreis {index} Comfort Temperatur"
+            },
+            "heating_circuit_program_eco_temperature": {
+                "name": "Heizkreis {index} Eco Temperatur"
+            },
+            "heating_circuit_program_external_temperature": {
+                "name": "Heizkreis {index} Extern Temperatur"
+            },
+            "heating_circuit_program_holiday_temperature": {
+                "name": "Heizkreis {index} Ferien Temperatur"
+            },
+            "heating_circuit_program_normal_temperature": {
+                "name": "Heizkreis {index} Normal Temperatur"
+            },
+            "heating_circuit_program_reduced_temperature": {
+                "name": "Heizkreis {index} Reduziert Temperatur"
+            },
+            "heating_circuit_program_standby_temperature": {
+                "name": "Heizkreis {index} Standby Temperatur"
+            },
+            "heating_circuit_program_comfort_cooling_temperature": {
+                "name": "Heizkreis {index} Comfort Kühlung Temperatur"
+            },
+            "heating_circuit_program_comfort_heating_temperature": {
+                "name": "Heizkreis {index} Comfort Heizung Temperatur"
+            },
+            "heating_circuit_program_normal_cooling_temperature": {
+                "name": "Heizkreis {index} Normal Kühlung Temperatur"
+            },
+            "heating_circuit_program_normal_heating_temperature": {
+                "name": "Heizkreis {index} Normal Heizung Temperatur"
+            },
+            "heating_circuit_program_reduced_cooling_temperature": {
+                "name": "Heizkreis {index} Reduziert Kühlung Temperatur"
+            },
+            "heating_circuit_program_reduced_heating_temperature": {
+                "name": "Heizkreis {index} Reduziert Heizung Temperatur"
+            },
+            "heating_circuit_program_eco_cooling_temperature": {
+                "name": "Heizkreis {index} Eco Kühlung Temperatur"
+            },
+            "heating_circuit_program_eco_heating_temperature": {
+                "name": "Heizkreis {index} Eco Heizung Temperatur"
+            }
+        },
+        "binary_sensor": {
+            "circulation_pump": {
+                "name": "Heizkreispumpe Heizkreis {index}"
+            },
+            "compressor_active": {
+                "name": "Verdichter {index} Aktiv"
+            },
+            "dhw_circulation_pump": {
+                "name": "Zirkulationspumpe Warmwasser"
+            },
+            "frost_protection": {
+                "name": "Frostschutz Heizkreis {index}"
+            },
+            "solar_pump": {
+                "name": "Solar-Kreis Pumpe"
+            },
+            "one_time_charge": {
+                "name": "Einmal-Speicherladung"
+            },
+            "dhw_charging": {
+                "name": "Warmwasserbereitung Aktiv"
+            },
+            "dhw_primary_pump": {
+                "name": "Speicherladepumpe"
+            },
+            "device_error": {
+                "name": "Störung Aktiv"
+            },
+            "compressor_crankcase_heater": {
+                "name": "Verdichter {index} Kurbelgehäuseheizung"
+            },
+            "evaporator_base_heater": {
+                "name": "Verdampfer {index} Basisheizung"
+            }
+        },
+        "sensor": {
+            "outside_temperature": {
+                "name": "Außentemperatur"
+            },
+            "return_temperature": {
+                "name": "Rücklauftemperatur"
+            },
+            "common_supply_temperature": {
+                "name": "Gemeinsamer Vorlauf"
+            },
+            "primary_supply_temperature": {
+                "name": "Vorlauf Primärkreis"
+            },
+            "secondary_supply_temperature": {
+                "name": "Vorlauf Sekundärkreis"
+            },
+            "buffer_cylinder_temperature": {
+                "name": "Pufferspeichertemperatur"
+            },
+            "heating_circuit_supply_temperature": {
+                "name": "Vorlauf Heizkreis {index}"
+            },
+            "dhw_temperature": {
+                "name": "Warmwassertemperatur"
+            },
+            "burner_modulation": {
+                "name": "Brennermodulation {index}"
+            },
+            "compressor_hours": {
+                "name": "Verdichter {index} Betriebsstunden"
+            },
+            "compressor_starts": {
+                "name": "Verdichter {index} Starts"
+            },
+            "heating_rod_starts": {
+                "name": "Heizstab Starts"
+            },
+            "heating_rod_hours": {
+                "name": "Heizstab Betriebsstunden"
+            },
+            "scop_dhw": {
+                "name": "SCOP Warmwasser"
+            },
+            "scop_heating": {
+                "name": "SCOP Heizung"
+            },
+            "scop_total": {
+                "name": "SCOP Gesamt"
+            },
+            "supply_pressure": {
+                "name": "Anlagendruck"
+            },
+            "volumetric_flow": {
+                "name": "Volumenstrom"
+            },
+            "consumption_total": {
+                "name": "Verbrauch Gesamt (Heute)"
+            },
+            "consumption_heating": {
+                "name": "Verbrauch Heizung (Heute)"
+            },
+            "consumption_dhw": {
+                "name": "Verbrauch Warmwasser (Heute)"
+            },
+            "burner_starts": {
+                "name": "Brennerstarts {index}"
+            },
+            "burner_hours": {
+                "name": "Brennerbetriebsstunden {index}"
+            },
+            "production_dhw_current_day": {
+                "name": "Erzeugte Energie Warmwasser (Heute)"
+            },
+            "production_heating_current_day": {
+                "name": "Erzeugte Energie Heizung (Heute)"
+            },
+            "inverter_power_output": {
+                "name": "Aktueller Stromverbrauch {index}"
+            },
+            "outside_humidity": {
+                "name": "Luftfeuchtigkeit Außen"
+            },
+            "boiler_temperature": {
+                "name": "Kesseltemperatur"
+            },
+            "primary_return_temperature": {
+                "name": "Rücklauf Primärkreis"
+            },
+            "secondary_return_temperature": {
+                "name": "Rücklauf Sekundärkreis"
+            },
+            "dhw_outlet_temperature": {
+                "name": "Warmwasser Auslauftemperatur"
+            },
+            "dhw_storage_top_temperature": {
+                "name": "Warmwassertemperatur (Oben)"
+            },
+            "dhw_storage_bottom_temperature": {
+                "name": "Warmwassertemperatur (Unten)"
+            },
+            "buffer_top_temperature": {
+                "name": "Pufferspeichertemperatur (Oben)"
+            },
+            "buffer_mid_top_temperature": {
+                "name": "Pufferspeichertemperatur (Mitte-Oben)"
+            },
+            "buffer_middle_temperature": {
+                "name": "Pufferspeichertemperatur (Mitte)"
+            },
+            "buffer_mid_bottom_temperature": {
+                "name": "Pufferspeichertemperatur (Mitte-Unten)"
+            },
+            "buffer_bottom_temperature": {
+                "name": "Pufferspeichertemperatur (Unten)"
+            },
+            "solar_collector_temperature": {
+                "name": "Solarkollektortemperatur"
+            },
+            "solar_dhw_temperature": {
+                "name": "Solar Warmwassertemperatur"
+            },
+            "solar_production_today": {
+                "name": "Solarertrag (Tag)"
+            },
+            "compressor_phase": {
+                "name": "Verdichter {index} Phase"
+            },
+            "compressor_inlet_pressure": {
+                "name": "Verdichter {index} Einlassdruck"
+            },
+            "compressor_inlet_temperature": {
+                "name": "Verdichter {index} Einlasstemperatur"
+            },
+            "compressor_motor_temperature": {
+                "name": "Verdichter {index} Motortemperatur"
+            },
+            "compressor_oil_temperature": {
+                "name": "Verdichter {index} Öltemperatur"
+            },
+            "compressor_outlet_temperature": {
+                "name": "Verdichter {index} Auslasstemperatur"
+            },
+            "compressor_speed_current": {
+                "name": "Verdichter {index} Drehzahl"
+            },
+            "compressor_speed_setpoint": {
+                "name": "Verdichter {index} Drehzahl Sollwert"
+            },
+            "fan_speed": {
+                "name": "Lüfter {index} Drehzahl"
+            },
+            "economizer_liquid_temperature": {
+                "name": "Economizer {index} Flüssigkeitstemperatur"
+            },
+            "evaporator_liquid_temperature": {
+                "name": "Verdampfer {index} Flüssigkeitstemperatur"
+            },
+            "evaporator_overheat_temperature": {
+                "name": "Verdampfer {index} Überhitzung"
+            },
+            "valve_position": {
+                "name": "4/3-Wege-Ventil Position"
+            }
+        },
+        "switch": {
+            "dhw_one_time_charge": {
+                "name": "Einmalige Warmwasserbereitung"
+            },
+            "dhw_hygiene": {
+                "name": "Warmwasser-Hygiene"
+            }
+        },
+        "select": {
+            "dhw_mode": {
+                "name": "Warmwasser Modus",
+                "state": {
+                    "off": "Aus",
+                    "eco": "Eco",
+                    "comfort": "Komfort",
+                    "efficient": "Eco",
+                    "efficientWithMinComfort": "Komfort",
+                    "balanced": "Normal",
+                    "standby": "Standby",
+                    "standard": "Standard"
+                }
+            }
+        },
+        "water_heater": {
+            "dhw_water_heater": {
+                "name": "Warmwasser",
+                "state": {
+                    "off": "Aus",
+                    "eco": "Eco",
+                    "comfort": "Komfort",
+                    "efficient": "Eco",
+                    "efficientWithMinComfort": "Komfort",
+                    "balanced": "Normal",
+                    "standby": "Standby",
+                    "standard": "Standard"
+                }
+            }
+        }
+    }
+}

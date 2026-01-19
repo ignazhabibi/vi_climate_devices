@@ -1,0 +1,321 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Connect to Viessmann Heat",
+                "description": "Click the link below to authenticate with Viessmann."
+            }
+        },
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        }
+    },
+    "entity": {
+        "number": {
+            "heating_curve_slope": {
+                "name": "Heating Circuit {index} Curve Slope"
+            },
+            "heating_curve_shift": {
+                "name": "Heating Circuit {index} Curve Shift"
+            },
+            "dhw_hysteresis_on": {
+                "name": "DHW Hysteresis Switch On"
+            },
+            "dhw_hysteresis_off": {
+                "name": "DHW Hysteresis Switch Off"
+            },
+            "dhw_target_temperature": {
+                "name": "DHW Target Temperature"
+            },
+            "heating_circuit_program_temperature": {
+                "name": "Circuit {index} {program} Temperature"
+            },
+            "heating_circuit_program_comfort_temperature": {
+                "name": "Circuit {index} Comfort Temperature"
+            },
+            "heating_circuit_program_eco_temperature": {
+                "name": "Circuit {index} Eco Temperature"
+            },
+            "heating_circuit_program_external_temperature": {
+                "name": "Circuit {index} External Temperature"
+            },
+            "heating_circuit_program_holiday_temperature": {
+                "name": "Circuit {index} Holiday Temperature"
+            },
+            "heating_circuit_program_normal_temperature": {
+                "name": "Circuit {index} Normal Temperature"
+            },
+            "heating_circuit_program_reduced_temperature": {
+                "name": "Circuit {index} Reduced Temperature"
+            },
+            "heating_circuit_program_standby_temperature": {
+                "name": "Circuit {index} Standby Temperature"
+            },
+            "heating_circuit_program_comfort_cooling_temperature": {
+                "name": "Circuit {index} Comfort Cooling Temperature"
+            },
+            "heating_circuit_program_comfort_heating_temperature": {
+                "name": "Circuit {index} Comfort Heating Temperature"
+            },
+            "heating_circuit_program_normal_cooling_temperature": {
+                "name": "Circuit {index} Normal Cooling Temperature"
+            },
+            "heating_circuit_program_normal_heating_temperature": {
+                "name": "Circuit {index} Normal Heating Temperature"
+            },
+            "heating_circuit_program_reduced_cooling_temperature": {
+                "name": "Circuit {index} Reduced Cooling Temperature"
+            },
+            "heating_circuit_program_reduced_heating_temperature": {
+                "name": "Circuit {index} Reduced Heating Temperature"
+            },
+            "heating_circuit_program_eco_cooling_temperature": {
+                "name": "Circuit {index} Eco Cooling Temperature"
+            },
+            "heating_circuit_program_eco_heating_temperature": {
+                "name": "Circuit {index} Eco Heating Temperature"
+            }
+        },
+        "binary_sensor": {
+            "circulation_pump": {
+                "name": "Circulation Pump Heating Circuit {index}"
+            },
+            "compressor_active": {
+                "name": "Compressor {index} Active"
+            },
+            "dhw_circulation_pump": {
+                "name": "DHW Circulation Pump"
+            },
+            "frost_protection": {
+                "name": "Frost Protection Heating Circuit {index}"
+            },
+            "solar_pump": {
+                "name": "Solar Circuit Pump"
+            },
+            "one_time_charge": {
+                "name": "One Time Charge"
+            },
+            "dhw_charging": {
+                "name": "DHW Charging"
+            },
+            "dhw_primary_pump": {
+                "name": "DHW Primary Pump"
+            },
+            "device_error": {
+                "name": "Error Active"
+            },
+            "dhw_hygiene": {
+                "name": "DHW Hygiene"
+            },
+            "compressor_crankcase_heater": {
+                "name": "Compressor {index} Crankcase Heater"
+            },
+            "evaporator_base_heater": {
+                "name": "Evaporator {index} Base Heater"
+            }
+        },
+        "select": {
+            "dhw_mode": {
+                "name": "DHW Mode",
+                "state": {
+                    "off": "Off",
+                    "eco": "Eco",
+                    "comfort": "Comfort",
+                    "efficient": "Comfort",
+                    "efficientWithMinComfort": "Eco",
+                    "balanced": "Balanced",
+                    "standby": "Standby",
+                    "standard": "Standard"
+                }
+            }
+        },
+        "sensor": {
+            "outside_temperature": {
+                "name": "Outside Temperature"
+            },
+            "return_temperature": {
+                "name": "Return Temperature"
+            },
+            "common_supply_temperature": {
+                "name": "Common Supply Temperature"
+            },
+            "primary_supply_temperature": {
+                "name": "Primary Circuit Supply Temperature"
+            },
+            "secondary_supply_temperature": {
+                "name": "Secondary Circuit Supply Temperature"
+            },
+            "buffer_cylinder_temperature": {
+                "name": "Buffer Cylinder Temperature"
+            },
+            "heating_circuit_supply_temperature": {
+                "name": "Heating Circuit {index} Supply Temperature"
+            },
+            "dhw_temperature": {
+                "name": "Hot Water Temperature"
+            },
+            "burner_modulation": {
+                "name": "Burner {index} Modulation"
+            },
+            "compressor_hours": {
+                "name": "Compressor {index} Hours"
+            },
+            "compressor_starts": {
+                "name": "Compressor {index} Starts"
+            },
+            "heating_rod_starts": {
+                "name": "Heating Rod Starts"
+            },
+            "heating_rod_hours": {
+                "name": "Heating Rod Hours"
+            },
+            "scop_dhw": {
+                "name": "SCOP DHW"
+            },
+            "scop_heating": {
+                "name": "SCOP Heating"
+            },
+            "scop_total": {
+                "name": "SCOP Total"
+            },
+            "supply_pressure": {
+                "name": "Supply Pressure"
+            },
+            "volumetric_flow": {
+                "name": "Volumetric Flow"
+            },
+            "consumption_total": {
+                "name": "Power Consumption Total (Today)"
+            },
+            "consumption_heating": {
+                "name": "Power Consumption Heating (Today)"
+            },
+            "consumption_dhw": {
+                "name": "Power Consumption DHW (Today)"
+            },
+            "burner_starts": {
+                "name": "Burner {index} Starts"
+            },
+            "burner_hours": {
+                "name": "Burner {index} Hours"
+            },
+            "production_dhw_current_day": {
+                "name": "Produced Energy DHW (Today)"
+            },
+            "production_heating_current_day": {
+                "name": "Produced Energy Heating (Today)"
+            },
+            "inverter_power_output": {
+                "name": "Inverter {index} Power Output"
+            },
+            "outside_humidity": {
+                "name": "Outside Humidity"
+            },
+            "boiler_temperature": {
+                "name": "Boiler Temperature"
+            },
+            "primary_return_temperature": {
+                "name": "Primary Circuit Return Temperature"
+            },
+            "secondary_return_temperature": {
+                "name": "Secondary Circuit Return Temperature"
+            },
+            "dhw_outlet_temperature": {
+                "name": "Hot Water Outlet Temperature"
+            },
+            "dhw_storage_top_temperature": {
+                "name": "Hot Water Storage Temperature (Top)"
+            },
+            "dhw_storage_bottom_temperature": {
+                "name": "Hot Water Storage Temperature (Bottom)"
+            },
+            "buffer_top_temperature": {
+                "name": "Buffer Cylinder Temperature (Top)"
+            },
+            "buffer_mid_top_temperature": {
+                "name": "Buffer Cylinder Temperature (Middle-Top)"
+            },
+            "buffer_middle_temperature": {
+                "name": "Buffer Cylinder Temperature (Middle)"
+            },
+            "buffer_mid_bottom_temperature": {
+                "name": "Buffer Cylinder Temperature (Middle-Bottom)"
+            },
+            "buffer_bottom_temperature": {
+                "name": "Buffer Cylinder Temperature (Bottom)"
+            },
+            "solar_collector_temperature": {
+                "name": "Solar Collector Temperature"
+            },
+            "solar_dhw_temperature": {
+                "name": "Solar Hot Water Temperature"
+            },
+            "solar_production_today": {
+                "name": "Solar Power Production (Day)"
+            },
+            "compressor_phase": {
+                "name": "Compressor {index} Phase"
+            },
+            "compressor_inlet_pressure": {
+                "name": "Compressor {index} Inlet Pressure"
+            },
+            "compressor_inlet_temperature": {
+                "name": "Compressor {index} Inlet Temperature"
+            },
+            "compressor_motor_temperature": {
+                "name": "Compressor {index} Motor Temperature"
+            },
+            "compressor_oil_temperature": {
+                "name": "Compressor {index} Oil Temperature"
+            },
+            "compressor_outlet_temperature": {
+                "name": "Compressor {index} Outlet Temperature"
+            },
+            "compressor_speed_current": {
+                "name": "Compressor {index} Speed"
+            },
+            "compressor_speed_setpoint": {
+                "name": "Compressor {index} Speed Setpoint"
+            },
+            "fan_speed": {
+                "name": "Fan {index} Speed"
+            },
+            "economizer_liquid_temperature": {
+                "name": "Economizer {index} Liquid Temperature"
+            },
+            "evaporator_liquid_temperature": {
+                "name": "Evaporator {index} Liquid Temperature"
+            },
+            "evaporator_overheat_temperature": {
+                "name": "Evaporator {index} Overheat Temperature"
+            },
+            "valve_position": {
+                "name": "4/3-Way Valve Position"
+            }
+        },
+        "switch": {
+            "dhw_one_time_charge": {
+                "name": "One Time DHW Charge"
+            },
+            "dhw_hygiene": {
+                "name": "DHW Hygiene"
+            }
+        },
+        "water_heater": {
+            "dhw_water_heater": {
+                "name": "DHW Water Heater",
+                "state": {
+                    "off": "Off",
+                    "eco": "Eco",
+                    "comfort": "Comfort",
+                    "efficient": "Comfort",
+                    "efficientWithMinComfort": "Eco",
+                    "balanced": "Balanced",
+                    "standby": "Standby",
+                    "standard": "Standard"
+                }
+            }
+        }
+    }
+}
