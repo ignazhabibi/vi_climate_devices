@@ -1,9 +1,16 @@
-#Viessmann Climate Devices
+# Viessmann Climate Devices
 
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 
-A custom Home Assistant integration for Viessmann heating systems using the official Viessmann API with modern OAuth2/PKCE authentication.
+A modern Home Assistant integration for Viessmann heating systems using the official Viessmann IoT API.
+It is built upon the **[vi_api_client](https://github.com/ignazhabibi/vi_api_client)** library, which was written from scratch specifically for this integration to ensure maximum performance and modern architecture.
+
+**Key Highlights:**
+- **Secure Authentication**: Uses the native Home Assistant **Application Credentials** platform for secure OAuth2/PKCE token management.
+- **Asynchronous & Fast**: The underlying API client is fully async (`aiohttp`/`asyncio`) for non-blocking I/O.
+- **Full Auto-Discovery**: Automatically finds all installations, gateways, and devices linked to your account.
+
 
 ## Features
 
@@ -23,7 +30,7 @@ Tested with:
 
 ### Prerequisites
 
-1. **Viessmann Developer Account**: Register at [developer.viessmann.com](https://developer.viessmann.com)
+1. **Viessmann Developer Account**: Register at [developer.viessmann-climatesolutions.com](https://developer.viessmann-climatesolutions.com/start.html)
 2. **Create an API Client**:
    - Go to "My Apps" → "Create New App"
    - Name: `Home Assistant` (or any name)
@@ -134,4 +141,4 @@ MIT License – see [LICENSE](LICENSE) for details.
 ## Acknowledgments
 
 - Built on [vi_api_client](https://github.com/ignazhabibi/vi_api_client) library
-- Inspired by the official Viessmann ViCare integration
+
