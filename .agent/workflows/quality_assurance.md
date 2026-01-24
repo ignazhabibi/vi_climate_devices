@@ -54,6 +54,8 @@ When making implementation decisions:
 
 - **Type Hints**:
   - [ ] Are all arguments and return values typed?
+  - [ ] **NO** `Any` types unless absolutely necessary (must have a comment explaining why).
+  - [ ] Use `Optional`, `Union`, or specific protocols instead of loose typing.
 
 - **Comment Standards**:
   - [ ] **NO** "thought process" comments (e.g. "I think we should do X", "Trying to fix Y").
@@ -79,6 +81,13 @@ When making implementation decisions:
 | No tests exist for code you're touching | Add tests for the specific behavior you're implementing/fixing, without refactoring existing code |
 | Tests exist but coverage is low | Add tests for gaps if you're already working in that area |
 | Tests exist, quality is low | Improve test quality if it's straightforward (better assertions, clearer names, remove duplication) |
+
+### Test Structure (AAA Pattern)
+
+- **Arrange**: Set up the test state (mocks, config).
+- **Act**: Execute the function under test.
+- **Assert**: Verify the results strictly.
+- *Action*: Ensure tests follow this structure with clear comments separating sections.
 
 ### Checklist
 
