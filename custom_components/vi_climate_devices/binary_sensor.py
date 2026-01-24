@@ -60,10 +60,11 @@ BINARY_SENSOR_TEMPLATES = [
             device_class=BinarySensorDeviceClass.RUNNING,
         ),
     },
-    # Crankcase Heater (heating.compressors.N.heater.crankcase)
-    # Crankcase Heater
+    # Crankcase Heater (heating.compressors.N.heater.crankcase.active)
     {
-        "pattern": re.compile(r"^heating\.compressors\.(\d+)\.heater\.crankcase$"),
+        "pattern": re.compile(
+            r"^heating\.compressors\.(\d+)\.heater\.crankcase\.active$"
+        ),
         "description": BinarySensorEntityDescription(
             key="placeholder",
             translation_key="compressor_crankcase_heater",
@@ -71,9 +72,9 @@ BINARY_SENSOR_TEMPLATES = [
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     },
-    # Evaporator Base Heater (heating.evaporators.N.heater.base)
+    # Evaporator Base Heater (heating.evaporators.N.heater.base.active)
     {
-        "pattern": re.compile(r"^heating\.evaporators\.(\d+)\.heater\.base$"),
+        "pattern": re.compile(r"^heating\.evaporators\.(\d+)\.heater\.base\.active$"),
         "description": BinarySensorEntityDescription(
             key="placeholder",
             translation_key="evaporator_base_heater",
