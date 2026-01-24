@@ -13,7 +13,7 @@
     "vi_api_client"
   ],
   "requirements": [
-    "vi_api_client @ git+https://github.com/ignazhabibi/vi_api_client.git@v0.2.0"
+    "vi_api_client @ git+https://github.com/ignazhabibi/vi_api_client.git@v0.2.1"
   ],
-  "version": "0.2.6"
+  "version": "0.2.7"
 }

@@ -20,7 +20,13 @@
                 "name": "Verschiebung Heizkurve Heizkreis {index}"
             },
             "dhw_hysteresis": {
+                "name": "Hysterese Warmwasser"
+            },
+            "dhw_hysteresis_on": {
                 "name": "Einschalthysterese Warmwasser"
+            },
+            "dhw_hysteresis_off": {
+                "name": "Ausschalthysterese Warmwasser"
             },
             "dhw_target_temperature": {
                 "name": "Warmwasser Solltemperatur"
