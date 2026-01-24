@@ -54,13 +54,14 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed("No installations found")
 
         try:
-            self.known_devices = await self.client.get_full_installation_status(
+            self._known_devices = await self.client.get_full_installation_status(
                 installations[0].id
             )
         except Exception as e:
             raise UpdateFailed(f"Failed to perform full discovery: {e}") from e
 
-        if not self.known_devices:
+        if not self._known_devices:
+            # It's possible to have an installation with no reachable devices
             _LOGGER.warning("No devices found during discovery")
 
     async def _async_update_data(self) -> dict:
@@ -76,16 +77,16 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
         """
         try:
             # 1. Initial Discovery
-            if not getattr(self, "known_devices", None):
+            if not getattr(self, "_known_devices", None):
                 await self._perform_discovery()
 
             # 2. Update Loop (Refresh each device)
             updated_data = {}
             updated_devices_list = []
 
-            if self.known_devices:
-                _LOGGER.debug("Updating %s known devices", len(self.known_devices))
-                for device in self.known_devices:
+            if self._known_devices:
+                _LOGGER.debug("Updating %s known devices", len(self._known_devices))
+                for device in self._known_devices:
                     key = f"{device.gateway_serial}_{device.id}"
                     try:
                         new_device = await self.client.update_device(device)
@@ -101,7 +102,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
                         updated_data[key] = device
 
                 # Update local reference with fresh immutable objects
-                self.known_devices = updated_devices_list
+                self._known_devices = updated_devices_list
 
             return updated_data
 
