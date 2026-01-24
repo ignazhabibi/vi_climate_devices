@@ -41,14 +41,12 @@ def get_entity_definitions(platform):
             descriptions.append(t["description"])
 
     elif platform == "number":
-        # NUMBER_TYPES is dict[feature_name, list[Description]]
-        for desc_list in NUMBER_TYPES.values():
-            descriptions.extend(desc_list)
+        # NUMBER_TYPES is dict[feature_name, Description] (Flat)
+        descriptions.extend(NUMBER_TYPES.values())
         # Templates
         for t in NUMBER_TEMPLATES:
-            descriptions.extend(
-                t["descriptions"]
-            )  # Note: number templates have 'descriptions' list
+            # NUMBER_TEMPLATES[i]["description"] is a single Description object now
+            descriptions.append(t["description"])
 
     return descriptions
 

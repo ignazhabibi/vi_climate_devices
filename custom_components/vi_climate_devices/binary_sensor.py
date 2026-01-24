@@ -154,7 +154,7 @@ async def async_setup_entry(
 
     if coordinator.data:
         for map_key, device in coordinator.data.items():
-            for feature in device.features_flat:
+            for feature in device.features:
                 if feature.name in BINARY_SENSOR_TYPES:
                     description = BINARY_SENSOR_TYPES[feature.name]
                     entities.append(
@@ -162,9 +162,9 @@ async def async_setup_entry(
                             coordinator, map_key, feature.name, description
                         )
                     )
-                elif match_result := _get_binary_sensor_entity_description(
-                    feature.name
-                ):
+                    continue
+
+                if match_result := _get_binary_sensor_entity_description(feature.name):
                     description, placeholders = match_result
                     entities.append(
                         ViClimateBinarySensor(
@@ -174,6 +174,19 @@ async def async_setup_entry(
                             description,
                             translation_placeholders=placeholders,
                         )
+                    )
+                    continue
+
+                # Automatic Discovery
+                # Read-only Boolean -> Binary Sensor
+                if not feature.is_writable and isinstance(feature.value, bool):
+                    desc = BinarySensorEntityDescription(
+                        key=feature.name,
+                        name=feature.name,
+                        entity_category=EntityCategory.DIAGNOSTIC,
+                    )
+                    entities.append(
+                        ViClimateBinarySensor(coordinator, map_key, feature.name, desc)
                     )
 
     async_add_entities(entities)
@@ -203,6 +216,13 @@ class ViClimateBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._attr_unique_id = f"{device.gateway_serial}-{device.id}-{description.key}"
         self._attr_has_entity_name = True
 
+        # Improve name for auto-discovered entities
+        if (
+            not hasattr(description, "translation_key")
+            or not description.translation_key
+        ):
+            self._attr_name = feature_name
+
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information."""
@@ -223,9 +243,7 @@ class ViClimateBinarySensor(CoordinatorEntity, BinarySensorEntity):
         device = self.coordinator.data.get(self._map_key)
         if not device:
             return None
-        return next(
-            (f for f in device.features_flat if f.name == self._feature_name), None
-        )
+        return device.get_feature(self._feature_name)
 
     @property
     def is_on(self) -> bool | None:

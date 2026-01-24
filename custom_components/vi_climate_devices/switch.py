@@ -12,6 +12,7 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -44,8 +45,13 @@ SWITCH_TYPES: dict[str, ViClimateSwitchEntityDescription] = {
         key="heating.dhw.hygiene",
         translation_key="dhw_hygiene",
         icon="mdi:shield-check",
-        property_name="enabled",
         device_class=SwitchDeviceClass.SWITCH,
+    ),
+    # Example flat feature
+    "heating.circuits.0.heating.curve.active": ViClimateSwitchEntityDescription(
+        key="heating.circuits.0.heating.curve.active",  # Placeholder for dynamic?
+        translation_key="heating_curve_active",
+        icon="mdi:check",
     ),
 }
 
@@ -63,13 +69,27 @@ async def async_setup_entry(
 
     if coordinator.data:
         for map_key, device in coordinator.data.items():
-            # Iterate hierarchically over features (NOT flat)
-            # Switches often have commands on the parent feature
             for feature in device.features:
+                if not feature.is_writable:
+                    continue
+
                 if feature.name in SWITCH_TYPES:
                     desc = SWITCH_TYPES[feature.name]
                     entities.append(
-                        ViClimateSwitch(coordinator, map_key, feature, desc)
+                        ViClimateSwitch(coordinator, map_key, feature.name, desc)
+                    )
+                    continue
+
+                # Automatic Discovery (Fallback)
+                # If writable boolean
+                if isinstance(feature.value, bool):
+                    desc = ViClimateSwitchEntityDescription(
+                        key=feature.name,
+                        name=feature.name,
+                        entity_category=EntityCategory.CONFIG,
+                    )
+                    entities.append(
+                        ViClimateSwitch(coordinator, map_key, feature.name, desc)
                     )
 
     async_add_entities(entities)
@@ -84,14 +104,14 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
         self,
         coordinator: ViClimateDataUpdateCoordinator,
         map_key: str,
-        feature: Feature,
+        feature_name: str,
         description: ViClimateSwitchEntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self.entity_description = description
         self._map_key = map_key
-        self._feature_name = feature.name
+        self._feature_name = feature_name
         self._property_name = description.property_name
 
         device = coordinator.data.get(map_key)
@@ -100,13 +120,20 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
         self._attr_unique_id = f"{device.gateway_serial}-{device.id}-{description.key}"
         self._attr_has_entity_name = True
 
+        # Improve name for auto-discovered entities
+        if (
+            not hasattr(description, "translation_key")
+            or not description.translation_key
+        ):
+            self._attr_name = feature_name
+
     @property
     def feature_data(self) -> Feature | None:
         """Get latest feature data from coordinator."""
         device = self.coordinator.data.get(self._map_key)
         if not device:
             return None
-        return next((f for f in device.features if f.name == self._feature_name), None)
+        return device.get_feature(self._feature_name)
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -129,15 +156,15 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
         if not feat:
             return None
 
-        # Determine value key
-        key = self._property_name or "active"
+        # Handle "on"/"off" strings or Booleans
+        val = feat.value
+        if isinstance(val, bool):
+            return val
+        if isinstance(val, str):
+            return val.lower() in ("on", "true", "active", "1", "enabled")
 
-        # Check properties
-        if key in feat.properties:
-            val = feat.properties[key].get("value")
-            return bool(val)
-
-        return None
+        # Fallback
+        return bool(val)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
@@ -149,94 +176,28 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
 
     async def _async_set_state(self, target_state: bool) -> None:
         """Execute the command."""
+        device = self.coordinator.data.get(self._map_key)
+        if not device:
+            raise HomeAssistantError("Device not found")
+
         feat = self.feature_data
         if not feat:
             raise HomeAssistantError("Feature not available")
 
-        # 1. Optimistic Update
-        key = self._property_name or "active"
-        old_value = None
-        if key in feat.properties:
-            old_value = feat.properties[key].get("value")
-            feat.properties[key]["value"] = target_state
-
-        self.async_write_ha_state()
+        # 1. Optimistic Update?
+        # Maybe skip to avoid flicker if API fails
 
         try:
-            await self._execute_command(feat, target_state)
+            client = self.coordinator.client
+            _LOGGER.debug(
+                "ViClimateSwitch: Setting state to %s for entity '%s'",
+                target_state,
+                self.entity_id,
+            )
+            await client.set_feature(device, feat, target_state)
+
+            # Refresh
+            await self.coordinator.async_request_refresh()
+
         except Exception as e:
-            # Revert optimistic update
-            if old_value is not None:
-                feat.properties[key]["value"] = old_value
-                self.async_write_ha_state()
             raise HomeAssistantError(f"Failed to switch {target_state}: {e}") from e
-
-    async def _execute_command(self, feat: Feature, target_state: bool) -> None:
-        """Determine and execute the correct command for the feature."""
-        client = self.coordinator.client
-        _LOGGER.debug(
-            "ViClimateSwitch: Setting state to %s for entity '%s' (Feature: %s)",
-            target_state,
-            self.entity_id,
-            self._feature_name,
-        )
-
-        # Logic: Prefer explicit boolean setters (setActive, setEnabled)
-        # Then fallback to action commands (activate/deactivate, enable/disable)
-
-        # --- PATH A: setEnabled (e.g. hygiene) ---
-        if "setEnabled" in feat.commands:
-            cmd_def = feat.commands["setEnabled"]
-            await self._execute_param_command(
-                feat, "setEnabled", "enabled", cmd_def, target_state
-            )
-            return
-
-        # --- PATH B: setActive (e.g. oneTimeCharge) ---
-        if "setActive" in feat.commands:
-            cmd_def = feat.commands["setActive"]
-            await self._execute_param_command(
-                feat, "setActive", "active", cmd_def, target_state
-            )
-            return
-
-        # --- PATH C: Action Commands (True) ---
-        if target_state:
-            if "enable" in feat.commands:
-                await client.execute_command(feat, "enable", {})
-            elif "activate" in feat.commands:
-                await client.execute_command(feat, "activate", {})
-            else:
-                available = list(feat.commands.keys())
-                raise HomeAssistantError(
-                    f"No suitable command found to TURN ON. Available: {available}"
-                )
-            return
-
-        # --- PATH D: Action Commands (False) ---
-        if "disable" in feat.commands:
-            await client.execute_command(feat, "disable", {})
-        elif "deactivate" in feat.commands:
-            await client.execute_command(feat, "deactivate", {})
-        else:
-            available = list(feat.commands.keys())
-            raise HomeAssistantError(
-                f"No suitable command found to TURN OFF. Available: {available}"
-            )
-
-    async def _execute_param_command(
-        self,
-        feat: Feature,
-        command_name: str,
-        default_param: str,
-        cmd_def,
-        value: bool,
-    ) -> None:
-        """Helper to execute simple boolean property commands."""
-        client = self.coordinator.client
-        target_param = default_param
-        # Dynamic Param Resolution
-        if target_param not in cmd_def.params and len(cmd_def.params) == 1:
-            target_param = next(iter(cmd_def.params.keys()))
-
-        await client.execute_command(feat, command_name, {target_param: value})

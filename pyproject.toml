@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vi_climate_devices"
-version = "0.1.5"
+version = "0.2.0"
 description = "Viessmann Climate Devices Integration for Home Assistant"
 authors = [
   { name = "Antigravity", email = "antigravity@example.com" },
@@ -16,7 +16,7 @@ classifiers = [
 ]
 requires-python = ">=3.11"
 dependencies = [
-    "vi_api_client>=0.1.6",
+    "vi_api_client>=0.2.0",
 ]
 
 [tool.ruff]

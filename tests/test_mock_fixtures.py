@@ -1,5 +1,3 @@
-import re
-
 import pytest
 from homeassistant.core import HomeAssistant
 from vi_api_client import MockViClient
@@ -112,7 +110,6 @@ async def test_mock_device_features(
     hass: HomeAssistant, device_name: str, coverage_data
 ):
     """Test compatibility and generate coverage report."""
-
     # Initialize Mock Client
     try:
         client = MockViClient(device_name=device_name)
@@ -134,7 +131,7 @@ async def test_mock_device_features(
         coverage_entry = _analyze_device_coverage(device, device_name)
         coverage_data.append(coverage_entry)
 
-        # Basic assertions to ensure test still fails on regression
+        # Basic assertions
         if "Vitopure" not in device_name:
             total_entities = (
                 len(coverage_entry["sensors"])
@@ -148,12 +145,10 @@ async def test_mock_device_features(
 
 def _analyze_device_coverage(device, device_name):
     """Analyze a single device for feature coverage."""
-    # Helper map for value lookup
-    flat_map = {f.name: f.value for f in device.features_flat}
+    # New API: device.features is the flat list
 
     # State tracking
     context = {
-        "flat_map": flat_map,
         "created": {
             "sensors": {},
             "binary": {},
@@ -161,7 +156,7 @@ def _analyze_device_coverage(device, device_name):
             "switches": {},
             "selects": {},
         },
-        "covered_flat_keys": set(),
+        "covered_keys": set(),
     }
 
     # 1. Simulate Number/Switch/Select Creation
@@ -175,8 +170,8 @@ def _analyze_device_coverage(device, device_name):
 
     return {
         "device_name": device_name,
-        "total": len([f for f in device.features_flat if f.is_enabled]),
-        "mapped": len([f for f in device.features_flat if f.is_enabled])
+        "total": len([f for f in device.features if f.is_enabled]),
+        "mapped": len([f for f in device.features if f.is_enabled])
         - len(missing_features),
         "sensors": context["created"]["sensors"],
         "binary": context["created"]["binary"],
@@ -187,125 +182,127 @@ def _analyze_device_coverage(device, device_name):
     }
 
 
-def _get_simple_value(context, feature_name, desc, default_prop="value"):
-    flat_map = context["flat_map"]
-    prop = (
-        getattr(desc, "property_name", None)
-        or getattr(desc, "param_name", None)
-        or default_prop
-    )
-    prop_key = f"{feature_name}.{prop}"
-    if prop_key in flat_map:
-        return flat_map[prop_key]
-    if feature_name in flat_map:
-        return flat_map[feature_name]  # Fallback
-    return "N/A"
-
-
 def _simulate_config_entities(device, context):
     """Simulate creation of configuration entities (Numbers, Switches, Selects)."""
     created = context["created"]
-    covered = context["covered_flat_keys"]
+    covered = context["covered_keys"]
 
     for feature in device.features:
+        if not feature.is_writable:
+            continue
+
+        # 1. Defined Entities
         if feature.name in NUMBER_TYPES:
-            for desc in NUMBER_TYPES[feature.name]:
-                val = _get_simple_value(context, feature.name, desc)
-                created["numbers"][desc.key] = val
-                _mark_covered(covered, feature.name, desc)
+            created["numbers"][feature.name] = feature.value
+            covered.add(feature.name)
+            continue
 
-        elif feature.name in SWITCH_TYPES:
-            desc = SWITCH_TYPES[feature.name]
-            val = _get_simple_value(context, feature.name, desc, default_prop="active")
-            created["switches"][desc.key] = val
-            prop = getattr(desc, "property_name", None) or "active"
-            covered.add(f"{feature.name}.{prop}")
+        if feature.name in SWITCH_TYPES:
+            created["switches"][feature.name] = feature.value
+            covered.add(feature.name)
+            continue
 
-        elif feature.name in SELECT_TYPES:
-            desc = SELECT_TYPES[feature.name]
-            val = _get_simple_value(context, feature.name, desc)
-            created["selects"][desc.key] = val
-            _mark_covered(covered, feature.name, desc)
+        if feature.name in SELECT_TYPES:
+            created["selects"][feature.name] = feature.value
+            covered.add(feature.name)
+            continue
 
-        else:
-            # Number Templates
-            for template in NUMBER_TEMPLATES:
-                match = re.match(template["pattern"], feature.name)
-                if match:
-                    groups = match.groups()
-                    index = groups[0]
-                    program = groups[1] if len(groups) > 1 else None
+        # 2. Templates (Numbers)
+        matched_template = False
+        for template in NUMBER_TEMPLATES:
+            if template["pattern"].match(feature.name):
+                created["numbers"][feature.name] = feature.value
+                covered.add(feature.name)
+                matched_template = True
+                break
+        if matched_template:
+            continue
 
-                    for desc in template["descriptions"]:
-                        if program:
-                            new_key = desc.key.format(index, program)
-                        else:
-                            new_key = desc.key.format(index)
+        # 3. Automatic Discovery
+        # Number
+        if (
+            feature.control
+            and feature.control.min is not None
+            and feature.control.max is not None
+        ):
+            created["numbers"][feature.name] = feature.value
+            covered.add(feature.name)
+            continue
 
-                        val = _get_simple_value(context, feature.name, desc)
-                        created["numbers"][new_key] = val
-                        _mark_covered(covered, feature.name, desc)
-                    break
+        # Select
+        if feature.control and feature.control.options:
+            created["selects"][feature.name] = feature.value
+            covered.add(feature.name)
+            continue
 
-
-def _mark_covered(covered_set, feature_name, desc):
-    prop = getattr(desc, "property_name", None) or getattr(desc, "param_name", None)
-    if prop:
-        covered_set.add(f"{feature_name}.{prop}")
+        # Switch
+        if isinstance(feature.value, bool):
+            created["switches"][feature.name] = feature.value
+            covered.add(feature.name)
+            continue
 
 
 def _simulate_sensor_entities(device, context):
     """Simulate creation of Sensor and BinarySensor entities."""
     created = context["created"]
-    covered = context["covered_flat_keys"]
+    covered = context["covered_keys"]
 
-    for feature in device.features_flat:
-        if not feature.is_enabled:
-            continue
-
+    for feature in device.features:
         # Sensors
         if feature.name in SENSOR_TYPES:
             created["sensors"][feature.name] = feature.value
             covered.add(feature.name)
-        else:
-            for template in SENSOR_TEMPLATES:
-                if re.match(template["pattern"], feature.name):
-                    created["sensors"][feature.name] = feature.value
-                    covered.add(feature.name)
-                    break
+            continue
 
         # Binary Sensors
         if feature.name in BINARY_SENSOR_TYPES:
             created["binary"][feature.name] = feature.value
             covered.add(feature.name)
-        else:
-            for template in BINARY_SENSOR_TEMPLATES:
-                if re.match(template["pattern"], feature.name):
-                    created["binary"][feature.name] = feature.value
-                    covered.add(feature.name)
-                    break
+            continue
+
+        # Templates
+        matched = False
+        for template in SENSOR_TEMPLATES:
+            if template["pattern"].match(feature.name):
+                created["sensors"][feature.name] = feature.value
+                covered.add(feature.name)
+                matched = True
+                break
+        if matched:
+            continue
+
+        for template in BINARY_SENSOR_TEMPLATES:
+            if template["pattern"].match(feature.name):
+                created["binary"][feature.name] = feature.value
+                covered.add(feature.name)
+                matched = True
+                break
+        if matched:
+            continue
+
+        # Automatic Discovery
+        if not feature.is_writable:
+            if isinstance(feature.value, bool):
+                created["binary"][feature.name] = feature.value
+                covered.add(feature.name)
+            elif not isinstance(feature.value, (dict, list)):  # Simple values
+                created["sensors"][feature.name] = feature.value
+                covered.add(feature.name)
 
 
 def _find_missing_features(device, context):
     """Identify enabled features that were not mapped."""
     missing = {}
-    created = context["created"]
-    covered = context["covered_flat_keys"]
+    covered = context["covered_keys"]
 
-    for feature in device.features_flat:
+    for feature in device.features:
         if not feature.is_enabled:
             continue
 
-        name = feature.name
-        if (
-            name in created["sensors"]
-            or name in created["binary"]
-            or name in created["numbers"]
-            or name in created["switches"]
-            or name in created["selects"]
-            or name in covered
-        ):
-            continue
+        if feature.name not in covered:
+            # Filter out complex objects we don't handle typically
+            if isinstance(feature.value, (dict, list)):
+                continue
+            missing[feature.name] = feature.value
 
-        missing[name] = feature.value
     return missing

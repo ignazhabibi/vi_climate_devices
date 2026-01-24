@@ -42,15 +42,13 @@ async def test_binary_sensor_value_parsing(hass: HomeAssistant):
 
     for raw_val, expected in test_cases:
         # Create a feature with the test value
-        # Manually set the value
         mock_feature = MagicMock()
         mock_feature.name = "heating.circuits.0.circulation.pump"
-        # Mock the value property directly on the object.
-        # In the actual code we access feature.value
         mock_feature.value = raw_val
         mock_feature.is_enabled = True
 
-        device.features_flat = [mock_feature]
+        device.features = [mock_feature]
+        device.get_feature = MagicMock(return_value=mock_feature)
 
         # Initialize sensor
         # Use new helper function

@@ -12,27 +12,24 @@ from custom_components.vi_climate_devices.coordinator import (
 @pytest.mark.asyncio
 async def test_gas_boiler_entities(hass: HomeAssistant):
     """Test that gas boiler (Vitodens) creates boiler sensors."""
+    # Use real MockViClient now that it is fixed
     client = MockViClient("Vitodens200W")
 
-    # MockViClient natively supports the V2 flow (get_installations -> devices -> update)
-    # No patching needed if the library is up to date.
+    # We need to properly initialize the mock client if needed,
+    # but MockViClient("Vitodens200W") should be enough to load fixtures.
 
     coordinator = ViClimateDataUpdateCoordinator(hass, client)
     await coordinator.async_refresh()
 
-    # Coordinator data is populated
     if not coordinator.data:
-        # Fallback debug or failure
-        pytest.fail(
-            f"Coordinator data empty. Client installations: {await client.get_installations()}"
-        )
+        pytest.fail("Coordinator data empty.")
 
     device = next(iter(coordinator.data.values()))
 
     # 1. Check for Boiler specific feature
     # heating.burners.0.modulation should exist and be used for a sensor
     burner_mod = next(
-        (f for f in device.features_flat if f.name == "heating.burners.0.modulation"),
+        (f for f in device.features if f.name == "heating.burners.0.modulation"),
         None,
     )
     assert burner_mod is not None
@@ -41,7 +38,7 @@ async def test_gas_boiler_entities(hass: HomeAssistant):
     hp_compressor = next(
         (
             f
-            for f in device.features_flat
+            for f in device.features
             if f.name == "heating.compressors.0.statistics.hours"
         ),
         None,
@@ -57,7 +54,8 @@ async def test_heat_pump_entities(hass: HomeAssistant):
     coordinator = ViClimateDataUpdateCoordinator(hass, client)
     await coordinator.async_refresh()
 
-    await coordinator.async_refresh()
+    if not coordinator.data:
+        pytest.fail("Coordinator data empty.")
 
     device = next(iter(coordinator.data.values()))
 
@@ -66,7 +64,7 @@ async def test_heat_pump_entities(hass: HomeAssistant):
     hp_compressor = next(
         (
             f
-            for f in device.features_flat
+            for f in device.features
             if f.name == "heating.compressors.0.statistics.hours"
         ),
         None,
@@ -75,7 +73,7 @@ async def test_heat_pump_entities(hass: HomeAssistant):
 
     # 2. Check that it does NOT have Boiler specific feature
     burner_mod = next(
-        (f for f in device.features_flat if f.name == "heating.burners.0.modulation"),
+        (f for f in device.features if f.name == "heating.burners.0.modulation"),
         None,
     )
     assert burner_mod is None

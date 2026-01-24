@@ -36,11 +36,9 @@ SELECT_TYPES: dict[str, ViClimateSelectEntityDescription] = {
         key="heating.dhw.operating.modes.active",
         translation_key="dhw_mode",
         icon="mdi:water-boiler-auto",
-        param_name="mode",
-        command_name="setMode",
-        property_name="value",  # Usually 'value' for modes
         entity_category=EntityCategory.CONFIG,
     ),
+    # Add other known select types here if any
 }
 
 
@@ -58,10 +56,28 @@ async def async_setup_entry(
     if coordinator.data:
         for map_key, device in coordinator.data.items():
             for feature in device.features:
+                if not feature.is_writable:
+                    continue
+
+                # 1. Defined Entities
                 if feature.name in SELECT_TYPES:
                     desc = SELECT_TYPES[feature.name]
                     entities.append(
-                        ViClimateSelect(coordinator, map_key, feature, desc)
+                        ViClimateSelect(coordinator, map_key, feature.name, desc)
+                    )
+                    continue
+
+                # 2. Automatic Discovery (Fallback)
+                # Check for control options (Enum)
+                if feature.control and feature.control.options:
+                    # Valid Select Entity needs options
+                    desc = ViClimateSelectEntityDescription(
+                        key=feature.name,
+                        name=feature.name,
+                        entity_category=EntityCategory.CONFIG,
+                    )
+                    entities.append(
+                        ViClimateSelect(coordinator, map_key, feature.name, desc)
                     )
 
     async_add_entities(entities)
@@ -76,17 +92,14 @@ class ViClimateSelect(CoordinatorEntity, SelectEntity):
         self,
         coordinator: ViClimateDataUpdateCoordinator,
         map_key: str,
-        feature: Feature,
+        feature_name: str,
         description: ViClimateSelectEntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self.entity_description = description
         self._map_key = map_key
-        self._feature_name = feature.name
-        self._param_name = description.param_name
-        self._property_name = description.property_name or description.param_name
-        self._command_name = description.command_name
+        self._feature_name = feature_name
 
         device = coordinator.data.get(map_key)
 
@@ -94,41 +107,24 @@ class ViClimateSelect(CoordinatorEntity, SelectEntity):
         self._attr_unique_id = f"{device.gateway_serial}-{device.id}-{description.key}"
         self._attr_has_entity_name = True
 
-        # Dynamic Option Discovery
-        self._attr_options = []
+        # Improve name for auto-discovered entities
+        if (
+            not hasattr(description, "translation_key")
+            or not description.translation_key
+        ):
+            self._attr_name = feature_name
+
+        # Initial Setup of Options
+        feature = device.get_feature(feature_name)
         self._update_options(feature)
 
     def _update_options(self, feature: Feature):
-        """Extract available options from constraints."""
-        empty_options = []
-        if not self._command_name:
-            self._attr_options = empty_options
-            return
-
-        cmd = feature.commands.get(self._command_name)
-        if not cmd:
-            self._attr_options = empty_options
-            return
-
-        # Try to find the parameter
-        param = cmd.params.get(self._param_name)
-
-        # Simple dynamic fallback if param name mismatch
-        if not param and len(cmd.params) == 1:
-            inferred = next(iter(cmd.params.keys()))
-            param = cmd.params[inferred]
-            # Update param name for execution later
-            self._param_name = inferred
-
-        if param and "constraints" in param and "enum" in param["constraints"]:
-            self._attr_options = param["constraints"]["enum"]
-        else:
-            _LOGGER.warning(
-                "No enum constraints found for select entity %s (param: %s)",
-                self.entity_id,
-                self._param_name,
-            )
-            self._attr_options = empty_options
+        """Extract available options from feature control."""
+        self._attr_options = []
+        if feature.control and feature.control.options:
+            # Options can be Dict[value, label] or List[value]
+            # We normlize to list of strings
+            self._attr_options = [str(opt) for opt in feature.control.options]
 
     @property
     def feature_data(self) -> Feature | None:
@@ -136,7 +132,7 @@ class ViClimateSelect(CoordinatorEntity, SelectEntity):
         device = self.coordinator.data.get(self._map_key)
         if not device:
             return None
-        return next((f for f in device.features if f.name == self._feature_name), None)
+        return device.get_feature(self._feature_name)
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -159,25 +155,28 @@ class ViClimateSelect(CoordinatorEntity, SelectEntity):
         if not feat:
             return None
 
-        if self._property_name in feat.properties:
-            val = feat.properties[self._property_name].get("value")
-            if val in self.options:
-                return str(val)
-            # If value is not in options (e.g. unknown state), return None or log?
-            # For now return None to avoid UI errors
+        # Check if value is valid option
+        val = str(feat.value)
+        if val in self.options:
+            return val
+
+        # Try finding case-insensitive match?
+        # Or maybe the value is a key in options dict (if we had access to labels)
+
         return None
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
+        device = self.coordinator.data.get(self._map_key)
+        if not device:
+            raise HomeAssistantError("Device not found")
+
         feat = self.feature_data
         if not feat:
             raise HomeAssistantError("Feature not available")
 
-        # Optimistic update
-        old_value = self.current_option
-        if self._property_name in feat.properties:
-            feat.properties[self._property_name]["value"] = option
-        self.async_write_ha_state()
+        # Optimistic update?
+        # Maybe skip to avoid flicker if API fails
 
         try:
             client = self.coordinator.client
@@ -186,12 +185,11 @@ class ViClimateSelect(CoordinatorEntity, SelectEntity):
                 option,
                 self.entity_id,
             )
-            await client.execute_command(
-                feat, self._command_name, {self._param_name: option}
-            )
+            # Library handles mapping option to command payload
+            await client.set_feature(device, feat, option)
+
+            # Refresh
+            await self.coordinator.async_request_refresh()
+
         except Exception as e:
-            # Revert
-            if old_value and self._property_name in feat.properties:
-                feat.properties[self._property_name]["value"] = old_value
-                self.async_write_ha_state()
             raise HomeAssistantError(f"Failed to set option {option}: {e}") from e

@@ -10,7 +10,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 from vi_api_client import ViClient as ViessmannClient
 
-from .const import DOMAIN, IGNORED_DEVICES
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,65 +38,21 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.debug("Performing initial discovery...")
 
         installations = await self.client.get_installations()
-        _LOGGER.debug("Found %s installations", len(installations))
+        if not installations:
+            raise UpdateFailed("No installations found")
 
-        gateways = await self.client.get_gateways()
-        _LOGGER.debug("Found %s gateways", len(gateways))
+        # Fetch EVERYTHING (Gateways -> Devices -> Features) for the first installation
+        # This is efficient for startup
+        try:
+            self.known_devices = await self.client.get_full_installation_status(
+                installations[0].id
+            )
+        except Exception as e:
+            raise UpdateFailed(f"Failed to perform full discovery: {e}") from e
 
-        if not gateways:
-            raise UpdateFailed("No gateways found")
-
-        all_devices = []
-        for gateway in gateways:
-            try:
-                _LOGGER.debug(
-                    "Processing gateway serial: %s...",
-                    gateway.serial[:4] if gateway.serial else "None",
-                )
-                # Our Model guarantees installation_id (String)
-                # We use getattr just in case of mock/version mismatches,
-                # but prioritize the property
-                inst_id = getattr(gateway, "installation_id", None)
-
-                # Fallback (just in case API sends data without it,
-                # though unlikely with current models)
-                if not inst_id and installations:
-                    inst_id = installations[0].id
-
-                if inst_id:
-                    # Type-safe call
-                    gw_devices = await self.client.get_devices(inst_id, gateway.serial)
-                    _LOGGER.debug("Gateway returned %s devices", len(gw_devices))
-
-                    # Filter out ignored devices
-                    filtered_devices = [
-                        d for d in gw_devices if d.id not in IGNORED_DEVICES
-                    ]
-
-                    if len(filtered_devices) < len(gw_devices):
-                        _LOGGER.debug(
-                            "Ignored %s devices (configured in const.py)",
-                            len(gw_devices) - len(filtered_devices),
-                        )
-
-                    all_devices.extend(filtered_devices)
-                else:
-                    _LOGGER.warning(
-                        "Skipping gateway %s (no installation ID)",
-                        gateway.serial,
-                    )
-
-            except Exception as e:
-                _LOGGER.error(
-                    "Failed to fetch devices for gateway %s: %s",
-                    gateway.serial,
-                    e,
-                )
-
-        if not all_devices:
-            raise UpdateFailed("No devices found")
-
-        self.known_devices = all_devices
+        if not self.known_devices:
+            # It's possible to have an installation with no reachable devices
+            _LOGGER.warning("No devices found during discovery")
 
     async def _async_update_data(self) -> dict:
         """Update data via library."""
@@ -106,86 +62,39 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
                 await self._perform_discovery()
 
             # 2. Update Loop (Refresh each device)
-            updated_devices = []
+            updated_data = {}
+            updated_devices_list = []
+
             if self.known_devices:
                 _LOGGER.debug("Updating %s known devices", len(self.known_devices))
                 for device in self.known_devices:
-                    _LOGGER.debug(
-                        "Updating device ID: ...%s",
-                        str(device.id)[-4:] if device.id else "unknown",
-                    )
+                    # Map by UNIQUE KEY (GatewaySerial_DeviceID)
+                    key = f"{device.gateway_serial}_{device.id}"
+
                     try:
                         # update_device is efficient! Uses internal IDs.
-                        new_dev = await self.client.update_device(device)
-                        updated_devices.append(new_dev)
+                        # The returned 'new_device' is a NEW immutable object with
+                        # updated features
+                        new_device = await self.client.update_device(device)
+
+                        updated_devices_list.append(new_device)
+                        updated_data[key] = new_device
+
                     except Exception as err:
                         _LOGGER.warning(
                             "Failed to update device %s: %s", device.id, err
                         )
-                        updated_devices.append(device)  # Keep old data on failure
+                        # Keep old data on failure so entities don't become unavailable
+                        updated_devices_list.append(device)
+                        updated_data[key] = device
 
-                self.known_devices = updated_devices
+                # Update our local reference
+                self.known_devices = updated_devices_list
 
-            # Map by UNIQUE KEY (GatewaySerial_DeviceID)
-            return {f"{d.gateway_serial}_{d.id}": d for d in self.known_devices}
+            return updated_data
 
         except Exception as exception:
             raise UpdateFailed(exception) from exception
-
-    async def _perform_discovery(self):
-        """Perform initial device discovery."""
-        _LOGGER.debug("Performing initial discovery...")
-
-        installations = await self.client.get_installations()
-        _LOGGER.debug("Found %s installations", len(installations))
-
-        gateways = await self.client.get_gateways()
-        _LOGGER.debug("Found %s gateways", len(gateways))
-
-        if not gateways:
-            raise UpdateFailed("No gateways found")
-
-        all_devices = []
-        for gateway in gateways:
-            try:
-                _LOGGER.debug(
-                    "Processing gateway serial: %s...",
-                    gateway.serial[:4] if gateway.serial else "None",
-                )
-                inst_id = getattr(gateway, "installation_id", None)
-
-                if not inst_id and installations:
-                    inst_id = installations[0].id
-
-                if inst_id:
-                    gw_devices = await self.client.get_devices(inst_id, gateway.serial)
-                    _LOGGER.debug("Gateway returned %s devices", len(gw_devices))
-
-                    filtered_devices = [
-                        d for d in gw_devices if d.id not in IGNORED_DEVICES
-                    ]
-
-                    if len(filtered_devices) < len(gw_devices):
-                        _LOGGER.debug(
-                            "Ignored %s devices (configured in const.py)",
-                            len(gw_devices) - len(filtered_devices),
-                        )
-
-                    all_devices.extend(filtered_devices)
-                else:
-                    _LOGGER.warning(
-                        "Skipping gateway %s (no installation ID)", gateway.serial
-                    )
-
-            except Exception as e:
-                _LOGGER.error(
-                    "Failed to fetch devices for gateway %s: %s", gateway.serial, e
-                )
-
-        if not all_devices:
-            raise UpdateFailed("No devices found")
-
-        self.known_devices = all_devices
 
 
 class ViClimateAnalyticsCoordinator(DataUpdateCoordinator):

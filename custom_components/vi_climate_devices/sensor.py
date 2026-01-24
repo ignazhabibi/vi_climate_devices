@@ -598,13 +598,16 @@ async def async_setup_entry(
     if coordinator.data:
         for map_key, device in coordinator.data.items():
             # Iterate over FLATTENED features
-            for feature in device.features_flat:
+            for feature in device.features:
+                # 1. Defined Entities (High Quality)
                 if feature.name in SENSOR_TYPES:
                     description = SENSOR_TYPES[feature.name]
                     entities.append(
                         ViClimateSensor(coordinator, map_key, feature.name, description)
                     )
-                elif match_result := _get_sensor_entity_description(feature.name):
+                    continue
+
+                if match_result := _get_sensor_entity_description(feature.name):
                     description, placeholders = match_result
                     entities.append(
                         ViClimateSensor(
@@ -614,6 +617,27 @@ async def async_setup_entry(
                             description,
                             translation_placeholders=placeholders,
                         )
+                    )
+                    continue
+
+                # 2. Automatic Discovery (Fallback)
+                # If not writable (Sensors) and not boolean
+                # (Binary Sensor handled elsewhere)
+                if not feature.is_writable and not isinstance(feature.value, bool):
+                    # Generic Description
+                    description = SensorEntityDescription(
+                        key=feature.name,
+                        name=feature.name,  # Will be overridden if has_entity_name=True
+                        state_class=(
+                            SensorStateClass.MEASUREMENT
+                            if isinstance(feature.value, (int, float))
+                            else None
+                        ),
+                        # Auto-discovered = Diagnostic usually
+                        entity_category=EntityCategory.DIAGNOSTIC,
+                    )
+                    entities.append(
+                        ViClimateSensor(coordinator, map_key, feature.name, description)
                     )
 
     # --- 2. Analytics Sensors ---
@@ -675,6 +699,13 @@ class ViClimateSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{device.gateway_serial}-{device.id}-{description.key}"
         self._attr_has_entity_name = True
 
+        # Improve name for auto-discovered entities
+        if (
+            not hasattr(description, "translation_key")
+            or not description.translation_key
+        ):
+            self._attr_name = feature_name
+
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information."""
@@ -695,10 +726,8 @@ class ViClimateSensor(CoordinatorEntity, SensorEntity):
         device = self.coordinator.data.get(self._map_key)
         if not device:
             return None
-        # Use features_flat so we find 'heating.curve.slope' etc.
-        return next(
-            (f for f in device.features_flat if f.name == self._feature_name), None
-        )
+        # Use efficient lookup
+        return device.get_feature(self._feature_name)
 
     @property
     def native_value(self):

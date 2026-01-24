@@ -12,27 +12,30 @@ async def test_select_dhw_mode(hass: HomeAssistant):
     """Test DHW Mode Select entity."""
     coordinator = MagicMock()
     coordinator.client = AsyncMock()
+    coordinator.client.set_feature = AsyncMock()
+    coordinator.async_request_refresh = AsyncMock()
 
     feature = MagicMock(spec=Feature)
     feature.name = "heating.dhw.operating.modes.active"
-    feature.properties = {"value": {"value": "eco"}}
+    feature.value = "eco"  # Current value
 
-    # Command with Enum constraints
-    msg_constraints = {"enum": ["off", "eco", "comfort"]}
-    cmd_def = MagicMock()
-    cmd_def.params = {"mode": {"constraints": msg_constraints}}
-    feature.commands = {"setMode": cmd_def}
+    # Mock Control Options
+    mock_control = MagicMock()
+    mock_control.options = ["off", "eco", "comfort"]
+    feature.control = mock_control
 
     device = MagicMock()
     device.gateway_serial = "test_gw"
     device.id = "0"
     device.model_id = "TestDevice"
     device.features = [feature]
+    device.get_feature.return_value = feature  # Mock lookup
+
     coordinator.data = {"test_gw_0": device}
 
     desc = SELECT_TYPES["heating.dhw.operating.modes.active"]
 
-    entity = ViClimateSelect(coordinator, "test_gw_0", feature, desc)
+    entity = ViClimateSelect(coordinator, "test_gw_0", feature.name, desc)
     entity.hass = hass
 
     # Verify Config
@@ -45,11 +48,7 @@ async def test_select_dhw_mode(hass: HomeAssistant):
     with patch.object(entity, "async_write_ha_state"):
         await entity.async_select_option("comfort")
 
-    coordinator.client.execute_command.assert_called_with(
-        feature, "setMode", {"mode": "comfort"}
-    )
-    # Optimistic update
-    assert feature.properties["value"]["value"] == "comfort"
+    coordinator.client.set_feature.assert_called_with(device, feature, "comfort")
 
 
 @pytest.mark.asyncio
@@ -60,23 +59,23 @@ async def test_select_dhw_mode_gas_variant(hass: HomeAssistant):
 
     feature = MagicMock(spec=Feature)
     feature.name = "heating.dhw.operating.modes.active"
-    feature.properties = {"value": {"value": "efficient"}}
+    feature.value = "efficient"
 
-    # Gas style enums
-    msg_constraints = {"enum": ["off", "efficient", "efficientWithMinComfort"]}
-    cmd_def = MagicMock()
-    cmd_def.params = {"mode": {"constraints": msg_constraints}}
-    feature.commands = {"setMode": cmd_def}
+    mock_control = MagicMock()
+    mock_control.options = ["off", "efficient", "efficientWithMinComfort"]
+    feature.control = mock_control
 
     device = MagicMock()
     device.gateway_serial = "test_gw"
     device.id = "0"
     device.model_id = "GasBoiler"
     device.features = [feature]
+    device.get_feature.return_value = feature
+
     coordinator.data = {"test_gw_0": device}
 
     desc = SELECT_TYPES["heating.dhw.operating.modes.active"]
-    entity = ViClimateSelect(coordinator, "test_gw_0", feature, desc)
+    entity = ViClimateSelect(coordinator, "test_gw_0", feature.name, desc)
     entity.hass = hass
 
     assert entity.options == ["off", "efficient", "efficientWithMinComfort"]

@@ -13,39 +13,31 @@ from custom_components.vi_climate_devices.coordinator import (
 @pytest.mark.asyncio
 async def test_sensor_creation(hass: HomeAssistant, mock_client):
     """Test that sensors are created correctly from the mock client."""
-    # Setup Mock Returns for Discovery Flow using AsyncMock to override real methods
+    # Setup Mock Returns for Discovery Flow
 
-    # Mock Installation Object
-    mock_install = MagicMock()
-    mock_install.id = "123"
-    mock_client.get_installations = AsyncMock(return_value=[mock_install])
-
-    # Mock Gateway Object
-    mock_gw = MagicMock()
-    mock_gw.serial = "mock_serial"
-    mock_client.get_gateways = AsyncMock(return_value=[mock_gw])
-
-    # We need to construct a Mock Device that get_devices returns
+    # We need to construct a Mock Device that get_full_installation_status returns
     mock_device = MagicMock()
     mock_device.id = "0"
     mock_device.gateway_serial = "mock_serial"
+    mock_device.model_id = "TestDevice"
 
     class MockFeature:
         def __init__(self, name, value):
             self.name = name
             self.value = value
             self.properties = {}
+            self.is_writable = False
+            self.is_enabled = True
+            self.control = None
 
-    # Mock Feature flat list
-    mock_device.features_flat = [
-        MockFeature("heating.sensors.temperature.outside", 16.7)
-    ]
-    mock_device.features = []  # Coordinator iterates this for commands, safe to be empty for sensor test
+    # Mock Feature list (flat)
+    mock_device.features = [MockFeature("heating.sensors.temperature.outside", 16.7)]
 
-    mock_client.get_devices = AsyncMock(return_value=[mock_device])
-    mock_client.update_device = AsyncMock(
-        return_value=mock_device
-    )  # Return same device on update
+    # Mock get_full_installation_status
+    mock_client.get_full_installation_status = AsyncMock(return_value=[mock_device])
+
+    # Mock update_device
+    mock_client.update_device = AsyncMock(return_value=mock_device)
 
     # Initialize the coordinator with the mock client
     coordinator = ViClimateDataUpdateCoordinator(hass, client=mock_client)
@@ -61,14 +53,10 @@ async def test_sensor_creation(hass: HomeAssistant, mock_client):
 
     device = next(iter(coordinator.data.values()))  # Assuming first device
 
-    # Check if the feature exists in the flattened list
+    # Check if the feature exists in the features list
     outside_temp = next(
-        (
-            f
-            for f in device.features_flat
-            if f.name == "heating.sensors.temperature.outside"
-        ),
+        (f for f in device.features if f.name == "heating.sensors.temperature.outside"),
         None,
     )
     assert outside_temp is not None
-    assert outside_temp.value == 16.7  # Value from Vitodens200W profile
+    assert outside_temp.value == 16.7
