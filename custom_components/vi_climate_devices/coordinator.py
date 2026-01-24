@@ -23,7 +23,12 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
         hass: HomeAssistant,
         client: ViessmannClient,
     ) -> None:
-        """Initialize."""
+        """Initialize the coordinator.
+
+        Args:
+            hass: The Home Assistant instance.
+            client: The authenticated Viessmann API client.
+        """
         self.client = client
         self.installation_id = None
         super().__init__(
@@ -34,7 +39,14 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
     async def _perform_discovery(self) -> None:
-        """Perform initial device discovery."""
+        """Perform initial device discovery.
+
+        Fetches all installations and their devices/features to populate the
+        internal device registry.
+
+        Raises:
+            UpdateFailed: If no installations are found or discovery fails.
+        """
         _LOGGER.debug("Performing initial discovery...")
 
         installations = await self.client.get_installations()
@@ -55,11 +67,22 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.warning("No devices found during discovery")
 
     async def _async_update_data(self) -> dict:
-        """Update data via library."""
+        """Update data via library.
+
+        Refreshes the state of all known devices.
+
+        Returns:
+            dict: A dictionary mapping unique device keys to Device objects.
+
+        Raises:
+            UpdateFailed: If the update process encounters an unhandled exception.
+        """
         try:
+            # 1. Initial Discovery
             if not getattr(self, "known_devices", None):
                 await self._perform_discovery()
 
+            # 2. Update Loop (Refresh each device)
             updated_data = {}
             updated_devices_list = []
 
@@ -102,7 +125,14 @@ class ViClimateAnalyticsCoordinator(DataUpdateCoordinator):
         client: ViessmannClient,
         main_coordinator: ViClimateDataUpdateCoordinator,
     ) -> None:
-        """Initialize."""
+        """Initialize the analytics coordinator.
+
+        Args:
+            hass: The Home Assistant instance.
+            client: The authenticated Viessmann API client.
+            main_coordinator: Reference to the main data coordinator to access
+                discovered devices.
+        """
         self.client = client
         self.main_coordinator = main_coordinator
         super().__init__(
@@ -113,7 +143,13 @@ class ViClimateAnalyticsCoordinator(DataUpdateCoordinator):
         )
 
     async def _async_update_data(self) -> dict:
-        """Update data via library (Analytics)."""
+        """Update data via library (Analytics).
+
+        Fetches daily energy consumption summaries for all heating devices.
+
+        Returns:
+            dict: A nested dictionary mapping device keys to analytics features.
+        """
         # 1. Identify all Heating Devices
         heating_devices = []
         if self.main_coordinator.data:
