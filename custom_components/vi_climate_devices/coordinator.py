@@ -147,7 +147,6 @@ class ViClimateAnalyticsCoordinator(DataUpdateCoordinator):
         heating_devices = []
         if self.main_coordinator.data:
             for device in self.main_coordinator.data.values():
-                # Check device type or fallback
                 device_type = getattr(device, "device_type", "unknown")
                 if device_type == "heating":
                     heating_devices.append(device)
