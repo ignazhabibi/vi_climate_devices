@@ -146,7 +146,8 @@ class ViClimateAnalyticsCoordinator(DataUpdateCoordinator):
         # 1. Identify all Heating Devices
         heating_devices = []
         if self.main_coordinator.data:
-            for device in self.main_coordinator.data.values():
+            devices = self.main_coordinator.data.values()
+            for device in devices:
                 device_type = getattr(device, "device_type", "unknown")
                 if device_type == "heating":
                     heating_devices.append(device)
