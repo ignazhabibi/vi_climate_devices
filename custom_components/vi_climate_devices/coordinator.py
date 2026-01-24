@@ -62,7 +62,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
             self._known_devices = [
                 device
                 for device in all_devices
-                if getattr(device, "device_type", "") not in IGNORED_DEVICES
+                if str(getattr(device, "id", "")) not in IGNORED_DEVICES
             ]
         except Exception as e:
             raise UpdateFailed(f"Failed to perform full discovery: {e}") from e
