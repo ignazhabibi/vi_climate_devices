@@ -192,7 +192,6 @@ async def async_setup_entry(
                 # 3. Automatic Discovery
                 if (
                     feature.control
-                    and feature.control.type in ["number", "int", "double"]
                     and feature.control.min is not None
                     and feature.control.max is not None
                 ):
