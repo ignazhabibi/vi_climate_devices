@@ -94,7 +94,6 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
 
             # 2. Update Loop (Refresh each device)
             updated_data = {}
-            updated_devices_list = []
 
             if self.known_devices:
                 _LOGGER.debug("Updating %s known devices", len(self.known_devices))
@@ -102,7 +101,6 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
                     key = f"{device.gateway_serial}_{device.id}"
                     try:
                         new_device = await self.client.update_device(device)
-                        updated_devices_list.append(new_device)
                         updated_data[key] = new_device
 
                     except Exception as err:
@@ -110,11 +108,10 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
                             "Failed to update device %s: %s", device.id, err
                         )
                         # Graceful degradation: keep old data so entities stay available
-                        updated_devices_list.append(device)
                         updated_data[key] = device
 
                 # Update local reference with fresh immutable objects
-                self.known_devices = updated_devices_list
+                self.known_devices = list(updated_data.values())
 
             return updated_data
 
