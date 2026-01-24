@@ -54,9 +54,14 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed("No installations found")
 
         try:
-            all_devices = await self.client.get_full_installation_status(
-                installations[0].id
-            )
+            # Fetch devices from ALL installations
+            all_devices = []
+            for installation in installations:
+                _LOGGER.debug("Fetching devices for installation %s", installation.id)
+                devices = await self.client.get_full_installation_status(
+                    installation.id
+                )
+                all_devices.extend(devices)
 
             # Filter out ignored devices
             self._known_devices = [
