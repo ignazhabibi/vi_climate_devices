@@ -76,9 +76,7 @@ async def async_setup_entry(
             # Let's verify essential features exist.
 
             # Find features by name in the device list
-            target_feat = next(
-                (f for f in device.features if f.name == FEATURE_TARGET_TEMP), None
-            )
+            target_feat = device.get_feature(FEATURE_TARGET_TEMP)
 
             if target_feat:
                 entities.append(ViClimateWaterHeater(coordinator, map_key, target_feat))
@@ -135,27 +133,16 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
         device = self.coordinator.data.get(self._map_key)
         if not device:
             return None
-        # Search flat list for efficiency if available, or normal list
-        # features_flat is usually available in this integration context
-        if hasattr(device, "features_flat"):
-            return next(
-                (f for f in device.features_flat if f.name == name),
-                None,
-            )
-        return next((f for f in device.features if f.name == name), None)
+        return device.get_feature(name)
 
     def _update_constraints(self, feature: Feature):
         """Extract min/max/step from target temp command."""
-        cmd_name = "setTargetTemperature"
-        param_name = "temperature"
-
-        cmd = feature.commands.get(cmd_name)
-        if cmd and param_name in cmd.params:
-            constraints = cmd.params[param_name].get("constraints", {})
-            if "min" in constraints:
-                self._attr_min_temp = float(constraints["min"])
-            if "max" in constraints:
-                self._attr_max_temp = float(constraints["max"])
+        # Use new FeatureControl object
+        if feature.control:
+            if feature.control.min is not None:
+                self._attr_min_temp = feature.control.min
+            if feature.control.max is not None:
+                self._attr_max_temp = feature.control.max
             # Precision/Step is not a standard attribute of WaterHeaterEntity matches
             # base class, but HA might respect 'precision' property.
 
@@ -165,31 +152,26 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         feat = self._get_feature(FEATURE_CURRENT_TEMP)
-        if feat and "value" in feat.properties:
-            val = feat.properties["value"].get("value")
-            if val is not None:
-                return float(val)
+        if feat and isinstance(feat.value, (int, float)):
+            return float(feat.value)
         return None
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         feat = self._get_feature(self._target_feature_name)
-        if feat and "value" in feat.properties:
-            val = feat.properties["value"].get("value")
-            if val is not None:
-                return float(val)
+        if feat and isinstance(feat.value, (int, float)):
+            return float(feat.value)
         return None
 
     @property
     def current_operation(self) -> str | None:
         """Return current operation mode mapped to HA standard state."""
         feat = self._get_feature(FEATURE_MODE)
-        if feat and "value" in feat.properties:
-            val = feat.properties["value"].get("value")
-            if val is not None:
-                # Map Viessmann mode to HA standard state
-                return VIESSMANN_TO_HA_MODE.get(str(val), str(val))
+        if feat and feat.value:
+            # Map Viessmann mode to HA standard state
+            val = str(feat.value)
+            return VIESSMANN_TO_HA_MODE.get(val, val)
         return None
 
     @property
@@ -199,20 +181,20 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
         if not feat:
             return []
 
-        # Try to find enum constraints in 'setMode' command
-        cmd = feat.commands.get("setMode")
-        if cmd:
-            param = cmd.params.get("mode")
-            if param and "constraints" in param and "enum" in param["constraints"]:
-                viessmann_modes = param["constraints"]["enum"]
-                # Map all Viessmann modes to HA states (unique values only)
-                ha_modes = []
-                seen = set()
-                for mode in viessmann_modes:
-                    ha_mode = VIESSMANN_TO_HA_MODE.get(mode, mode)
-                    if ha_mode not in seen:
-                        ha_modes.append(ha_mode)
-                        seen.add(ha_mode)
+        # Try to find enum constraints in control options
+        if feat.control and feat.control.options:
+            viessmann_modes = feat.control.options
+            # Map all Viessmann modes to HA states (unique values only)
+            ha_modes = []
+            seen = set()
+            for mode in viessmann_modes:
+                mode_str = str(mode)
+                ha_mode = VIESSMANN_TO_HA_MODE.get(mode_str, mode_str)
+                if ha_mode not in seen:
+                    ha_modes.append(ha_mode)
+                    seen.add(ha_mode)
+            # Ensure we don't return an empty list if mapping failed?
+            if ha_modes:
                 return ha_modes
 
         # Fallback if no command constraints found but value exists
@@ -233,37 +215,24 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
         if not feat:
             raise HomeAssistantError("Target temperature feature not found")
 
-        # Store old value for rollback
-        old_value = (
-            feat.properties.get("value", {}).get("value")
-            if "value" in feat.properties
-            else None
-        )
+        device = self.coordinator.data.get(self._map_key)
 
-        # Optimistic update
-        if "value" in feat.properties:
-            feat.properties["value"]["value"] = value
-        self.async_write_ha_state()
-
-        command_name = "setTargetTemperature"
-        param_name = "temperature"
-
+        # 1. Execute
         try:
-            await self.coordinator.client.execute_command(
-                feat, command_name, {param_name: value}
-            )
+            await self.coordinator.client.set_feature(device, feat, value)
         except Exception as err:
-            # Revert optimistic update on failure
-            if old_value is not None and "value" in feat.properties:
-                feat.properties["value"]["value"] = old_value
-            self.async_write_ha_state()
             raise HomeAssistantError(f"Failed to set temperature: {err}") from err
+
+        # 2. Refresh
+        await self.coordinator.async_request_refresh()
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         feat = self._get_feature(FEATURE_MODE)
         if not feat:
             raise HomeAssistantError("Mode feature not found")
+
+        device = self.coordinator.data.get(self._map_key)
 
         # Get available API modes from device
         available_api_modes = self._get_available_api_modes(feat)
@@ -287,38 +256,15 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
                 viessmann_mode,
             )
 
-        # Store old value for rollback
-        old_value = (
-            feat.properties.get("value", {}).get("value")
-            if "value" in feat.properties
-            else None
-        )
-
-        # Optimistic update
-        # (store Viessmann mode, our property maps it back to HA state)
-        if "value" in feat.properties:
-            feat.properties["value"]["value"] = viessmann_mode
-        self.async_write_ha_state()
-
-        command_name = "setMode"
-        param_name = "mode"
-
         try:
-            await self.coordinator.client.execute_command(
-                feat, command_name, {param_name: viessmann_mode}
-            )
+            await self.coordinator.client.set_feature(device, feat, viessmann_mode)
         except Exception as err:
-            # Revert optimistic update on failure
-            if old_value is not None and "value" in feat.properties:
-                feat.properties["value"]["value"] = old_value
-            self.async_write_ha_state()
             raise HomeAssistantError(f"Failed to set mode: {err}") from err
+
+        await self.coordinator.async_request_refresh()
 
     def _get_available_api_modes(self, feat: Feature) -> list[str]:
         """Get list of available API modes from feature constraints."""
-        cmd = feat.commands.get("setMode")
-        if cmd:
-            param = cmd.params.get("mode")
-            if param and "constraints" in param and "enum" in param["constraints"]:
-                return param["constraints"]["enum"]
+        if feat.control and feat.control.options:
+            return list(map(str, feat.control.options))
         return []

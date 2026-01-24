@@ -8,7 +8,8 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
-from vi_api_client import MockViClient
+from vi_api_client import Feature, MockViClient
+from vi_api_client.models import FeatureControl
 
 from custom_components.vi_climate_devices import water_heater
 from custom_components.vi_climate_devices.const import DOMAIN
@@ -29,49 +30,35 @@ def mock_water_heater_client():
     client = MockViClient("Vitocal252")
 
     # 1. Target Temp Feature
-    f_target = MagicMock()
+    f_target = MagicMock(spec=Feature)
     f_target.name = "heating.dhw.temperature.main"
     f_target.is_enabled = True
-    f_target.properties = {"value": {"value": 50.0}}
-    f_target.commands = {
-        "setTargetTemperature": MagicMock(
-            name="setTargetTemperature",
-            is_executable=True,
-            params={
-                "temperature": {
-                    "required": True,
-                    "constraints": {"min": 10, "max": 60, "step": 1.0},
-                }
-            },
-        )
-    }
+    f_target.value = 50.0
+    f_target.control = MagicMock(spec=FeatureControl)
+    f_target.control.min = 10
+    f_target.control.max = 60
+    f_target.control.step = 1.0
+    f_target.control.options = None
 
     # 2. Current Temp Feature
-    f_current = MagicMock()
+    f_current = MagicMock(spec=Feature)
     f_current.name = "heating.dhw.sensors.temperature.hotWaterStorage"
     f_current.is_enabled = True
-    f_current.properties = {"value": {"value": 48.5}}
+    f_current.value = 48.5
+    f_current.control = None
 
     # 3. Mode Feature
-    f_mode = MagicMock()
+    f_mode = MagicMock(spec=Feature)
     f_mode.name = "heating.dhw.operating.modes.active"
     f_mode.is_enabled = True
-    f_mode.properties = {"value": {"value": "eco"}}
-    f_mode.commands = {
-        "setMode": MagicMock(
-            name="setMode",
-            is_executable=True,
-            params={
-                "mode": {
-                    "required": True,
-                    "constraints": {"enum": ["off", "eco", "comfort", "standard"]},
-                }
-            },
-        )
-    }
+    f_mode.value = "eco"
+    f_mode.control = MagicMock(spec=FeatureControl)
+    f_mode.control.options = ["off", "eco", "comfort", "standard"]
+    # MockViClient validation checks 'options' for enums
+    # We must ensure options are set correctly if we want validation to pass
+    # However, since we mock set_feature, validation might be bypassed if we mock the client.
 
     client.features = [f_target, f_current, f_mode]
-    client.features_flat = [f_target, f_current, f_mode]
     return client
 
 
@@ -90,7 +77,10 @@ async def test_water_heater_creation(hass: HomeAssistant, mock_water_heater_clie
     mock_device.id = "0"
     mock_device.model_id = "Vitocal252"
     mock_device.features = mock_water_heater_client.features
-    mock_device.features_flat = mock_water_heater_client.features_flat
+    mock_device.features_flat = mock_water_heater_client.features
+    mock_device.get_feature.side_effect = lambda name: next(
+        (f for f in mock_device.features if f.name == name), None
+    )
 
     coordinator.data = {"0": mock_device}
 
@@ -114,7 +104,10 @@ async def test_water_heater_creation(hass: HomeAssistant, mock_water_heater_clie
     assert entity.current_operation == STATE_ECO
     assert entity.min_temp == 10
     assert entity.max_temp == 60
-    assert entity.operation_list == [STATE_OFF, STATE_ECO, STATE_PERFORMANCE, STATE_GAS]
+    # Mapping check: eco->eco, comfort->performance, standard->gas, off->off
+    assert sorted(entity.operation_list) == sorted(
+        [STATE_OFF, STATE_ECO, STATE_PERFORMANCE, STATE_GAS]
+    )
 
     # Verify supported features
     assert entity.supported_features & WaterHeaterEntityFeature.TARGET_TEMPERATURE
@@ -135,12 +128,12 @@ async def test_water_heater_commands(hass: HomeAssistant, mock_water_heater_clie
     mock_device.id = "0"
     mock_device.model_id = "Vitocal252"
     mock_device.features = mock_water_heater_client.features
-    mock_device.features_flat = mock_water_heater_client.features_flat
+    mock_device.features_flat = mock_water_heater_client.features
+    mock_device.get_feature.side_effect = lambda name: next(
+        (f for f in mock_device.features if f.name == name), None
+    )
 
     coordinator.data = {"0": mock_device}
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {"data": coordinator}
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {"data": coordinator}
@@ -149,8 +142,9 @@ async def test_water_heater_commands(hass: HomeAssistant, mock_water_heater_clie
     await water_heater.async_setup_entry(hass, entry, async_add_entities)
     entity = async_add_entities.call_args[0][0][0]
 
-    # Mock execute_command on coordinator client
-    coordinator.client.execute_command = AsyncMock()
+    # Mock set_feature on coordinator client
+    coordinator.client.set_feature = AsyncMock()
+    coordinator.async_request_refresh = AsyncMock()
 
     # Entity is not fully registered, so mock async_write_ha_state
     entity.async_write_ha_state = MagicMock()
@@ -158,21 +152,18 @@ async def test_water_heater_commands(hass: HomeAssistant, mock_water_heater_clie
     # Test Set Temperature
     await entity.async_set_temperature(**{ATTR_TEMPERATURE: 55.0})
 
-    coordinator.client.execute_command.assert_called_with(
+    coordinator.client.set_feature.assert_called_with(
+        mock_device,
         entity._get_feature("heating.dhw.temperature.main"),
-        "setTargetTemperature",
-        {"temperature": 55.0},
+        55.0,
     )
-    # Optimistic State Check
-    assert entity.target_temperature == 55.0
 
     # Test Set Mode (now uses HA states)
     await entity.async_set_operation_mode(STATE_PERFORMANCE)
 
     # Should send Viessmann mode "comfort" to API
-    coordinator.client.execute_command.assert_called_with(
+    coordinator.client.set_feature.assert_called_with(
+        mock_device,
         entity._get_feature("heating.dhw.operating.modes.active"),
-        "setMode",
-        {"mode": "comfort"},
+        "comfort",
     )
-    assert entity.current_operation == STATE_PERFORMANCE

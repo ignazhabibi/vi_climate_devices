@@ -522,6 +522,13 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
+    # Valves
+    "heating.valves.fourThreeWay.position": SensorEntityDescription(
+        key="heating.valves.fourThreeWay.position",
+        translation_key="valve_position",
+        icon="mdi:valve",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 }
 
 # Analytics Features (from handover)
@@ -546,13 +553,6 @@ ANALYTICS_Types: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    # Valves
-    "heating.valves.fourThreeWay.position": SensorEntityDescription(
-        key="heating.valves.fourThreeWay.position",
-        translation_key="valve_position",
-        icon="mdi:valve",
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 
@@ -734,17 +734,33 @@ class ViClimateSensor(CoordinatorEntity, SensorEntity):
         """Return the state of the sensor."""
         feat = self.feature_data
         if feat:
-            if hasattr(feat.value, "lower") and "notconnected" in str(
-                feat.value
-            ).lower().replace(" ", ""):
+            val = feat.value
+            # Handle "NotConnected" case
+            if hasattr(val, "lower") and "notconnected" in str(val).lower().replace(
+                " ", ""
+            ):
                 return None
-            return feat.value
+
+            # Handle Complex types (Dict/List) that exceed HA state limit
+            if isinstance(val, (dict, list)):
+                # We cannot return complex types as state.
+                # If it's a list, return len. If dict, return "Complex".
+                # The full data is available in extra_state_attributes fallback.
+                if isinstance(val, list):
+                    return len(val)
+                return "Complex Data"
+
+            return val
         return None
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        return {"viessmann_feature_name": self._feature_name}
+        attrs = {"viessmann_feature_name": self._feature_name}
+        feat = self.feature_data
+        if feat and isinstance(feat.value, (dict, list)):
+            attrs["raw_value"] = feat.value
+        return attrs
 
     @property
     def available(self) -> bool:
@@ -816,6 +832,26 @@ class ViClimateConsumptionSensor(CoordinatorEntity, SensorEntity):
 
         feature = device_features.get(self._feature_name)
         if feature:
-            return feature.value
+            val = feature.value
+            if isinstance(val, (dict, list)):
+                # Return primitive summary for state
+                if isinstance(val, list):
+                    return len(val)
+                return "Complex Data"
+            return val
 
         return None
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        attrs = {}
+        data = self.coordinator.data
+        if data:
+            device_key = f"{self.device.gateway_serial}_{self.device.id}"
+            device_features = data.get(device_key)
+            if device_features:
+                feature = device_features.get(self._feature_name)
+                if feature and isinstance(feature.value, (dict, list)):
+                    attrs["raw_value"] = feature.value
+        return attrs
