@@ -4,17 +4,17 @@ from unittest.mock import MagicMock
 
 import pytest
 from homeassistant.core import HomeAssistant
+from vi_api_client import Feature
 
+from custom_components.vi_climate_devices import sensor
 from custom_components.vi_climate_devices.const import DOMAIN
 from custom_components.vi_climate_devices.coordinator import (
     ViClimateDataUpdateCoordinator,
 )
 from custom_components.vi_climate_devices.sensor import (
-    ANALYTICS_Types,
     SENSOR_TYPES,
+    ANALYTICS_Types,
 )
-from custom_components.vi_climate_devices import sensor
-from vi_api_client import Feature
 
 
 def test_no_duplicate_sensor_definitions():
