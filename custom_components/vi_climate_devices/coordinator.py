@@ -154,10 +154,12 @@ class ViClimateAnalyticsCoordinator(DataUpdateCoordinator):
             dict: A nested dictionary mapping device keys to analytics features.
         """
         # 1. Identify all Heating Devices
-        if not self.main_coordinator.data:
-            return {}
+        devices = (
+            self.main_coordinator.data.values() if self.main_coordinator.data else []
+        )
 
-        devices = self.main_coordinator.data.values()
+        if not devices:
+            return {}
 
         heating_devices = [
             device
