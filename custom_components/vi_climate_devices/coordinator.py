@@ -10,7 +10,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 from vi_api_client import ViClient as ViessmannClient
 
-from .const import DOMAIN
+from .const import DOMAIN, IGNORED_DEVICES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,9 +54,17 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed("No installations found")
 
         try:
-            self._known_devices = await self.client.get_full_installation_status(
+            all_devices = await self.client.get_full_installation_status(
                 installations[0].id
             )
+
+            # Filter out ignored devices (e.g. Gateways) to save API calls
+            self._known_devices = [
+                d
+                for d in all_devices
+                if getattr(d, "model", "") not in IGNORED_DEVICES
+                and getattr(d, "device_type", "") not in IGNORED_DEVICES
+            ]
         except Exception as e:
             raise UpdateFailed(f"Failed to perform full discovery: {e}") from e
 
