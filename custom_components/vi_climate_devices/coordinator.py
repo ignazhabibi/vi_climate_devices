@@ -57,24 +57,20 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Update data via library."""
         try:
-            # 1. Initial Discovery
             if not getattr(self, "known_devices", None):
                 await self._perform_discovery()
 
-            # 2. Update Loop (Refresh each device)
             updated_data = {}
             updated_devices_list = []
 
             if self.known_devices:
                 _LOGGER.debug("Updating %s known devices", len(self.known_devices))
                 for device in self.known_devices:
-                    # Map by UNIQUE KEY (GatewaySerial_DeviceID)
+                    # GatewaySerial + DeviceID is unique across installations
                     key = f"{device.gateway_serial}_{device.id}"
 
                     try:
-                        # update_device is efficient! Uses internal IDs.
-                        # The returned 'new_device' is a NEW immutable object with
-                        # updated features
+                        # The update returns a new immutable Device object
                         new_device = await self.client.update_device(device)
 
                         updated_devices_list.append(new_device)
@@ -84,11 +80,11 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
                         _LOGGER.warning(
                             "Failed to update device %s: %s", device.id, err
                         )
-                        # Keep old data on failure so entities don't become unavailable
+                        # Graceful degradation: keep old data so entities stay available
                         updated_devices_list.append(device)
                         updated_data[key] = device
 
-                # Update our local reference
+                # Update local reference with fresh immutable objects
                 self.known_devices = updated_devices_list
 
             return updated_data
@@ -141,8 +137,6 @@ class ViClimateAnalyticsCoordinator(DataUpdateCoordinator):
             _LOGGER.warning("No heating devices found for analytics.")
             return {}
 
-        # 2. Fetch Data for EACH device
-        # Result Structure: { "gateway_device": { "analytics.feature": Feature, ... } }
         results = {}
 
         for device in heating_devices:
