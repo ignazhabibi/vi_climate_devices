@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vi_climate_devices"
-version = "0.2.4"
+version = "0.2.5"
 description = "Viessmann Climate Devices Integration for Home Assistant"
 authors = [
   { name = "Antigravity", email = "antigravity@example.com" },

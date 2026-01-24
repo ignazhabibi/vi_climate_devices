@@ -19,11 +19,8 @@
             "heating_curve_shift": {
                 "name": "Heating Circuit {index} Curve Shift"
             },
-            "dhw_hysteresis_on": {
-                "name": "DHW Hysteresis Switch On"
-            },
-            "dhw_hysteresis_off": {
-                "name": "DHW Hysteresis Switch Off"
+            "dhw_hysteresis": {
+                "name": "DHW Hysteresis"
             },
             "dhw_target_temperature": {
                 "name": "DHW Target Temperature"

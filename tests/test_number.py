@@ -209,8 +209,8 @@ async def test_number_hysteresis_set(hass: HomeAssistant):
 
     # Mock feature
     mock_feature = MagicMock()
-    mock_feature.name = "heating.dhw.temperature.hysteresis.switchOnValue"
-    mock_feature.value = 2.5
+    mock_feature.name = "heating.dhw.temperature.hysteresis"
+    mock_feature.value = 5.0
 
     control = MagicMock()
     control.min = 1
@@ -221,14 +221,14 @@ async def test_number_hysteresis_set(hass: HomeAssistant):
     device.get_feature.return_value = mock_feature
     coordinator.data = {"serial_0": device}
 
-    # Initialize Hysteresis ON Entity
-    desc_on = NUMBER_TYPES["heating.dhw.temperature.hysteresis.switchOnValue"]
-    entity_on = ViClimateNumber(coordinator, "serial_0", mock_feature.name, desc_on)
-    entity_on.hass = hass
-    entity_on.async_write_ha_state = MagicMock()
+    # Initialize Hysteresis Entity
+    desc_hyst = NUMBER_TYPES["heating.dhw.temperature.hysteresis"]
+    entity_hyst = ViClimateNumber(coordinator, "serial_0", mock_feature.name, desc_hyst)
+    entity_hyst.hass = hass
+    entity_hyst.async_write_ha_state = MagicMock()
 
     # ACT: Set to 3.0
-    await entity_on.async_set_native_value(3.0)
+    await entity_hyst.async_set_native_value(3.0)
 
     # ASSERT
     mock_client.set_feature.assert_called_once_with(device, mock_feature, 3.0)

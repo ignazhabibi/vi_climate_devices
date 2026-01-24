@@ -19,11 +19,8 @@
             "heating_curve_shift": {
                 "name": "Verschiebung Heizkurve Heizkreis {index}"
             },
-            "dhw_hysteresis_on": {
+            "dhw_hysteresis": {
                 "name": "Einschalthysterese Warmwasser"
-            },
-            "dhw_hysteresis_off": {
-                "name": "Ausschalthysterese Warmwasser"
             },
             "dhw_target_temperature": {
                 "name": "Warmwasser Solltemperatur"

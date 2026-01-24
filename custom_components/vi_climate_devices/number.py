@@ -87,27 +87,14 @@ NUMBER_TEMPLATES = [
 
 NUMBER_TYPES: dict[str, ViClimateNumberEntityDescription] = {
     # Updated keys for Flat Architecture
-    "heating.dhw.temperature.hysteresis.switchOnValue": (
-        ViClimateNumberEntityDescription(
-            key="heating.dhw.temperature.hysteresis.switchOnValue",
-            translation_key="dhw_hysteresis_on",
-            icon="mdi:thermometer-plus",
-            mode=NumberMode.BOX,
-            entity_category=EntityCategory.CONFIG,
-            native_unit_of_measurement=UnitOfTemperature.KELVIN,
-            device_class=NumberDeviceClass.TEMPERATURE,
-        )
-    ),
-    "heating.dhw.temperature.hysteresis.switchOffValue": (
-        ViClimateNumberEntityDescription(
-            key="heating.dhw.temperature.hysteresis.switchOffValue",
-            translation_key="dhw_hysteresis_off",
-            icon="mdi:thermometer-minus",
-            mode=NumberMode.BOX,
-            entity_category=EntityCategory.CONFIG,
-            native_unit_of_measurement=UnitOfTemperature.KELVIN,
-            device_class=NumberDeviceClass.TEMPERATURE,
-        )
+    "heating.dhw.temperature.hysteresis": ViClimateNumberEntityDescription(
+        key="heating.dhw.temperature.hysteresis",
+        translation_key="dhw_hysteresis",
+        icon="mdi:thermometer-lines",
+        mode=NumberMode.BOX,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTemperature.KELVIN,
+        device_class=NumberDeviceClass.TEMPERATURE,
     ),
     "heating.dhw.temperature.main": ViClimateNumberEntityDescription(
         key="heating.dhw.temperature.main",
