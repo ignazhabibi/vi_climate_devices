@@ -35,21 +35,21 @@ class ViClimateSwitchEntityDescription(SwitchEntityDescription):
 
 
 SWITCH_TYPES: dict[str, ViClimateSwitchEntityDescription] = {
-    "heating.dhw.oneTimeCharge": ViClimateSwitchEntityDescription(
-        key="heating.dhw.oneTimeCharge",
+    # Updated keys for Flat Architecture
+    "heating.dhw.oneTimeCharge.active": ViClimateSwitchEntityDescription(
+        key="heating.dhw.oneTimeCharge.active",
         translation_key="dhw_one_time_charge",
         icon="mdi:water-boiler",
         device_class=SwitchDeviceClass.SWITCH,
     ),
-    "heating.dhw.hygiene": ViClimateSwitchEntityDescription(
-        key="heating.dhw.hygiene",
+    "heating.dhw.hygiene.enabled": ViClimateSwitchEntityDescription(
+        key="heating.dhw.hygiene.enabled",
         translation_key="dhw_hygiene",
         icon="mdi:shield-check",
         device_class=SwitchDeviceClass.SWITCH,
     ),
-    # Example flat feature
     "heating.circuits.0.heating.curve.active": ViClimateSwitchEntityDescription(
-        key="heating.circuits.0.heating.curve.active",  # Placeholder for dynamic?
+        key="heating.circuits.0.heating.curve.active",
         translation_key="heating_curve_active",
         icon="mdi:check",
     ),
@@ -70,14 +70,16 @@ async def async_setup_entry(
     if coordinator.data:
         for map_key, device in coordinator.data.items():
             for feature in device.features:
-                if not feature.is_writable:
-                    continue
-
+                # 1. Defined Entities (Skip writable check for known overrides)
                 if feature.name in SWITCH_TYPES:
                     desc = SWITCH_TYPES[feature.name]
                     entities.append(
                         ViClimateSwitch(coordinator, map_key, feature.name, desc)
                     )
+                    continue
+
+                # 2. Automatic Discovery (Must be writable)
+                if not feature.is_writable:
                     continue
 
                 # Automatic Discovery (Fallback)

@@ -19,7 +19,7 @@ async def test_switch_entity(hass: HomeAssistant):
 
     # Mock Device & Feature
     feature = MagicMock(spec=Feature)
-    feature.name = "heating.dhw.oneTimeCharge"
+    feature.name = "heating.dhw.oneTimeCharge.active"
     feature.value = False  # Initial state
 
     # Switch.py uses feature.value
@@ -34,12 +34,12 @@ async def test_switch_entity(hass: HomeAssistant):
     coordinator.data = {"test_gw_0": device}
 
     # Instantiate
-    desc = SWITCH_TYPES["heating.dhw.oneTimeCharge"]
+    desc = SWITCH_TYPES["heating.dhw.oneTimeCharge.active"]
     switch = ViClimateSwitch(coordinator, "test_gw_0", feature.name, desc)
     switch.hass = hass
 
     # Test Init
-    assert switch.unique_id == "test_gw-0-heating.dhw.oneTimeCharge"
+    assert switch.unique_id == "test_gw-0-heating.dhw.oneTimeCharge.active"
     assert switch.translation_key == "dhw_one_time_charge"
 
     # Test State Reading
@@ -72,7 +72,7 @@ async def test_switch_hygiene_set_enabled(hass: HomeAssistant):
     coordinator.async_request_refresh = AsyncMock()
 
     feature = MagicMock(spec=Feature)
-    feature.name = "heating.dhw.hygiene"
+    feature.name = "heating.dhw.hygiene.enabled"
     feature.value = False
 
     device = MagicMock()
@@ -84,7 +84,7 @@ async def test_switch_hygiene_set_enabled(hass: HomeAssistant):
 
     coordinator.data = {"test_gw_0": device}
 
-    desc = SWITCH_TYPES["heating.dhw.hygiene"]
+    desc = SWITCH_TYPES["heating.dhw.hygiene.enabled"]
     switch = ViClimateSwitch(coordinator, "test_gw_0", feature.name, desc)
     switch.hass = hass
 

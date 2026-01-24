@@ -86,23 +86,28 @@ NUMBER_TEMPLATES = [
 ]
 
 NUMBER_TYPES: dict[str, ViClimateNumberEntityDescription] = {
-    "heating.dhw.temperature.hysteresis.on": ViClimateNumberEntityDescription(
-        key="heating.dhw.temperature.hysteresis.on",
-        translation_key="dhw_hysteresis_on",
-        icon="mdi:thermometer-plus",
-        mode=NumberMode.BOX,
-        entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=UnitOfTemperature.KELVIN,
-        device_class=NumberDeviceClass.TEMPERATURE,
+    # Updated keys for Flat Architecture
+    "heating.dhw.temperature.hysteresis.switchOnValue": (
+        ViClimateNumberEntityDescription(
+            key="heating.dhw.temperature.hysteresis.switchOnValue",
+            translation_key="dhw_hysteresis_on",
+            icon="mdi:thermometer-plus",
+            mode=NumberMode.BOX,
+            entity_category=EntityCategory.CONFIG,
+            native_unit_of_measurement=UnitOfTemperature.KELVIN,
+            device_class=NumberDeviceClass.TEMPERATURE,
+        )
     ),
-    "heating.dhw.temperature.hysteresis.off": ViClimateNumberEntityDescription(
-        key="heating.dhw.temperature.hysteresis.off",
-        translation_key="dhw_hysteresis_off",
-        icon="mdi:thermometer-minus",
-        mode=NumberMode.BOX,
-        entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=UnitOfTemperature.KELVIN,
-        device_class=NumberDeviceClass.TEMPERATURE,
+    "heating.dhw.temperature.hysteresis.switchOffValue": (
+        ViClimateNumberEntityDescription(
+            key="heating.dhw.temperature.hysteresis.switchOffValue",
+            translation_key="dhw_hysteresis_off",
+            icon="mdi:thermometer-minus",
+            mode=NumberMode.BOX,
+            entity_category=EntityCategory.CONFIG,
+            native_unit_of_measurement=UnitOfTemperature.KELVIN,
+            device_class=NumberDeviceClass.TEMPERATURE,
+        )
     ),
     "heating.dhw.temperature.main": ViClimateNumberEntityDescription(
         key="heating.dhw.temperature.main",
@@ -164,15 +169,15 @@ async def async_setup_entry(
     if coordinator.data:
         for map_key, device in coordinator.data.items():
             for feature in device.features:
-                if not feature.is_writable:
-                    continue
-
-                # 1. Defined Entities
+                # 1. Defined Entities (Skip writable check for known overrides)
                 if feature.name in NUMBER_TYPES:
                     desc = NUMBER_TYPES[feature.name]
                     entities.append(
                         ViClimateNumber(coordinator, map_key, feature.name, desc)
                     )
+                    continue
+
+                if not feature.is_writable:
                     continue
 
                 # 2. Configured Templates
