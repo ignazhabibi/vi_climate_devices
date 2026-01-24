@@ -33,18 +33,18 @@ class ViClimateBinarySensorEntityDescription(BinarySensorEntityDescription):
 # Dynamic Templates
 # Pre-compiled regex patterns for better performance
 BINARY_SENSOR_TEMPLATES = [
-    # Circulation Pumps (heating.circuits.N.circulation.pump)
+    # Circulation Pumps (heating.circuits.N.circulation.pump.status)
     {
-        "pattern": re.compile(r"^heating\.circuits\.(\d+)\.circulation\.pump$"),
+        "pattern": re.compile(r"^heating\.circuits\.(\d+)\.circulation\.pump\.status$"),
         "description": BinarySensorEntityDescription(
             key="placeholder",
             translation_key="circulation_pump",  # Generic key with {index}
             device_class=BinarySensorDeviceClass.RUNNING,
         ),
     },
-    # Frost Protection (heating.circuits.N.frostprotection)
+    # Frost Protection (heating.circuits.N.frostprotection.status)
     {
-        "pattern": re.compile(r"^heating\.circuits\.(\d+)\.frostprotection$"),
+        "pattern": re.compile(r"^heating\.circuits\.(\d+)\.frostprotection\.status$"),
         "description": BinarySensorEntityDescription(
             key="placeholder",
             translation_key="frost_protection",
@@ -61,6 +61,7 @@ BINARY_SENSOR_TEMPLATES = [
         ),
     },
     # Crankcase Heater (heating.compressors.N.heater.crankcase)
+    # Crankcase Heater
     {
         "pattern": re.compile(r"^heating\.compressors\.(\d+)\.heater\.crankcase$"),
         "description": BinarySensorEntityDescription(
@@ -84,13 +85,13 @@ BINARY_SENSOR_TEMPLATES = [
 
 BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     # Static / Named components
-    "heating.dhw.pumps.circulation": BinarySensorEntityDescription(
-        key="heating.dhw.pumps.circulation",
+    "heating.dhw.pumps.circulation.status": BinarySensorEntityDescription(
+        key="heating.dhw.pumps.circulation.status",
         translation_key="dhw_circulation_pump",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
-    "heating.dhw.pumps.primary": BinarySensorEntityDescription(
-        key="heating.dhw.pumps.primary",
+    "heating.dhw.pumps.primary.status": BinarySensorEntityDescription(
+        key="heating.dhw.pumps.primary.status",
         translation_key="dhw_primary_pump",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
@@ -99,13 +100,13 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
         translation_key="dhw_charging",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
-    "heating.dhw.oneTimeCharge": BinarySensorEntityDescription(
-        key="heating.dhw.oneTimeCharge",
+    "heating.dhw.oneTimeCharge.active": BinarySensorEntityDescription(
+        key="heating.dhw.oneTimeCharge.active",
         translation_key="one_time_charge",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
-    "heating.solar.pumps.circuit": BinarySensorEntityDescription(
-        key="heating.solar.pumps.circuit",
+    "heating.solar.pumps.circuit.status": BinarySensorEntityDescription(
+        key="heating.solar.pumps.circuit.status",
         translation_key="solar_pump",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),

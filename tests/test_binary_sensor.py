@@ -43,7 +43,7 @@ async def test_binary_sensor_value_parsing(hass: HomeAssistant):
     for raw_val, expected in test_cases:
         # Create a feature with the test value
         mock_feature = MagicMock()
-        mock_feature.name = "heating.circuits.0.circulation.pump"
+        mock_feature.name = "heating.circuits.0.circulation.pump.status"
         mock_feature.value = raw_val
         mock_feature.is_enabled = True
 
@@ -53,7 +53,7 @@ async def test_binary_sensor_value_parsing(hass: HomeAssistant):
         # Initialize sensor
         # Use new helper function
         result = _get_binary_sensor_entity_description(
-            "heating.circuits.0.circulation.pump"
+            "heating.circuits.0.circulation.pump.status"
         )
         assert result is not None
         description, placeholders = result
@@ -63,7 +63,7 @@ async def test_binary_sensor_value_parsing(hass: HomeAssistant):
         sensor = ViClimateBinarySensor(
             coordinator,
             "serial_0",
-            "heating.circuits.0.circulation.pump",
+            "heating.circuits.0.circulation.pump.status",
             description,
             translation_placeholders=placeholders,
         )
