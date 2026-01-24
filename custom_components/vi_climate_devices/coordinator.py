@@ -157,9 +157,11 @@ class ViClimateAnalyticsCoordinator(DataUpdateCoordinator):
         if not self.main_coordinator.data:
             return {}
 
+        devices = self.main_coordinator.data.values()
+
         heating_devices = [
             device
-            for device in self.main_coordinator.data.values()
+            for device in devices
             if getattr(device, "device_type", "unknown") == "heating"
         ]
 
