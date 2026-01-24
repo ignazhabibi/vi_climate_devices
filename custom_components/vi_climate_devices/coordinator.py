@@ -123,8 +123,8 @@ class ViClimateAnalyticsCoordinator(DataUpdateCoordinator):
         if self.main_coordinator.data:
             for device in self.main_coordinator.data.values():
                 # Check device type or fallback
-                d_type = getattr(device, "device_type", "unknown")
-                if d_type == "heating":
+                device_type = getattr(device, "device_type", "unknown")
+                if device_type == "heating":
                     heating_devices.append(device)
 
         # Fallback for users where device_type might be missing/different
@@ -166,11 +166,11 @@ class ViClimateAnalyticsCoordinator(DataUpdateCoordinator):
 
                 # Map Features for this device
                 device_features = {}
-                for f in features_list:
-                    name = f.name
+                for feature in features_list:
+                    name = feature.name
                     if not name.startswith("analytics."):
                         name = f"analytics.{name}"
-                    device_features[name] = f
+                    device_features[name] = feature
 
                 results[device_key] = device_features
 
