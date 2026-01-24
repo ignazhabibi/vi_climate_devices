@@ -58,12 +58,11 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
                 installations[0].id
             )
 
-            # Filter out ignored devices (e.g. Gateways) to save API calls
+            # Filter out ignored devices
             self._known_devices = [
                 device
                 for device in all_devices
-                if getattr(device, "model", "") not in IGNORED_DEVICES
-                and getattr(device, "device_type", "") not in IGNORED_DEVICES
+                if getattr(device, "device_type", "") not in IGNORED_DEVICES
             ]
         except Exception as e:
             raise UpdateFailed(f"Failed to perform full discovery: {e}") from e
