@@ -53,6 +53,12 @@ When making implementation decisions:
 - **Type Hints**:
   - [ ] Are all arguments and return values typed?
 
+- **Comment Standards**:
+  - [ ] **NO** "thought process" comments (e.g. "I think we should do X", "Trying to fix Y").
+  - [ ] **NO** redundant comments explaining obvious code (e.g. `i += 1 # increment i`).
+  - [ ] **ONLY** Professional "Senior Dev" comments: Explain **WHY** something is done if it's non-obvious, or clarify complex constraints.
+  - [ ] *Action*: Remove any internal monologue or trivial comments.
+
 ## 5. Linting (Ruff)
 
 - **Run Linter**:
