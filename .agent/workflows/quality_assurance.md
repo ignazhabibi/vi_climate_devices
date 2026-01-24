@@ -47,8 +47,10 @@ When making implementation decisions:
 
 - **Docstrings**:
   - [ ] Does every public module, class, and method have a docstring?
-  - [ ] Do they follow Google Style (Args/Returns/Raises)?
-  - [ ] *Action*: update docstrings.
+  - [ ] Do they follow **Strict** Google Style?
+    - Must include `Args:`, `Returns:`, and `Raises:` sections where applicable.
+    - One-line summaries only for very simple properties without arguments.
+  - [ ] *Action*: Update docstrings to be comprehensive.
 
 - **Type Hints**:
   - [ ] Are all arguments and return values typed?
