@@ -304,6 +304,9 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return the current value."""
+        # Return optimistic value if set, otherwise from coordinator
+        if hasattr(self, "_optimistic_value") and self._optimistic_value is not None:
+            return self._optimistic_value
         feat = self.feature_data
         if not feat:
             return None
@@ -319,20 +322,20 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
         if not feat:
             raise HomeAssistantError("Feature not available")
 
-        # 1. OPTIMISTIC UPDATE (Immediate UI Feedback)
-        # Note: Library features are immutable so we can't really update the 'feat'
-        # object in place easily without replacing it in the device.
-        # But we can rely on HA state engine or just wait for refresh.
-        # For now, let's just execute.
+        # 1. OPTIMISTIC UPDATE - Store locally and update UI immediately
+        self._optimistic_value = value
+        self.async_write_ha_state()
 
         # 2. EXECUTE COMMAND
         try:
             client = self.coordinator.client
-            # New easy API!
             await client.set_feature(device, feat, value)
 
-            # 3. REFRESH
-            await self.coordinator.async_request_refresh()
+            # 3. Clear optimistic value - let next poll pick up real value
+            self._optimistic_value = None
 
         except Exception as e:
+            # 4. ROLLBACK on error
+            self._optimistic_value = None
+            self.async_write_ha_state()
             raise HomeAssistantError(f"Failed to set value: {e}") from e

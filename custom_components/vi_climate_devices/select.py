@@ -151,6 +151,10 @@ class ViClimateSelect(CoordinatorEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the current value."""
+        # Return optimistic option if set
+        if hasattr(self, "_optimistic_option") and self._optimistic_option is not None:
+            return self._optimistic_option
+
         feat = self.feature_data
         if not feat:
             return None
@@ -175,8 +179,9 @@ class ViClimateSelect(CoordinatorEntity, SelectEntity):
         if not feat:
             raise HomeAssistantError("Feature not available")
 
-        # Optimistic update?
-        # Maybe skip to avoid flicker if API fails
+        # 1. OPTIMISTIC UPDATE - Store locally and update UI immediately
+        self._optimistic_option = option
+        self.async_write_ha_state()
 
         try:
             client = self.coordinator.client
@@ -188,8 +193,11 @@ class ViClimateSelect(CoordinatorEntity, SelectEntity):
             # Library handles mapping option to command payload
             await client.set_feature(device, feat, option)
 
-            # Refresh
-            await self.coordinator.async_request_refresh()
+            # Clear optimistic option - let next poll pick up real value
+            self._optimistic_option = None
 
         except Exception as e:
+            # ROLLBACK on error
+            self._optimistic_option = None
+            self.async_write_ha_state()
             raise HomeAssistantError(f"Failed to set option {option}: {e}") from e

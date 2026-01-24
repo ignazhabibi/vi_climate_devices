@@ -189,9 +189,8 @@ async def test_number_set_value(hass: HomeAssistant):
     # ASSERT
     mock_client.set_feature.assert_called_once_with(device, mock_feature, 1.6)
 
-    # Optimistic updates are less explicit in new code (library handles object, HA handles state),
-    # but we DO call refresh
-    coordinator.async_request_refresh.assert_called_once()
+    # With optimistic UI, we call async_write_ha_state instead of refresh
+    entity_slope.async_write_ha_state.assert_called()
 
 
 @pytest.mark.asyncio
@@ -232,4 +231,5 @@ async def test_number_hysteresis_set(hass: HomeAssistant):
 
     # ASSERT
     mock_client.set_feature.assert_called_once_with(device, mock_feature, 3.0)
-    coordinator.async_request_refresh.assert_called_once()
+    # With optimistic UI, we call async_write_ha_state instead of refresh
+    entity_hyst.async_write_ha_state.assert_called()

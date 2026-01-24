@@ -159,6 +159,9 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
+        # Return optimistic value if set
+        if hasattr(self, "_optimistic_temp") and self._optimistic_temp is not None:
+            return self._optimistic_temp
         feat = self._get_feature(self._target_feature_name)
         if feat and isinstance(feat.value, (int, float)):
             return float(feat.value)
@@ -167,6 +170,9 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
     @property
     def current_operation(self) -> str | None:
         """Return current operation mode mapped to HA standard state."""
+        # Return optimistic mode if set
+        if hasattr(self, "_optimistic_mode") and self._optimistic_mode is not None:
+            return self._optimistic_mode
         feat = self._get_feature(FEATURE_MODE)
         if feat and feat.value:
             # Map Viessmann mode to HA standard state
@@ -175,33 +181,28 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
         return None
 
     @property
-    def operation_list(self) -> list[str] | None:
+    def operation_list(self) -> list[str]:
         """Return available operation modes as HA standard states."""
         feat = self._get_feature(FEATURE_MODE)
-        if not feat:
-            return []
+        if not feat or not feat.control or not feat.control.options:
+            # Fallback
+            return [STATE_OFF, STATE_ECO, STATE_PERFORMANCE]
 
-        # Try to find enum constraints in control options
-        if feat.control and feat.control.options:
-            viessmann_modes = feat.control.options
-            # Map all Viessmann modes to HA states (unique values only)
-            ha_modes = []
-            seen = set()
-            for mode in viessmann_modes:
-                mode_str = str(mode)
-                ha_mode = VIESSMANN_TO_HA_MODE.get(mode_str, mode_str)
-                if ha_mode not in seen:
-                    ha_modes.append(ha_mode)
-                    seen.add(ha_mode)
-            # Ensure we don't return an empty list if mapping failed?
-            if ha_modes:
-                return ha_modes
+        # Get API modes from constraints
+        api_modes: list[str] = []
+        options = feat.control.options
+        if isinstance(options, list):
+            api_modes = [str(opt) for opt in options]
+        elif isinstance(options, dict):
+            api_modes = list(options.keys())
 
-        # Fallback if no command constraints found but value exists
-        curr = self.current_operation
-        if curr:
-            return [curr]
-        return []
+        # Convert to HA standard states (deduplicated)
+        ha_modes = set()
+        for api_mode in api_modes:
+            ha_mode = VIESSMANN_TO_HA_MODE.get(api_mode, api_mode)
+            ha_modes.add(ha_mode)
+
+        return list(ha_modes)
 
     # --- Actions ---
 
@@ -217,14 +218,19 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
 
         device = self.coordinator.data.get(self._map_key)
 
-        # 1. Execute
+        # 1. OPTIMISTIC UPDATE
+        self._optimistic_temp = value
+        self.async_write_ha_state()
+
         try:
             await self.coordinator.client.set_feature(device, feat, value)
+            # Clear optimistic value - let next poll pick up real value
+            self._optimistic_temp = None
         except Exception as err:
+            # ROLLBACK on error
+            self._optimistic_temp = None
+            self.async_write_ha_state()
             raise HomeAssistantError(f"Failed to set temperature: {err}") from err
-
-        # 2. Refresh
-        await self.coordinator.async_request_refresh()
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
@@ -256,12 +262,19 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
                 viessmann_mode,
             )
 
+        # 1. OPTIMISTIC UPDATE
+        self._optimistic_mode = operation_mode
+        self.async_write_ha_state()
+
         try:
             await self.coordinator.client.set_feature(device, feat, viessmann_mode)
+            # Clear optimistic mode - let next poll pick up real value
+            self._optimistic_mode = None
         except Exception as err:
+            # ROLLBACK on error
+            self._optimistic_mode = None
+            self.async_write_ha_state()
             raise HomeAssistantError(f"Failed to set mode: {err}") from err
-
-        await self.coordinator.async_request_refresh()
 
     def _get_available_api_modes(self, feat: Feature) -> list[str]:
         """Get list of available API modes from feature constraints."""

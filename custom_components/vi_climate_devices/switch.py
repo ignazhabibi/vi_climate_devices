@@ -154,6 +154,10 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
+        # Return optimistic state if set
+        if hasattr(self, "_optimistic_state") and self._optimistic_state is not None:
+            return self._optimistic_state
+
         feat = self.feature_data
         if not feat:
             return None
@@ -186,8 +190,9 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
         if not feat:
             raise HomeAssistantError("Feature not available")
 
-        # 1. Optimistic Update?
-        # Maybe skip to avoid flicker if API fails
+        # 1. OPTIMISTIC UPDATE - Store locally and update UI immediately
+        self._optimistic_state = target_state
+        self.async_write_ha_state()
 
         try:
             client = self.coordinator.client
@@ -198,8 +203,11 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
             )
             await client.set_feature(device, feat, target_state)
 
-            # Refresh
-            await self.coordinator.async_request_refresh()
+            # Clear optimistic state - let next poll pick up real value
+            self._optimistic_state = None
 
         except Exception as e:
+            # ROLLBACK on error
+            self._optimistic_state = None
+            self.async_write_ha_state()
             raise HomeAssistantError(f"Failed to switch {target_state}: {e}") from e
