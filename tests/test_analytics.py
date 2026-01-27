@@ -5,13 +5,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client.mock_client import MockViClient
 
 from custom_components.vi_climate_devices.const import DOMAIN
 
 
 @pytest.mark.asyncio
-async def test_analytics_sensors_setup_and_data(hass: HomeAssistant):
+async def test_analytics_sensors_setup_and_data(hass: HomeAssistant, mock_client):
     """Test that analytics sensors are set up and receive data."""
     # Arrange: Mock Config Entry.
     entry = MockConfigEntry(
@@ -22,9 +21,6 @@ async def test_analytics_sensors_setup_and_data(hass: HomeAssistant):
         },
     )
     entry.add_to_hass(hass)
-
-    # Initialize MockViClient.
-    mock_client = MockViClient(device_name="Vitocal250A")
 
     with (
         patch(

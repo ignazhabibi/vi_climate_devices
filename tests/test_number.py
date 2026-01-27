@@ -18,7 +18,7 @@ from custom_components.vi_climate_devices.const import DOMAIN
 
 
 @pytest.mark.asyncio
-async def test_number_creation_and_services(hass: HomeAssistant):
+async def test_number_creation_and_services(hass: HomeAssistant, mock_client):
     """Test number entity creation, values, and service calls."""
     # Arrange: Mock Config Entry.
     entry = MockConfigEntry(
@@ -34,9 +34,6 @@ async def test_number_creation_and_services(hass: HomeAssistant):
         },
     )
     entry.add_to_hass(hass)
-
-    # Initialize MockViClient with a real fixture (Vitocal250A).
-    mock_client = MockViClient(device_name="Vitocal250A")
 
     # Spy on set_feature to verify service calls.
     mock_client.set_feature = AsyncMock()

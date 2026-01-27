@@ -5,13 +5,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client.mock_client import MockViClient
 
 from custom_components.vi_climate_devices.const import DOMAIN
 
 
 @pytest.mark.asyncio
-async def test_binary_sensor_values(hass: HomeAssistant):
+async def test_binary_sensor_values(hass: HomeAssistant, mock_client):
     """Test that binary sensors are created correctly from the fixture data."""
     # Arrange: Setup Viessmann integration with MockConfigEntry and MockViClient.
     entry = MockConfigEntry(
@@ -27,9 +26,6 @@ async def test_binary_sensor_values(hass: HomeAssistant):
         },
     )
     entry.add_to_hass(hass)
-
-    # Initialize MockViClient with a real fixture (Vitocal250A).
-    mock_client = MockViClient(device_name="Vitocal250A")
 
     with (
         patch(
