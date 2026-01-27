@@ -19,6 +19,13 @@ dependencies = [
     "vi_api_client>=0.2.0",
 ]
 
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-homeassistant-custom-component",
+    "syrupy",
+]
 [tool.ruff]
 line-length = 88
 target-version = "py311"
