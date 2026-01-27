@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
-from vi_api_client import ViClient as ViessmannClient
+from vi_api_client import Device, Feature, ViClient as ViessmannClient
 
 from .const import DOMAIN, IGNORED_DEVICES
 
@@ -30,8 +30,8 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
             client: The authenticated Viessmann API client.
         """
         self.client = client
-        self.installation_id = None
-        self.known_devices = None
+        self.installation_id: int | None = None
+        self._known_devices: list[Device] | None = None
         super().__init__(
             hass,
             _LOGGER,
@@ -56,7 +56,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
 
         try:
             # Fetch devices from ALL installations
-            all_devices = []
+            all_devices: list[Device] = []
             for installation in installations:
                 _LOGGER.debug("Fetching devices for installation %s", installation.id)
                 devices = await self.client.get_full_installation_status(
@@ -65,15 +65,13 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
                 all_devices.extend(devices)
 
             # Filter out ignored devices
-            self.known_devices = [
-                device
-                for device in all_devices
-                if str(device.id) not in IGNORED_DEVICES
+            self._known_devices = [
+                device for device in all_devices if device.id not in IGNORED_DEVICES
             ]
         except Exception as e:
             raise UpdateFailed(f"Failed to perform full discovery: {e}") from e
 
-        if not self.known_devices:
+        if not self._known_devices:
             _LOGGER.warning("No devices found during discovery")
 
     async def _async_update_data(self) -> dict:
@@ -89,15 +87,15 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
         """
         try:
             # 1. Initial Discovery
-            if not self.known_devices:
+            if not self._known_devices:
                 await self._perform_discovery()
 
             # 2. Update Loop (Refresh each device)
-            updated_data = {}
+            updated_data: dict[str, Device] = {}
 
-            if self.known_devices:
-                _LOGGER.debug("Updating %s known devices", len(self.known_devices))
-                for device in self.known_devices:
+            if self._known_devices:
+                _LOGGER.debug("Updating %s known devices", len(self._known_devices))
+                for device in self._known_devices:
                     key = f"{device.gateway_serial}_{device.id}"
                     try:
                         new_device = await self.client.update_device(device)
@@ -111,7 +109,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
                         updated_data[key] = device
 
                 # Update local reference with fresh immutable objects
-                self.known_devices = list(updated_data.values())
+                self._known_devices = list(updated_data.values())
 
             return updated_data
 
@@ -120,7 +118,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
 
 
 class ViClimateAnalyticsCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching Viessmann Analytics data (Slow polling)."""
+    """Class to manage fetching Viessmann Analytics data."""
 
     def __init__(
         self,
@@ -153,7 +151,6 @@ class ViClimateAnalyticsCoordinator(DataUpdateCoordinator):
         Returns:
             dict: A nested dictionary mapping device keys to analytics features.
         """
-        # 1. Identify all Heating Devices
         devices = (
             self.main_coordinator.data.values() if self.main_coordinator.data else []
         )
@@ -161,44 +158,30 @@ class ViClimateAnalyticsCoordinator(DataUpdateCoordinator):
         if not devices:
             return {}
 
-        heating_devices = [
-            device
-            for device in devices
-            if getattr(device, "device_type", "unknown") == "heating"
+        heating_devices: list[Device] = [
+            device for device in devices if device.device_type == "heating"
         ]
 
         if not heating_devices:
             _LOGGER.warning("No heating devices found for analytics.")
             return {}
 
-        results = {}
+        results: dict[str, dict[str, Feature]] = {}
 
         for device in heating_devices:
-            _LOGGER.debug(
-                "Fetching analytics for device ID: ...%s",
-                str(device.id)[-4:] if device.id else "unknown",
-            )
+            _LOGGER.debug("Fetching analytics for device %s", device.id)
             device_key = f"{device.gateway_serial}_{device.id}"
             try:
-                # Generic consumption call with explicit time range (Today local time)
-                # dt_util.now() returns timezone-aware datetime configured in HA
-                now = dt_util.now()
-                start_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
-                end_today = now.replace(
-                    hour=23, minute=59, second=59, microsecond=999999
-                )
+                start_today, end_today = self._get_today_time_range()
 
                 features_list = await self.client.get_consumption(
                     device, start_dt=start_today, end_dt=end_today, metric="summary"
                 )
 
                 # Map Features for this device
-                device_features = {}
+                device_features: dict[str, Feature] = {}
                 for feature in features_list:
-                    name = feature.name
-                    if not name.startswith("analytics."):
-                        name = f"analytics.{name}"
-                    device_features[name] = feature
+                    device_features[feature.name] = feature
 
                 results[device_key] = device_features
 
@@ -206,7 +189,17 @@ class ViClimateAnalyticsCoordinator(DataUpdateCoordinator):
                 _LOGGER.error(
                     "Failed to fetch analytics for device %s: %s", device.id, err
                 )
-                # We continue for other devices
 
         _LOGGER.debug("Analytics Data Refreshed: %s devices", len(results))
         return results
+
+    def _get_today_time_range(self) -> tuple[datetime, datetime]:
+        """Calculate the start and end datetime for the current day.
+
+        Returns:
+            tuple[datetime, datetime]: A tuple containing (start_of_day, end_of_day).
+        """
+        now = dt_util.now()
+        start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        return start, end

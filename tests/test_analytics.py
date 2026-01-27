@@ -1,98 +1,64 @@
-"""Tests for the Viessmann Heat analytics."""
+"""Tests for ViClimate analytics sensors."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from homeassistant.core import HomeAssistant
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+from vi_api_client.mock_client import MockViClient
 
-from custom_components.vi_climate_devices.coordinator import (
-    ViClimateAnalyticsCoordinator,
-    ViClimateDataUpdateCoordinator,
-)
-from custom_components.vi_climate_devices.sensor import (
-    ANALYTICS_Types,
-    ViClimateConsumptionSensor,
-)
+from custom_components.vi_climate_devices.const import DOMAIN
 
 
 @pytest.mark.asyncio
-async def test_analytics_sensor_setup_and_data(hass: HomeAssistant):
+async def test_analytics_sensors_setup_and_data(hass: HomeAssistant):
     """Test that analytics sensors are set up and receive data."""
-    # 1. Setup Mock Client
-    mock_client = AsyncMock()
-
-    # 2. Main Coordinator Setup
-    # Create a heating device
-    heating_device = MagicMock()
-    heating_device.id = "0"
-    heating_device.gateway_serial = "serial"
-    heating_device.device_type = "heating"  # CRITICAL Property
-    heating_device.model_id = "Vitodens"
-
-    main_coordinator = MagicMock(spec=ViClimateDataUpdateCoordinator)
-    # New Key Structure
-    main_coordinator.data = {"serial_0": heating_device}
-    main_coordinator.last_update_success = True
-
-    # 3. Analytics Coordinator Setup
-    analytics_coordinator = ViClimateAnalyticsCoordinator(
-        hass, mock_client, main_coordinator
+    # Arrange: Mock Config Entry.
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "client_id": "123",
+            "token": {"access_token": "mock", "expires_at": 9999999999},
+        },
     )
+    entry.add_to_hass(hass)
 
-    # Mock get_today_consumption return
-    # Feature(name, value, properties, commands, is_enabled, is_ready) or similar order.
-    # Looking at the error "missing 2 required positional arguments: 'is_enabled' and 'is_ready'"
-    # and likely properties/commands are optional or positional?
-    # Actually, inspecting library or error implicitly:
-    # If I just used name, value, it failed.
-    # Let's use kwargs or positional if we know them.
-    # Mocking Feature entirely might be safer if constructor is complex, but let's try pos args.
-    # Assuming: name, value, properties, commands, is_enabled, is_ready
+    # Initialize MockViClient.
+    mock_client = MockViClient(device_name="Vitocal250A")
 
-    class MockFeature:
-        def __init__(self, name, value):
-            self.name = name
-            self.value = value
-            self.is_enabled = True
+    with (
+        patch(
+            "custom_components.vi_climate_devices.ViessmannClient",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+            return_value=None,
+        ),
+    ):
+        # Act: Setup Integration.
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    feat1 = MockFeature("analytics.heating.power.consumption.total", 10.5)
-    feat2 = MockFeature("analytics.heating.power.consumption.heating", 8.0)
-    feat3 = MockFeature("analytics.heating.power.consumption.dhw", 2.5)
+        # Assert: Verify total consumption sensor.
+        # Entity ID derived from translation key "consumption_total" -> "Power Consumption Total Today"
+        state = hass.states.get("sensor.vitocal250a_power_consumption_total_today")
+        assert state is not None
+        assert state.state == "41.8"
+        assert state.attributes["unit_of_measurement"] == "kWh"
+        assert state.attributes["device_class"] == "energy"
+        assert state.attributes["state_class"] == "total_increasing"
 
-    mock_client.get_consumption.return_value = [feat1, feat2, feat3]
+        # Assert: Verify heating consumption sensor.
+        state = hass.states.get("sensor.vitocal250a_power_consumption_heating_today")
+        assert state is not None
+        assert state.state == "31.6"
 
-    # Refresh Analytics
-    await analytics_coordinator._async_update_data()
-    # Manually populate data since _async_update_data internal doesn't set self.data on the mock?
-    # Wait, calling the method returns the dict. The coordinator infrastructure normally sets self.data.
-    # Let's call async_refresh logic or just set data for the test of the ENTITY.
-
-    # But first, verify the COORDINATOR logic finds the device
-    data = await analytics_coordinator._async_update_data()
-    assert data is not None
-    # Data is now nested by device key
-    assert "serial_0" in data
-    device_data = data["serial_0"]
-    assert "analytics.heating.power.consumption.total" in device_data
-    assert device_data["analytics.heating.power.consumption.total"].value == 10.5
-
-    # Check that it called client with correct args
-    assert mock_client.get_consumption.called
-    args, kwargs = mock_client.get_consumption.call_args
-    assert args[0] == heating_device  # Device is 1st arg
-    assert kwargs["metric"] == "summary"
-
-    # 4. Entity Setup
-    analytics_coordinator.data = data
-    analytics_coordinator.last_update_success = True
-
-    # Retrieve the class to test (ViClimateConsumptionSensor)
-    # We can import it or use a simplified test of logic
-
-    desc = ANALYTICS_Types["analytics.heating.power.consumption.total"]
-    sensor = ViClimateConsumptionSensor(analytics_coordinator, heating_device, desc)
-
-    # Verify State
-    assert sensor.native_value == 10.5
-    assert sensor.available is True
-    assert sensor.unique_id == "serial-0-analytics.heating.power.consumption.total"
+        # Assert: Verify DHW consumption sensor.
+        state = hass.states.get("sensor.vitocal250a_power_consumption_dhw_today")
+        assert state is not None
+        assert state.state == "10.2"

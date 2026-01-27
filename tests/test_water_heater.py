@@ -1,169 +1,169 @@
 """Tests for ViClimate water heater entities."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from homeassistant.components.water_heater import (
+    SERVICE_SET_OPERATION_MODE,
+    SERVICE_SET_TEMPERATURE,
+    STATE_ECO,
+    STATE_PERFORMANCE,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
-from vi_api_client import Feature, MockViClient
-from vi_api_client.models import FeatureControl
+from homeassistant.exceptions import HomeAssistantError
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+from vi_api_client.mock_client import MockViClient
 
-from custom_components.vi_climate_devices import water_heater
 from custom_components.vi_climate_devices.const import DOMAIN
-from custom_components.vi_climate_devices.coordinator import (
-    ViClimateDataUpdateCoordinator,
-)
 from custom_components.vi_climate_devices.water_heater import (
-    STATE_ECO,
-    STATE_GAS,
-    STATE_OFF,
-    STATE_PERFORMANCE,
+    FEATURE_MODE,
+    FEATURE_TARGET_TEMP,
 )
 
 
-@pytest.fixture
-def mock_water_heater_client():
-    """Return a mocked client with water heater features."""
-    client = MockViClient("Vitocal252")
+@pytest.mark.asyncio
+async def test_water_heater_creation_and_services(hass: HomeAssistant):
+    """Test water heater entity creation and service calls."""
+    # Arrange: Mock Config Entry.
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "client_id": "123",
+            "token": {
+                "access_token": "mock",
+                "refresh_token": "mock",
+                "expires_at": 9999999999,
+                "token_type": "Bearer",
+            },
+        },
+    )
+    entry.add_to_hass(hass)
 
-    # 1. Target Temp Feature
-    f_target = MagicMock(spec=Feature)
-    f_target.name = "heating.dhw.temperature.main"
-    f_target.is_enabled = True
-    f_target.value = 50.0
-    f_target.control = MagicMock(spec=FeatureControl)
-    f_target.control.min = 10
-    f_target.control.max = 60
-    f_target.control.step = 1.0
-    f_target.control.options = None
+    # Initialize MockViClient with a real fixture (Vitocal250A).
+    mock_client = MockViClient(device_name="Vitocal250A")
+    mock_client.set_feature = AsyncMock()
 
-    # 2. Current Temp Feature
-    f_current = MagicMock(spec=Feature)
-    f_current.name = "heating.dhw.sensors.temperature.hotWaterStorage"
-    f_current.is_enabled = True
-    f_current.value = 48.5
-    f_current.control = None
+    with (
+        patch(
+            "custom_components.vi_climate_devices.ViessmannClient",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+            return_value=None,
+        ),
+    ):
+        # Act: Load Integration.
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    # 3. Mode Feature
-    f_mode = MagicMock(spec=Feature)
-    f_mode.name = "heating.dhw.operating.modes.active"
-    f_mode.is_enabled = True
-    f_mode.value = "eco"
-    f_mode.control = MagicMock(spec=FeatureControl)
-    f_mode.control.options = ["off", "eco", "comfort", "standard"]
-    # MockViClient validation checks 'options' for enums
-    # We must ensure options are set correctly if we want validation to pass
-    # However, since we mock set_feature, validation might be bypassed if we mock the client.
+        # Get the Water Heater Entity.
+        entity_id = "water_heater.vitocal250a_dhw_water_heater"
+        state = hass.states.get(entity_id)
+        assert state is not None
 
-    client.features = [f_target, f_current, f_mode]
-    return client
+        # Verify Initial Attributes from Fixture.
+        # Temp: 55.0, Current: 46.8, Mode: efficient -> STATE_ECO.
+        assert state.state == STATE_ECO
+        assert float(state.attributes["current_temperature"]) == 46.8
+        assert float(state.attributes["temperature"]) == 55.0
+        assert state.attributes["min_temp"] == 10.0
+        assert state.attributes["max_temp"] == 60.0
+        assert state.attributes["supported_features"] == (
+            WaterHeaterEntityFeature.TARGET_TEMPERATURE
+            | WaterHeaterEntityFeature.OPERATION_MODE
+        )
+
+        # Act: Set Temperature to 45.0.
+        await hass.services.async_call(
+            "water_heater",
+            SERVICE_SET_TEMPERATURE,
+            {"entity_id": entity_id, "temperature": 45.0},
+            blocking=True,
+        )
+
+        # Verify Service Call (Set Temp).
+        # We expect set_feature to be called with "heating.dhw.temperature.main" and 45.0.
+        # Note: Since set_feature is called multiple times if we chain tests, we check specific call.
+        assert mock_client.set_feature.call_count == 1
+        args, _ = mock_client.set_feature.call_args
+        assert args[1].name == FEATURE_TARGET_TEMP
+        assert args[2] == 45.0
+
+        # Verify Optimistic Update (Temp).
+        state = hass.states.get(entity_id)
+        assert float(state.attributes["temperature"]) == 45.0
+
+        # Reset Mock.
+        mock_client.set_feature.reset_mock()
+
+        # Act: Set Mode to STATE_PERFORMANCE.
+        # Based on mapping, STATE_PERFORMANCE maps to ["comfort", "efficientWithMinComfort"].
+        # Fixture has "efficientWithMinComfort" available, so it should use that.
+        await hass.services.async_call(
+            "water_heater",
+            SERVICE_SET_OPERATION_MODE,
+            {"entity_id": entity_id, "operation_mode": STATE_PERFORMANCE},
+            blocking=True,
+        )
+
+        # Verify Service Call (Set Mode).
+        assert mock_client.set_feature.call_count == 1
+        args, _ = mock_client.set_feature.call_args
+        assert args[1].name == FEATURE_MODE
+        assert args[2] == "efficientWithMinComfort"
+
+        # Verify Optimistic Update (Mode).
+        state = hass.states.get(entity_id)
+        assert state.state == STATE_PERFORMANCE
 
 
 @pytest.mark.asyncio
-async def test_water_heater_creation(hass: HomeAssistant, mock_water_heater_client):
-    """Test water heater entity is created and has correct attributes."""
-    entry = MagicMock()
-    entry.entry_id = "test_entry"
+async def test_water_heater_error_handling(hass: HomeAssistant):
+    """Test water heater error handling and rollback (Option B)."""
+    # Arrange: Setup integration.
+    entry = MockConfigEntry(domain=DOMAIN, data={"client_id": "123", "token": "abc"})
+    entry.add_to_hass(hass)
 
-    # We need to manually simulate the coordinator setup
-    coordinator = ViClimateDataUpdateCoordinator(hass, mock_water_heater_client)
+    mock_client = MockViClient(device_name="Vitocal250A")
+    # Simulate API Error.
+    mock_client.set_feature = AsyncMock(side_effect=HomeAssistantError("API Error"))
 
-    # Mock successful update by just setting data directly
-    mock_device = MagicMock()
-    mock_device.gateway_serial = "1234567890"
-    mock_device.id = "0"
-    mock_device.model_id = "Vitocal252"
-    mock_device.features = mock_water_heater_client.features
-    mock_device.features_flat = mock_water_heater_client.features
-    mock_device.get_feature.side_effect = lambda name: next(
-        (f for f in mock_device.features if f.name == name), None
-    )
+    with (
+        patch(
+            "custom_components.vi_climate_devices.ViessmannClient",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+            return_value=None,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    coordinator.data = {"0": mock_device}
+        entity_id = "water_heater.vitocal250a_dhw_water_heater"
+        state = hass.states.get(entity_id)
+        original_temp = float(state.attributes["temperature"])
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {"data": coordinator}
+        # Act: Try to set temperature (Should fail).
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                "water_heater",
+                SERVICE_SET_TEMPERATURE,
+                {"entity_id": entity_id, "temperature": 40.0},
+                blocking=True,
+            )
 
-    # Manually load the platform
-
-    async_add_entities = MagicMock()
-    await water_heater.async_setup_entry(hass, entry, async_add_entities)
-
-    # Check if entity was added
-    assert async_add_entities.called
-    entities = async_add_entities.call_args[0][0]
-    assert len(entities) == 1
-    entity = entities[0]
-
-    # Verify State Attributes
-    assert entity.current_temperature == 48.5
-    assert entity.target_temperature == 50.0
-    assert entity.current_operation == STATE_ECO
-    assert entity.min_temp == 10
-    assert entity.max_temp == 60
-    # Mapping check: eco->eco, comfort->performance, standard->gas, off->off
-    assert sorted(entity.operation_list) == sorted(
-        [STATE_OFF, STATE_ECO, STATE_PERFORMANCE, STATE_GAS]
-    )
-
-    # Verify supported features
-    assert entity.supported_features & WaterHeaterEntityFeature.TARGET_TEMPERATURE
-    assert entity.supported_features & WaterHeaterEntityFeature.OPERATION_MODE
-
-
-@pytest.mark.asyncio
-async def test_water_heater_commands(hass: HomeAssistant, mock_water_heater_client):
-    """Test setting temperature and mode."""
-    entry = MagicMock()
-    entry.entry_id = "test_entry"
-
-    coordinator = ViClimateDataUpdateCoordinator(hass, mock_water_heater_client)
-
-    # Mock successful update by just setting data directly
-    mock_device = MagicMock()
-    mock_device.gateway_serial = "1234567890"
-    mock_device.id = "0"
-    mock_device.model_id = "Vitocal252"
-    mock_device.features = mock_water_heater_client.features
-    mock_device.features_flat = mock_water_heater_client.features
-    mock_device.get_feature.side_effect = lambda name: next(
-        (f for f in mock_device.features if f.name == name), None
-    )
-
-    coordinator.data = {"0": mock_device}
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {"data": coordinator}
-
-    async_add_entities = MagicMock()
-    await water_heater.async_setup_entry(hass, entry, async_add_entities)
-    entity = async_add_entities.call_args[0][0][0]
-
-    # Mock set_feature on coordinator client
-    coordinator.client.set_feature = AsyncMock()
-    coordinator.async_request_refresh = AsyncMock()
-
-    # Entity is not fully registered, so mock async_write_ha_state
-    entity.async_write_ha_state = MagicMock()
-
-    # Test Set Temperature
-    await entity.async_set_temperature(**{ATTR_TEMPERATURE: 55.0})
-
-    coordinator.client.set_feature.assert_called_with(
-        mock_device,
-        entity._get_feature("heating.dhw.temperature.main"),
-        55.0,
-    )
-
-    # Test Set Mode (now uses HA states)
-    await entity.async_set_operation_mode(STATE_PERFORMANCE)
-
-    # Should send Viessmann mode "comfort" to API
-    coordinator.client.set_feature.assert_called_with(
-        mock_device,
-        entity._get_feature("heating.dhw.operating.modes.active"),
-        "comfort",
-    )
+        # Assert: Rollback occurred.
+        state = hass.states.get(entity_id)
+        assert float(state.attributes["temperature"]) == original_temp
