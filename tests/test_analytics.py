@@ -35,6 +35,7 @@ async def test_analytics_sensors_setup_and_data(hass: HomeAssistant, mock_client
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
             return_value=None,
         ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
     ):
         # Act: Setup Integration.
         await hass.config_entries.async_setup(entry.entry_id)
@@ -58,3 +59,6 @@ async def test_analytics_sensors_setup_and_data(hass: HomeAssistant, mock_client
         state = hass.states.get("sensor.vitocal250a_power_consumption_dhw_today")
         assert state is not None
         assert state.state == "10.2"
+
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()

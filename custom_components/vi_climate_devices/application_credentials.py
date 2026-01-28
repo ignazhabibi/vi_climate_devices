@@ -1,4 +1,5 @@
 """Application credentials platform for Viessmann Climate Devices."""
+
 from __future__ import annotations
 
 import logging
@@ -16,12 +17,14 @@ from vi_api_client.const import ENDPOINT_AUTHORIZE, ENDPOINT_TOKEN
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_get_authorization_server(hass: HomeAssistant) -> AuthorizationServer:
     """Return authorization server."""
     return AuthorizationServer(
         authorize_url=ENDPOINT_AUTHORIZE,
         token_url=ENDPOINT_TOKEN,
     )
+
 
 async def async_get_auth_implementation(
     hass: HomeAssistant, auth_domain: str, credential: ClientCredential

@@ -21,7 +21,6 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
-    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -30,6 +29,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import ViClimateAnalyticsCoordinator, ViClimateDataUpdateCoordinator
+from .utils import beautify_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -389,7 +389,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "heating.sensors.volumetricFlow.allengra": SensorEntityDescription(
         key="heating.sensors.volumetricFlow.allengra",
         translation_key="volumetric_flow",
-        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+        native_unit_of_measurement="L/h",
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:gauge",
@@ -581,6 +581,55 @@ def _get_sensor_entity_description(
     return None
 
 
+def _get_auto_discovery_description(feature) -> SensorEntityDescription:
+    """Create a sensor description based on feature unit/type."""
+    unit = getattr(feature, "unit", None)
+
+    # Defaults
+    device_class = None
+    state_class = None
+    native_unit = None
+
+    match unit:
+        case "celsius":
+            device_class = SensorDeviceClass.TEMPERATURE
+            native_unit = UnitOfTemperature.CELSIUS
+            state_class = SensorStateClass.MEASUREMENT
+        case "bar":
+            device_class = SensorDeviceClass.PRESSURE
+            native_unit = UnitOfPressure.BAR
+            state_class = SensorStateClass.MEASUREMENT
+        case "percent":
+            native_unit = PERCENTAGE
+            state_class = SensorStateClass.MEASUREMENT
+        case "kilowattHour":
+            device_class = SensorDeviceClass.ENERGY
+            native_unit = UnitOfEnergy.KILO_WATT_HOUR
+            state_class = SensorStateClass.TOTAL_INCREASING
+        case "watt":
+            device_class = SensorDeviceClass.POWER
+            native_unit = UnitOfPower.WATT
+            state_class = SensorStateClass.MEASUREMENT
+        case "volumetricFlow" | "liter/hour":
+            # API gives 'volumetricFlow' or 'liter/hour' -> L/h
+            device_class = SensorDeviceClass.VOLUME_FLOW_RATE
+            native_unit = "L/h"
+            state_class = SensorStateClass.MEASUREMENT
+
+    # Fallback for generic numbers
+    if state_class is None and isinstance(feature.value, (int, float)):
+        state_class = SensorStateClass.MEASUREMENT
+
+    return SensorEntityDescription(
+        key=feature.name,
+        name=beautify_name(feature.name),
+        native_unit_of_measurement=native_unit,
+        device_class=device_class,
+        state_class=state_class,
+        entity_category=EntityCategory.DIAGNOSTIC if not device_class else None,
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -624,18 +673,7 @@ async def async_setup_entry(
                 # If not writable (Sensors) and not boolean
                 # (Binary Sensor handled elsewhere)
                 if not feature.is_writable and not isinstance(feature.value, bool):
-                    # Generic Description
-                    description = SensorEntityDescription(
-                        key=feature.name,
-                        name=feature.name,  # Will be overridden if has_entity_name=True
-                        state_class=(
-                            SensorStateClass.MEASUREMENT
-                            if isinstance(feature.value, (int, float))
-                            else None
-                        ),
-                        # Auto-discovered = Diagnostic usually
-                        entity_category=EntityCategory.DIAGNOSTIC,
-                    )
+                    description = _get_auto_discovery_description(feature)
                     entities.append(
                         ViClimateSensor(coordinator, map_key, feature.name, description)
                     )
@@ -704,7 +742,10 @@ class ViClimateSensor(CoordinatorEntity, SensorEntity):
             not hasattr(description, "translation_key")
             or not description.translation_key
         ):
-            self._attr_name = feature_name
+            if hasattr(description, "name") and description.name:
+                self._attr_name = description.name
+            else:
+                self._attr_name = beautify_name(feature_name)
 
     @property
     def device_info(self) -> DeviceInfo:
