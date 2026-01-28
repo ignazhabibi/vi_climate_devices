@@ -581,6 +581,55 @@ def _get_sensor_entity_description(
     return None
 
 
+def _get_auto_discovery_description(feature) -> SensorEntityDescription:
+    """Create a sensor description based on feature unit/type."""
+    unit = getattr(feature, "unit", None)
+
+    # Defaults
+    device_class = None
+    state_class = None
+    native_unit = None
+
+    match unit:
+        case "celsius":
+            device_class = SensorDeviceClass.TEMPERATURE
+            native_unit = UnitOfTemperature.CELSIUS
+            state_class = SensorStateClass.MEASUREMENT
+        case "bar":
+            device_class = SensorDeviceClass.PRESSURE
+            native_unit = UnitOfPressure.BAR
+            state_class = SensorStateClass.MEASUREMENT
+        case "percent":
+            native_unit = PERCENTAGE
+            state_class = SensorStateClass.MEASUREMENT
+        case "kilowattHour":
+            device_class = SensorDeviceClass.ENERGY
+            native_unit = UnitOfEnergy.KILO_WATT_HOUR
+            state_class = SensorStateClass.TOTAL_INCREASING
+        case "watt":
+            device_class = SensorDeviceClass.POWER
+            native_unit = UnitOfPower.WATT
+            state_class = SensorStateClass.MEASUREMENT
+        case "volumetricFlow" | "liter/hour":
+            # API gives 'volumetricFlow' or 'liter/hour' -> L/h
+            device_class = SensorDeviceClass.VOLUME_FLOW_RATE
+            native_unit = UnitOfVolumeFlowRate.LITERS_PER_HOUR
+            state_class = SensorStateClass.MEASUREMENT
+
+    # Fallback for generic numbers
+    if state_class is None and isinstance(feature.value, (int, float)):
+        state_class = SensorStateClass.MEASUREMENT
+
+    return SensorEntityDescription(
+        key=feature.name,
+        name=feature.name,
+        native_unit_of_measurement=native_unit,
+        device_class=device_class,
+        state_class=state_class,
+        entity_category=EntityCategory.DIAGNOSTIC if not device_class else None,
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -624,18 +673,7 @@ async def async_setup_entry(
                 # If not writable (Sensors) and not boolean
                 # (Binary Sensor handled elsewhere)
                 if not feature.is_writable and not isinstance(feature.value, bool):
-                    # Generic Description
-                    description = SensorEntityDescription(
-                        key=feature.name,
-                        name=feature.name,  # Will be overridden if has_entity_name=True
-                        state_class=(
-                            SensorStateClass.MEASUREMENT
-                            if isinstance(feature.value, (int, float))
-                            else None
-                        ),
-                        # Auto-discovered = Diagnostic usually
-                        entity_category=EntityCategory.DIAGNOSTIC,
-                    )
+                    description = _get_auto_discovery_description(feature)
                     entities.append(
                         ViClimateSensor(coordinator, map_key, feature.name, description)
                     )

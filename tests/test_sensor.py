@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+from vi_api_client import Device, Feature
 
 from custom_components.vi_climate_devices.const import DOMAIN
 
@@ -94,3 +95,96 @@ async def test_no_duplicate_entity_creation(hass: HomeAssistant, mock_client):
         hass.states.get("sensor.vitocal250a_heating_compressors_0_speed_current")
         is None
     )
+
+
+@pytest.mark.asyncio
+async def test_auto_discovery_unit_mapping(hass: HomeAssistant, mock_client):
+    """Test that auto-discovered sensors get correct unit mapping based on feature.unit."""
+    # Arrange: Create a mock device with features that have specific units but are NOT in SENSOR_TYPES.
+
+    # Create Features with various units
+    feat_celsius = Feature(
+        name="test.unknown.temp",
+        value=20.5,
+        is_enabled=True,
+        is_ready=True,
+        unit="celsius",
+    )
+
+    feat_bar = Feature(
+        name="test.unknown.pressure",
+        value=1.5,
+        is_enabled=True,
+        is_ready=True,
+        unit="bar",
+    )
+
+    feat_energy = Feature(
+        name="test.unknown.energy",
+        value=100.0,
+        is_enabled=True,
+        is_ready=True,
+        unit="kilowattHour",
+    )
+
+    feat_flow = Feature(
+        name="test.unknown.flow",
+        value=500,
+        is_enabled=True,
+        is_ready=True,
+        unit="liter/hour",
+    )
+
+    # Create Device
+    mock_device = Device(
+        id="0",
+        gateway_serial="mock_gateway",
+        installation_id=123,
+        features=[feat_celsius, feat_bar, feat_energy, feat_flow],
+        model_id="MockDevice",
+        device_type="heating",
+        status="online",
+    )
+
+    # Configure MockClient to return this specific device
+    # Note: validation logic in conftest/mock_client usually loads from file.
+    # We must patch get_full_installation_status on the mock_client passed in.
+    # The fixture mock_client is a MagicMock wrapping ViMockClient or just a MockViClient instance?
+    # conftest says: return MockViClient(...)
+    # MockViClient has methods. We need to mock them if we want custom data that is NOT in the fixture file.
+    # However, MockViClient loads json.
+    # Better approach: We PATCH the methods on the instance to return our manual object.
+
+    with (
+        patch.object(
+            mock_client, "get_full_installation_status", return_value=[mock_device]
+        ),
+        patch.object(mock_client, "update_device", return_value=mock_device),
+    ):
+        # Act
+        await _setup_integration(hass, mock_client)
+
+        # Assert: Check Celsius Mapping
+        sensor_temp = hass.states.get("sensor.mockdevice_test_unknown_temp")
+        assert sensor_temp is not None
+        assert sensor_temp.attributes["unit_of_measurement"] == "°C"
+        assert sensor_temp.attributes["device_class"] == "temperature"
+
+        # Assert: Check Bar Mapping
+        sensor_pressure = hass.states.get("sensor.mockdevice_test_unknown_pressure")
+        assert sensor_pressure is not None
+        assert sensor_pressure.attributes["unit_of_measurement"] == "bar"
+        assert sensor_pressure.attributes["device_class"] == "pressure"
+
+        # Assert: Check Energy Mapping
+        sensor_energy = hass.states.get("sensor.mockdevice_test_unknown_energy")
+        assert sensor_energy is not None
+        assert sensor_energy.attributes["unit_of_measurement"] == "kWh"
+        assert sensor_energy.attributes["device_class"] == "energy"
+        assert sensor_energy.attributes["state_class"] == "total_increasing"
+
+        # Assert: Check Flow Mapping
+        sensor_flow = hass.states.get("sensor.mockdevice_test_unknown_flow")
+        assert sensor_flow is not None
+        assert sensor_flow.attributes["unit_of_measurement"] == "L/h"
+        assert sensor_flow.attributes["device_class"] == "volume_flow_rate"
