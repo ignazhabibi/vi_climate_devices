@@ -29,7 +29,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import ViClimateAnalyticsCoordinator, ViClimateDataUpdateCoordinator
-from .utils import beautify_name
+from .utils import beautify_name, is_feature_boolean_like
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -670,9 +670,11 @@ async def async_setup_entry(
                     continue
 
                 # 2. Automatic Discovery (Fallback)
-                # If not writable (Sensors) and not boolean
-                # (Binary Sensor handled elsewhere)
-                if not feature.is_writable and not isinstance(feature.value, bool):
+                # If not writable (Sensors) and not boolean-like
+                # (Binary Sensor platform handles all boolean-like values)
+                if not feature.is_writable and not is_feature_boolean_like(
+                    feature.value
+                ):
                     description = _get_auto_discovery_description(feature)
                     entities.append(
                         ViClimateSensor(coordinator, map_key, feature.name, description)
