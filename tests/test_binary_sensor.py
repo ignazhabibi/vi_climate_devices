@@ -40,6 +40,7 @@ async def test_binary_sensor_values(hass: HomeAssistant, mock_client):
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
             return_value=None,
         ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
     ):
         # Act: Initialize the integration (setup entry).
         await hass.config_entries.async_setup(entry.entry_id)
@@ -66,6 +67,10 @@ async def test_binary_sensor_values(hass: HomeAssistant, mock_client):
         assert compressor is not None
         assert compressor.state == "off"
 
+        # Cleanup: Unload the integration to prevent thread leaks.
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
 
 @pytest.mark.asyncio
 async def test_binary_sensor_discovers_generic_on_off_string(
@@ -90,6 +95,7 @@ async def test_binary_sensor_discovers_generic_on_off_string(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
             return_value=None,
         ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
     ):
         entry = MockConfigEntry(domain=DOMAIN, data={"client_id": "1", "token": "x"})
         entry.add_to_hass(hass)
@@ -104,5 +110,6 @@ async def test_binary_sensor_discovers_generic_on_off_string(
         assert entity.state == "on"
         assert entity.attributes["viessmann_feature_name"] == "heating.dhw.status"
 
-
-# Sync trigger
+        # Cleanup: Unload the integration to prevent thread leaks.
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()

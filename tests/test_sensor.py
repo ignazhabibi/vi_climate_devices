@@ -39,6 +39,7 @@ async def _setup_integration(hass: HomeAssistant, mock_client):
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
             return_value=None,
         ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -74,6 +75,11 @@ async def test_sensor_values(hass: HomeAssistant, mock_client):
     assert "raw_value" in messages_info.attributes
     assert isinstance(messages_info.attributes["raw_value"], dict)
 
+    # Cleanup: Unload the integration to prevent thread leaks.
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
 
 @pytest.mark.asyncio
 async def test_no_duplicate_entity_creation(hass: HomeAssistant, mock_client):
@@ -95,6 +101,11 @@ async def test_no_duplicate_entity_creation(hass: HomeAssistant, mock_client):
         hass.states.get("sensor.vitocal250a_heating_compressors_0_speed_current")
         is None
     )
+
+    # Cleanup: Unload the integration to prevent thread leaks.
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.asyncio
@@ -194,6 +205,11 @@ async def test_auto_discovery_unit_mapping(hass: HomeAssistant, mock_client):
         assert sensor_flow.attributes["device_class"] == "volume_flow_rate"
         assert sensor_flow.attributes["friendly_name"] == "MockDevice Test Unknown Flow"
 
+        # Cleanup: Unload the integration to prevent thread leaks.
+        entry = hass.config_entries.async_entries(DOMAIN)[0]
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
 
 @pytest.mark.asyncio
 async def test_sensor_ignores_generic_on_off_string(hass: HomeAssistant, mock_client):
@@ -215,6 +231,7 @@ async def test_sensor_ignores_generic_on_off_string(hass: HomeAssistant, mock_cl
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
             return_value=None,
         ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
     ):
         entry = MockConfigEntry(domain=DOMAIN, data={"client_id": "1", "token": "x"})
         entry.add_to_hass(hass)
@@ -228,5 +245,6 @@ async def test_sensor_ignores_generic_on_off_string(hass: HomeAssistant, mock_cl
         sensor_entity = hass.states.get("sensor.vitocal250a_heating_dhw_status")
         assert sensor_entity is None
 
-
-# Sync trigger
+        # Cleanup: Unload the integration to prevent thread leaks.
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
