@@ -227,3 +227,6 @@ async def test_sensor_ignores_generic_on_off_string(hass: HomeAssistant, mock_cl
         # The feature returns "on", so it should be picked up by binary_sensor, NOT sensor.
         sensor_entity = hass.states.get("sensor.vitocal250a_heating_dhw_status")
         assert sensor_entity is None
+
+
+# Sync trigger

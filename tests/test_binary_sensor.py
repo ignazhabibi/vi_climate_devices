@@ -103,3 +103,6 @@ async def test_binary_sensor_discovers_generic_on_off_string(
         assert entity is not None
         assert entity.state == "on"
         assert entity.attributes["viessmann_feature_name"] == "heating.dhw.status"
+
+
+# Sync trigger
