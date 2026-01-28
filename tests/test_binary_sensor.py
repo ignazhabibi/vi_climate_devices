@@ -67,5 +67,49 @@ async def test_binary_sensor_values(hass: HomeAssistant, mock_client):
         assert compressor is not None
         assert compressor.state == "off"
 
+        # Cleanup: Unload the integration to prevent thread leaks.
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+@pytest.mark.asyncio
+async def test_binary_sensor_discovers_generic_on_off_string(
+    hass: HomeAssistant, mock_client
+):
+    """Test that a feature with 'on'/'off' string value IS created as a binary sensor.
+
+    Using real fixture key: heating.dhw.status (value: "on")
+    This feature is NOT in BINARY_SENSOR_TYPES, so it tests the generic discovery.
+    """
+    # Arrange: Configure the integration with the mock client fixture.
+    with (
+        patch(
+            "custom_components.vi_climate_devices.ViessmannClient",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+            return_value=None,
+        ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
+    ):
+        entry = MockConfigEntry(domain=DOMAIN, data={"client_id": "1", "token": "x"})
+        entry.add_to_hass(hass)
+
+        # Act: Initialize the integration to trigger discovery.
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Assert: Verify the generic 'on' feature is discovered as a binary sensor.
+        entity = hass.states.get("binary_sensor.vitocal250a_heating_dhw_status")
+        assert entity is not None
+        assert entity.state == "on"
+        assert entity.attributes["viessmann_feature_name"] == "heating.dhw.status"
+
+        # Cleanup: Unload the integration to prevent thread leaks.
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
