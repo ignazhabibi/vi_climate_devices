@@ -20,7 +20,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = [
+dev = [
     "pytest",
     "pytest-asyncio",
     "pytest-homeassistant-custom-component",
