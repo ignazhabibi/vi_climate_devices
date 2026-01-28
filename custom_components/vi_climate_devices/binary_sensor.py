@@ -21,6 +21,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import ViClimateDataUpdateCoordinator
+from .utils import is_feature_boolean_like
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -180,8 +181,8 @@ async def async_setup_entry(
                     continue
 
                 # Automatic Discovery
-                # Read-only Boolean -> Binary Sensor
-                if not feature.is_writable and isinstance(feature.value, bool):
+                # Read-only Boolean OR "on"/"off" String -> Binary Sensor
+                if not feature.is_writable and is_feature_boolean_like(feature.value):
                     desc = BinarySensorEntityDescription(
                         key=feature.name,
                         name=feature.name,

@@ -21,7 +21,6 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
-    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -30,7 +29,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import ViClimateAnalyticsCoordinator, ViClimateDataUpdateCoordinator
-from .utils import beautify_name
+from .utils import beautify_name, is_feature_boolean_like
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -390,7 +389,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "heating.sensors.volumetricFlow.allengra": SensorEntityDescription(
         key="heating.sensors.volumetricFlow.allengra",
         translation_key="volumetric_flow",
-        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+        native_unit_of_measurement="L/h",
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:gauge",
@@ -614,7 +613,7 @@ def _get_auto_discovery_description(feature) -> SensorEntityDescription:
         case "volumetricFlow" | "liter/hour":
             # API gives 'volumetricFlow' or 'liter/hour' -> L/h
             device_class = SensorDeviceClass.VOLUME_FLOW_RATE
-            native_unit = UnitOfVolumeFlowRate.LITERS_PER_HOUR
+            native_unit = "L/h"
             state_class = SensorStateClass.MEASUREMENT
 
     # Fallback for generic numbers
@@ -671,9 +670,11 @@ async def async_setup_entry(
                     continue
 
                 # 2. Automatic Discovery (Fallback)
-                # If not writable (Sensors) and not boolean
-                # (Binary Sensor handled elsewhere)
-                if not feature.is_writable and not isinstance(feature.value, bool):
+                # If not writable (Sensors) and not boolean-like
+                # (Binary Sensor platform handles all boolean-like values)
+                if not feature.is_writable and not is_feature_boolean_like(
+                    feature.value
+                ):
                     description = _get_auto_discovery_description(feature)
                     entities.append(
                         ViClimateSensor(coordinator, map_key, feature.name, description)

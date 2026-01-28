@@ -97,6 +97,14 @@
     }),
     dict({
       'attributes': dict({
+        'friendly_name': 'Vitocal250A heating.boiler.pumps.internal.status',
+        'viessmann_feature_name': 'heating.boiler.pumps.internal.status',
+      }),
+      'entity_id': 'binary_sensor.vitocal250a_heating_boiler_pumps_internal_status',
+      'state': 'off',
+    }),
+    dict({
+      'attributes': dict({
         'friendly_name': 'Vitocal250A heating.circuits.0.active',
         'viessmann_feature_name': 'heating.circuits.0.active',
       }),
@@ -318,6 +326,14 @@
       }),
       'entity_id': 'binary_sensor.vitocal250a_heating_dhw_operating_modes_off_active',
       'state': 'off',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A heating.dhw.status',
+        'viessmann_feature_name': 'heating.dhw.status',
+      }),
+      'entity_id': 'binary_sensor.vitocal250a_heating_dhw_status',
+      'state': 'on',
     }),
     dict({
       'attributes': dict({
@@ -1107,14 +1123,6 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Heating Boiler Pumps Internal Status',
-        'viessmann_feature_name': 'heating.boiler.pumps.internal.status',
-      }),
-      'entity_id': 'sensor.vitocal250a_heating_boiler_pumps_internal_status',
-      'state': 'off',
-    }),
-    dict({
-      'attributes': dict({
         'friendly_name': 'Vitocal250A Heating Boiler Pumps Internal Target',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '%',
@@ -1190,14 +1198,6 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Heating Circuits 0 Circulation Pump Status',
-        'viessmann_feature_name': 'heating.circuits.0.circulation.pump.status',
-      }),
-      'entity_id': 'sensor.vitocal250a_heating_circuits_0_circulation_pump_status',
-      'state': 'on',
-    }),
-    dict({
-      'attributes': dict({
         'device_class': 'temperature',
         'friendly_name': 'Vitocal250A Heating Circuits 0 Configuration Summereco Absolute Threshold',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1206,14 +1206,6 @@
       }),
       'entity_id': 'sensor.vitocal250a_heating_circuits_0_configuration_summereco_absolute_threshold',
       'state': '15',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Heating Circuits 0 Frostprotection Status',
-        'viessmann_feature_name': 'heating.circuits.0.frostprotection.status',
-      }),
-      'entity_id': 'sensor.vitocal250a_heating_circuits_0_frostprotection_status',
-      'state': 'off',
     }),
     dict({
       'attributes': dict({
@@ -1633,14 +1625,6 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Heating Dhw Pumps Circulation Status',
-        'viessmann_feature_name': 'heating.dhw.pumps.circulation.status',
-      }),
-      'entity_id': 'sensor.vitocal250a_heating_dhw_pumps_circulation_status',
-      'state': 'on',
-    }),
-    dict({
-      'attributes': dict({
         'device_class': 'temperature',
         'friendly_name': 'Vitocal250A Heating Dhw Sensors Temperature Dhwcylinder',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1665,14 +1649,6 @@
       }),
       'entity_id': 'sensor.vitocal250a_heating_dhw_sensors_temperature_hotwaterstorage_status',
       'state': 'connected',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Heating Dhw Status',
-        'viessmann_feature_name': 'heating.dhw.status',
-      }),
-      'entity_id': 'sensor.vitocal250a_heating_dhw_status',
-      'state': 'on',
     }),
     dict({
       'attributes': dict({
@@ -2877,7 +2853,7 @@
         'friendly_name': 'Vitocal250A Volumetric Flow',
         'icon': 'mdi:gauge',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
+        'unit_of_measurement': 'L/h',
         'viessmann_feature_name': 'heating.sensors.volumetricFlow.allengra',
       }),
       'entity_id': 'sensor.vitocal250a_volumetric_flow',

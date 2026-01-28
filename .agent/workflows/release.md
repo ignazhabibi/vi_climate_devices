@@ -31,7 +31,8 @@ This workflow guides the agent to create a semantic release for the Home Assista
     -   **WAIT for Confirmation**.
 
 ## 3. Generate Changelog
-Create a changelog snippet in the requested style:
+Create a changelog snippet in the requested style.
+**IMPORTANT:** Do NOT summarize. Use the exact commit scope and message from `git log`. Include the commit hash.
 
 ```markdown
 # Changelog

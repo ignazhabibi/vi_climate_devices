@@ -193,3 +193,37 @@ async def test_auto_discovery_unit_mapping(hass: HomeAssistant, mock_client):
         assert sensor_flow.attributes["unit_of_measurement"] == "L/h"
         assert sensor_flow.attributes["device_class"] == "volume_flow_rate"
         assert sensor_flow.attributes["friendly_name"] == "MockDevice Test Unknown Flow"
+
+
+@pytest.mark.asyncio
+async def test_sensor_ignores_generic_on_off_string(hass: HomeAssistant, mock_client):
+    """Test that a feature with 'on'/'off' string value is NOT created as a sensor.
+
+    Using real fixture key: heating.dhw.status (value: "on")
+    """
+    # Arrange: Configure the integration with the mock client fixture.
+    with (
+        patch(
+            "custom_components.vi_climate_devices.ViessmannClient",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+            return_value=None,
+        ),
+    ):
+        entry = MockConfigEntry(domain=DOMAIN, data={"client_id": "1", "token": "x"})
+        entry.add_to_hass(hass)
+
+        # Act: Initialize the integration to trigger discovery.
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Assert: Sensor should NOT exist for 'heating.dhw.status'.
+        # The feature returns "on", so it should be picked up by binary_sensor, NOT sensor.
+        sensor_entity = hass.states.get("sensor.vitocal250a_heating_dhw_status")
+        assert sensor_entity is None
