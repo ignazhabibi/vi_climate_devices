@@ -40,6 +40,7 @@ async def test_binary_sensor_values(hass: HomeAssistant, mock_client):
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
             return_value=None,
         ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
     ):
         # Act: Initialize the integration (setup entry).
         await hass.config_entries.async_setup(entry.entry_id)
@@ -65,3 +66,6 @@ async def test_binary_sensor_values(hass: HomeAssistant, mock_client):
         compressor = hass.states.get("binary_sensor.vitocal250a_compressor_0_active")
         assert compressor is not None
         assert compressor.state == "off"
+
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()

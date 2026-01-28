@@ -2877,7 +2877,7 @@
         'friendly_name': 'Vitocal250A Volumetric Flow',
         'icon': 'mdi:gauge',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
+        'unit_of_measurement': 'L/h',
         'viessmann_feature_name': 'heating.sensors.volumetricFlow.allengra',
       }),
       'entity_id': 'sensor.vitocal250a_volumetric_flow',

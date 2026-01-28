@@ -46,6 +46,7 @@ async def test_select_creation_and_services(hass: HomeAssistant, mock_client):
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
             return_value=None,
         ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
     ):
         # Act: Load Integration.
         await hass.config_entries.async_setup(entry.entry_id)
@@ -115,6 +116,9 @@ async def test_select_creation_and_services(hass: HomeAssistant, mock_client):
         )
         assert circuit_mode.state == "standby"
 
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
 
 @pytest.mark.asyncio
 async def test_select_error_handling(hass: HomeAssistant):
@@ -146,6 +150,7 @@ async def test_select_error_handling(hass: HomeAssistant):
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
             return_value=None,
         ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
     ):
         # Act: Initialize integration.
         await hass.config_entries.async_setup(entry.entry_id)
@@ -171,3 +176,6 @@ async def test_select_error_handling(hass: HomeAssistant):
         # Assert: Rollback occurred.
         state = hass.states.get(entity_id)
         assert state.state == original_state
+
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
