@@ -30,6 +30,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import ViClimateAnalyticsCoordinator, ViClimateDataUpdateCoordinator
+from .utils import beautify_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -622,7 +623,7 @@ def _get_auto_discovery_description(feature) -> SensorEntityDescription:
 
     return SensorEntityDescription(
         key=feature.name,
-        name=feature.name,
+        name=beautify_name(feature.name),
         native_unit_of_measurement=native_unit,
         device_class=device_class,
         state_class=state_class,
@@ -742,7 +743,10 @@ class ViClimateSensor(CoordinatorEntity, SensorEntity):
             not hasattr(description, "translation_key")
             or not description.translation_key
         ):
-            self._attr_name = feature_name
+            if hasattr(description, "name") and description.name:
+                self._attr_name = description.name
+            else:
+                self._attr_name = beautify_name(feature_name)
 
     @property
     def device_info(self) -> DeviceInfo:

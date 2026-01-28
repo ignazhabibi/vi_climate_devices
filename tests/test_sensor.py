@@ -146,14 +146,7 @@ async def test_auto_discovery_unit_mapping(hass: HomeAssistant, mock_client):
         status="online",
     )
 
-    # Configure MockClient to return this specific device
-    # Note: validation logic in conftest/mock_client usually loads from file.
-    # We must patch get_full_installation_status on the mock_client passed in.
-    # The fixture mock_client is a MagicMock wrapping ViMockClient or just a MockViClient instance?
-    # conftest says: return MockViClient(...)
-    # MockViClient has methods. We need to mock them if we want custom data that is NOT in the fixture file.
-    # However, MockViClient loads json.
-    # Better approach: We PATCH the methods on the instance to return our manual object.
+    # Arrange: Patch the mock client to return our custom device.
 
     with (
         patch.object(
@@ -169,12 +162,19 @@ async def test_auto_discovery_unit_mapping(hass: HomeAssistant, mock_client):
         assert sensor_temp is not None
         assert sensor_temp.attributes["unit_of_measurement"] == "°C"
         assert sensor_temp.attributes["device_class"] == "temperature"
+        # Verify Beautification
+        # Entity name is appended to device name: "MockDevice Test Unknown Temp"
+        assert sensor_temp.attributes["friendly_name"] == "MockDevice Test Unknown Temp"
 
         # Assert: Check Bar Mapping
         sensor_pressure = hass.states.get("sensor.mockdevice_test_unknown_pressure")
         assert sensor_pressure is not None
         assert sensor_pressure.attributes["unit_of_measurement"] == "bar"
         assert sensor_pressure.attributes["device_class"] == "pressure"
+        assert (
+            sensor_pressure.attributes["friendly_name"]
+            == "MockDevice Test Unknown Pressure"
+        )
 
         # Assert: Check Energy Mapping
         sensor_energy = hass.states.get("sensor.mockdevice_test_unknown_energy")
@@ -182,9 +182,14 @@ async def test_auto_discovery_unit_mapping(hass: HomeAssistant, mock_client):
         assert sensor_energy.attributes["unit_of_measurement"] == "kWh"
         assert sensor_energy.attributes["device_class"] == "energy"
         assert sensor_energy.attributes["state_class"] == "total_increasing"
+        assert (
+            sensor_energy.attributes["friendly_name"]
+            == "MockDevice Test Unknown Energy"
+        )
 
         # Assert: Check Flow Mapping
         sensor_flow = hass.states.get("sensor.mockdevice_test_unknown_flow")
         assert sensor_flow is not None
         assert sensor_flow.attributes["unit_of_measurement"] == "L/h"
         assert sensor_flow.attributes["device_class"] == "volume_flow_rate"
+        assert sensor_flow.attributes["friendly_name"] == "MockDevice Test Unknown Flow"
