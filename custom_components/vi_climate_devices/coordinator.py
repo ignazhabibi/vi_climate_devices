@@ -6,9 +6,15 @@ import logging
 from datetime import datetime, timedelta
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
-from vi_api_client import Device, Feature, ViClient as ViessmannClient
+from vi_api_client import (
+    Device,
+    Feature,
+    ViAuthError,
+    ViClient as ViessmannClient,
+)
 
 from .const import DOMAIN, IGNORED_DEVICES
 
@@ -30,7 +36,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
             client: The authenticated Viessmann API client.
         """
         self.client = client
-        self.installation_id: int | None = None
+
         self._known_devices: list[Device] | None = None
         super().__init__(
             hass,
@@ -68,6 +74,10 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
             self._known_devices = [
                 device for device in all_devices if device.id not in IGNORED_DEVICES
             ]
+        except ViAuthError as err:
+            raise ConfigEntryAuthFailed(
+                f"Authentication failed during discovery: {err}"
+            ) from err
         except Exception as e:
             raise UpdateFailed(f"Failed to perform full discovery: {e}") from e
 
@@ -101,6 +111,12 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
                         new_device = await self.client.update_device(device)
                         updated_data[key] = new_device
 
+                    except ViAuthError as err:
+                        # Trigger HA re-auth flow immediately
+                        raise ConfigEntryAuthFailed(
+                            f"Authentication failed for device {device.id}: {err}"
+                        ) from err
+
                     except Exception as err:
                         _LOGGER.warning(
                             "Failed to update device %s: %s", device.id, err
@@ -113,6 +129,8 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
 
             return updated_data
 
+        except ViAuthError as err:
+            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
         except Exception as exception:
             raise UpdateFailed(exception) from exception
 
@@ -184,6 +202,11 @@ class ViClimateAnalyticsCoordinator(DataUpdateCoordinator):
                     device_features[feature.name] = feature
 
                 results[device_key] = device_features
+
+            except ViAuthError as err:
+                raise ConfigEntryAuthFailed(
+                    f"Analytics Auth failed for {device.id}: {err}"
+                ) from err
 
             except Exception as err:
                 _LOGGER.error(

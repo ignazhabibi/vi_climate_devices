@@ -14,9 +14,9 @@ from custom_components.vi_climate_devices.binary_sensor import (
 from custom_components.vi_climate_devices.number import NUMBER_TEMPLATES, NUMBER_TYPES
 from custom_components.vi_climate_devices.select import SELECT_TYPES
 from custom_components.vi_climate_devices.sensor import (
-    ANALYTICS_Types,
     SENSOR_TEMPLATES,
     SENSOR_TYPES,
+    ANALYTICS_Types,
 )
 from custom_components.vi_climate_devices.water_heater import ViClimateWaterHeater
 
