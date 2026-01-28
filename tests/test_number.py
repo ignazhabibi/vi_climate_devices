@@ -51,6 +51,7 @@ async def test_number_creation_and_services(hass: HomeAssistant, mock_client):
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
             return_value=None,
         ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
     ):
         # Act: Load Integration.
         await hass.config_entries.async_setup(entry.entry_id)
@@ -119,6 +120,9 @@ async def test_number_creation_and_services(hass: HomeAssistant, mock_client):
         dhw_temp = hass.states.get("number.vitocal250a_dhw_target_temperature")
         assert float(dhw_temp.state) == 45.0
 
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
 
 @pytest.mark.asyncio
 async def test_number_error_handling(hass: HomeAssistant):
@@ -150,6 +154,7 @@ async def test_number_error_handling(hass: HomeAssistant):
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
             return_value=None,
         ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
     ):
         # Act: Initialize integration.
         await hass.config_entries.async_setup(entry.entry_id)
@@ -173,3 +178,6 @@ async def test_number_error_handling(hass: HomeAssistant):
         # State should still be 0.6, not 2.0.
         state = hass.states.get(entity_id)
         assert state.state == "0.6"
+
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()

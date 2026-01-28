@@ -44,6 +44,7 @@ async def test_discovery_snapshot(hass: HomeAssistant, snapshot: SnapshotAsserti
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
             return_value=None,
         ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
     ):
         # Act: Initialize the integration to trigger entity discovery.
         await hass.config_entries.async_setup(entry.entry_id)
@@ -67,3 +68,6 @@ async def test_discovery_snapshot(hass: HomeAssistant, snapshot: SnapshotAsserti
         ]
 
         assert snapshot_data == snapshot
+
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
