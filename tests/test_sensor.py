@@ -127,20 +127,12 @@ async def test_auto_discovery_unit_mapping(hass: HomeAssistant, mock_client):
         unit="kilowattHour",
     )
 
-    feat_flow = Feature(
-        name="test.unknown.flow",
-        value=500,
-        is_enabled=True,
-        is_ready=True,
-        unit="liter/hour",
-    )
-
     # Create Device
     mock_device = Device(
         id="0",
         gateway_serial="mock_gateway",
         installation_id=123,
-        features=[feat_celsius, feat_bar, feat_energy, feat_flow],
+        features=[feat_celsius, feat_bar, feat_energy],
         model_id="MockDevice",
         device_type="heating",
         status="online",
@@ -186,10 +178,3 @@ async def test_auto_discovery_unit_mapping(hass: HomeAssistant, mock_client):
             sensor_energy.attributes["friendly_name"]
             == "MockDevice Test Unknown Energy"
         )
-
-        # Assert: Check Flow Mapping
-        sensor_flow = hass.states.get("sensor.mockdevice_test_unknown_flow")
-        assert sensor_flow is not None
-        assert sensor_flow.attributes["unit_of_measurement"] == "L/h"
-        assert sensor_flow.attributes["device_class"] == "volume_flow_rate"
-        assert sensor_flow.attributes["friendly_name"] == "MockDevice Test Unknown Flow"

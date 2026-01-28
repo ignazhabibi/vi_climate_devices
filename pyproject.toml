@@ -23,7 +23,7 @@ dependencies = [
 dev = [
     "pytest",
     "pytest-asyncio",
-    "pytest-homeassistant-custom-component",
+    "pytest-homeassistant-custom-component>=0.13.129",
     "syrupy",
 ]
 [tool.ruff]
