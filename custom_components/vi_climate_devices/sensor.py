@@ -21,7 +21,6 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
-    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -390,7 +389,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "heating.sensors.volumetricFlow.allengra": SensorEntityDescription(
         key="heating.sensors.volumetricFlow.allengra",
         translation_key="volumetric_flow",
-        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+        native_unit_of_measurement="L/h",
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:gauge",
@@ -614,7 +613,7 @@ def _get_auto_discovery_description(feature) -> SensorEntityDescription:
         case "volumetricFlow" | "liter/hour":
             # API gives 'volumetricFlow' or 'liter/hour' -> L/h
             device_class = SensorDeviceClass.VOLUME_FLOW_RATE
-            native_unit = UnitOfVolumeFlowRate.LITERS_PER_HOUR
+            native_unit = "L/h"
             state_class = SensorStateClass.MEASUREMENT
 
     # Fallback for generic numbers
