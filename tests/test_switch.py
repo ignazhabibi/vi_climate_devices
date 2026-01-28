@@ -47,6 +47,7 @@ async def test_switch_creation_and_services(hass: HomeAssistant, mock_client):
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
             return_value=None,
         ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
     ):
         # Act: Load Integration.
         await hass.config_entries.async_setup(entry.entry_id)
@@ -113,6 +114,9 @@ async def test_switch_creation_and_services(hass: HomeAssistant, mock_client):
         hygiene_switch = hass.states.get("switch.vitocal250a_dhw_hygiene")
         assert hygiene_switch.state == STATE_OFF
 
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
 
 @pytest.mark.asyncio
 async def test_switch_error_handling(hass: HomeAssistant):
@@ -146,6 +150,7 @@ async def test_switch_error_handling(hass: HomeAssistant):
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
             return_value=None,
         ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
     ):
         # Act: Initialize integration.
         await hass.config_entries.async_setup(entry.entry_id)
@@ -168,3 +173,6 @@ async def test_switch_error_handling(hass: HomeAssistant):
         # Assert: State Rollback.
         # The switch should NOT be stuck in 'on' state; it should revert to 'off'.
         assert hass.states.get(switch_id).state == STATE_OFF
+
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
