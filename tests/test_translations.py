@@ -16,7 +16,7 @@ from custom_components.vi_climate_devices.select import SELECT_TYPES
 from custom_components.vi_climate_devices.sensor import (
     SENSOR_TEMPLATES,
     SENSOR_TYPES,
-    ANALYTICS_Types,
+    ANALYTICS_TYPES,
 )
 from custom_components.vi_climate_devices.water_heater import ViClimateWaterHeater
 
@@ -36,7 +36,7 @@ def get_entity_definitions(platform):
     if platform == "sensor":
         # Static and Analytics
         descriptions.extend(SENSOR_TYPES.values())
-        descriptions.extend(ANALYTICS_Types.values())
+        descriptions.extend(ANALYTICS_TYPES.values())
         # Templates
         for t in SENSOR_TEMPLATES:
             descriptions.append(t["description"])
