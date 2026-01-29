@@ -17,6 +17,7 @@ from vi_api_client import Feature
 
 from .const import DOMAIN, IGNORED_FEATURES
 from .coordinator import ViClimateDataUpdateCoordinator
+from .utils import is_feature_ignored
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ async def async_setup_entry(
         for map_key, device in coordinator.data.items():
             for feature in device.features:
                 # Skip ignored features early
-                if feature.name in IGNORED_FEATURES:
+                if is_feature_ignored(feature.name, IGNORED_FEATURES):
                     continue
 
                 if not feature.is_writable:

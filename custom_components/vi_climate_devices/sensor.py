@@ -29,7 +29,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, IGNORED_FEATURES
 from .coordinator import ViClimateAnalyticsCoordinator, ViClimateDataUpdateCoordinator
-from .utils import beautify_name, is_feature_boolean_like
+from .utils import beautify_name, is_feature_boolean_like, is_feature_ignored
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -662,7 +662,7 @@ def _discover_realtime_sensors(
         # Iterate over FLATTENED features
         for feature in device.features:
             # Skip ignored features early
-            if feature.name in IGNORED_FEATURES:
+            if is_feature_ignored(feature.name, IGNORED_FEATURES):
                 continue
 
             # 1. Defined Entities (High Quality)
@@ -721,7 +721,11 @@ def _discover_analytics_sensors(
                 heating_device.id,
                 heating_device.gateway_serial,
             )
-            for _feature_name, description in ANALYTICS_TYPES.items():
+            for feature_name, description in ANALYTICS_TYPES.items():
+                # Skip ignored features
+                if is_feature_ignored(feature_name, IGNORED_FEATURES):
+                    continue
+
                 entities.append(
                     ViClimateConsumptionSensor(
                         analytics_coordinator, heating_device, description
