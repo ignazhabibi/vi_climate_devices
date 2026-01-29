@@ -157,8 +157,11 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity specific state attributes."""
         attrs = {}
-        if self.target_temperature_step is not None:
-            attrs["target_temp_step"] = self.target_temperature_step
+        # Use underlying attribute to avoid AttributeError if base class
+        # doesn't provide the property in all HA versions.
+        step = getattr(self, "_attr_target_temperature_step", None)
+        if step is not None:
+            attrs["target_temp_step"] = step
         return attrs
 
     # --- Properties ---
