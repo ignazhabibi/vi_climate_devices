@@ -69,9 +69,7 @@ async def test_sensor_values(hass: HomeAssistant, mock_client):
 
     # Assert: Verify a Complex Data Sensor (Heating Consumption).
     # Ensures that large lists are not set as state, but preserved in attributes.
-    heating_total = hass.states.get(
-        "sensor.vitocal250a_heating_power_consumption_total"
-    )
+    heating_total = hass.states.get("sensor.vitocal250a_power_consumption_total")
     assert heating_total is not None
     assert heating_total.state == "Complex Data"
     assert "raw_value" in heating_total.attributes
@@ -91,10 +89,7 @@ async def test_no_duplicate_entity_creation(hass: HomeAssistant, mock_client):
     # Assert: Verify duplicate prevention for Defined Features.
     # The specific entity 'outside_temperature' should exist, but the generic fallback 'heating_sensors_...' should not.
     assert hass.states.get("sensor.vitocal250a_outside_temperature") is not None
-    assert (
-        hass.states.get("sensor.vitocal250a_heating_sensors_temperature_outside")
-        is None
-    )
+    assert hass.states.get("sensor.vitocal250a_sensors_temperature_outside") is None
 
     # Assert: Verify duplicate prevention for Template Features.
     # The template entity 'compressor_0_speed' should exist, but the generic fallback 'heating_compressors_...' should not.

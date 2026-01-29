@@ -22,7 +22,12 @@ from vi_api_client import Feature
 
 from .const import DOMAIN, IGNORED_FEATURES
 from .coordinator import ViClimateDataUpdateCoordinator
-from .utils import is_feature_ignored
+from .utils import (
+    beautify_name,
+    get_feature_bool_value,
+    is_feature_boolean_like,
+    is_feature_ignored,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,11 +93,11 @@ async def async_setup_entry(
                     continue
 
                 # Automatic Discovery (Fallback)
-                # If writable boolean
-                if isinstance(feature.value, bool):
+                # If writable boolean-like
+                if is_feature_boolean_like(feature.value):
                     desc = ViClimateSwitchEntityDescription(
                         key=feature.name,
-                        name=feature.name,
+                        name=beautify_name(feature.name),
                         entity_category=EntityCategory.CONFIG,
                     )
                     entities.append(
@@ -132,7 +137,10 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
             not hasattr(description, "translation_key")
             or not description.translation_key
         ):
-            self._attr_name = feature_name
+            if description.name:
+                self._attr_name = description.name
+            else:
+                self._attr_name = beautify_name(feature_name)
 
     @property
     def feature_data(self) -> Feature | None:
@@ -167,15 +175,7 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
         if not feat:
             return None
 
-        # Handle "on"/"off" strings or Booleans
-        val = feat.value
-        if isinstance(val, bool):
-            return val
-        if isinstance(val, str):
-            return val.lower() in ("on", "true", "active", "1", "enabled")
-
-        # Fallback
-        return bool(val)
+        return get_feature_bool_value(feat.value)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""

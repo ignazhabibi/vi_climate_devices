@@ -17,7 +17,7 @@ from vi_api_client import Feature
 
 from .const import DOMAIN, IGNORED_FEATURES
 from .coordinator import ViClimateDataUpdateCoordinator
-from .utils import is_feature_ignored
+from .utils import beautify_name, is_feature_ignored
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +78,7 @@ async def async_setup_entry(
                     # Valid Select Entity needs options
                     desc = ViClimateSelectEntityDescription(
                         key=feature.name,
-                        name=feature.name,
+                        name=beautify_name(feature.name),
                         entity_category=EntityCategory.CONFIG,
                     )
                     entities.append(
@@ -117,7 +117,10 @@ class ViClimateSelect(CoordinatorEntity, SelectEntity):
             not hasattr(description, "translation_key")
             or not description.translation_key
         ):
-            self._attr_name = feature_name
+            if description.name:
+                self._attr_name = description.name
+            else:
+                self._attr_name = beautify_name(feature_name)
 
         # Initial Setup of Options
         feature = device.get_feature(feature_name)

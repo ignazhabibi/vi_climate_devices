@@ -24,7 +24,7 @@ from vi_api_client import Feature
 
 from .const import DOMAIN, IGNORED_FEATURES
 from .coordinator import ViClimateDataUpdateCoordinator
-from .utils import is_feature_ignored
+from .utils import beautify_name, is_feature_ignored
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -216,7 +216,7 @@ async def async_setup_entry(
                 ):
                     desc = ViClimateNumberEntityDescription(
                         key=feature.name,
-                        name=feature.name,
+                        name=beautify_name(feature.name),
                         mode=NumberMode.BOX,  # Safer default
                         entity_category=EntityCategory.CONFIG,
                     )
@@ -258,7 +258,10 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
             not hasattr(description, "translation_key")
             or not description.translation_key
         ):
-            self._attr_name = feature_name
+            if description.name:
+                self._attr_name = description.name
+            else:
+                self._attr_name = beautify_name(feature_name)
 
         # Initial Setup of Constraints from Feature Control
         feature = device.get_feature(feature_name)

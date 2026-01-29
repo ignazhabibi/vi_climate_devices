@@ -48,7 +48,7 @@ async def test_binary_sensor_values(hass: HomeAssistant, mock_client):
 
         # Assert: Verify a Standard Binary Sensor (DHW Active).
         # Fixture value is 'on' -> State 'on'.
-        dhw_active = hass.states.get("binary_sensor.vitocal250a_heating_dhw_active")
+        dhw_active = hass.states.get("binary_sensor.vitocal250a_dhw_active")
         assert dhw_active is not None
         assert dhw_active.state == "on"
 
@@ -105,7 +105,7 @@ async def test_binary_sensor_discovers_generic_on_off_string(
         await hass.async_block_till_done()
 
         # Assert: Verify the generic 'on' feature is discovered as a binary sensor.
-        entity = hass.states.get("binary_sensor.vitocal250a_heating_dhw_status")
+        entity = hass.states.get("binary_sensor.vitocal250a_dhw_status")
         assert entity is not None
         assert entity.state == "on"
         assert entity.attributes["viessmann_feature_name"] == "heating.dhw.status"

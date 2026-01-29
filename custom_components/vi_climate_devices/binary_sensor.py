@@ -21,7 +21,12 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, IGNORED_FEATURES
 from .coordinator import ViClimateDataUpdateCoordinator
-from .utils import is_feature_boolean_like, is_feature_ignored
+from .utils import (
+    beautify_name,
+    get_feature_bool_value,
+    is_feature_boolean_like,
+    is_feature_ignored,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -189,7 +194,7 @@ async def async_setup_entry(
                 if not feature.is_writable and is_feature_boolean_like(feature.value):
                     desc = BinarySensorEntityDescription(
                         key=feature.name,
-                        name=feature.name,
+                        name=beautify_name(feature.name),
                         entity_category=EntityCategory.DIAGNOSTIC,
                     )
                     entities.append(
@@ -228,7 +233,10 @@ class ViClimateBinarySensor(CoordinatorEntity, BinarySensorEntity):
             not hasattr(description, "translation_key")
             or not description.translation_key
         ):
-            self._attr_name = feature_name
+            if description.name:
+                self._attr_name = description.name
+            else:
+                self._attr_name = beautify_name(feature_name)
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -257,10 +265,7 @@ class ViClimateBinarySensor(CoordinatorEntity, BinarySensorEntity):
         """Return true if the binary sensor is on."""
         feat = self.feature_data
         if feat and feat.value is not None:
-            # Interpret value. Assuming "on" string or boolean true/1.
-            if isinstance(feat.value, str):
-                return feat.value.lower() in ("on", "active", "true", "1")
-            return bool(feat.value)
+            return get_feature_bool_value(feat.value)
         return None
 
     @property
