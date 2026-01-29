@@ -81,22 +81,6 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A heating.configuration.heatingRod.dhw.useApproved',
-        'viessmann_feature_name': 'heating.configuration.heatingRod.dhw.useApproved',
-      }),
-      'entity_id': 'binary_sensor.vitocal250a_heating_configuration_heatingrod_dhw_useapproved',
-      'state': 'on',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A heating.configuration.heatingRod.heating.useApproved',
-        'viessmann_feature_name': 'heating.configuration.heatingRod.heating.useApproved',
-      }),
-      'entity_id': 'binary_sensor.vitocal250a_heating_configuration_heatingrod_heating_useapproved',
-      'state': 'on',
-    }),
-    dict({
-      'attributes': dict({
         'friendly_name': 'Vitocal250A heating.dhw.active',
         'viessmann_feature_name': 'heating.dhw.active',
       }),
@@ -129,43 +113,11 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A heating.dhw.operating.modes.efficient.active',
-        'viessmann_feature_name': 'heating.dhw.operating.modes.efficient.active',
-      }),
-      'entity_id': 'binary_sensor.vitocal250a_heating_dhw_operating_modes_efficient_active',
-      'state': 'on',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A heating.dhw.operating.modes.efficientWithMinComfort.active',
-        'viessmann_feature_name': 'heating.dhw.operating.modes.efficientWithMinComfort.active',
-      }),
-      'entity_id': 'binary_sensor.vitocal250a_heating_dhw_operating_modes_efficientwithmincomfort_active',
-      'state': 'off',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A heating.dhw.operating.modes.off.active',
-        'viessmann_feature_name': 'heating.dhw.operating.modes.off.active',
-      }),
-      'entity_id': 'binary_sensor.vitocal250a_heating_dhw_operating_modes_off_active',
-      'state': 'off',
-    }),
-    dict({
-      'attributes': dict({
         'friendly_name': 'Vitocal250A heating.dhw.status',
         'viessmann_feature_name': 'heating.dhw.status',
       }),
       'entity_id': 'binary_sensor.vitocal250a_heating_dhw_status',
       'state': 'on',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A heating.external.lock.active',
-        'viessmann_feature_name': 'heating.external.lock.active',
-      }),
-      'entity_id': 'binary_sensor.vitocal250a_heating_external_lock_active',
-      'state': 'off',
     }),
     dict({
       'attributes': dict({
@@ -659,83 +611,11 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Heating Configuration Buffercylindersize',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'viessmann_feature_name': 'heating.configuration.bufferCylinderSize',
-      }),
-      'entity_id': 'sensor.vitocal250a_heating_configuration_buffercylindersize',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Heating Configuration Centralheatingcylindersize',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'viessmann_feature_name': 'heating.configuration.centralHeatingCylinderSize',
-      }),
-      'entity_id': 'sensor.vitocal250a_heating_configuration_centralheatingcylindersize',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Heating Configuration Dhwcylindersize',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'viessmann_feature_name': 'heating.configuration.dhwCylinderSize',
-      }),
-      'entity_id': 'sensor.vitocal250a_heating_configuration_dhwcylindersize',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Heating Configuration Househeatingload',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'viessmann_feature_name': 'heating.configuration.houseHeatingLoad',
-      }),
-      'entity_id': 'sensor.vitocal250a_heating_configuration_househeatingload',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
         'friendly_name': 'Vitocal250A Heating Configuration Houselocation Altitude',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'viessmann_feature_name': 'heating.configuration.houseLocation.altitude',
       }),
       'entity_id': 'sensor.vitocal250a_heating_configuration_houselocation_altitude',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Heating Configuration Houselocation Latitude',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'viessmann_feature_name': 'heating.configuration.houseLocation.latitude',
-      }),
-      'entity_id': 'sensor.vitocal250a_heating_configuration_houselocation_latitude',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Heating Configuration Houselocation Longitude',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'viessmann_feature_name': 'heating.configuration.houseLocation.longitude',
-      }),
-      'entity_id': 'sensor.vitocal250a_heating_configuration_houselocation_longitude',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Heating Configuration Houseorientation Horizontal',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'viessmann_feature_name': 'heating.configuration.houseOrientation.horizontal',
-      }),
-      'entity_id': 'sensor.vitocal250a_heating_configuration_houseorientation_horizontal',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Heating Configuration Houseorientation Vertical',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'viessmann_feature_name': 'heating.configuration.houseOrientation.vertical',
-      }),
-      'entity_id': 'sensor.vitocal250a_heating_configuration_houseorientation_vertical',
       'state': '0',
     }),
     dict({
