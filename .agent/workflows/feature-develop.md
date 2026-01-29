@@ -24,16 +24,16 @@ git pull
 ```
 
 ## Step 2: Create Feature Branch
-Create a new branch with a descriptive name using the `feature/` prefix.
-
-```bash
-git checkout -b feature/<descriptive-name>
-```
+Ask the user for a short description of the feature you're about to build. Use this description to generate a descriptive branch name using the `feature/` prefix.
 
 **Naming Convention:**
 - Use kebab-case (lowercase with hyphens)
 - Be specific: `feature/add-user-authentication` not `feature/auth`
 - Keep it short but meaningful
+
+```bash
+git checkout -b feature/<generated-name>
+```
 
 ## Step 3: Develop (The Loop)
 Iterate on your feature with frequent validation.
