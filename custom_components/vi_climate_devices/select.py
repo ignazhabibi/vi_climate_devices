@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import dataclasses
 import logging
+import re
 from dataclasses import dataclass
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -43,6 +45,45 @@ SELECT_TYPES: dict[str, ViClimateSelectEntityDescription] = {
 }
 
 
+# Dynamic Templates
+SELECT_TEMPLATES = [
+    # Heating Circuit Operating Modes (heating.circuits.N.operating.modes.active)
+    {
+        "pattern": re.compile(r"^heating\.circuits\.(\d+)\.operating\.modes\.active$"),
+        "description": ViClimateSelectEntityDescription(
+            key="placeholder",
+            translation_key="heating_circuit_operation_mode",
+            icon="mdi:home-thermometer-auto",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    },
+]
+
+
+def _get_select_entity_description(
+    feature_name: str,
+) -> tuple[ViClimateSelectEntityDescription, dict[str, str] | None] | None:
+    """Find a matching entity description for a dynamic feature name.
+
+    Returns:
+        tuple: (description, translation_placeholders) or None
+    """
+    for template in SELECT_TEMPLATES:
+        match = template["pattern"].match(feature_name)
+        if match:
+            index = match.group(1)
+            base_desc: ViClimateSelectEntityDescription = template["description"]
+
+            # Clone and Format
+            new_desc = dataclasses.replace(
+                base_desc,
+                key=feature_name,
+                translation_key=base_desc.translation_key,
+            )
+            return new_desc, {"index": index}
+    return None
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -72,7 +113,21 @@ async def async_setup_entry(
                     )
                     continue
 
-                # 2. Automatic Discovery (Fallback)
+                # 2. Dynamic Templates
+                if match_result := _get_select_entity_description(feature.name):
+                    description, placeholders = match_result
+                    entities.append(
+                        ViClimateSelect(
+                            coordinator,
+                            map_key,
+                            feature.name,
+                            description,
+                            translation_placeholders=placeholders,
+                        )
+                    )
+                    continue
+
+                # 3. Automatic Discovery (Fallback)
                 # Check for control options (Enum)
                 if feature.control and feature.control.options:
                     # Valid Select Entity needs options
@@ -99,12 +154,14 @@ class ViClimateSelect(CoordinatorEntity, SelectEntity):
         map_key: str,
         feature_name: str,
         description: ViClimateSelectEntityDescription,
+        translation_placeholders: dict[str, str] | None = None,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self.entity_description = description
         self._map_key = map_key
         self._feature_name = feature_name
+        self._attr_translation_placeholders = translation_placeholders or {}
 
         device = coordinator.data.get(map_key)
 

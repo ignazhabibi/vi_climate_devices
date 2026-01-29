@@ -170,10 +170,10 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Outdoor Defrosting Active',
+        'friendly_name': 'Vitocal250A Outdoor Defrosting',
         'viessmann_feature_name': 'heating.outdoor.defrosting.active',
       }),
-      'entity_id': 'binary_sensor.vitocal250a_outdoor_defrosting_active',
+      'entity_id': 'binary_sensor.vitocal250a_outdoor_defrosting',
       'state': 'off',
     }),
     dict({
@@ -306,17 +306,6 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Circuits 0 Operating Modes Active',
-        'options': list([
-          'heating',
-          'standby',
-        ]),
-      }),
-      'entity_id': 'select.vitocal250a_circuits_0_operating_modes_active',
-      'state': 'heating',
-    }),
-    dict({
-      'attributes': dict({
         'friendly_name': 'Vitocal250A DHW Mode',
         'icon': 'mdi:water-boiler-auto',
         'options': list([
@@ -327,6 +316,18 @@
       }),
       'entity_id': 'select.vitocal250a_dhw_mode',
       'state': 'efficient',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Heating Circuit 0 Operation Mode',
+        'icon': 'mdi:home-thermometer-auto',
+        'options': list([
+          'heating',
+          'standby',
+        ]),
+      }),
+      'entity_id': 'select.vitocal250a_heating_circuit_0_operation_mode',
+      'state': 'heating',
     }),
     dict({
       'attributes': dict({

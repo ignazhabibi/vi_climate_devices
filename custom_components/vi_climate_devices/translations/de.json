@@ -113,6 +113,9 @@
             },
             "evaporator_base_heater": {
                 "name": "Verdampfer {index} Basisheizung"
+            },
+            "outdoor_defrosting": {
+                "name": "Abtauvorgang Außen"
             }
         },
         "sensor": {
@@ -302,6 +305,13 @@
                     "balanced": "Normal",
                     "standby": "Standby",
                     "standard": "Standard"
+                }
+            },
+            "heating_circuit_operation_mode": {
+                "name": "Betriebsart Heizkreis {index}",
+                "state": {
+                    "heating": "Heizen",
+                    "standby": "Abschaltbetrieb"
                 }
             }
         },

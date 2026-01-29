@@ -116,6 +116,9 @@
             },
             "evaporator_base_heater": {
                 "name": "Evaporator {index} Base Heater"
+            },
+            "outdoor_defrosting": {
+                "name": "Outdoor Defrosting"
             }
         },
         "select": {
@@ -130,6 +133,13 @@
                     "balanced": "Balanced",
                     "standby": "Standby",
                     "standard": "Standard"
+                }
+            },
+            "heating_circuit_operation_mode": {
+                "name": "Heating Circuit {index} Operation Mode",
+                "state": {
+                    "heating": "Heating",
+                    "standby": "Standby"
                 }
             }
         },

@@ -88,7 +88,7 @@ async def test_select_creation_and_services(hass: HomeAssistant, mock_client):
 
         # Verify initial state.
         circuit_mode = hass.states.get(
-            "select.vitocal250a_circuits_0_operating_modes_active"
+            "select.vitocal250a_heating_circuit_0_operation_mode"
         )
         assert circuit_mode is not None
         assert circuit_mode.state == "heating"
@@ -98,7 +98,7 @@ async def test_select_creation_and_services(hass: HomeAssistant, mock_client):
             "select",
             SERVICE_SELECT_OPTION,
             {
-                "entity_id": "select.vitocal250a_circuits_0_operating_modes_active",
+                "entity_id": "select.vitocal250a_heating_circuit_0_operation_mode",
                 "option": "standby",
             },
             blocking=True,
@@ -112,7 +112,7 @@ async def test_select_creation_and_services(hass: HomeAssistant, mock_client):
 
         # Verify Optimistic Update.
         circuit_mode = hass.states.get(
-            "select.vitocal250a_circuits_0_operating_modes_active"
+            "select.vitocal250a_heating_circuit_0_operation_mode"
         )
         assert circuit_mode.state == "standby"
 
