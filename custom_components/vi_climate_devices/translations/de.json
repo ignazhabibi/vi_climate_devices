@@ -311,7 +311,7 @@
                 "name": "Betriebsart Heizkreis {index}",
                 "state": {
                     "heating": "Heizen",
-                    "standby": "Abschaltbetrieb"
+                    "standby": "Standby"
                 }
             }
         },
