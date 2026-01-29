@@ -113,6 +113,9 @@
             },
             "evaporator_base_heater": {
                 "name": "Evaporator {index} Base Heater"
+            },
+            "outdoor_defrosting": {
+                "name": "Outdoor Defrosting"
             }
         },
         "sensor": {
@@ -263,6 +266,9 @@
             "compressor_speed_setpoint": {
                 "name": "Compressor {index} Speed Setpoint"
             },
+            "condensor_liquid_temperature": {
+                "name": "Condensor {index} Liquid Temperature"
+            },
             "fan_speed": {
                 "name": "Fan {index} Speed"
             },
@@ -299,6 +305,13 @@
                     "balanced": "Balanced",
                     "standby": "Standby",
                     "standard": "Standard"
+                }
+            },
+            "heating_circuit_operation_mode": {
+                "name": "Heating Circuit {index} Operation Mode",
+                "state": {
+                    "heating": "Heating",
+                    "standby": "Standby"
                 }
             }
         },

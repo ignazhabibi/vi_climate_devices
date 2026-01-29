@@ -113,6 +113,9 @@
             },
             "evaporator_base_heater": {
                 "name": "Verdampfer {index} Basisheizung"
+            },
+            "outdoor_defrosting": {
+                "name": "Abtauvorgang Außen"
             }
         },
         "sensor": {
@@ -263,6 +266,9 @@
             "compressor_speed_setpoint": {
                 "name": "Verdichter {index} Drehzahl Sollwert"
             },
+            "condensor_liquid_temperature": {
+                "name": "Verflüssiger {index} Flüssigkeitstemperatur"
+            },
             "fan_speed": {
                 "name": "Lüfter {index} Drehzahl"
             },
@@ -299,6 +305,13 @@
                     "balanced": "Normal",
                     "standby": "Standby",
                     "standard": "Standard"
+                }
+            },
+            "heating_circuit_operation_mode": {
+                "name": "Betriebsart Heizkreis {index}",
+                "state": {
+                    "heating": "Heizen",
+                    "standby": "Standby"
                 }
             }
         },

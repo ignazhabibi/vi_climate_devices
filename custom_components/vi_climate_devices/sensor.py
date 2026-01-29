@@ -281,6 +281,22 @@ SENSOR_TEMPLATES = [
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
+            icon="mdi:thermometer",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    },
+    # Condensor Liquid Temperature
+    {
+        "pattern": re.compile(
+            r"^heating\.condensors\.(\d+)\.sensors\.temperature\.liquid$"
+        ),
+        "description": SensorEntityDescription(
+            key="placeholder",
+            translation_key="condensor_liquid_temperature",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            icon="mdi:thermometer",
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     },
@@ -692,7 +708,13 @@ def _discover_realtime_sensors(
             if not feature.is_writable and not is_feature_boolean_like(feature.value):
                 description = _get_auto_discovery_description(feature)
                 entities.append(
-                    ViClimateSensor(coordinator, map_key, feature.name, description)
+                    ViClimateSensor(
+                        coordinator,
+                        map_key,
+                        feature.name,
+                        description,
+                        enabled_default=False,
+                    )
                 )
     return entities
 
@@ -740,13 +762,14 @@ def _discover_analytics_sensors(
 class ViClimateSensor(CoordinatorEntity, SensorEntity):
     """Representation of a generic Viessmann Climate Devices Sensor."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         coordinator: ViClimateDataUpdateCoordinator,
         map_key: str,
         feature_name: str,
         description: SensorEntityDescription,
         translation_placeholders: dict[str, str] | None = None,
+        enabled_default: bool = True,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -754,6 +777,7 @@ class ViClimateSensor(CoordinatorEntity, SensorEntity):
         self._map_key = map_key
         self._feature_name = feature_name
         self._attr_translation_placeholders = translation_placeholders or {}
+        self._attr_entity_registry_enabled_default = enabled_default
 
         device = coordinator.data.get(map_key)
 

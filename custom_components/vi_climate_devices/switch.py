@@ -22,7 +22,12 @@ from vi_api_client import Feature
 
 from .const import DOMAIN, IGNORED_FEATURES
 from .coordinator import ViClimateDataUpdateCoordinator
-from .utils import is_feature_ignored
+from .utils import (
+    beautify_name,
+    get_feature_bool_value,
+    is_feature_boolean_like,
+    is_feature_ignored,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,11 +53,6 @@ SWITCH_TYPES: dict[str, ViClimateSwitchEntityDescription] = {
         translation_key="dhw_hygiene",
         icon="mdi:shield-check",
         device_class=SwitchDeviceClass.SWITCH,
-    ),
-    "heating.circuits.0.heating.curve.active": ViClimateSwitchEntityDescription(
-        key="heating.circuits.0.heating.curve.active",
-        translation_key="heating_curve_active",
-        icon="mdi:check",
     ),
 }
 
@@ -88,15 +88,21 @@ async def async_setup_entry(
                     continue
 
                 # Automatic Discovery (Fallback)
-                # If writable boolean
-                if isinstance(feature.value, bool):
+                # If writable boolean-like
+                if is_feature_boolean_like(feature.value):
                     desc = ViClimateSwitchEntityDescription(
                         key=feature.name,
-                        name=feature.name,
+                        name=beautify_name(feature.name),
                         entity_category=EntityCategory.CONFIG,
                     )
                     entities.append(
-                        ViClimateSwitch(coordinator, map_key, feature.name, desc)
+                        ViClimateSwitch(
+                            coordinator,
+                            map_key,
+                            feature.name,
+                            desc,
+                            enabled_default=False,
+                        )
                     )
 
     async_add_entities(entities)
@@ -113,6 +119,7 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
         map_key: str,
         feature_name: str,
         description: ViClimateSwitchEntityDescription,
+        enabled_default: bool = True,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
@@ -120,6 +127,7 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
         self._map_key = map_key
         self._feature_name = feature_name
         self._property_name = description.property_name
+        self._attr_entity_registry_enabled_default = enabled_default
 
         device = coordinator.data.get(map_key)
 
@@ -132,7 +140,10 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
             not hasattr(description, "translation_key")
             or not description.translation_key
         ):
-            self._attr_name = feature_name
+            if description.name:
+                self._attr_name = description.name
+            else:
+                self._attr_name = beautify_name(feature_name)
 
     @property
     def feature_data(self) -> Feature | None:
@@ -167,15 +178,7 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
         if not feat:
             return None
 
-        # Handle "on"/"off" strings or Booleans
-        val = feat.value
-        if isinstance(val, bool):
-            return val
-        if isinstance(val, str):
-            return val.lower() in ("on", "true", "active", "1", "enabled")
-
-        # Fallback
-        return bool(val)
+        return get_feature_bool_value(feat.value)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""

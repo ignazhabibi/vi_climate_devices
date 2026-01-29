@@ -24,7 +24,7 @@ from vi_api_client import Feature
 
 from .const import DOMAIN, IGNORED_FEATURES
 from .coordinator import ViClimateDataUpdateCoordinator
-from .utils import is_feature_ignored
+from .utils import beautify_name, is_feature_ignored
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -216,12 +216,18 @@ async def async_setup_entry(
                 ):
                     desc = ViClimateNumberEntityDescription(
                         key=feature.name,
-                        name=feature.name,
+                        name=beautify_name(feature.name),
                         mode=NumberMode.BOX,  # Safer default
                         entity_category=EntityCategory.CONFIG,
                     )
                     entities.append(
-                        ViClimateNumber(coordinator, map_key, feature.name, desc)
+                        ViClimateNumber(
+                            coordinator,
+                            map_key,
+                            feature.name,
+                            desc,
+                            enabled_default=False,
+                        )
                     )
 
     async_add_entities(entities)
@@ -232,13 +238,14 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
 
     entity_description: ViClimateNumberEntityDescription
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         coordinator: ViClimateDataUpdateCoordinator,
         map_key: str,
         feature_name: str,
         description: ViClimateNumberEntityDescription,
         translation_placeholders: dict[str, str] | None = None,
+        enabled_default: bool = True,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
@@ -246,6 +253,7 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
         self._map_key = map_key
         self._feature_name = feature_name
         self._attr_translation_placeholders = translation_placeholders or {}
+        self._attr_entity_registry_enabled_default = enabled_default
 
         device = coordinator.data.get(map_key)
 
@@ -258,7 +266,10 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
             not hasattr(description, "translation_key")
             or not description.translation_key
         ):
-            self._attr_name = feature_name
+            if description.name:
+                self._attr_name = description.name
+            else:
+                self._attr_name = beautify_name(feature_name)
 
         # Initial Setup of Constraints from Feature Control
         feature = device.get_feature(feature_name)

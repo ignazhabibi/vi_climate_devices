@@ -7,10 +7,13 @@ from typing import Any
 def beautify_name(name: str) -> str:
     """Convert a dot-separated name to a Title Cased string.
 
-    Example: 'heating.outside.temperature' -> 'Heating Outside Temperature'
+    Removes leading 'heating.' if present.
+    Example: 'heating.outside.temperature' -> 'Outside Temperature'
     """
     if not name:
         return name
+    if name.startswith("heating."):
+        name = name[8:]
     return name.replace(".", " ").title()
 
 
@@ -20,11 +23,40 @@ def is_feature_boolean_like(value: Any) -> bool:
     Used to determine if a generic feature should be a Binary Sensor
     instead of a Sensor.
     """
+    return get_feature_bool_value(value, strict=True) is not None
+
+
+def get_feature_bool_value(value: Any, strict: bool = False) -> bool | None:
+    """Interpret a feature value as a boolean if possible.
+
+    If strict is True, only explicit boolean-like values (bool, specific strings)
+    are returned. Numeric fallback is skipped.
+    """
+    if value is None:
+        return None
     if isinstance(value, bool):
-        return True
+        return value
+
+    result = None
     if isinstance(value, str):
-        return value.lower() in ("on", "off", "active", "true", "false")
-    return False
+        val_lower = value.lower()
+        if val_lower in ("on", "active", "true", "1", "enabled"):
+            result = True
+        elif val_lower in ("off", "inactive", "false", "0", "disabled"):
+            result = False
+
+    if result is not None:
+        return result
+
+    if not strict:
+        # Fallback for truthiness for other types (e.g. numeric 1/0)
+        try:
+            if isinstance(value, (int, float)):
+                return bool(value)
+        except (ValueError, TypeError):
+            pass
+
+    return None
 
 
 def is_feature_ignored(
