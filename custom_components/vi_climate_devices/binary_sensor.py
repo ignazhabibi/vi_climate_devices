@@ -202,7 +202,13 @@ async def async_setup_entry(
                         entity_category=EntityCategory.DIAGNOSTIC,
                     )
                     entities.append(
-                        ViClimateBinarySensor(coordinator, map_key, feature.name, desc)
+                        ViClimateBinarySensor(
+                            coordinator,
+                            map_key,
+                            feature.name,
+                            desc,
+                            enabled_default=False,
+                        )
                     )
 
     async_add_entities(entities)
@@ -211,13 +217,14 @@ async def async_setup_entry(
 class ViClimateBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Representation of a generic Viessmann Climate Devices Binary Sensor."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         coordinator: ViClimateDataUpdateCoordinator,
         map_key: str,
         feature_name: str,
         description: BinarySensorEntityDescription,
         translation_placeholders: dict[str, str] | None = None,
+        enabled_default: bool = True,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -225,6 +232,7 @@ class ViClimateBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._map_key = map_key
         self._feature_name = feature_name
         self._attr_translation_placeholders = translation_placeholders or {}
+        self._attr_entity_registry_enabled_default = enabled_default
 
         device = coordinator.data.get(map_key)
 

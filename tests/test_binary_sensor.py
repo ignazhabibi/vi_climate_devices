@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.vi_climate_devices.const import DOMAIN
@@ -46,11 +47,11 @@ async def test_binary_sensor_values(hass: HomeAssistant, mock_client):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        # Assert: Verify a Standard Binary Sensor (DHW Active).
-        # Fixture value is 'on' -> State 'on'.
-        dhw_active = hass.states.get("binary_sensor.vitocal250a_dhw_active")
+        # Assert: Verify a Standard Binary Sensor (One Time Charge).
+        # Fixture value is 'off' -> State 'off'.
+        dhw_active = hass.states.get("binary_sensor.vitocal250a_one_time_charge")
         assert dhw_active is not None
-        assert dhw_active.state == "on"
+        assert dhw_active.state == "off"
 
         # Assert: Verify a Template/Regex Binary Sensor (Circulation Pump).
         # Fixture value is 'on' -> State 'on'.
@@ -105,10 +106,12 @@ async def test_binary_sensor_discovers_generic_on_off_string(
         await hass.async_block_till_done()
 
         # Assert: Verify the generic 'on' feature is discovered as a binary sensor.
-        entity = hass.states.get("binary_sensor.vitocal250a_dhw_status")
-        assert entity is not None
-        assert entity.state == "on"
-        assert entity.attributes["viessmann_feature_name"] == "heating.dhw.status"
+        registry = er.async_get(hass)
+
+        # heating.dhw.status (auto-discovered)
+        reg_entry = registry.async_get("binary_sensor.vitocal250a_dhw_status")
+        assert reg_entry is not None
+        assert reg_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
         # Cleanup: Unload the integration to prevent thread leaks.
         await hass.config_entries.async_unload(entry.entry_id)

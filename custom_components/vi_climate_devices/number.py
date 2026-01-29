@@ -221,7 +221,13 @@ async def async_setup_entry(
                         entity_category=EntityCategory.CONFIG,
                     )
                     entities.append(
-                        ViClimateNumber(coordinator, map_key, feature.name, desc)
+                        ViClimateNumber(
+                            coordinator,
+                            map_key,
+                            feature.name,
+                            desc,
+                            enabled_default=False,
+                        )
                     )
 
     async_add_entities(entities)
@@ -232,13 +238,14 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
 
     entity_description: ViClimateNumberEntityDescription
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         coordinator: ViClimateDataUpdateCoordinator,
         map_key: str,
         feature_name: str,
         description: ViClimateNumberEntityDescription,
         translation_placeholders: dict[str, str] | None = None,
+        enabled_default: bool = True,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
@@ -246,6 +253,7 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
         self._map_key = map_key
         self._feature_name = feature_name
         self._attr_translation_placeholders = translation_placeholders or {}
+        self._attr_entity_registry_enabled_default = enabled_default
 
         device = coordinator.data.get(map_key)
 

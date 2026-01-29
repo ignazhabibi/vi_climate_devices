@@ -101,7 +101,13 @@ async def async_setup_entry(
                         entity_category=EntityCategory.CONFIG,
                     )
                     entities.append(
-                        ViClimateSwitch(coordinator, map_key, feature.name, desc)
+                        ViClimateSwitch(
+                            coordinator,
+                            map_key,
+                            feature.name,
+                            desc,
+                            enabled_default=False,
+                        )
                     )
 
     async_add_entities(entities)
@@ -118,6 +124,7 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
         map_key: str,
         feature_name: str,
         description: ViClimateSwitchEntityDescription,
+        enabled_default: bool = True,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
@@ -125,6 +132,7 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
         self._map_key = map_key
         self._feature_name = feature_name
         self._property_name = description.property_name
+        self._attr_entity_registry_enabled_default = enabled_default
 
         device = coordinator.data.get(map_key)
 
