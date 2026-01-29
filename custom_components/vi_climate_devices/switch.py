@@ -54,11 +54,6 @@ SWITCH_TYPES: dict[str, ViClimateSwitchEntityDescription] = {
         icon="mdi:shield-check",
         device_class=SwitchDeviceClass.SWITCH,
     ),
-    "heating.circuits.0.heating.curve.active": ViClimateSwitchEntityDescription(
-        key="heating.circuits.0.heating.curve.active",
-        translation_key="heating_curve_active",
-        icon="mdi:check",
-    ),
 }
 
 
