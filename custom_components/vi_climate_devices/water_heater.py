@@ -153,6 +153,14 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
         step = getattr(self, "_attr_target_temperature_step", None)
         return get_suggested_precision(step)
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return entity specific state attributes."""
+        attrs = {}
+        if self.target_temperature_step is not None:
+            attrs["target_temp_step"] = self.target_temperature_step
+        return attrs
+
     # --- Properties ---
 
     @property

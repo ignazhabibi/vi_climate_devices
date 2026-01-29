@@ -74,12 +74,14 @@ async def test_water_heater_creation_and_services(hass: HomeAssistant, mock_clie
         assert float(state.attributes["temperature"]) == 55.0
         assert state.attributes["min_temp"] == 10.0
         assert state.attributes["max_temp"] == 60.0
-        assert state.attributes["target_temp_step"] == 1.0
-
-        # Verify precision on entity
+        # Verify constraints on entity
         component = hass.data.get("water_heater")
         entity = component.get_entity(entity_id)
+        assert entity.target_temperature_step == 1.0
         assert entity.suggested_display_precision == 0
+
+        # Verify it is also in attributes (via extra_state_attributes)
+        assert state.attributes["target_temp_step"] == 1.0
         assert state.attributes["supported_features"] == (
             WaterHeaterEntityFeature.TARGET_TEMPERATURE
             | WaterHeaterEntityFeature.OPERATION_MODE
