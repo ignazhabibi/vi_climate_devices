@@ -25,6 +25,7 @@ from vi_api_client import Feature
 
 from .const import DOMAIN
 from .coordinator import ViClimateDataUpdateCoordinator
+from .utils import get_suggested_precision
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -143,8 +144,14 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
                 self._attr_min_temp = feature.control.min
             if feature.control.max is not None:
                 self._attr_max_temp = feature.control.max
-            # Precision/Step is not a standard attribute of WaterHeaterEntity matches
-            # base class, but HA might respect 'precision' property.
+            if feature.control.step is not None:
+                self._attr_target_temperature_step = feature.control.step
+
+    @property
+    def suggested_display_precision(self) -> int | None:
+        """Return the suggested number of decimal places."""
+        step = getattr(self, "_attr_target_temperature_step", None)
+        return get_suggested_precision(step)
 
     # --- Properties ---
 

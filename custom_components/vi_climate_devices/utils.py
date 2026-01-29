@@ -70,3 +70,21 @@ def is_feature_ignored(
         if hasattr(pattern, "match") and pattern.match(feature_name):
             return True
     return False
+
+
+def get_suggested_precision(step: float | None) -> int | None:
+    """Determine decimal precision for display based on step size."""
+    if step is None:
+        return None
+
+    # is_integer() returns True for floats that are whole numbers (e.g. 1.0, 2.0)
+    if step.is_integer():
+        return 0
+
+    # Determine decimals based on float representation
+    # Use fixed-point formatting to avoid scientific notation (1e-04)
+    step_str = f"{step:f}".rstrip("0")
+    if "." in step_str:
+        return len(step_str.split(".")[1])
+
+    return 0

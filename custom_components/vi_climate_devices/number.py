@@ -24,7 +24,7 @@ from vi_api_client import Feature
 
 from .const import DOMAIN, IGNORED_FEATURES
 from .coordinator import ViClimateDataUpdateCoordinator
-from .utils import beautify_name, is_feature_ignored
+from .utils import beautify_name, get_suggested_precision, is_feature_ignored
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -316,6 +316,11 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
         return {
             "viessmann_feature_name": self._feature_name,
         }
+
+    @property
+    def suggested_display_precision(self) -> int | None:
+        """Return the suggested number of decimal places."""
+        return get_suggested_precision(self._attr_native_step)
 
     @property
     def native_value(self) -> float | None:

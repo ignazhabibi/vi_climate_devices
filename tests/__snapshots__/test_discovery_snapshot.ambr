@@ -620,6 +620,7 @@
         'supported_features': <WaterHeaterEntityFeature.TARGET_TEMPERATURE|OPERATION_MODE: 3>,
         'target_temp_high': None,
         'target_temp_low': None,
+        'target_temp_step': 1,
         'temperature': 55.0,
       }),
       'entity_id': 'water_heater.vitocal250a_dhw_water_heater',

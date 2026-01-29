@@ -68,6 +68,12 @@ async def test_number_creation_and_services(hass: HomeAssistant, mock_client):
         assert slope.attributes[ATTR_MAX] == 3.5
         assert slope.attributes[ATTR_STEP] == 0.1
 
+        # Verify precision on entity
+        component = hass.data.get("number")
+        entity_id = "number.vitocal250a_heating_circuit_0_curve_slope"
+        entity = component.get_entity(entity_id)
+        assert entity.suggested_display_precision == 1
+
         # Act: Set slope to 1.6.
         await hass.services.async_call(
             "number",

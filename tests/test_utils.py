@@ -3,6 +3,7 @@
 from custom_components.vi_climate_devices.utils import (
     beautify_name,
     get_feature_bool_value,
+    get_suggested_precision,
     is_feature_boolean_like,
 )
 
@@ -80,3 +81,27 @@ def test_get_feature_bool_value():
     assert get_feature_bool_value(None) is None
     assert get_feature_bool_value("standby") is None
     assert get_feature_bool_value("some_random_string") is None
+
+
+def test_get_suggested_precision():
+    """Test precision detection logic based on step."""
+
+    # Act & Assert: Verify Whole Numbers.
+    assert get_suggested_precision(1.0) == 0
+    assert get_suggested_precision(1) == 0
+    assert get_suggested_precision(2.0) == 0
+    assert get_suggested_precision(5.0) == 0
+
+    # Act & Assert: Verify Decimals.
+    assert get_suggested_precision(0.5) == 1
+    assert get_suggested_precision(0.1) == 1
+    assert get_suggested_precision(0.01) == 2
+    assert get_suggested_precision(0.25) == 2
+
+    # Act & Assert: Verify Scientific/Edge cases.
+    assert get_suggested_precision(0.0001) == 4
+    assert get_suggested_precision(1e-06) == 6
+
+    # Act & Assert: Edge cases.
+    assert get_suggested_precision(None) is None
+    assert get_suggested_precision(0.0) == 0
