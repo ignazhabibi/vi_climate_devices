@@ -263,6 +263,9 @@
             "compressor_speed_setpoint": {
                 "name": "Verdichter {index} Drehzahl Sollwert"
             },
+            "condensor_liquid_temperature": {
+                "name": "Verflüssiger {index} Flüssigkeitstemperatur"
+            },
             "fan_speed": {
                 "name": "Lüfter {index} Drehzahl"
             },

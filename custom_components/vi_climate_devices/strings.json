@@ -281,6 +281,9 @@
             "compressor_speed_setpoint": {
                 "name": "Compressor {index} Speed Setpoint"
             },
+            "condensor_liquid_temperature": {
+                "name": "Condensor {index} Liquid Temperature"
+            },
             "fan_speed": {
                 "name": "Fan {index} Speed"
             },

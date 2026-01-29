@@ -281,6 +281,22 @@ SENSOR_TEMPLATES = [
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
+            icon="mdi:thermometer",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    },
+    # Condensor Liquid Temperature
+    {
+        "pattern": re.compile(
+            r"^heating\.condensors\.(\d+)\.sensors\.temperature\.liquid$"
+        ),
+        "description": SensorEntityDescription(
+            key="placeholder",
+            translation_key="condensor_liquid_temperature",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            icon="mdi:thermometer",
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     },

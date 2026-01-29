@@ -535,12 +535,13 @@
     dict({
       'attributes': dict({
         'device_class': 'temperature',
-        'friendly_name': 'Vitocal250A Condensors 0 Sensors Temperature Liquid',
+        'friendly_name': 'Vitocal250A Condensor 0 Liquid Temperature',
+        'icon': 'mdi:thermometer',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
         'viessmann_feature_name': 'heating.condensors.0.sensors.temperature.liquid',
       }),
-      'entity_id': 'sensor.vitocal250a_condensors_0_sensors_temperature_liquid',
+      'entity_id': 'sensor.vitocal250a_condensor_0_liquid_temperature',
       'state': '25.9',
     }),
     dict({
@@ -729,6 +730,7 @@
       'attributes': dict({
         'device_class': 'temperature',
         'friendly_name': 'Vitocal250A Evaporator 0 Overheat Temperature',
+        'icon': 'mdi:thermometer',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
         'viessmann_feature_name': 'heating.evaporators.0.sensors.temperature.overheat',
