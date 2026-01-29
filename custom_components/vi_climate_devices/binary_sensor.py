@@ -19,9 +19,9 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, IGNORED_FEATURES
 from .coordinator import ViClimateDataUpdateCoordinator
-from .utils import is_feature_boolean_like
+from .utils import is_feature_boolean_like, is_feature_ignored
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -158,6 +158,10 @@ async def async_setup_entry(
     if coordinator.data:
         for map_key, device in coordinator.data.items():
             for feature in device.features:
+                # Skip ignored features early
+                if is_feature_ignored(feature.name, IGNORED_FEATURES):
+                    continue
+
                 if feature.name in BINARY_SENSOR_TYPES:
                     description = BINARY_SENSOR_TYPES[feature.name]
                     entities.append(

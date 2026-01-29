@@ -27,9 +27,9 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, IGNORED_FEATURES
 from .coordinator import ViClimateAnalyticsCoordinator, ViClimateDataUpdateCoordinator
-from .utils import beautify_name, is_feature_boolean_like
+from .utils import beautify_name, is_feature_boolean_like, is_feature_ignored
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -532,7 +532,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
 }
 
 # Analytics Features (from handover)
-ANALYTICS_Types: dict[str, SensorEntityDescription] = {
+ANALYTICS_TYPES: dict[str, SensorEntityDescription] = {
     "analytics.heating.power.consumption.total": SensorEntityDescription(
         key="analytics.heating.power.consumption.total",
         translation_key="consumption_total",
@@ -642,77 +642,99 @@ async def async_setup_entry(
 
     entities = []
 
-    # --- 1. Realtime Sensors ---
-    # coordinator.data is Dict[map_key, Device]
+    # --- 1. Viessmann IoT API ---
     if coordinator.data:
-        for map_key, device in coordinator.data.items():
-            # Iterate over FLATTENED features
-            for feature in device.features:
-                # 1. Defined Entities (High Quality)
-                if feature.name in SENSOR_TYPES:
-                    description = SENSOR_TYPES[feature.name]
-                    entities.append(
-                        ViClimateSensor(coordinator, map_key, feature.name, description)
-                    )
-                    continue
+        entities.extend(_discover_realtime_sensors(coordinator))
 
-                if match_result := _get_sensor_entity_description(feature.name):
-                    description, placeholders = match_result
-                    entities.append(
-                        ViClimateSensor(
-                            coordinator,
-                            map_key,
-                            feature.name,
-                            description,
-                            translation_placeholders=placeholders,
-                        )
-                    )
-                    continue
-
-                # 2. Automatic Discovery (Fallback)
-                # If not writable (Sensors) and not boolean-like
-                # (Binary Sensor platform handles all boolean-like values)
-                if not feature.is_writable and not is_feature_boolean_like(
-                    feature.value
-                ):
-                    description = _get_auto_discovery_description(feature)
-                    entities.append(
-                        ViClimateSensor(coordinator, map_key, feature.name, description)
-                    )
-
-    # --- 2. Analytics Sensors ---
-    # Analytics data is stored nested: { "gateway_device": { "feature": Feature } }
+    # --- 2. Viessmann Analytics API ---
     if coordinator.data and analytics_coordinator:
-        heating_devices = []
-
-        # 1. Identify heating devices (Mirroring coordinator logic)
-        heating_devices = [
-            d
-            for d in coordinator.data.values()
-            if getattr(d, "device_type", "unknown") == "heating"
-        ]
-
-        # Fallback
-        if not heating_devices and len(coordinator.data) == 1:
-            heating_devices.append(next(iter(coordinator.data.values())))
-
-        if heating_devices:
-            for heating_device in heating_devices:
-                _LOGGER.debug(
-                    "Analytics attached to device: %s (Serial: %s)",
-                    heating_device.id,
-                    heating_device.gateway_serial,
-                )
-                for _feature_name, description in ANALYTICS_Types.items():
-                    entities.append(
-                        ViClimateConsumptionSensor(
-                            analytics_coordinator, heating_device, description
-                        )
-                    )
-        else:
-            _LOGGER.warning("No heating device found for Analytics Setup.")
+        entities.extend(_discover_analytics_sensors(coordinator, analytics_coordinator))
 
     async_add_entities(entities)
+
+
+def _discover_realtime_sensors(
+    coordinator: ViClimateDataUpdateCoordinator,
+) -> list[SensorEntity]:
+    """Discover and return realtime sensor entities."""
+    entities = []
+    for map_key, device in coordinator.data.items():
+        # Iterate over FLATTENED features
+        for feature in device.features:
+            # Skip ignored features early
+            if is_feature_ignored(feature.name, IGNORED_FEATURES):
+                continue
+
+            # 1. Defined Entities (High Quality)
+            if feature.name in SENSOR_TYPES:
+                description = SENSOR_TYPES[feature.name]
+                entities.append(
+                    ViClimateSensor(coordinator, map_key, feature.name, description)
+                )
+                continue
+
+            if match_result := _get_sensor_entity_description(feature.name):
+                description, placeholders = match_result
+                entities.append(
+                    ViClimateSensor(
+                        coordinator,
+                        map_key,
+                        feature.name,
+                        description,
+                        translation_placeholders=placeholders,
+                    )
+                )
+                continue
+
+            # 2. Automatic Discovery (Fallback)
+            # If not writable (Sensors) and not boolean-like
+            # (Binary Sensor platform handles all boolean-like values)
+            if not feature.is_writable and not is_feature_boolean_like(feature.value):
+                description = _get_auto_discovery_description(feature)
+                entities.append(
+                    ViClimateSensor(coordinator, map_key, feature.name, description)
+                )
+    return entities
+
+
+def _discover_analytics_sensors(
+    coordinator: ViClimateDataUpdateCoordinator,
+    analytics_coordinator: ViClimateAnalyticsCoordinator,
+) -> list[SensorEntity]:
+    """Discover and return analytics sensor entities."""
+    entities = []
+    # 1. Identify heating devices (Mirroring coordinator logic)
+    heating_devices = [
+        device
+        for device in coordinator.data.values()
+        if getattr(device, "device_type", "unknown") == "heating"
+    ]
+
+    # Fallback
+    if not heating_devices and len(coordinator.data) == 1:
+        heating_devices.append(next(iter(coordinator.data.values())))
+
+    if heating_devices:
+        for heating_device in heating_devices:
+            _LOGGER.debug(
+                "Analytics attached to device: %s (Serial: %s)",
+                heating_device.id,
+                heating_device.gateway_serial,
+            )
+            for feature_name, description in ANALYTICS_TYPES.items():
+                # Skip ignored features
+                if is_feature_ignored(feature_name, IGNORED_FEATURES):
+                    continue
+
+                entities.append(
+                    ViClimateConsumptionSensor(
+                        analytics_coordinator, heating_device, description
+                    )
+                )
+    else:
+        _LOGGER.warning("No heating device found for Analytics Setup.")
+
+    return entities
 
 
 class ViClimateSensor(CoordinatorEntity, SensorEntity):
