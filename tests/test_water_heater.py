@@ -77,7 +77,11 @@ async def test_water_heater_creation_and_services(hass: HomeAssistant, mock_clie
         # Verify constraints on entity
         component = hass.data.get("water_heater")
         entity = component.get_entity(entity_id)
-        assert entity.target_temperature_step == 1.0
+        # Use getattr because property might not exist in all HA versions
+        assert (
+            getattr(entity, "target_temperature_step", None) == 1.0
+            or getattr(entity, "_attr_target_temperature_step", None) == 1.0
+        )
         assert entity.suggested_display_precision == 0
 
         # Verify it is also in attributes (via extra_state_attributes)
