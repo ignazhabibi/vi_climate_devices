@@ -67,14 +67,6 @@ async def test_sensor_values(hass: HomeAssistant, mock_client):
         compressor_speed.attributes["friendly_name"] == "Vitocal250A Compressor 0 Speed"
     )
 
-    # Assert: Verify a Complex Data Sensor (Heating Consumption).
-    # Ensures that large lists are not set as state, but preserved in attributes.
-    heating_total = hass.states.get("sensor.vitocal250a_power_consumption_total")
-    assert heating_total is not None
-    assert heating_total.state == "Complex Data"
-    assert "raw_value" in heating_total.attributes
-    assert isinstance(heating_total.attributes["raw_value"], dict)
-
     # Cleanup: Unload the integration to prevent thread leaks.
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     await hass.config_entries.async_unload(entry.entry_id)

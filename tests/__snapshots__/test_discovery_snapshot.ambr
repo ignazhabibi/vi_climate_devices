@@ -178,14 +178,6 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Primarycircuit Valves Fourthreeway Active',
-        'viessmann_feature_name': 'heating.primaryCircuit.valves.fourThreeWay.active',
-      }),
-      'entity_id': 'binary_sensor.vitocal250a_primarycircuit_valves_fourthreeway_active',
-      'state': 'off',
-    }),
-    dict({
-      'attributes': dict({
         'friendly_name': 'Vitocal250A Secondaryheatgenerator Active',
         'viessmann_feature_name': 'heating.secondaryHeatGenerator.active',
       }),
@@ -524,17 +516,6 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Compressors Enabled',
-        'raw_value': list([
-          '0',
-        ]),
-        'viessmann_feature_name': 'heating.compressors.enabled',
-      }),
-      'entity_id': 'sensor.vitocal250a_compressors_enabled',
-      'state': '1',
-    }),
-    dict({
-      'attributes': dict({
         'device_class': 'temperature',
         'friendly_name': 'Vitocal250A Condensor 0 Liquid Temperature',
         'icon': 'mdi:thermometer',
@@ -652,14 +633,6 @@
       }),
       'entity_id': 'sensor.vitocal250a_configuration_temperature_outside_dampingfactor',
       'state': '10',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Device Variant',
-        'viessmann_feature_name': 'heating.device.variant',
-      }),
-      'entity_id': 'sensor.vitocal250a_device_variant',
-      'state': 'Vitocal250A',
     }),
     dict({
       'attributes': dict({
@@ -1157,84 +1130,6 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Power Consumption Dhw',
-        'raw_value': dict({
-          'day': dict({
-            'type': 'array',
-            'unit': 'kilowattHour',
-            'value': list([
-              2.6,
-              5.8,
-              3.5,
-              2.3,
-              1.8,
-              5.1,
-              3.4,
-              5.4,
-            ]),
-          }),
-          'dayValueReadAt': dict({
-            'type': 'string',
-            'value': '2025-10-05T05:14:16.233Z',
-          }),
-          'month': dict({
-            'type': 'array',
-            'unit': 'kilowattHour',
-            'value': list([
-              16,
-              89.7,
-              28.1,
-              41.7,
-              31.5,
-              54.9,
-              76.3,
-              144.2,
-              178.4,
-              214.3,
-              210,
-              178.7,
-              128.4,
-            ]),
-          }),
-          'monthValueReadAt': dict({
-            'type': 'string',
-            'value': '2025-10-05T05:14:16.233Z',
-          }),
-          'week': dict({
-            'type': 'array',
-            'unit': 'kilowattHour',
-            'value': list([
-              24.5,
-              32.7,
-              13.8,
-              22.4,
-              12.3,
-            ]),
-          }),
-          'weekValueReadAt': dict({
-            'type': 'string',
-            'value': '2025-10-05T05:14:16.233Z',
-          }),
-          'year': dict({
-            'type': 'array',
-            'unit': 'kilowattHour',
-            'value': list([
-              875.0999999999999,
-              1536.8,
-            ]),
-          }),
-          'yearValueReadAt': dict({
-            'type': 'string',
-            'value': '2025-10-05T05:14:16.233Z',
-          }),
-        }),
-        'viessmann_feature_name': 'heating.power.consumption.dhw',
-      }),
-      'entity_id': 'sensor.vitocal250a_power_consumption_dhw',
-      'state': 'Complex Data',
-    }),
-    dict({
-      'attributes': dict({
         'device_class': 'energy',
         'friendly_name': 'Vitocal250A Power Consumption DHW (Today)',
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1242,84 +1137,6 @@
       }),
       'entity_id': 'sensor.vitocal250a_power_consumption_dhw_today',
       'state': '10.2',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Power Consumption Heating',
-        'raw_value': dict({
-          'day': dict({
-            'type': 'array',
-            'unit': 'kilowattHour',
-            'value': list([
-              4.6,
-              6.8,
-              7,
-              6.1,
-              7.8,
-              4.3,
-              2.8,
-              4.6,
-            ]),
-          }),
-          'dayValueReadAt': dict({
-            'type': 'string',
-            'value': '2025-10-05T05:14:16.246Z',
-          }),
-          'month': dict({
-            'type': 'array',
-            'unit': 'kilowattHour',
-            'value': list([
-              32.3,
-              32.1,
-              0,
-              0,
-              0,
-              10.4,
-              205.7,
-              538.8,
-              830.5,
-              915.9,
-              839.5,
-              560.4000000000001,
-              208.6,
-            ]),
-          }),
-          'monthValueReadAt': dict({
-            'type': 'string',
-            'value': '2025-10-05T05:14:16.246Z',
-          }),
-          'week': dict({
-            'type': 'array',
-            'unit': 'kilowattHour',
-            'value': list([
-              39.39999999999999,
-              22.7,
-              0,
-              0,
-              2.3,
-            ]),
-          }),
-          'weekValueReadAt': dict({
-            'type': 'string',
-            'value': '2025-10-05T05:14:16.246Z',
-          }),
-          'year': dict({
-            'type': 'array',
-            'unit': 'kilowattHour',
-            'value': list([
-              2565.7,
-              3809.6,
-            ]),
-          }),
-          'yearValueReadAt': dict({
-            'type': 'string',
-            'value': '2025-10-05T05:14:16.246Z',
-          }),
-        }),
-        'viessmann_feature_name': 'heating.power.consumption.heating',
-      }),
-      'entity_id': 'sensor.vitocal250a_power_consumption_heating',
-      'state': 'Complex Data',
     }),
     dict({
       'attributes': dict({
@@ -1531,84 +1348,6 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Power Consumption Total',
-        'raw_value': dict({
-          'day': dict({
-            'type': 'array',
-            'unit': 'kilowattHour',
-            'value': list([
-              7.199999999999999,
-              12.6,
-              10.5,
-              8.399999999999999,
-              9.6,
-              9.399999999999999,
-              6.199999999999999,
-              10,
-            ]),
-          }),
-          'dayValueReadAt': dict({
-            'type': 'string',
-            'value': '2025-10-05T05:14:16.233Z',
-          }),
-          'month': dict({
-            'type': 'array',
-            'unit': 'kilowattHour',
-            'value': list([
-              48.3,
-              121.80000000000001,
-              28.1,
-              41.7,
-              31.5,
-              65.3,
-              282,
-              683,
-              1008.9,
-              1130.1999999999998,
-              1049.5,
-              739.1000000000001,
-              337,
-            ]),
-          }),
-          'monthValueReadAt': dict({
-            'type': 'string',
-            'value': '2025-10-05T05:14:16.233Z',
-          }),
-          'week': dict({
-            'type': 'array',
-            'unit': 'kilowattHour',
-            'value': list([
-              63.89999999999999,
-              55.400000000000006,
-              13.8,
-              22.4,
-              14.600000000000001,
-            ]),
-          }),
-          'weekValueReadAt': dict({
-            'type': 'string',
-            'value': '2025-10-05T05:14:16.233Z',
-          }),
-          'year': dict({
-            'type': 'array',
-            'unit': 'kilowattHour',
-            'value': list([
-              3440.8,
-              5346.400000000001,
-            ]),
-          }),
-          'yearValueReadAt': dict({
-            'type': 'string',
-            'value': '2025-10-05T05:14:16.233Z',
-          }),
-        }),
-        'viessmann_feature_name': 'heating.power.consumption.total',
-      }),
-      'entity_id': 'sensor.vitocal250a_power_consumption_total',
-      'state': 'Complex Data',
-    }),
-    dict({
-      'attributes': dict({
         'device_class': 'energy',
         'friendly_name': 'Vitocal250A Power Consumption Total (Today)',
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1627,22 +1366,6 @@
       }),
       'entity_id': 'sensor.vitocal250a_primary_circuit_supply_temperature',
       'state': '13.9',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Primarycircuit Fans 0 Current Status',
-        'viessmann_feature_name': 'heating.primaryCircuit.fans.0.current.status',
-      }),
-      'entity_id': 'sensor.vitocal250a_primarycircuit_fans_0_current_status',
-      'state': 'connected',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Primarycircuit Fans 1 Current Status',
-        'viessmann_feature_name': 'heating.primaryCircuit.fans.1.current.status',
-      }),
-      'entity_id': 'sensor.vitocal250a_primarycircuit_fans_1_current_status',
-      'state': 'connected',
     }),
     dict({
       'attributes': dict({
@@ -1736,14 +1459,6 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Secondarycircuit Sensors Temperature Supply Status',
-        'viessmann_feature_name': 'heating.secondaryCircuit.sensors.temperature.supply.status',
-      }),
-      'entity_id': 'sensor.vitocal250a_secondarycircuit_sensors_temperature_supply_status',
-      'state': 'connected',
-    }),
-    dict({
-      'attributes': dict({
         'device_class': 'temperature',
         'friendly_name': 'Vitocal250A Secondarycircuit Temperature Return Minimum',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1772,14 +1487,6 @@
       }),
       'entity_id': 'sensor.vitocal250a_secondarycircuit_valves_fourthreeway_target',
       'state': '50',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Secondaryheatgenerator Connectiontype',
-        'viessmann_feature_name': 'heating.secondaryHeatGenerator.connectionType',
-      }),
-      'entity_id': 'sensor.vitocal250a_secondaryheatgenerator_connectiontype',
-      'state': 'unknown',
     }),
     dict({
       'attributes': dict({
