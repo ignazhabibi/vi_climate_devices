@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from vi_api_client import Feature
 
-from .const import DOMAIN
+from .const import DOMAIN, IGNORED_FEATURES
 from .coordinator import ViClimateDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,6 +56,10 @@ async def async_setup_entry(
     if coordinator.data:
         for map_key, device in coordinator.data.items():
             for feature in device.features:
+                # Skip ignored features early
+                if feature.name in IGNORED_FEATURES:
+                    continue
+
                 if not feature.is_writable:
                     continue
 
