@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from vi_api_client.api import Feature
 
 from .const import DOMAIN, IGNORED_FEATURES
 from .coordinator import ViClimateDataUpdateCoordinator
@@ -36,8 +37,7 @@ class ViClimateBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Custom description for ViClimate binary sensors."""
 
 
-# Dynamic Templates
-# Pre-compiled regex patterns for better performance
+# Templates with regex patterns for dynamic feature names
 BINARY_SENSOR_TEMPLATES = [
     # Circulation Pumps (heating.circuits.N.circulation.pump.status)
     {
@@ -91,32 +91,37 @@ BINARY_SENSOR_TEMPLATES = [
 ]
 
 BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
-    # Static / Named components
+    # DHW Circulation Pump (heating.dhw.pumps.circulation.status)
     "heating.dhw.pumps.circulation.status": BinarySensorEntityDescription(
         key="heating.dhw.pumps.circulation.status",
         translation_key="dhw_circulation_pump",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
+    # DHW Primary Pump (heating.dhw.pumps.primary.status)
     "heating.dhw.pumps.primary.status": BinarySensorEntityDescription(
         key="heating.dhw.pumps.primary.status",
         translation_key="dhw_primary_pump",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
+    # DHW Charging (heating.dhw.charging)
     "heating.dhw.charging": BinarySensorEntityDescription(
         key="heating.dhw.charging",
         translation_key="dhw_charging",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
+    # One Time Charge (heating.dhw.oneTimeCharge.active)
     "heating.dhw.oneTimeCharge.active": BinarySensorEntityDescription(
         key="heating.dhw.oneTimeCharge.active",
         translation_key="one_time_charge",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
+    # Solar Pump (heating.solar.pumps.circuit.status)
     "heating.solar.pumps.circuit.status": BinarySensorEntityDescription(
         key="heating.solar.pumps.circuit.status",
         translation_key="solar_pump",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
+    # Outdoor Defrosting (heating.outdoor.defrosting.active)
     "heating.outdoor.defrosting.active": BinarySensorEntityDescription(
         key="heating.outdoor.defrosting.active",
         translation_key="outdoor_defrosting",
@@ -139,7 +144,6 @@ def _get_binary_sensor_entity_description(
             index = match.group(1)
             base_desc: BinarySensorEntityDescription = template["description"]
 
-            # Clone and Format
             new_desc = dataclasses.replace(
                 base_desc,
                 key=feature_name,
@@ -261,7 +265,7 @@ class ViClimateBinarySensor(CoordinatorEntity, BinarySensorEntity):
         )
 
     @property
-    def feature_data(self):
+    def feature_data(self) -> Feature | None:
         """Retrieve the specific feature from coordinator data."""
         device = self.coordinator.data.get(self._map_key)
         if not device:
@@ -277,7 +281,7 @@ class ViClimateBinarySensor(CoordinatorEntity, BinarySensorEntity):
         return None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         return {"viessmann_feature_name": self._feature_name}
 

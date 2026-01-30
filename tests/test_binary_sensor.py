@@ -13,7 +13,7 @@ from custom_components.vi_climate_devices.const import DOMAIN
 @pytest.mark.asyncio
 async def test_binary_sensor_values(hass: HomeAssistant, mock_client):
     """Test that binary sensors are created correctly from the fixture data."""
-    # Arrange: Setup Viessmann integration with MockConfigEntry and MockViClient.
+    # Arrange: Setup Viessmann integration with MockConfigEntry.
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -27,6 +27,8 @@ async def test_binary_sensor_values(hass: HomeAssistant, mock_client):
         },
     )
     entry.add_to_hass(hass)
+
+    # Note: MockViClient is provided by fixture (mock_client).
 
     with (
         patch(
@@ -82,7 +84,12 @@ async def test_binary_sensor_discovers_generic_on_off_string(
     Using real fixture key: heating.dhw.status (value: "on")
     This feature is NOT in BINARY_SENSOR_TYPES, so it tests the generic discovery.
     """
-    # Arrange: Configure the integration with the mock client fixture.
+    # Arrange: Setup integration and mock client fixture.
+    entry = MockConfigEntry(domain=DOMAIN, data={"client_id": "1", "token": "x"})
+    entry.add_to_hass(hass)
+
+    # Note: MockClient provided by fixture.
+
     with (
         patch(
             "custom_components.vi_climate_devices.ViessmannClient",
@@ -98,9 +105,6 @@ async def test_binary_sensor_discovers_generic_on_off_string(
         ),
         patch("custom_components.vi_climate_devices.HAAuth"),
     ):
-        entry = MockConfigEntry(domain=DOMAIN, data={"client_id": "1", "token": "x"})
-        entry.add_to_hass(hass)
-
         # Act: Initialize the integration to trigger discovery.
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
