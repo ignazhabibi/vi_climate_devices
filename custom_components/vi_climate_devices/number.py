@@ -33,23 +33,14 @@ _LOGGER = logging.getLogger(__name__)
 class ViClimateNumberEntityDescription(NumberEntityDescription):
     """Custom description for ViClimate number entities."""
 
-    param_name: str | None = None
-    command_name: str | None = None
-    property_name: str | None = None
-    # Optional: logic name to read from properties if different from param_name
 
-
-# Definition maps: feature_name -> List of descriptions
-# Dynamic Templates
-
-# Dynamic Templates
-# Each template matches a single flat feature name
+# Templates with regex patterns for dynamic feature names
 NUMBER_TEMPLATES = [
     {
         "pattern": re.compile(r"^heating\.circuits\.(\d+)\.heating\.curve\.slope$"),
         "description": ViClimateNumberEntityDescription(
             key="placeholder",
-            translation_key="heating_curve_slope",  # Generic key
+            translation_key="heating_curve_slope",
             icon="mdi:slope-uphill",
             mode=NumberMode.BOX,
             entity_category=EntityCategory.CONFIG,
@@ -59,7 +50,7 @@ NUMBER_TEMPLATES = [
         "pattern": re.compile(r"^heating\.circuits\.(\d+)\.heating\.curve\.shift$"),
         "description": ViClimateNumberEntityDescription(
             key="placeholder",
-            translation_key="heating_curve_shift",  # Generic key
+            translation_key="heating_curve_shift",
             icon="mdi:arrow-up-down",
             mode=NumberMode.BOX,
             entity_category=EntityCategory.CONFIG,
@@ -87,7 +78,6 @@ NUMBER_TEMPLATES = [
 ]
 
 NUMBER_TYPES: dict[str, ViClimateNumberEntityDescription] = {
-    # Hysteresis entities (v0.2.1+ of vi_api_client)
     "heating.dhw.temperature.hysteresis": ViClimateNumberEntityDescription(
         key="heating.dhw.temperature.hysteresis",
         translation_key="dhw_hysteresis",
@@ -96,6 +86,7 @@ NUMBER_TYPES: dict[str, ViClimateNumberEntityDescription] = {
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.KELVIN,
         device_class=NumberDeviceClass.TEMPERATURE,
+        entity_registry_enabled_default=False,
     ),
     "heating.dhw.temperature.hysteresis.switchOnValue": (
         ViClimateNumberEntityDescription(
@@ -183,7 +174,7 @@ async def async_setup_entry(
                 if is_feature_ignored(feature.name, IGNORED_FEATURES):
                     continue
 
-                # 1. Defined Entities (Skip writable check for known overrides)
+                # 1. Defined Entities
                 if feature.name in NUMBER_TYPES:
                     desc = NUMBER_TYPES[feature.name]
                     entities.append(
@@ -217,7 +208,7 @@ async def async_setup_entry(
                     desc = ViClimateNumberEntityDescription(
                         key=feature.name,
                         name=beautify_name(feature.name),
-                        mode=NumberMode.BOX,  # Safer default
+                        mode=NumberMode.BOX,
                         entity_category=EntityCategory.CONFIG,
                     )
                     entities.append(
@@ -284,7 +275,6 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
                 self._attr_native_max_value = float(feature.control.max)
             if feature.control.step is not None:
                 self._attr_native_step = float(feature.control.step)
-            # Default fallback if step is missing?
             if self._attr_native_step is None:
                 self._attr_native_step = 1.0
 

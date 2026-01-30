@@ -66,6 +66,7 @@
     }),
     dict({
       'attributes': dict({
+        'device_class': 'running',
         'friendly_name': 'Vitocal250A Outdoor Defrosting',
         'viessmann_feature_name': 'heating.outdoor.defrosting.active',
       }),
@@ -176,7 +177,7 @@
     dict({
       'attributes': dict({
         'friendly_name': 'Vitocal250A Heating Circuit 0 Operation Mode',
-        'icon': 'mdi:home-thermometer-auto',
+        'icon': 'mdi:home-thermometer',
         'options': list([
           'heating',
           'standby',

@@ -39,11 +39,7 @@ class ViClimateSensorEntityDescription(SensorEntityDescription):
     """Custom description for ViClimate sensors."""
 
 
-# --- Sensor Definitions ---
-
-# Dynamic Templates for repeated features (index N)
-# Pattern is a regex. Description translation_key expects {} for the index.
-# Pre-compiled regex patterns for better performance
+# Templates with regex patterns for dynamic feature names
 SENSOR_TEMPLATES = [
     # Heating Circuits Supply Temperature
     {
@@ -52,7 +48,7 @@ SENSOR_TEMPLATES = [
         ),
         "description": SensorEntityDescription(
             key="placeholder",
-            translation_key="heating_circuit_supply_temperature",  # Generic key
+            translation_key="heating_circuit_supply_temperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -63,7 +59,7 @@ SENSOR_TEMPLATES = [
         "pattern": re.compile(r"^heating\.burners\.(\d+)\.modulation$"),
         "description": SensorEntityDescription(
             key="placeholder",
-            translation_key="burner_modulation",  # Generic key
+            translation_key="burner_modulation",
             native_unit_of_measurement=PERCENTAGE,
             icon="mdi:fire",
             state_class=SensorStateClass.MEASUREMENT,
@@ -115,7 +111,7 @@ SENSOR_TEMPLATES = [
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     },
-    # Compressor Phase (text sensor)
+    # Compressor Phase
     {
         "pattern": re.compile(r"^heating\.compressors\.(\d+)\.phase$"),
         "description": SensorEntityDescription(
@@ -225,7 +221,7 @@ SENSOR_TEMPLATES = [
         "pattern": re.compile(r"^heating\.inverters\.(\d+)\.sensors\.power\.output$"),
         "description": SensorEntityDescription(
             key="placeholder",
-            translation_key="inverter_power_output",  # Generic key
+            translation_key="inverter_power_output",
             native_unit_of_measurement=UnitOfPower.WATT,
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -302,8 +298,8 @@ SENSOR_TEMPLATES = [
     },
 ]
 
-# Map feature names to SensorEntityDescription
 SENSOR_TYPES: dict[str, SensorEntityDescription] = {
+    # Outside Temperature
     "heating.sensors.temperature.outside": SensorEntityDescription(
         key="heating.sensors.temperature.outside",
         translation_key="outside_temperature",
@@ -311,6 +307,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Return Temperature (Generic)
     "heating.sensors.temperature.return": SensorEntityDescription(
         key="heating.sensors.temperature.return",
         translation_key="return_temperature",
@@ -318,6 +315,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Boiler Common Supply Temperature
     "heating.boiler.sensors.temperature.commonSupply": SensorEntityDescription(
         key="heating.boiler.sensors.temperature.commonSupply",
         translation_key="common_supply_temperature",
@@ -325,6 +323,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Primary Circuit Supply Temperature
     "heating.primaryCircuit.sensors.temperature.supply": SensorEntityDescription(
         key="heating.primaryCircuit.sensors.temperature.supply",
         translation_key="primary_supply_temperature",
@@ -332,6 +331,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Secondary Circuit Supply Temperature
     "heating.secondaryCircuit.sensors.temperature.supply": SensorEntityDescription(
         key="heating.secondaryCircuit.sensors.temperature.supply",
         translation_key="secondary_supply_temperature",
@@ -339,6 +339,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Buffer Cylinder Main Temperature
     "heating.bufferCylinder.sensors.temperature.main": SensorEntityDescription(
         key="heating.bufferCylinder.sensors.temperature.main",
         translation_key="buffer_cylinder_temperature",
@@ -346,6 +347,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # DHW Hot Water Storage Temperature
     "heating.dhw.sensors.temperature.hotWaterStorage": SensorEntityDescription(
         key="heating.dhw.sensors.temperature.hotWaterStorage",
         translation_key="dhw_temperature",
@@ -392,7 +394,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         icon="mdi:chart-line",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    # Additional Diagnostic
+    # Supply Pressure
     "heating.sensors.pressure.supply": SensorEntityDescription(
         key="heating.sensors.pressure.supply",
         translation_key="supply_pressure",
@@ -402,6 +404,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         icon="mdi:gauge",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    # Volumetric Flow (Allengra)
     "heating.sensors.volumetricFlow.allengra": SensorEntityDescription(
         key="heating.sensors.volumetricFlow.allengra",
         translation_key="volumetric_flow",
@@ -411,7 +414,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         icon="mdi:gauge",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    # Production / Power
+    # Production Summary DHW (Today)
     "heating.heat.production.summary.dhw.currentDay": SensorEntityDescription(
         key="heating.heat.production.summary.dhw.currentDay",
         translation_key="production_dhw_current_day",
@@ -419,6 +422,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
+    # Production Summary Heating (Today)
     "heating.heat.production.summary.heating.currentDay": SensorEntityDescription(
         key="heating.heat.production.summary.heating.currentDay",
         translation_key="production_heating_current_day",
@@ -426,8 +430,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    # --- New Sensors ---
-    # Environment
+    # Outside Humidity
     "heating.sensors.humidity.outside": SensorEntityDescription(
         key="heating.sensors.humidity.outside",
         translation_key="outside_humidity",
@@ -435,7 +438,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Boiler (Gas)
+    # Boiler Main Temperature
     "heating.boiler.sensors.temperature.main": SensorEntityDescription(
         key="heating.boiler.sensors.temperature.main",
         translation_key="boiler_temperature",
@@ -443,7 +446,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Circuits Return
+    # Primary Circuit Return Temperature
     "heating.primaryCircuit.sensors.temperature.return": SensorEntityDescription(
         key="heating.primaryCircuit.sensors.temperature.return",
         translation_key="primary_return_temperature",
@@ -451,6 +454,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Secondary Circuit Return Temperature
     "heating.secondaryCircuit.sensors.temperature.return": SensorEntityDescription(
         key="heating.secondaryCircuit.sensors.temperature.return",
         translation_key="secondary_return_temperature",
@@ -458,7 +462,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # DHW Details
+    # DHW Outlet Temperature
     "heating.dhw.sensors.temperature.outlet": SensorEntityDescription(
         key="heating.dhw.sensors.temperature.outlet",
         translation_key="dhw_outlet_temperature",
@@ -466,6 +470,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # DHW Storage Temperature - Top
     "heating.dhw.sensors.temperature.hotWaterStorageTop": SensorEntityDescription(
         key="heating.dhw.sensors.temperature.hotWaterStorageTop",
         translation_key="dhw_storage_top_temperature",
@@ -473,6 +478,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # DHW Storage Temperature - Bottom
     "heating.dhw.sensors.temperature.hotWaterStorageBottom": SensorEntityDescription(
         key="heating.dhw.sensors.temperature.hotWaterStorageBottom",
         translation_key="dhw_storage_bottom_temperature",
@@ -480,7 +486,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Buffer Cylinder Details
+    # Buffer Cylinder Temperature - Top
     "heating.bufferCylinder.sensors.temperature.top": SensorEntityDescription(
         key="heating.bufferCylinder.sensors.temperature.top",
         translation_key="buffer_top_temperature",
@@ -488,6 +494,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Buffer Cylinder Temperature - Mid Top
     "heating.bufferCylinder.sensors.temperature.midTop": SensorEntityDescription(
         key="heating.bufferCylinder.sensors.temperature.midTop",
         translation_key="buffer_mid_top_temperature",
@@ -495,6 +502,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Buffer Cylinder Temperature - Middle
     "heating.bufferCylinder.sensors.temperature.middle": SensorEntityDescription(
         key="heating.bufferCylinder.sensors.temperature.middle",
         translation_key="buffer_middle_temperature",
@@ -502,6 +510,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Buffer Cylinder Temperature - Mid Bottom
     "heating.bufferCylinder.sensors.temperature.midBottom": SensorEntityDescription(
         key="heating.bufferCylinder.sensors.temperature.midBottom",
         translation_key="buffer_mid_bottom_temperature",
@@ -509,6 +518,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Buffer Cylinder Temperature - Bottom
     "heating.bufferCylinder.sensors.temperature.bottom": SensorEntityDescription(
         key="heating.bufferCylinder.sensors.temperature.bottom",
         translation_key="buffer_bottom_temperature",
@@ -516,7 +526,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Solar
+    # Solar Collector Temperature
     "heating.solar.sensors.temperature.collector": SensorEntityDescription(
         key="heating.solar.sensors.temperature.collector",
         translation_key="solar_collector_temperature",
@@ -524,6 +534,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Solar DHW Temperature
     "heating.solar.sensors.temperature.dhw": SensorEntityDescription(
         key="heating.solar.sensors.temperature.dhw",
         translation_key="solar_dhw_temperature",
@@ -531,6 +542,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Solar Power Production Today
     "heating.solar.power.production.day": SensorEntityDescription(
         key="heating.solar.power.production.day",
         translation_key="solar_production_today",
@@ -547,8 +559,9 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ),
 }
 
-# Analytics Features (from handover)
+# Analytics Features
 ANALYTICS_TYPES: dict[str, SensorEntityDescription] = {
+    # Analytics: Total Consumption
     "analytics.heating.power.consumption.total": SensorEntityDescription(
         key="analytics.heating.power.consumption.total",
         translation_key="consumption_total",
@@ -556,6 +569,7 @@ ANALYTICS_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
+    # Analytics: Heating Consumption
     "analytics.heating.power.consumption.heating": SensorEntityDescription(
         key="analytics.heating.power.consumption.heating",
         translation_key="consumption_heating",
@@ -563,6 +577,7 @@ ANALYTICS_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
+    # Analytics: DHW Consumption
     "analytics.heating.power.consumption.dhw": SensorEntityDescription(
         key="analytics.heating.power.consumption.dhw",
         translation_key="consumption_dhw",
@@ -587,7 +602,6 @@ def _get_sensor_entity_description(
             index = match.group(1)
             base_desc: SensorEntityDescription = template["description"]
 
-            # Clone and Format
             new_desc = dataclasses.replace(
                 base_desc,
                 key=feature_name,
@@ -601,7 +615,6 @@ def _get_auto_discovery_description(feature) -> SensorEntityDescription:
     """Create a sensor description based on feature unit/type."""
     unit = getattr(feature, "unit", None)
 
-    # Defaults
     device_class = None
     state_class = None
     native_unit = None
@@ -627,7 +640,7 @@ def _get_auto_discovery_description(feature) -> SensorEntityDescription:
             native_unit = UnitOfPower.WATT
             state_class = SensorStateClass.MEASUREMENT
         case "volumetricFlow" | "liter/hour":
-            # API gives 'volumetricFlow' or 'liter/hour' -> L/h
+            # API gives 'liter/hour' -> L/h
             device_class = SensorDeviceClass.VOLUME_FLOW_RATE
             native_unit = "L/h"
             state_class = SensorStateClass.MEASUREMENT
