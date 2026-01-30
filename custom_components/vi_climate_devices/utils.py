@@ -12,9 +12,27 @@ def beautify_name(name: str) -> str:
     """
     if not name:
         return name
-    if name.startswith("heating."):
-        name = name[8:]
-    return name.replace(".", " ").title()
+
+    # Strip specific cleaning prefixes (order matters)
+    for prefix in ("heating.heat.", "heating.", "Power.", "device.power.", "device."):
+        if name.startswith(prefix):
+            name = name[len(prefix) :]
+            break
+
+    # Robust segment cleaning: split, filter, join
+    # This handles start, middle, and end occurrences cleanly.
+    segments = name.split(".")
+    filtered_segments = [s for s in segments if s not in ("summary", "Power")]
+    name = ".".join(filtered_segments)
+
+    # Replace dots with spaces
+    name = name.replace(".", " ")
+
+    # Split camelCase: insert space before uppercase letters
+    # that follow lowercase letters
+    name = re.sub(r"([a-z])([A-Z])", r"\1 \2", name)
+
+    return name.title()
 
 
 def is_feature_boolean_like(value: Any) -> bool:

@@ -21,6 +21,27 @@ def test_beautify_name():
     # Act & Assert: Verify single word input.
     assert beautify_name("simple") == "Simple"
 
+    # Act & Assert: Verify extended cleaning logic (heating.heat, summary, Power).
+    assert (
+        beautify_name("heating.heat.production.summary.dhw.currentDay")
+        == "Production Dhw Current Day"
+    )
+    assert (
+        beautify_name("device.power.consumption.limitation") == "Consumption Limitation"
+    )
+    assert (
+        beautify_name("heating.boiler.sensors.temperature.commonSupply")
+        == "Boiler Sensors Temperature Common Supply"
+    )
+    assert (
+        beautify_name("heating.bufferCylinder.sensors.temperature.main")
+        == "Buffer Cylinder Sensors Temperature Main"
+    )
+    assert (
+        beautify_name("heating.solar.power.production.day")
+        == "Solar Power Production Day"
+    )
+
 
 def test_is_feature_boolean_like():
     """Test boolean detection logic."""
