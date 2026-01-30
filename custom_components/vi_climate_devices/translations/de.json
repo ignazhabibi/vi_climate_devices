@@ -105,9 +105,6 @@
             "dhw_primary_pump": {
                 "name": "Speicherladepumpe"
             },
-            "device_error": {
-                "name": "Störung Aktiv"
-            },
             "compressor_crankcase_heater": {
                 "name": "Verdichter {index} Kurbelgehäuseheizung"
             },

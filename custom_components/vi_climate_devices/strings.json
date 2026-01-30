@@ -105,9 +105,6 @@
             "dhw_primary_pump": {
                 "name": "DHW Primary Pump"
             },
-            "device_error": {
-                "name": "Error Active"
-            },
             "dhw_hygiene": {
                 "name": "DHW Hygiene"
             },

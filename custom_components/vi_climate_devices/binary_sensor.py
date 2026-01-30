@@ -117,14 +117,10 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
         translation_key="solar_pump",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
-    "heating.errors.active": BinarySensorEntityDescription(
-        key="heating.errors.active",
-        translation_key="device_error",
-        device_class=BinarySensorDeviceClass.PROBLEM,
-    ),
     "heating.outdoor.defrosting.active": BinarySensorEntityDescription(
         key="heating.outdoor.defrosting.active",
         translation_key="outdoor_defrosting",
+        device_class=BinarySensorDeviceClass.RUNNING,
     ),
 }
 
