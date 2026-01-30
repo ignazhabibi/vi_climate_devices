@@ -2,7 +2,7 @@
     "config": {
         "step": {
             "user": {
-                "title": "Verbinde mit Viessmann Heat",
+                "title": "Verbinde mit Viessmann CLimate Devices",
                 "description": "Klicke auf den Link unten, um dich bei Viessmann anzumelden."
             }
         },
@@ -14,19 +14,19 @@
     "entity": {
         "number": {
             "heating_curve_slope": {
-                "name": "Steigung Heizkurve Heizkreis {index}"
+                "name": "Heizkurve Steigung Heizkreis {index}"
             },
             "heating_curve_shift": {
-                "name": "Verschiebung Heizkurve Heizkreis {index}"
+                "name": "Heizkurve Verschiebung Heizkreis {index}"
             },
             "dhw_hysteresis": {
-                "name": "Hysterese Warmwasser"
+                "name": "Warmwasser Hysterese"
             },
             "dhw_hysteresis_on": {
-                "name": "Einschalthysterese Warmwasser"
+                "name": "Warmwasser Hysterese Ein"
             },
             "dhw_hysteresis_off": {
-                "name": "Ausschalthysterese Warmwasser"
+                "name": "Warmwasser Hysterese Aus"
             },
             "dhw_target_temperature": {
                 "name": "Warmwasser Solltemperatur"
@@ -85,7 +85,7 @@
                 "name": "Heizkreispumpe Heizkreis {index}"
             },
             "compressor_active": {
-                "name": "Verdichter {index} Aktiv"
+                "name": "Verdichter {index}"
             },
             "dhw_circulation_pump": {
                 "name": "Zirkulationspumpe Warmwasser"
@@ -100,7 +100,7 @@
                 "name": "Einmal-Speicherladung"
             },
             "dhw_charging": {
-                "name": "Warmwasserbereitung Aktiv"
+                "name": "Warmwasserbereitung"
             },
             "dhw_primary_pump": {
                 "name": "Speicherladepumpe"
@@ -112,7 +112,7 @@
                 "name": "Verdampfer {index} Basisheizung"
             },
             "outdoor_defrosting": {
-                "name": "Abtauvorgang Außen"
+                "name": "Abtauvorgang"
             }
         },
         "sensor": {
@@ -287,7 +287,7 @@
                 "name": "Einmalige Warmwasserbereitung"
             },
             "dhw_hygiene": {
-                "name": "Warmwasser-Hygiene"
+                "name": "Warmwasser Hygieneprogramm"
             }
         },
         "select": {

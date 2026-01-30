@@ -33,7 +33,6 @@ class ViClimateSelectEntityDescription(SelectEntityDescription):
     property_name: str | None = None
 
 
-# Feature -> Description
 SELECT_TYPES: dict[str, ViClimateSelectEntityDescription] = {
     "heating.dhw.operating.modes.active": ViClimateSelectEntityDescription(
         key="heating.dhw.operating.modes.active",
@@ -41,11 +40,10 @@ SELECT_TYPES: dict[str, ViClimateSelectEntityDescription] = {
         icon="mdi:water-boiler-auto",
         entity_category=EntityCategory.CONFIG,
     ),
-    # Add other known select types here if any
 }
 
 
-# Dynamic Templates
+# Templates with regex patterns for dynamic feature names
 SELECT_TEMPLATES = [
     # Heating Circuit Operating Modes (heating.circuits.N.operating.modes.active)
     {
@@ -53,7 +51,7 @@ SELECT_TEMPLATES = [
         "description": ViClimateSelectEntityDescription(
             key="placeholder",
             translation_key="heating_circuit_operation_mode",
-            icon="mdi:home-thermometer-auto",
+            icon="mdi:home-thermometer",
             entity_category=EntityCategory.CONFIG,
         ),
     },
@@ -74,7 +72,6 @@ def _get_select_entity_description(
             index = match.group(1)
             base_desc: ViClimateSelectEntityDescription = template["description"]
 
-            # Clone and Format
             new_desc = dataclasses.replace(
                 base_desc,
                 key=feature_name,
@@ -196,8 +193,16 @@ class ViClimateSelect(CoordinatorEntity, SelectEntity):
         self._attr_options = []
         if feature.control and feature.control.options:
             # Options can be Dict[value, label] or List[value]
-            # We normlize to list of strings
-            self._attr_options = [str(opt) for opt in feature.control.options]
+            # We normalize to list of strings
+            normalized_opts = []
+            for opt in feature.control.options:
+                if isinstance(opt, dict) and "value" in opt:
+                    # Case B: Dict with value/(label)
+                    normalized_opts.append(str(opt["value"]))
+                else:
+                    # Case A: Primitive value
+                    normalized_opts.append(str(opt))
+            self._attr_options = normalized_opts
 
     @property
     def feature_data(self) -> Feature | None:
@@ -236,9 +241,6 @@ class ViClimateSelect(CoordinatorEntity, SelectEntity):
         val = str(feat.value)
         if val in self.options:
             return val
-
-        # Try finding case-insensitive match?
-        # Or maybe the value is a key in options dict (if we had access to labels)
 
         return None
 
