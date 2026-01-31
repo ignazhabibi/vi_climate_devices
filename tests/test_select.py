@@ -1,5 +1,6 @@
 """Tests for the Viessmann Heat select platform."""
 
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -170,6 +171,69 @@ async def test_select_error_handling(hass: HomeAssistant):
                 "select",
                 SERVICE_SELECT_OPTION,
                 {"entity_id": entity_id, "option": target_option},
+                blocking=True,
+            )
+
+        # Assert: Rollback occurred.
+        state = hass.states.get(entity_id)
+        assert state.state == original_state
+
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+@pytest.mark.asyncio
+async def test_select_api_rejection(hass: HomeAssistant):
+    """Test select handling of API logical rejection (success=False)."""
+    # Arrange: Setup integration.
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "client_id": "123",
+            "token": {"access_token": "mock", "expires_at": 9999999999},
+        },
+    )
+    entry.add_to_hass(hass)
+
+    mock_client = MockViClient(device_name="Vitocal250A")
+
+    # Simulate API Logical Failure.
+
+    mock_client.set_feature = AsyncMock(
+        return_value=SimpleNamespace(
+            success=False, message="Invalid Option", reason=None
+        )
+    )
+
+    with (
+        patch(
+            "custom_components.vi_climate_devices.ViessmannClient",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+            return_value=None,
+        ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
+    ):
+        # Act: Initialize.
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        entity_id = "select.vitocal250a_dhw_mode"
+        state = hass.states.get(entity_id)
+        original_state = state.state  # "efficient"
+
+        # Act: Try to change option.
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                "select",
+                SERVICE_SELECT_OPTION,
+                {"entity_id": entity_id, "option": "comfort"},
                 blocking=True,
             )
 
