@@ -209,7 +209,12 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
                 target_state,
                 self.entity_id,
             )
-            await client.set_feature(device, feat, target_state)
+            response = await client.set_feature(device, feat, target_state)
+
+            if not response.success:
+                raise HomeAssistantError(
+                    f"Command rejected: {response.message or response.reason}"
+                )
 
             # Clear optimistic state - let next poll pick up real value
             self._optimistic_state = None

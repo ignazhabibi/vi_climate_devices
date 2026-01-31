@@ -41,6 +41,22 @@ def test_beautify_name():
         beautify_name("heating.solar.power.production.day")
         == "Solar Power Production Day"
     )
+    assert (
+        beautify_name("heating.heatingRod.power.consumption.summary.dhw.currentDay")
+        == "Heating Rod Consumption Dhw Current Day"
+    )
+    assert (
+        beautify_name("heating.power.consumption.summary.cooling.currentDay")
+        == "Consumption Cooling Current Day"
+    )
+    assert (
+        beautify_name("heating.configuration.pressure.total.maximumPressure")
+        == "Total Maximum Pressure"
+    )
+    assert (
+        beautify_name("heating.circuits.0.configuration.summerEco.absolute.threshold")
+        == "Circuits 0 Summer Eco Absolute Threshold"
+    )
 
 
 def test_is_feature_boolean_like():

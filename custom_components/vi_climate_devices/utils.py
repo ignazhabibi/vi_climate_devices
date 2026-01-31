@@ -14,15 +14,27 @@ def beautify_name(name: str) -> str:
         return name
 
     # Strip specific cleaning prefixes (order matters)
-    for prefix in ("heating.heat.", "heating.", "Power.", "device.power.", "device."):
+    for prefix in (
+        "heating.configuration.pressure.",
+        "heating.heat.",
+        "heating.",
+        "Power.",
+        "device.power.",
+        "device.",
+    ):
         if name.startswith(prefix):
             name = name[len(prefix) :]
             break
 
+    # Collapse specific phrases
+    name = name.replace("power.consumption", "consumption")
+
     # Robust segment cleaning: split, filter, join
     # This handles start, middle, and end occurrences cleanly.
     segments = name.split(".")
-    filtered_segments = [s for s in segments if s not in ("summary", "Power")]
+    filtered_segments = [
+        s for s in segments if s not in ("summary", "Power", "configuration")
+    ]
     name = ".".join(filtered_segments)
 
     # Replace dots with spaces
@@ -58,9 +70,9 @@ def get_feature_bool_value(value: Any, strict: bool = False) -> bool | None:
     result = None
     if isinstance(value, str):
         val_lower = value.lower()
-        if val_lower in ("on", "active", "true", "1", "enabled"):
+        if val_lower in {"on", "active", "true", "1", "enabled"}:
             result = True
-        elif val_lower in ("off", "inactive", "false", "0", "disabled"):
+        elif val_lower in {"off", "inactive", "false", "0", "disabled"}:
             result = False
 
     if result is not None:
