@@ -266,7 +266,18 @@ class ViClimateSelect(CoordinatorEntity, SelectEntity):
                 self.entity_id,
             )
             # Library handles mapping option to command payload
-            await client.set_feature(device, feat, option)
+            response = await client.set_feature(device, feat, option)
+            _LOGGER.debug(
+                "Command response: success=%s, message=%s, reason=%s",
+                response.success,
+                response.message,
+                response.reason,
+            )
+
+            if not response.success:
+                raise HomeAssistantError(
+                    f"Command rejected: {response.message or response.reason}"
+                )
 
             # Clear optimistic option - let next poll pick up real value
             self._optimistic_option = None

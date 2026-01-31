@@ -340,7 +340,18 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
         # 2. EXECUTE COMMAND
         try:
             client = self.coordinator.client
-            await client.set_feature(device, feat, value)
+            response = await client.set_feature(device, feat, value)
+            _LOGGER.debug(
+                "Command response: success=%s, message=%s, reason=%s",
+                response.success,
+                response.message,
+                response.reason,
+            )
+
+            if not response.success:
+                raise HomeAssistantError(
+                    f"Command rejected: {response.message or response.reason}"
+                )
 
             # 3. Clear optimistic value - let next poll pick up real value
             self._optimistic_value = None

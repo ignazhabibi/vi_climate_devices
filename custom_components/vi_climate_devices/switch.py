@@ -210,6 +210,12 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
                 self.entity_id,
             )
             response = await client.set_feature(device, feat, target_state)
+            _LOGGER.debug(
+                "Command response: success=%s, message=%s, reason=%s",
+                response.success,
+                response.message,
+                response.reason,
+            )
 
             if not response.success:
                 raise HomeAssistantError(
