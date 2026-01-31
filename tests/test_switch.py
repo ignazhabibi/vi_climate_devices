@@ -120,7 +120,7 @@ async def test_switch_creation_and_services(hass: HomeAssistant, mock_client):
 
 
 @pytest.mark.asyncio
-async def test_switch_error_handling(hass: HomeAssistant):
+async def test_switch_error_handling(hass: HomeAssistant, mock_client):
     """Test switch error handling and rollback."""
     # Arrange: Setup with a mock client that raises an error.
     entry = MockConfigEntry(
@@ -132,7 +132,6 @@ async def test_switch_error_handling(hass: HomeAssistant):
     )
     entry.add_to_hass(hass)
 
-    mock_client = MockViClient(device_name="Vitocal250A")
     # Simulate an API error during set_feature.
 
     # set_feature will raise an exception when called.

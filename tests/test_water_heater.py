@@ -14,7 +14,6 @@ from homeassistant.components.water_heater import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client.mock_client import MockViClient
 
 from custom_components.vi_climate_devices.const import DOMAIN
 from custom_components.vi_climate_devices.water_heater import (
@@ -140,13 +139,12 @@ async def test_water_heater_creation_and_services(hass: HomeAssistant, mock_clie
 
 
 @pytest.mark.asyncio
-async def test_water_heater_error_handling(hass: HomeAssistant):
+async def test_water_heater_error_handling(hass: HomeAssistant, mock_client):
     """Test water heater error handling and rollback (Option B)."""
     # Arrange: Setup integration.
     entry = MockConfigEntry(domain=DOMAIN, data={"client_id": "123", "token": "abc"})
     entry.add_to_hass(hass)
 
-    mock_client = MockViClient(device_name="Vitocal250A")
     # Simulate API Error.
     mock_client.set_feature = AsyncMock(side_effect=HomeAssistantError("API Error"))
 
@@ -191,13 +189,11 @@ async def test_water_heater_error_handling(hass: HomeAssistant):
 
 
 @pytest.mark.asyncio
-async def test_water_heater_api_rejection(hass: HomeAssistant):
+async def test_water_heater_api_rejection(hass: HomeAssistant, mock_client):
     """Test water heater handling of API logical rejection (success=False)."""
     # Arrange: Setup integration.
     entry = MockConfigEntry(domain=DOMAIN, data={"client_id": "123", "token": "abc"})
     entry.add_to_hass(hass)
-
-    mock_client = MockViClient(device_name="Vitocal250A")
 
     # Simulate API Logical Failure.
 

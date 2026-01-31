@@ -6,13 +6,14 @@ import pytest
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from syrupy import SnapshotAssertion
-from vi_api_client.mock_client import MockViClient
 
 from custom_components.vi_climate_devices.const import DOMAIN
 
 
 @pytest.mark.asyncio
-async def test_discovery_snapshot(hass: HomeAssistant, snapshot: SnapshotAssertion):
+async def test_discovery_snapshot(
+    hass: HomeAssistant, snapshot: SnapshotAssertion, mock_client
+):
     """Test that all entities are created correctly and match the snapshot."""
     # Arrange: Setup Viessmann integration with MockConfigEntry and MockViClient.
     entry = MockConfigEntry(
@@ -28,8 +29,6 @@ async def test_discovery_snapshot(hass: HomeAssistant, snapshot: SnapshotAsserti
         },
     )
     entry.add_to_hass(hass)
-
-    mock_client = MockViClient(device_name="Vitocal250A")
 
     with (
         patch(
