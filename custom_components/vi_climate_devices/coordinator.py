@@ -42,7 +42,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=f"{DOMAIN}_data",
-            update_interval=timedelta(minutes=60),
+            update_interval=timedelta(minutes=3),
         )
 
     async def _perform_discovery(self) -> None:
@@ -158,7 +158,7 @@ class ViClimateAnalyticsCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=f"{DOMAIN}_analytics",
-            update_interval=timedelta(minutes=60),
+            update_interval=timedelta(hours=1),
         )
 
     async def _async_update_data(self) -> dict:
