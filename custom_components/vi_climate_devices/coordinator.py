@@ -15,6 +15,7 @@ from vi_api_client import (
     ViAuthError,
     ViClient as ViessmannClient,
 )
+from vi_api_client.utils import mask_pii
 
 from .const import DOMAIN, IGNORED_DEVICES
 
@@ -28,24 +29,21 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         client: ViessmannClient,
+        update_interval: timedelta | None = None,
+        analytics_enabled: bool = True,
     ) -> None:
-        """Initialize the coordinator.
-
-        Args:
-            hass: The Home Assistant instance.
-            client: The authenticated Viessmann API client.
-        """
-        self.client = client
-
-        self._known_devices: list[Device] | None = None
+        """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             name=f"{DOMAIN}_data",
-            update_interval=timedelta(minutes=3),
+            update_interval=update_interval or timedelta(minutes=2),
         )
+        self.client = client
+        self._known_devices: list[Device] = []
+        self.analytics_enabled = analytics_enabled
 
-    async def _perform_discovery(self) -> None:
+    async def _perform_discovery(self):
         """Perform initial device discovery.
 
         Fetches all installations and their devices/features to populate the
@@ -64,7 +62,9 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
             # Fetch devices from ALL installations
             all_devices: list[Device] = []
             for installation in installations:
-                _LOGGER.debug("Fetching devices for installation %s", installation.id)
+                _LOGGER.debug(
+                    mask_pii(f"Fetching devices for installation ID: {installation.id}")
+                )
                 devices = await self.client.get_full_installation_status(
                     installation.id
                 )
