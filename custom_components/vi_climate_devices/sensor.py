@@ -27,6 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from vi_api_client.utils import mask_pii
 
 from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateAnalyticsCoordinator, ViClimateDataUpdateCoordinator
@@ -766,9 +767,10 @@ def _discover_analytics_sensors(
     if heating_devices:
         for heating_device in heating_devices:
             _LOGGER.debug(
-                "Analytics attached to device: %s (Serial: %s)",
-                heating_device.id,
-                heating_device.gateway_serial,
+                mask_pii(
+                    f"Analytics attached to device: {heating_device.id} "
+                    f"(Serial: {heating_device.gateway_serial})"
+                )
             )
             for feature_name, description in ANALYTICS_TYPES.items():
                 # Skip ignored features
