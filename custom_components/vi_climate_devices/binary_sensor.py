@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from vi_api_client.api import Feature
 
-from .const import DOMAIN, IGNORED_FEATURES
+from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
 from .utils import (
     beautify_name,
@@ -91,18 +91,6 @@ BINARY_SENSOR_TEMPLATES = [
 ]
 
 BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
-    # DHW Circulation Pump (heating.dhw.pumps.circulation.status)
-    "heating.dhw.pumps.circulation.status": BinarySensorEntityDescription(
-        key="heating.dhw.pumps.circulation.status",
-        translation_key="dhw_circulation_pump",
-        device_class=BinarySensorDeviceClass.RUNNING,
-    ),
-    # DHW Primary Pump (heating.dhw.pumps.primary.status)
-    "heating.dhw.pumps.primary.status": BinarySensorEntityDescription(
-        key="heating.dhw.pumps.primary.status",
-        translation_key="dhw_primary_pump",
-        device_class=BinarySensorDeviceClass.RUNNING,
-    ),
     # DHW Charging (heating.dhw.charging)
     "heating.dhw.charging": BinarySensorEntityDescription(
         key="heating.dhw.charging",
@@ -115,16 +103,28 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
         translation_key="one_time_charge",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
-    # Solar Pump (heating.solar.pumps.circuit.status)
-    "heating.solar.pumps.circuit.status": BinarySensorEntityDescription(
-        key="heating.solar.pumps.circuit.status",
-        translation_key="solar_pump",
+    # DHW Circulation Pump (heating.dhw.pumps.circulation.status)
+    "heating.dhw.pumps.circulation.status": BinarySensorEntityDescription(
+        key="heating.dhw.pumps.circulation.status",
+        translation_key="dhw_circulation_pump",
+        device_class=BinarySensorDeviceClass.RUNNING,
+    ),
+    # DHW Primary Pump (heating.dhw.pumps.primary.status)
+    "heating.dhw.pumps.primary.status": BinarySensorEntityDescription(
+        key="heating.dhw.pumps.primary.status",
+        translation_key="dhw_primary_pump",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
     # Outdoor Defrosting (heating.outdoor.defrosting.active)
     "heating.outdoor.defrosting.active": BinarySensorEntityDescription(
         key="heating.outdoor.defrosting.active",
         translation_key="outdoor_defrosting",
+        device_class=BinarySensorDeviceClass.RUNNING,
+    ),
+    # Solar Pump (heating.solar.pumps.circuit.status)
+    "heating.solar.pumps.circuit.status": BinarySensorEntityDescription(
+        key="heating.solar.pumps.circuit.status",
+        translation_key="solar_pump",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
 }
@@ -201,13 +201,15 @@ async def async_setup_entry(
                         name=beautify_name(feature.name),
                         entity_category=EntityCategory.DIAGNOSTIC,
                     )
+                    # Only disable entities by default for thoroughly tested devices
+                    is_tested = device.model_id in TESTED_DEVICES
                     entities.append(
                         ViClimateBinarySensor(
                             coordinator,
                             map_key,
                             feature.name,
                             desc,
-                            enabled_default=False,
+                            enabled_default=not is_tested,
                         )
                     )
 

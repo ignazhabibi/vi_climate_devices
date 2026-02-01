@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from vi_api_client import Feature
 
-from .const import DOMAIN, IGNORED_FEATURES
+from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
 from .utils import beautify_name, get_suggested_precision, is_feature_ignored
 
@@ -199,25 +199,25 @@ async def async_setup_entry(
                     )
                     continue
 
-                # 3. Automatic Discovery
-                if (
-                    feature.control
-                    and feature.control.min is not None
-                    and feature.control.max is not None
+                # Automatic Discovery (Fallback)
+                # Control must exist and have min/max constraints
+                if feature.control and (
+                    feature.control.min is not None or feature.control.max is not None
                 ):
-                    desc = ViClimateNumberEntityDescription(
+                    description = NumberEntityDescription(
                         key=feature.name,
                         name=beautify_name(feature.name),
-                        mode=NumberMode.BOX,
                         entity_category=EntityCategory.CONFIG,
                     )
+                    # Only disable entities by default for thoroughly tested devices
+                    is_tested = device.model_id in TESTED_DEVICES
                     entities.append(
                         ViClimateNumber(
                             coordinator,
                             map_key,
                             feature.name,
-                            desc,
-                            enabled_default=False,
+                            description,
+                            enabled_default=not is_tested,
                         )
                     )
 
@@ -340,7 +340,18 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
         # 2. EXECUTE COMMAND
         try:
             client = self.coordinator.client
-            await client.set_feature(device, feat, value)
+            response = await client.set_feature(device, feat, value)
+            _LOGGER.debug(
+                "Command response: success=%s, message=%s, reason=%s",
+                response.success,
+                response.message,
+                response.reason,
+            )
+
+            if not response.success:
+                raise HomeAssistantError(
+                    f"Command rejected: {response.message or response.reason}"
+                )
 
             # 3. Clear optimistic value - let next poll pick up real value
             self._optimistic_value = None

@@ -5,7 +5,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client.mock_client import MockViClient
 
 from custom_components.vi_climate_devices.const import DOMAIN
 
@@ -46,11 +45,9 @@ async def _setup_integration(hass: HomeAssistant, mock_client):
 
 
 @pytest.mark.asyncio
-async def test_auto_discovery_ignore_list(hass: HomeAssistant):
+async def test_auto_discovery_ignore_list(hass: HomeAssistant, mock_client):
     """Test that features in IGNORED_FEATURES are not created as entities."""
-    # Arrange: Use Vitocal250A fixture
-    mock_client = MockViClient(device_name="Vitocal250A")
-
+    # Arrange: Use mock_client fixture
     # We want to ignore a specific feature that would normally be discovered.
     # From Vitocal250A: "heating.sensors.temperature.outside"
     ignored = [

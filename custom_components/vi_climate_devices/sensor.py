@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
+    UnitOfElectricCurrent,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfPressure,
@@ -27,7 +28,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, IGNORED_FEATURES
+from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateAnalyticsCoordinator, ViClimateDataUpdateCoordinator
 from .utils import beautify_name, is_feature_boolean_like, is_feature_ignored
 
@@ -299,22 +300,6 @@ SENSOR_TEMPLATES = [
 ]
 
 SENSOR_TYPES: dict[str, SensorEntityDescription] = {
-    # Outside Temperature
-    "heating.sensors.temperature.outside": SensorEntityDescription(
-        key="heating.sensors.temperature.outside",
-        translation_key="outside_temperature",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    # Return Temperature (Generic)
-    "heating.sensors.temperature.return": SensorEntityDescription(
-        key="heating.sensors.temperature.return",
-        translation_key="return_temperature",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
     # Boiler Common Supply Temperature
     "heating.boiler.sensors.temperature.commonSupply": SensorEntityDescription(
         key="heating.boiler.sensors.temperature.commonSupply",
@@ -323,18 +308,18 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Primary Circuit Supply Temperature
-    "heating.primaryCircuit.sensors.temperature.supply": SensorEntityDescription(
-        key="heating.primaryCircuit.sensors.temperature.supply",
-        translation_key="primary_supply_temperature",
+    # Boiler Main Temperature
+    "heating.boiler.sensors.temperature.main": SensorEntityDescription(
+        key="heating.boiler.sensors.temperature.main",
+        translation_key="boiler_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Secondary Circuit Supply Temperature
-    "heating.secondaryCircuit.sensors.temperature.supply": SensorEntityDescription(
-        key="heating.secondaryCircuit.sensors.temperature.supply",
-        translation_key="secondary_supply_temperature",
+    # Buffer Cylinder Temperature - Bottom
+    "heating.bufferCylinder.sensors.temperature.bottom": SensorEntityDescription(
+        key="heating.bufferCylinder.sensors.temperature.bottom",
+        translation_key="buffer_bottom_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -347,7 +332,39 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # DHW Hot Water Storage Temperature
+    # Buffer Cylinder Temperature - Mid Bottom
+    "heating.bufferCylinder.sensors.temperature.midBottom": SensorEntityDescription(
+        key="heating.bufferCylinder.sensors.temperature.midBottom",
+        translation_key="buffer_mid_bottom_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Buffer Cylinder Temperature - Middle
+    "heating.bufferCylinder.sensors.temperature.middle": SensorEntityDescription(
+        key="heating.bufferCylinder.sensors.temperature.middle",
+        translation_key="buffer_middle_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Buffer Cylinder Temperature - Mid Top
+    "heating.bufferCylinder.sensors.temperature.midTop": SensorEntityDescription(
+        key="heating.bufferCylinder.sensors.temperature.midTop",
+        translation_key="buffer_mid_top_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Buffer Cylinder Temperature - Top
+    "heating.bufferCylinder.sensors.temperature.top": SensorEntityDescription(
+        key="heating.bufferCylinder.sensors.temperature.top",
+        translation_key="buffer_top_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # DHW Charging (Today)
     "heating.dhw.sensors.temperature.hotWaterStorage": SensorEntityDescription(
         key="heating.dhw.sensors.temperature.hotWaterStorage",
         translation_key="dhw_temperature",
@@ -355,64 +372,29 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Heating Rod (Diagnostic)
-    "heating.heatingRod.statistics.starts": SensorEntityDescription(
-        key="heating.heatingRod.statistics.starts",
-        translation_key="heating_rod_starts",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:counter",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    "heating.heatingRod.statistics.hours": SensorEntityDescription(
-        key="heating.heatingRod.statistics.hours",
-        translation_key="heating_rod_hours",
-        native_unit_of_measurement="h",
-        device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:counter",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    # SCOP
-    "heating.scop.dhw": SensorEntityDescription(
-        key="heating.scop.dhw",
-        translation_key="scop_dhw",
+    # DHW Storage Temperature - Bottom
+    "heating.dhw.sensors.temperature.hotWaterStorageBottom": SensorEntityDescription(
+        key="heating.dhw.sensors.temperature.hotWaterStorageBottom",
+        translation_key="dhw_storage_bottom_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:chart-line",
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "heating.scop.heating": SensorEntityDescription(
-        key="heating.scop.heating",
-        translation_key="scop_heating",
+    # DHW Storage Temperature - Top
+    "heating.dhw.sensors.temperature.hotWaterStorageTop": SensorEntityDescription(
+        key="heating.dhw.sensors.temperature.hotWaterStorageTop",
+        translation_key="dhw_storage_top_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:chart-line",
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "heating.scop.total": SensorEntityDescription(
-        key="heating.scop.total",
-        translation_key="scop_total",
+    # DHW Outlet Temperature
+    "heating.dhw.sensors.temperature.outlet": SensorEntityDescription(
+        key="heating.dhw.sensors.temperature.outlet",
+        translation_key="dhw_outlet_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:chart-line",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    # Supply Pressure
-    "heating.sensors.pressure.supply": SensorEntityDescription(
-        key="heating.sensors.pressure.supply",
-        translation_key="supply_pressure",
-        native_unit_of_measurement=UnitOfPressure.BAR,
-        device_class=SensorDeviceClass.PRESSURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:gauge",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    # Volumetric Flow (Allengra)
-    "heating.sensors.volumetricFlow.allengra": SensorEntityDescription(
-        key="heating.sensors.volumetricFlow.allengra",
-        translation_key="volumetric_flow",
-        native_unit_of_measurement="L/h",
-        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
-        state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:gauge",
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # Production Summary DHW (Today)
     "heating.heat.production.summary.dhw.currentDay": SensorEntityDescription(
@@ -430,21 +412,23 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    # Outside Humidity
-    "heating.sensors.humidity.outside": SensorEntityDescription(
-        key="heating.sensors.humidity.outside",
-        translation_key="outside_humidity",
-        native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.HUMIDITY,
-        state_class=SensorStateClass.MEASUREMENT,
+    # Heating Rod (Diagnostic) - Hours
+    "heating.heatingRod.statistics.hours": SensorEntityDescription(
+        key="heating.heatingRod.statistics.hours",
+        translation_key="heating_rod_hours",
+        native_unit_of_measurement="h",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:counter",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    # Boiler Main Temperature
-    "heating.boiler.sensors.temperature.main": SensorEntityDescription(
-        key="heating.boiler.sensors.temperature.main",
-        translation_key="boiler_temperature",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
+    # Heating Rod (Diagnostic) - Starts
+    "heating.heatingRod.statistics.starts": SensorEntityDescription(
+        key="heating.heatingRod.statistics.starts",
+        translation_key="heating_rod_starts",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:counter",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # Primary Circuit Return Temperature
     "heating.primaryCircuit.sensors.temperature.return": SensorEntityDescription(
@@ -454,6 +438,38 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Primary Circuit Supply Temperature
+    "heating.primaryCircuit.sensors.temperature.supply": SensorEntityDescription(
+        key="heating.primaryCircuit.sensors.temperature.supply",
+        translation_key="primary_supply_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # SCOP DHW
+    "heating.scop.dhw": SensorEntityDescription(
+        key="heating.scop.dhw",
+        translation_key="scop_dhw",
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:chart-line",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    # SCOP Heating
+    "heating.scop.heating": SensorEntityDescription(
+        key="heating.scop.heating",
+        translation_key="scop_heating",
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:chart-line",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    # SCOP Total
+    "heating.scop.total": SensorEntityDescription(
+        key="heating.scop.total",
+        translation_key="scop_total",
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:chart-line",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     # Secondary Circuit Return Temperature
     "heating.secondaryCircuit.sensors.temperature.return": SensorEntityDescription(
         key="heating.secondaryCircuit.sensors.temperature.return",
@@ -462,69 +478,57 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # DHW Outlet Temperature
-    "heating.dhw.sensors.temperature.outlet": SensorEntityDescription(
-        key="heating.dhw.sensors.temperature.outlet",
-        translation_key="dhw_outlet_temperature",
+    # Secondary Circuit Supply Temperature
+    "heating.secondaryCircuit.sensors.temperature.supply": SensorEntityDescription(
+        key="heating.secondaryCircuit.sensors.temperature.supply",
+        translation_key="secondary_supply_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # DHW Storage Temperature - Top
-    "heating.dhw.sensors.temperature.hotWaterStorageTop": SensorEntityDescription(
-        key="heating.dhw.sensors.temperature.hotWaterStorageTop",
-        translation_key="dhw_storage_top_temperature",
+    # Outside Humidity
+    "heating.sensors.humidity.outside": SensorEntityDescription(
+        key="heating.sensors.humidity.outside",
+        translation_key="outside_humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Supply Pressure
+    "heating.sensors.pressure.supply": SensorEntityDescription(
+        key="heating.sensors.pressure.supply",
+        translation_key="supply_pressure",
+        native_unit_of_measurement=UnitOfPressure.BAR,
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:gauge",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    # Outside Temperature
+    "heating.sensors.temperature.outside": SensorEntityDescription(
+        key="heating.sensors.temperature.outside",
+        translation_key="outside_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # DHW Storage Temperature - Bottom
-    "heating.dhw.sensors.temperature.hotWaterStorageBottom": SensorEntityDescription(
-        key="heating.dhw.sensors.temperature.hotWaterStorageBottom",
-        translation_key="dhw_storage_bottom_temperature",
+    # Return Temperature (Generic)
+    "heating.sensors.temperature.return": SensorEntityDescription(
+        key="heating.sensors.temperature.return",
+        translation_key="return_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Buffer Cylinder Temperature - Top
-    "heating.bufferCylinder.sensors.temperature.top": SensorEntityDescription(
-        key="heating.bufferCylinder.sensors.temperature.top",
-        translation_key="buffer_top_temperature",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
+    # Volumetric Flow (Allengra)
+    "heating.sensors.volumetricFlow.allengra": SensorEntityDescription(
+        key="heating.sensors.volumetricFlow.allengra",
+        translation_key="volumetric_flow",
+        native_unit_of_measurement="L/h",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
-    ),
-    # Buffer Cylinder Temperature - Mid Top
-    "heating.bufferCylinder.sensors.temperature.midTop": SensorEntityDescription(
-        key="heating.bufferCylinder.sensors.temperature.midTop",
-        translation_key="buffer_mid_top_temperature",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    # Buffer Cylinder Temperature - Middle
-    "heating.bufferCylinder.sensors.temperature.middle": SensorEntityDescription(
-        key="heating.bufferCylinder.sensors.temperature.middle",
-        translation_key="buffer_middle_temperature",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    # Buffer Cylinder Temperature - Mid Bottom
-    "heating.bufferCylinder.sensors.temperature.midBottom": SensorEntityDescription(
-        key="heating.bufferCylinder.sensors.temperature.midBottom",
-        translation_key="buffer_mid_bottom_temperature",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    # Buffer Cylinder Temperature - Bottom
-    "heating.bufferCylinder.sensors.temperature.bottom": SensorEntityDescription(
-        key="heating.bufferCylinder.sensors.temperature.bottom",
-        translation_key="buffer_bottom_temperature",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:gauge",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # Solar Collector Temperature
     "heating.solar.sensors.temperature.collector": SensorEntityDescription(
@@ -561,10 +565,10 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
 
 # Analytics Features
 ANALYTICS_TYPES: dict[str, SensorEntityDescription] = {
-    # Analytics: Total Consumption
-    "analytics.heating.power.consumption.total": SensorEntityDescription(
-        key="analytics.heating.power.consumption.total",
-        translation_key="consumption_total",
+    # Analytics: DHW Consumption
+    "analytics.heating.power.consumption.dhw": SensorEntityDescription(
+        key="analytics.heating.power.consumption.dhw",
+        translation_key="consumption_dhw",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -577,10 +581,10 @@ ANALYTICS_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    # Analytics: DHW Consumption
-    "analytics.heating.power.consumption.dhw": SensorEntityDescription(
-        key="analytics.heating.power.consumption.dhw",
-        translation_key="consumption_dhw",
+    # Analytics: Total Consumption
+    "analytics.heating.power.consumption.total": SensorEntityDescription(
+        key="analytics.heating.power.consumption.total",
+        translation_key="consumption_total",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -638,6 +642,14 @@ def _get_auto_discovery_description(feature) -> SensorEntityDescription:
         case "watt":
             device_class = SensorDeviceClass.POWER
             native_unit = UnitOfPower.WATT
+            state_class = SensorStateClass.MEASUREMENT
+        case "wattHour":
+            device_class = SensorDeviceClass.ENERGY
+            native_unit = UnitOfEnergy.WATT_HOUR
+            state_class = SensorStateClass.TOTAL_INCREASING
+        case "ampere":
+            device_class = SensorDeviceClass.CURRENT
+            native_unit = UnitOfElectricCurrent.AMPERE
             state_class = SensorStateClass.MEASUREMENT
         case "volumetricFlow" | "liter/hour":
             # API gives 'liter/hour' -> L/h
@@ -720,13 +732,15 @@ def _discover_realtime_sensors(
             # (Binary Sensor platform handles all boolean-like values)
             if not feature.is_writable and not is_feature_boolean_like(feature.value):
                 description = _get_auto_discovery_description(feature)
+                # Only disable entities by default for thoroughly tested devices
+                is_tested = device.model_id in TESTED_DEVICES
                 entities.append(
                     ViClimateSensor(
                         coordinator,
                         map_key,
                         feature.name,
                         description,
-                        enabled_default=False,
+                        enabled_default=not is_tested,
                     )
                 )
     return entities

@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from vi_api_client import Feature
 
-from .const import DOMAIN, IGNORED_FEATURES
+from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
 from .utils import beautify_name, is_feature_ignored
 
@@ -124,22 +124,23 @@ async def async_setup_entry(
                     )
                     continue
 
-                # 3. Automatic Discovery (Fallback)
-                # Check for control options (Enum)
-                if feature.control and feature.control.options:
-                    # Valid Select Entity needs options
-                    desc = ViClimateSelectEntityDescription(
+                # Automatic Discovery (Fallback)
+                # Control must exist and have enum options
+                if feature.control and feature.control.options is not None:
+                    description = SelectEntityDescription(
                         key=feature.name,
                         name=beautify_name(feature.name),
                         entity_category=EntityCategory.CONFIG,
                     )
+                    # Only disable entities by default for thoroughly tested devices
+                    is_tested = device.model_id in TESTED_DEVICES
                     entities.append(
                         ViClimateSelect(
                             coordinator,
                             map_key,
                             feature.name,
-                            desc,
-                            enabled_default=False,
+                            description,
+                            enabled_default=not is_tested,
                         )
                     )
 
@@ -266,7 +267,18 @@ class ViClimateSelect(CoordinatorEntity, SelectEntity):
                 self.entity_id,
             )
             # Library handles mapping option to command payload
-            await client.set_feature(device, feat, option)
+            response = await client.set_feature(device, feat, option)
+            _LOGGER.debug(
+                "Command response: success=%s, message=%s, reason=%s",
+                response.success,
+                response.message,
+                response.reason,
+            )
+
+            if not response.success:
+                raise HomeAssistantError(
+                    f"Command rejected: {response.message or response.reason}"
+                )
 
             # Clear optimistic option - let next poll pick up real value
             self._optimistic_option = None

@@ -7,6 +7,14 @@ DOMAIN = "vi_climate_devices"
 # Devices to ignore during discovery to prevent API calls
 IGNORED_DEVICES = ["gateway", "RoomControl-1"]
 
+# List of thoroughly tested device model_id values.
+# Only these devices will have auto-discovered entities disabled by default,
+# because there are well-defined entities available that provide a better UX.
+# For untested devices, all entities are enabled by default so users can decide.
+TESTED_DEVICES = [
+    "E3_Vitocal_16",
+]
+
 # Features to ignore during auto-discovery
 # List feature names (dot-notation) or regex patterns (compiled) to exclude them
 IGNORED_FEATURES = [

@@ -3,6 +3,9 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 
+> [!WARNING]
+> This project is in an early stage of development. It is currently under active development, and changes (including breaking changes) are possible at any time.
+
 A modern Home Assistant integration for Viessmann heating systems using the official Viessmann IoT API.
 It is built upon the **[vi_api_client](https://github.com/ignazhabibi/vi_api_client)** library, which was written from scratch specifically for this integration to ensure maximum performance and modern architecture.
 

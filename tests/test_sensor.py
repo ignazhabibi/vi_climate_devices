@@ -128,6 +128,22 @@ async def test_auto_discovery_unit_mapping(hass: HomeAssistant, mock_client):
         unit="kilowattHour",
     )
 
+    feat_watthour = Feature(
+        name="test.unknown.watthour",
+        value=500.0,
+        is_enabled=True,
+        is_ready=True,
+        unit="wattHour",
+    )
+
+    feat_ampere = Feature(
+        name="test.unknown.ampere",
+        value=5.0,
+        is_enabled=True,
+        is_ready=True,
+        unit="ampere",
+    )
+
     feat_flow = Feature(
         name="test.unknown.flow",
         value=500,
@@ -141,7 +157,14 @@ async def test_auto_discovery_unit_mapping(hass: HomeAssistant, mock_client):
         id="0",
         gateway_serial="mock_gateway",
         installation_id=123,
-        features=[feat_celsius, feat_bar, feat_energy, feat_flow],
+        features=[
+            feat_celsius,
+            feat_bar,
+            feat_energy,
+            feat_watthour,
+            feat_ampere,
+            feat_flow,
+        ],
         model_id="MockDevice",
         device_type="heating",
         status="online",
@@ -163,25 +186,38 @@ async def test_auto_discovery_unit_mapping(hass: HomeAssistant, mock_client):
         # Assert: Check Celsius Mapping via Registry
         entry_temp = registry.async_get("sensor.mockdevice_test_unknown_temp")
         assert entry_temp is not None
-        assert entry_temp.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+        # MockDevice is not in TESTED_DEVICES, so entities are enabled by default
+        assert entry_temp.disabled_by is None
         assert entry_temp.original_device_class == "temperature"
 
         # Assert: Check Bar Mapping
         entry_pressure = registry.async_get("sensor.mockdevice_test_unknown_pressure")
         assert entry_pressure is not None
-        assert entry_pressure.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+        assert entry_pressure.disabled_by is None
         assert entry_pressure.original_device_class == "pressure"
 
         # Assert: Check Energy Mapping
         entry_energy = registry.async_get("sensor.mockdevice_test_unknown_energy")
         assert entry_energy is not None
-        assert entry_energy.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+        assert entry_energy.disabled_by is None
         assert entry_energy.original_device_class == "energy"
+
+        # Assert: Check WattHour Mapping
+        entry_wh = registry.async_get("sensor.mockdevice_test_unknown_watthour")
+        assert entry_wh is not None
+        assert entry_wh.original_device_class == "energy"
+        assert entry_wh.unit_of_measurement == "Wh"
+
+        # Assert: Check Ampere Mapping
+        entry_amp = registry.async_get("sensor.mockdevice_test_unknown_ampere")
+        assert entry_amp is not None
+        assert entry_amp.original_device_class == "current"
+        assert entry_amp.unit_of_measurement == "A"
 
         # Assert: Check Flow Mapping
         entry_flow = registry.async_get("sensor.mockdevice_test_unknown_flow")
         assert entry_flow is not None
-        assert entry_flow.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+        assert entry_flow.disabled_by is None
         # Flow doesn't have a default device class in our auto-discovery yet
 
         # Cleanup: Unload the integration to prevent thread leaks.

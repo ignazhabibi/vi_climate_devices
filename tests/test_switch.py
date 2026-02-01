@@ -1,5 +1,6 @@
 """Tests for the Viessmann Heat switch platform."""
 
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -119,7 +120,7 @@ async def test_switch_creation_and_services(hass: HomeAssistant, mock_client):
 
 
 @pytest.mark.asyncio
-async def test_switch_error_handling(hass: HomeAssistant):
+async def test_switch_error_handling(hass: HomeAssistant, mock_client):
     """Test switch error handling and rollback."""
     # Arrange: Setup with a mock client that raises an error.
     entry = MockConfigEntry(
@@ -131,7 +132,6 @@ async def test_switch_error_handling(hass: HomeAssistant):
     )
     entry.add_to_hass(hass)
 
-    mock_client = MockViClient(device_name="Vitocal250A")
     # Simulate an API error during set_feature.
 
     # set_feature will raise an exception when called.
@@ -172,6 +172,71 @@ async def test_switch_error_handling(hass: HomeAssistant):
 
         # Assert: State Rollback.
         # The switch should NOT be stuck in 'on' state; it should revert to 'off'.
+        assert hass.states.get(switch_id).state == STATE_OFF
+
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+@pytest.mark.asyncio
+async def test_switch_api_rejection(hass: HomeAssistant):
+    """Test switch handling of API logical rejection (success=False)."""
+    # Arrange: Setup integration.
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "client_id": "123",
+            "token": {"access_token": "mock", "expires_at": 9999999999},
+        },
+    )
+    entry.add_to_hass(hass)
+
+    mock_client = MockViClient(device_name="Vitocal250A")
+
+    # Simulate API Logical Failure (Blocked).
+
+    # set_feature returns success=False object.
+    mock_client.set_feature = AsyncMock(
+        return_value=SimpleNamespace(
+            success=False, message="Blocked by device", reason=None
+        )
+    )
+
+    with (
+        patch(
+            "custom_components.vi_climate_devices.ViessmannClient",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+            return_value=None,
+        ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
+    ):
+        # Act: Initialize integration.
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        switch_id = "switch.vitocal250a_dhw_hygiene"
+        assert hass.states.get(switch_id).state == STATE_OFF
+
+        # Act: Call turn_on.
+        # We expect HomeAssistantError because success=False.
+        with pytest.raises(
+            HomeAssistantError, match="Command rejected: Blocked by device"
+        ):
+            await hass.services.async_call(
+                "switch",
+                "turn_on",
+                {"entity_id": switch_id},
+                blocking=True,
+            )
+
+        # Assert: Rollback occurred (State remains OFF).
         assert hass.states.get(switch_id).state == STATE_OFF
 
         await hass.config_entries.async_unload(entry.entry_id)
