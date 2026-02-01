@@ -191,7 +191,7 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
         await self._async_set_state(False)
 
     async def _async_set_state(self, target_state: bool) -> None:
-        """Execute the command."""
+        """Internal method to set the switch state."""
         device = self.coordinator.data.get(self._map_key)
         if not device:
             raise HomeAssistantError("Device not found")
@@ -200,18 +200,16 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
         if not feat:
             raise HomeAssistantError("Feature not available")
 
-        # 1. OPTIMISTIC UPDATE - Store locally and update UI immediately
+        # 1. OPTIMISTIC UPDATE
         self._optimistic_state = target_state
         self.async_write_ha_state()
 
+        # 2. EXECUTE COMMAND
         try:
             client = self.coordinator.client
-            _LOGGER.debug(
-                "ViClimateSwitch: Setting state to %s for entity '%s'",
-                target_state,
-                self.entity_id,
+            response, updated_device = await client.set_feature(
+                device, feat, target_state
             )
-            response = await client.set_feature(device, feat, target_state)
             _LOGGER.debug(
                 "Command response: success=%s, message=%s, reason=%s",
                 response.success,
@@ -224,11 +222,14 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
                     f"Command rejected: {response.message or response.reason}"
                 )
 
-            # Clear optimistic state - let next poll pick up real value
+            # 3. Store optimistically updated device in coordinator
+            self.coordinator.data[self._map_key] = updated_device
+
+            # 4. Clear optimistic state
             self._optimistic_state = None
 
         except Exception as e:
-            # ROLLBACK on error
+            # 5. ROLLBACK on error
             self._optimistic_state = None
             self.async_write_ha_state()
-            raise HomeAssistantError(f"Failed to switch {target_state}: {e}") from e
+            raise HomeAssistantError(f"Failed to set state: {e}") from e

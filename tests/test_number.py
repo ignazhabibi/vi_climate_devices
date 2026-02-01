@@ -1,6 +1,5 @@
 """Tests for the Viessmann Heat number platform."""
 
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -13,6 +12,7 @@ from homeassistant.components.number import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+from vi_api_client.models import CommandResponse
 
 from custom_components.vi_climate_devices.const import DOMAIN
 
@@ -35,8 +35,14 @@ async def test_number_creation_and_services(hass: HomeAssistant, mock_client):
     )
     entry.add_to_hass(hass)
 
-    # Spy on set_feature to verify service calls.
-    mock_client.set_feature = AsyncMock()
+    # Spy on set_feature to verify service calls (returns tuple in v1.0.0).
+    async def mock_set_feature(device, feature, value):
+        response = CommandResponse(
+            success=True, message=None, reason="COMMAND_EXECUTION_SUCCESS"
+        )
+        return (response, device)
+
+    mock_client.set_feature = AsyncMock(side_effect=mock_set_feature)
 
     with (
         patch(
@@ -144,7 +150,10 @@ async def test_number_error_handling(hass: HomeAssistant, mock_client):
     entry.add_to_hass(hass)
 
     # Simulate API Error.
-    mock_client.set_feature = AsyncMock(side_effect=HomeAssistantError("API Error"))
+    async def mock_set_feature_error(device, feature, value):
+        raise HomeAssistantError("API Error")
+
+    mock_client.set_feature = AsyncMock(side_effect=mock_set_feature_error)
 
     with (
         patch(
@@ -203,11 +212,13 @@ async def test_number_api_rejection(hass: HomeAssistant, mock_client):
 
     # Simulate API Logical Failure.
 
-    mock_client.set_feature = AsyncMock(
-        return_value=SimpleNamespace(
-            success=False, reason="Parameter out of range", message=None
+    async def mock_set_feature_rejection(device, feature, value):
+        response = CommandResponse(
+            success=False, message="Parameter out of range", reason=None
         )
-    )
+        return (response, device)
+
+    mock_client.set_feature = AsyncMock(side_effect=mock_set_feature_rejection)
 
     with (
         patch(

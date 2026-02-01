@@ -1,6 +1,5 @@
 """Tests for the Viessmann Heat switch platform."""
 
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -9,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from vi_api_client.mock_client import MockViClient
+from vi_api_client.models import CommandResponse
 
 from custom_components.vi_climate_devices.const import DOMAIN
 
@@ -31,9 +31,14 @@ async def test_switch_creation_and_services(hass: HomeAssistant, mock_client):
     )
     entry.add_to_hass(hass)
 
-    # Spy on set_feature to verify service calls.
-    # Note: We must patch it on the instance that ends up in the coordinator.
-    mock_client.set_feature = AsyncMock()
+    # Spy on set_feature to verify service calls (returns tuple in v1.0.0).
+    async def mock_set_feature(device, feature, value):
+        response = CommandResponse(
+            success=True, message=None, reason="COMMAND_EXECUTION_SUCCESS"
+        )
+        return (response, device)
+
+    mock_client.set_feature = AsyncMock(side_effect=mock_set_feature)
 
     with (
         patch(
@@ -135,7 +140,10 @@ async def test_switch_error_handling(hass: HomeAssistant, mock_client):
     # Simulate an API error during set_feature.
 
     # set_feature will raise an exception when called.
-    mock_client.set_feature = AsyncMock(side_effect=HomeAssistantError("API Error"))
+    async def mock_set_feature_error(device, feature, value):
+        raise HomeAssistantError("API Error")
+
+    mock_client.set_feature = AsyncMock(side_effect=mock_set_feature_error)
 
     with (
         patch(
@@ -196,11 +204,13 @@ async def test_switch_api_rejection(hass: HomeAssistant):
     # Simulate API Logical Failure (Blocked).
 
     # set_feature returns success=False object.
-    mock_client.set_feature = AsyncMock(
-        return_value=SimpleNamespace(
+    async def mock_set_feature_rejection(device, feature, value):
+        response = CommandResponse(
             success=False, message="Blocked by device", reason=None
         )
-    )
+        return (response, device)
+
+    mock_client.set_feature = AsyncMock(side_effect=mock_set_feature_rejection)
 
     with (
         patch(
