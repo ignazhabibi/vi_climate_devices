@@ -255,19 +255,14 @@ class ViClimateSelect(CoordinatorEntity, SelectEntity):
         if not feat:
             raise HomeAssistantError("Feature not available")
 
-        # 1. OPTIMISTIC UPDATE - Store locally and update UI immediately
+        # 1. OPTIMISTIC UPDATE
         self._optimistic_option = option
         self.async_write_ha_state()
 
+        # 2. EXECUTE COMMAND
         try:
             client = self.coordinator.client
-            _LOGGER.debug(
-                "ViClimateSelect: Setting option %s for entity %s",
-                option,
-                self.entity_id,
-            )
-            # Library handles mapping option to command payload
-            response = await client.set_feature(device, feat, option)
+            response, updated_device = await client.set_feature(device, feat, option)
             _LOGGER.debug(
                 "Command response: success=%s, message=%s, reason=%s",
                 response.success,
@@ -280,11 +275,14 @@ class ViClimateSelect(CoordinatorEntity, SelectEntity):
                     f"Command rejected: {response.message or response.reason}"
                 )
 
-            # Clear optimistic option - let next poll pick up real value
+            # 3. Store optimistically updated device in coordinator
+            self.coordinator.data[self._map_key] = updated_device
+
+            # 4. Clear optimistic value
             self._optimistic_option = None
 
         except Exception as e:
-            # ROLLBACK on error
+            # 5. ROLLBACK on error
             self._optimistic_option = None
             self.async_write_ha_state()
-            raise HomeAssistantError(f"Failed to set option {option}: {e}") from e
+            raise HomeAssistantError(f"Failed to select option: {e}") from e

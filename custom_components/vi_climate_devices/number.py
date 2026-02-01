@@ -340,7 +340,7 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
         # 2. EXECUTE COMMAND
         try:
             client = self.coordinator.client
-            response = await client.set_feature(device, feat, value)
+            response, updated_device = await client.set_feature(device, feat, value)
             _LOGGER.debug(
                 "Command response: success=%s, message=%s, reason=%s",
                 response.success,
@@ -353,11 +353,14 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
                     f"Command rejected: {response.message or response.reason}"
                 )
 
-            # 3. Clear optimistic value - let next poll pick up real value
+            # 3. Store optimistically updated device in coordinator
+            self.coordinator.data[self._map_key] = updated_device
+
+            # 4. Clear optimistic value - let next poll pick up real value
             self._optimistic_value = None
 
         except Exception as e:
-            # 4. ROLLBACK on error
+            # 5. ROLLBACK on error
             self._optimistic_value = None
             self.async_write_ha_state()
             raise HomeAssistantError(f"Failed to set value: {e}") from e
