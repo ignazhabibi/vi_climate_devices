@@ -241,7 +241,9 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
         self.async_write_ha_state()
 
         try:
-            response = await self.coordinator.client.set_feature(device, feat, value)
+            response, updated_device = await self.coordinator.client.set_feature(
+                device, feat, value
+            )
             _LOGGER.debug(
                 "Command response: success=%s, message=%s, reason=%s",
                 response.success,
@@ -253,6 +255,10 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
                 raise HomeAssistantError(
                     f"Command rejected: {response.message or response.reason}"
                 )
+
+            # Store optimistically updated device in coordinator
+            self.coordinator.data[self._map_key] = updated_device
+
             # Clear optimistic value - let next poll pick up real value
             self._optimistic_temp = None
         except Exception as err:
@@ -296,7 +302,7 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
         self.async_write_ha_state()
 
         try:
-            response = await self.coordinator.client.set_feature(
+            response, updated_device = await self.coordinator.client.set_feature(
                 device, feat, viessmann_mode
             )
             _LOGGER.debug(
@@ -310,6 +316,10 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
                 raise HomeAssistantError(
                     f"Command rejected: {response.message or response.reason}"
                 )
+
+            # Store optimistically updated device in coordinator
+            self.coordinator.data[self._map_key] = updated_device
+
             # Clear optimistic mode - let next poll pick up real value
             self._optimistic_mode = None
         except Exception as err:
