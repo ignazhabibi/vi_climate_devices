@@ -16,7 +16,7 @@ classifiers = [
 ]
 requires-python = ">=3.11"
 dependencies = [
-    "vi_api_client @ git+https://github.com/ignazhabibi/vi_api_client.git@v1.0.0",
+    "vi_api_client @ git+https://github.com/ignazhabibi/vi_api_client.git@v1.0.1",
 ]
 
 [project.optional-dependencies]

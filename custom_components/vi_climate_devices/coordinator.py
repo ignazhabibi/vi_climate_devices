@@ -15,6 +15,7 @@ from vi_api_client import (
     ViAuthError,
     ViClient as ViessmannClient,
 )
+from vi_api_client.utils import mask_pii
 
 from .const import DOMAIN, IGNORED_DEVICES
 
@@ -64,7 +65,9 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
             # Fetch devices from ALL installations
             all_devices: list[Device] = []
             for installation in installations:
-                _LOGGER.debug("Fetching devices for installation %s", installation.id)
+                _LOGGER.debug(
+                    mask_pii(f"Fetching devices for installation ID: {installation.id}")
+                )
                 devices = await self.client.get_full_installation_status(
                     installation.id
                 )
