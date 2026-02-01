@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
+    UnitOfElectricCurrent,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfPressure,
@@ -27,7 +28,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, IGNORED_FEATURES
+from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateAnalyticsCoordinator, ViClimateDataUpdateCoordinator
 from .utils import beautify_name, is_feature_boolean_like, is_feature_ignored
 
@@ -642,6 +643,14 @@ def _get_auto_discovery_description(feature) -> SensorEntityDescription:
             device_class = SensorDeviceClass.POWER
             native_unit = UnitOfPower.WATT
             state_class = SensorStateClass.MEASUREMENT
+        case "wattHour":
+            device_class = SensorDeviceClass.ENERGY
+            native_unit = UnitOfEnergy.WATT_HOUR
+            state_class = SensorStateClass.TOTAL_INCREASING
+        case "ampere":
+            device_class = SensorDeviceClass.CURRENT
+            native_unit = UnitOfElectricCurrent.AMPERE
+            state_class = SensorStateClass.MEASUREMENT
         case "volumetricFlow" | "liter/hour":
             # API gives 'liter/hour' -> L/h
             device_class = SensorDeviceClass.VOLUME_FLOW_RATE
@@ -723,13 +732,15 @@ def _discover_realtime_sensors(
             # (Binary Sensor platform handles all boolean-like values)
             if not feature.is_writable and not is_feature_boolean_like(feature.value):
                 description = _get_auto_discovery_description(feature)
+                # Only disable entities by default for thoroughly tested devices
+                is_tested = device.model_id in TESTED_DEVICES
                 entities.append(
                     ViClimateSensor(
                         coordinator,
                         map_key,
                         feature.name,
                         description,
-                        enabled_default=False,
+                        enabled_default=not is_tested,
                     )
                 )
     return entities

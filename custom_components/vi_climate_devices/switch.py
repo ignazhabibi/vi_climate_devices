@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from vi_api_client import Feature
 
-from .const import DOMAIN, IGNORED_FEATURES
+from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
 from .utils import (
     beautify_name,
@@ -88,20 +88,22 @@ async def async_setup_entry(
                     continue
 
                 # Automatic Discovery (Fallback)
-                # If writable boolean-like
-                if is_feature_boolean_like(feature.value):
-                    desc = ViClimateSwitchEntityDescription(
+                # Writable boolean-like feature
+                if feature.is_writable and is_feature_boolean_like(feature.value):
+                    description = SwitchEntityDescription(
                         key=feature.name,
                         name=beautify_name(feature.name),
                         entity_category=EntityCategory.CONFIG,
                     )
+                    # Only disable entities by default for thoroughly tested devices
+                    is_tested = device.model_id in TESTED_DEVICES
                     entities.append(
                         ViClimateSwitch(
                             coordinator,
                             map_key,
                             feature.name,
-                            desc,
-                            enabled_default=False,
+                            description,
+                            enabled_default=not is_tested,
                         )
                     )
 

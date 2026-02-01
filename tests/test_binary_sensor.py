@@ -112,10 +112,12 @@ async def test_binary_sensor_discovers_generic_on_off_string(
         # Assert: Verify the generic 'on' feature is discovered as a binary sensor.
         registry = er.async_get(hass)
 
-        # heating.dhw.status (auto-discovered)
+        # heating.dhw.status (auto-discovered) - Vitocal250A is not E3_Vitocal_16
+        # so this should be enabled by default
         reg_entry = registry.async_get("binary_sensor.vitocal250a_dhw_status")
         assert reg_entry is not None
-        assert reg_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+        # Vitocal250A is not in TESTED_DEVICES, so should be enabled
+        assert reg_entry.disabled_by is None
 
         # Cleanup: Unload the integration to prevent thread leaks.
         await hass.config_entries.async_unload(entry.entry_id)

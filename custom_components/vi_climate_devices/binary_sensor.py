@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from vi_api_client.api import Feature
 
-from .const import DOMAIN, IGNORED_FEATURES
+from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
 from .utils import (
     beautify_name,
@@ -201,13 +201,15 @@ async def async_setup_entry(
                         name=beautify_name(feature.name),
                         entity_category=EntityCategory.DIAGNOSTIC,
                     )
+                    # Only disable entities by default for thoroughly tested devices
+                    is_tested = device.model_id in TESTED_DEVICES
                     entities.append(
                         ViClimateBinarySensor(
                             coordinator,
                             map_key,
                             feature.name,
                             desc,
-                            enabled_default=False,
+                            enabled_default=not is_tested,
                         )
                     )
 
