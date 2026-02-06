@@ -37,7 +37,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=f"{DOMAIN}_data",
-            update_interval=update_interval or timedelta(minutes=2),
+            update_interval=update_interval or timedelta(minutes=5),
         )
         self.client = client
         self._known_devices: list[Device] = []
@@ -158,7 +158,7 @@ class ViClimateAnalyticsCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=f"{DOMAIN}_analytics",
-            update_interval=timedelta(hours=1),
+            update_interval=timedelta(minutes=15),
         )
 
     async def _async_update_data(self) -> dict:
