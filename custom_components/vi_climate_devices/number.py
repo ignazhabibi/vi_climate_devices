@@ -339,6 +339,11 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
 
         # 2. EXECUTE COMMAND
         try:
+            # Round value based on step to avoid floating point precision issues.
+            precision = get_suggested_precision(self._attr_native_step)
+            if precision is not None:
+                value = round(value, precision)
+
             client = self.coordinator.client
             response, updated_device = await client.set_feature(device, feat, value)
             _LOGGER.debug(

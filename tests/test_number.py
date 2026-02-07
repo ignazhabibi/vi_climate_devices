@@ -260,3 +260,94 @@ async def test_number_api_rejection(hass: HomeAssistant, mock_client):
 
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
+
+
+@pytest.mark.asyncio
+async def test_number_floating_point_precision(hass: HomeAssistant, mock_client):
+    """Test number entity rounds floating-point values before API calls."""
+    # Arrange: Setup integration with mock client that records exact values sent.
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "client_id": "123",
+            "token": {
+                "access_token": "mock_access_token",
+                "refresh_token": "mock_refresh_token",
+                "expires_at": 3800000000,
+                "token_type": "Bearer",
+            },
+        },
+    )
+    entry.add_to_hass(hass)
+
+    # Track the actual values sent to the API.
+    api_calls = []
+
+    async def mock_set_feature(device, feature, value):
+        api_calls.append({"feature": feature.name, "value": value})
+        response = CommandResponse(
+            success=True, message=None, reason="COMMAND_EXECUTION_SUCCESS"
+        )
+        return (response, device)
+
+    mock_client.set_feature = AsyncMock(side_effect=mock_set_feature)
+
+    with (
+        patch(
+            "custom_components.vi_climate_devices.ViessmannClient",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+            return_value=None,
+        ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
+    ):
+        # Act: Load Integration.
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Test Case 1: Heating Curve Slope with step=0.1 (precision=1).
+        # Send value with floating-point noise: 0.7000000000000001.
+        # Expected API call: 0.7 (rounded to 1 decimal place).
+        await hass.services.async_call(
+            "number",
+            SERVICE_SET_VALUE,
+            {
+                "entity_id": "number.vitocal250a_heating_circuit_0_curve_slope",
+                "value": 0.7000000000000001,
+            },
+            blocking=True,
+        )
+
+        # Assert: API received clean value 0.7.
+        assert len(api_calls) == 1
+        assert api_calls[0]["feature"] == "heating.circuits.0.heating.curve.slope"
+        assert api_calls[0]["value"] == 0.7
+
+        # Test Case 2: DHW Temperature with step=1.0 (precision=0).
+        # Send value with floating-point noise: 45.00000000001.
+        # Expected API call: 45.0 (rounded to 0 decimal places).
+        api_calls.clear()
+
+        await hass.services.async_call(
+            "number",
+            SERVICE_SET_VALUE,
+            {
+                "entity_id": "number.vitocal250a_dhw_target_temperature",
+                "value": 45.00000000001,
+            },
+            blocking=True,
+        )
+
+        # Assert: API received clean value 45.0.
+        assert len(api_calls) == 1
+        assert api_calls[0]["feature"] == "heating.dhw.temperature.main"
+        assert api_calls[0]["value"] == 45.0
+
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
