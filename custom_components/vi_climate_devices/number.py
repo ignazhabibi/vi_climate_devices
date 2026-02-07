@@ -75,6 +75,30 @@ NUMBER_TEMPLATES = [
             device_class=NumberDeviceClass.TEMPERATURE,
         ),
     },
+    {
+        "pattern": re.compile(r"^heating\.circuits\.(\d+)\.temperature\.levels\.min$"),
+        "description": ViClimateNumberEntityDescription(
+            key="placeholder",
+            translation_key="heating_circuit_temperature_limit_min",
+            icon="mdi:thermometer-low",
+            mode=NumberMode.BOX,
+            entity_category=EntityCategory.CONFIG,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_class=NumberDeviceClass.TEMPERATURE,
+        ),
+    },
+    {
+        "pattern": re.compile(r"^heating\.circuits\.(\d+)\.temperature\.levels\.max$"),
+        "description": ViClimateNumberEntityDescription(
+            key="placeholder",
+            translation_key="heating_circuit_temperature_limit_max",
+            icon="mdi:thermometer-high",
+            mode=NumberMode.BOX,
+            entity_category=EntityCategory.CONFIG,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_class=NumberDeviceClass.TEMPERATURE,
+        ),
+    },
 ]
 
 NUMBER_TYPES: dict[str, ViClimateNumberEntityDescription] = {
@@ -339,6 +363,11 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
 
         # 2. EXECUTE COMMAND
         try:
+            # Round value based on step to avoid floating point precision issues.
+            precision = get_suggested_precision(self._attr_native_step)
+            if precision is not None:
+                value = round(value, precision)
+
             client = self.coordinator.client
             response, updated_device = await client.set_feature(device, feat, value)
             _LOGGER.debug(

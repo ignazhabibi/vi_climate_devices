@@ -11,6 +11,142 @@
     }),
     dict({
       'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Active',
+        'viessmann_feature_name': 'heating.circuits.0.active',
+      }),
+      'entity_id': 'binary_sensor.vitocal250a_circuits_0_active',
+      'state': 'on',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Modes Heating Active',
+        'viessmann_feature_name': 'heating.circuits.0.operating.modes.heating.active',
+      }),
+      'entity_id': 'binary_sensor.vitocal250a_circuits_0_operating_modes_heating_active',
+      'state': 'on',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Modes Standby Active',
+        'viessmann_feature_name': 'heating.circuits.0.operating.modes.standby.active',
+      }),
+      'entity_id': 'binary_sensor.vitocal250a_circuits_0_operating_modes_standby_active',
+      'state': 'off',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Comfort Cooling Energy Saving Active',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.comfortCoolingEnergySaving.active',
+      }),
+      'entity_id': 'binary_sensor.vitocal250a_circuits_0_operating_programs_comfort_cooling_energy_saving_active',
+      'state': 'off',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Comfort Energy Saving Active',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.comfortEnergySaving.active',
+      }),
+      'entity_id': 'binary_sensor.vitocal250a_circuits_0_operating_programs_comfort_energy_saving_active',
+      'state': 'off',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Comfort Heating Active',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.comfortHeating.active',
+      }),
+      'entity_id': 'binary_sensor.vitocal250a_circuits_0_operating_programs_comfort_heating_active',
+      'state': 'off',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Fixed Active',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.fixed.active',
+      }),
+      'entity_id': 'binary_sensor.vitocal250a_circuits_0_operating_programs_fixed_active',
+      'state': 'off',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Forced Last From Schedule Active',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.forcedLastFromSchedule.active',
+      }),
+      'entity_id': 'binary_sensor.vitocal250a_circuits_0_operating_programs_forced_last_from_schedule_active',
+      'state': 'off',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Frostprotection Active',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.frostprotection.active',
+      }),
+      'entity_id': 'binary_sensor.vitocal250a_circuits_0_operating_programs_frostprotection_active',
+      'state': 'off',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Normal Cooling Energy Saving Active',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.normalCoolingEnergySaving.active',
+      }),
+      'entity_id': 'binary_sensor.vitocal250a_circuits_0_operating_programs_normal_cooling_energy_saving_active',
+      'state': 'off',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Normal Energy Saving Active',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.normalEnergySaving.active',
+      }),
+      'entity_id': 'binary_sensor.vitocal250a_circuits_0_operating_programs_normal_energy_saving_active',
+      'state': 'off',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Normal Heating Active',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.normalHeating.active',
+      }),
+      'entity_id': 'binary_sensor.vitocal250a_circuits_0_operating_programs_normal_heating_active',
+      'state': 'on',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Reduced Cooling Energy Saving Active',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.reducedCoolingEnergySaving.active',
+      }),
+      'entity_id': 'binary_sensor.vitocal250a_circuits_0_operating_programs_reduced_cooling_energy_saving_active',
+      'state': 'off',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Reduced Energy Saving Active',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.reducedEnergySaving.active',
+      }),
+      'entity_id': 'binary_sensor.vitocal250a_circuits_0_operating_programs_reduced_energy_saving_active',
+      'state': 'off',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Reduced Heating Active',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.reducedHeating.active',
+      }),
+      'entity_id': 'binary_sensor.vitocal250a_circuits_0_operating_programs_reduced_heating_active',
+      'state': 'off',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Standby Active',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.standby.active',
+      }),
+      'entity_id': 'binary_sensor.vitocal250a_circuits_0_operating_programs_standby_active',
+      'state': 'off',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Summer Eco Active',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.summerEco.active',
+      }),
+      'entity_id': 'binary_sensor.vitocal250a_circuits_0_operating_programs_summer_eco_active',
+      'state': 'off',
+    }),
+    dict({
+      'attributes': dict({
         'friendly_name': 'Vitocal250A Circuits 0 Summer Eco Absolute Active',
         'viessmann_feature_name': 'heating.circuits.0.configuration.summerEco.absolute.active',
       }),
@@ -187,27 +323,48 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Circuits 0 Temperature Levels Max',
-        'max': 70.0,
-        'min': 10.0,
-        'mode': <NumberMode.AUTO: 'auto'>,
+        'device_class': 'temperature',
+        'friendly_name': 'Vitocal250A Circuit 0 Comfort Heating Temperature',
+        'icon': 'mdi:thermometer',
+        'max': 37.0,
+        'min': 3.0,
+        'mode': <NumberMode.BOX: 'box'>,
         'step': 1.0,
-        'viessmann_feature_name': 'heating.circuits.0.temperature.levels.max',
+        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.comfortHeating.temperature',
       }),
-      'entity_id': 'number.vitocal250a_circuits_0_temperature_levels_max',
-      'state': '60',
+      'entity_id': 'number.vitocal250a_circuit_0_comfort_heating_temperature',
+      'state': '22',
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Circuits 0 Temperature Levels Min',
-        'max': 30.0,
-        'min': 1.0,
-        'mode': <NumberMode.AUTO: 'auto'>,
+        'device_class': 'temperature',
+        'friendly_name': 'Vitocal250A Circuit 0 Normal Heating Temperature',
+        'icon': 'mdi:thermometer',
+        'max': 37.0,
+        'min': 3.0,
+        'mode': <NumberMode.BOX: 'box'>,
         'step': 1.0,
-        'viessmann_feature_name': 'heating.circuits.0.temperature.levels.min',
+        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.normalHeating.temperature',
       }),
-      'entity_id': 'number.vitocal250a_circuits_0_temperature_levels_min',
+      'entity_id': 'number.vitocal250a_circuit_0_normal_heating_temperature',
       'state': '20',
+    }),
+    dict({
+      'attributes': dict({
+        'device_class': 'temperature',
+        'friendly_name': 'Vitocal250A Circuit 0 Reduced Heating Temperature',
+        'icon': 'mdi:thermometer',
+        'max': 37.0,
+        'min': 3.0,
+        'mode': <NumberMode.BOX: 'box'>,
+        'step': 1.0,
+        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.reducedHeating.temperature',
+      }),
+      'entity_id': 'number.vitocal250a_circuit_0_reduced_heating_temperature',
+      'state': '18',
     }),
     dict({
       'attributes': dict({
@@ -299,6 +456,36 @@
     }),
     dict({
       'attributes': dict({
+        'device_class': 'temperature',
+        'friendly_name': 'Vitocal250A Heating Circuit 0 Temperature Limit Max',
+        'icon': 'mdi:thermometer-high',
+        'max': 70.0,
+        'min': 10.0,
+        'mode': <NumberMode.BOX: 'box'>,
+        'step': 1.0,
+        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+        'viessmann_feature_name': 'heating.circuits.0.temperature.levels.max',
+      }),
+      'entity_id': 'number.vitocal250a_heating_circuit_0_temperature_limit_max',
+      'state': '60',
+    }),
+    dict({
+      'attributes': dict({
+        'device_class': 'temperature',
+        'friendly_name': 'Vitocal250A Heating Circuit 0 Temperature Limit Min',
+        'icon': 'mdi:thermometer-low',
+        'max': 30.0,
+        'min': 1.0,
+        'mode': <NumberMode.BOX: 'box'>,
+        'step': 1.0,
+        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+        'viessmann_feature_name': 'heating.circuits.0.temperature.levels.min',
+      }),
+      'entity_id': 'number.vitocal250a_heating_circuit_0_temperature_limit_min',
+      'state': '20',
+    }),
+    dict({
+      'attributes': dict({
         'friendly_name': 'Vitocal250A DHW Mode',
         'icon': 'mdi:water-boiler-auto',
         'options': list([
@@ -383,6 +570,142 @@
       }),
       'entity_id': 'sensor.vitocal250a_buffer_sensors_temperature_main',
       'state': '29.9',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Active',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.active',
+      }),
+      'entity_id': 'sensor.vitocal250a_circuits_0_operating_programs_active',
+      'state': 'normalHeating',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Comfort Cooling Energy Saving Demand',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.comfortCoolingEnergySaving.demand',
+      }),
+      'entity_id': 'sensor.vitocal250a_circuits_0_operating_programs_comfort_cooling_energy_saving_demand',
+      'state': 'cooling',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Comfort Cooling Energy Saving Reason',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.comfortCoolingEnergySaving.reason',
+      }),
+      'entity_id': 'sensor.vitocal250a_circuits_0_operating_programs_comfort_cooling_energy_saving_reason',
+      'state': 'summerEco',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Comfort Energy Saving Demand',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.comfortEnergySaving.demand',
+      }),
+      'entity_id': 'sensor.vitocal250a_circuits_0_operating_programs_comfort_energy_saving_demand',
+      'state': 'heating',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Comfort Energy Saving Reason',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.comfortEnergySaving.reason',
+      }),
+      'entity_id': 'sensor.vitocal250a_circuits_0_operating_programs_comfort_energy_saving_reason',
+      'state': 'summerEco',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Comfort Heating Demand',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.comfortHeating.demand',
+      }),
+      'entity_id': 'sensor.vitocal250a_circuits_0_operating_programs_comfort_heating_demand',
+      'state': 'heating',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Normal Cooling Energy Saving Demand',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.normalCoolingEnergySaving.demand',
+      }),
+      'entity_id': 'sensor.vitocal250a_circuits_0_operating_programs_normal_cooling_energy_saving_demand',
+      'state': 'cooling',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Normal Cooling Energy Saving Reason',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.normalCoolingEnergySaving.reason',
+      }),
+      'entity_id': 'sensor.vitocal250a_circuits_0_operating_programs_normal_cooling_energy_saving_reason',
+      'state': 'summerEco',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Normal Energy Saving Demand',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.normalEnergySaving.demand',
+      }),
+      'entity_id': 'sensor.vitocal250a_circuits_0_operating_programs_normal_energy_saving_demand',
+      'state': 'heating',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Normal Energy Saving Reason',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.normalEnergySaving.reason',
+      }),
+      'entity_id': 'sensor.vitocal250a_circuits_0_operating_programs_normal_energy_saving_reason',
+      'state': 'summerEco',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Normal Heating Demand',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.normalHeating.demand',
+      }),
+      'entity_id': 'sensor.vitocal250a_circuits_0_operating_programs_normal_heating_demand',
+      'state': 'heating',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Reduced Cooling Energy Saving Demand',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.reducedCoolingEnergySaving.demand',
+      }),
+      'entity_id': 'sensor.vitocal250a_circuits_0_operating_programs_reduced_cooling_energy_saving_demand',
+      'state': 'cooling',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Reduced Cooling Energy Saving Reason',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.reducedCoolingEnergySaving.reason',
+      }),
+      'entity_id': 'sensor.vitocal250a_circuits_0_operating_programs_reduced_cooling_energy_saving_reason',
+      'state': 'summerEco',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Reduced Energy Saving Demand',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.reducedEnergySaving.demand',
+      }),
+      'entity_id': 'sensor.vitocal250a_circuits_0_operating_programs_reduced_energy_saving_demand',
+      'state': 'heating',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Reduced Energy Saving Reason',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.reducedEnergySaving.reason',
+      }),
+      'entity_id': 'sensor.vitocal250a_circuits_0_operating_programs_reduced_energy_saving_reason',
+      'state': 'unknown',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Reduced Heating Demand',
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.reducedHeating.demand',
+      }),
+      'entity_id': 'sensor.vitocal250a_circuits_0_operating_programs_reduced_heating_demand',
+      'state': 'heating',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Circuits 0 Sensors Temperature Supply Status',
+        'viessmann_feature_name': 'heating.circuits.0.sensors.temperature.supply.status',
+      }),
+      'entity_id': 'sensor.vitocal250a_circuits_0_sensors_temperature_supply_status',
+      'state': 'connected',
     }),
     dict({
       'attributes': dict({
