@@ -187,30 +187,6 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Circuits 0 Temperature Levels Max',
-        'max': 70.0,
-        'min': 10.0,
-        'mode': <NumberMode.AUTO: 'auto'>,
-        'step': 1.0,
-        'viessmann_feature_name': 'heating.circuits.0.temperature.levels.max',
-      }),
-      'entity_id': 'number.vitocal250a_circuits_0_temperature_levels_max',
-      'state': '60',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Circuits 0 Temperature Levels Min',
-        'max': 30.0,
-        'min': 1.0,
-        'mode': <NumberMode.AUTO: 'auto'>,
-        'step': 1.0,
-        'viessmann_feature_name': 'heating.circuits.0.temperature.levels.min',
-      }),
-      'entity_id': 'number.vitocal250a_circuits_0_temperature_levels_min',
-      'state': '20',
-    }),
-    dict({
-      'attributes': dict({
         'device_class': 'temperature',
         'friendly_name': 'Vitocal250A DHW Hysteresis',
         'icon': 'mdi:thermometer-lines',
@@ -296,6 +272,36 @@
       }),
       'entity_id': 'number.vitocal250a_heating_circuit_0_curve_slope',
       'state': '0.6',
+    }),
+    dict({
+      'attributes': dict({
+        'device_class': 'temperature',
+        'friendly_name': 'Vitocal250A Heating Circuit 0 Temperature Limit Max',
+        'icon': 'mdi:thermometer-high',
+        'max': 70.0,
+        'min': 10.0,
+        'mode': <NumberMode.BOX: 'box'>,
+        'step': 1.0,
+        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+        'viessmann_feature_name': 'heating.circuits.0.temperature.levels.max',
+      }),
+      'entity_id': 'number.vitocal250a_heating_circuit_0_temperature_limit_max',
+      'state': '60',
+    }),
+    dict({
+      'attributes': dict({
+        'device_class': 'temperature',
+        'friendly_name': 'Vitocal250A Heating Circuit 0 Temperature Limit Min',
+        'icon': 'mdi:thermometer-low',
+        'max': 30.0,
+        'min': 1.0,
+        'mode': <NumberMode.BOX: 'box'>,
+        'step': 1.0,
+        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+        'viessmann_feature_name': 'heating.circuits.0.temperature.levels.min',
+      }),
+      'entity_id': 'number.vitocal250a_heating_circuit_0_temperature_limit_min',
+      'state': '20',
     }),
     dict({
       'attributes': dict({

@@ -78,6 +78,12 @@
             },
             "heating_circuit_program_eco_heating_temperature": {
                 "name": "Circuit {index} Eco Heating Temperature"
+            },
+            "heating_circuit_temperature_limit_min": {
+                "name": "Heating Circuit {index} Temperature Limit Min"
+            },
+            "heating_circuit_temperature_limit_max": {
+                "name": "Heating Circuit {index} Temperature Limit Max"
             }
         },
         "binary_sensor": {
