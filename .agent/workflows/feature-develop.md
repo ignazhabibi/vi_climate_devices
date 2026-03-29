@@ -92,6 +92,20 @@ git commit -m "type: description"
 - Proposed commit message
 - Summary of changes
 
+### D. Documentation Drift Check
+Before considering the feature complete, explicitly check whether the work
+changed repository-operational documentation, including:
+
+- `README.md`
+- `AGENTS.md`
+- `.agent/rules/`, especially `architecture-context.md` and `tech-stack.md`
+- `.agent/workflows/`
+
+If the feature changed architecture, tech stack, setup commands, testing
+strategy, CI behavior, release flow, or GitHub governance expectations, update
+the affected documentation in the same task or explicitly state that it was
+checked and no change was needed.
+
 ---
 
 ## Notes

@@ -1,45 +1,55 @@
 ---
-description: Bring the current file up to the standards defined in the project rules
+description: Review and update agent guidance so rules, workflows, and bootstrap docs remain aligned with repository reality
 ---
 
-# Code Compliance & Modernization
+# Rules and Workflow Compliance Check
 
-**Goal:** Bring the current file up to the standards defined in the project rules (`.agent/rules/*.md`), specifically focusing on the **Home Assistant Integration** context and **Flat Architecture**.
+**Goal:** Keep `AGENTS.md`, `.agent/rules/`, and `.agent/workflows/`
+self-contained, current, and internally consistent with the real repository
+behavior.
 
 ## Instructions
 
-Act as a strict Code Reviewer and Refactoring Agent. Analyze the code and apply the following transformations step-by-step.
+Act as a strict repository guidance reviewer. Audit the guidance files against
+the actual codebase, CI, release process, and GitHub governance, then update
+them directly where needed.
 
-### Phase 1: Architecture Check (ref: `architecture-context.md`)
-1.  **Flat Model Enforcement:**
-    *   Ensure NO nested property access on devices (e.g., `device.heating....` is BANNED).
-    *   Ensure usage of `device.features` list or `get_feature()` methods.
-2.  **No Polling:**
-    *   Verify `update_device(device)` is used for refreshing state, not individual feature polls.
-3.  **Hybrid Discovery:**
-    *   If this is an Entity file, check if it respects the "Defined" vs "Auto" discovery logic.
+### Phase 1: Repository Reality Check
+1.  **Bootstrap Alignment:**
+    *   Verify `AGENTS.md` still points to the right always-relevant files and workflows.
+    *   Ensure it reflects current branch protection, CI, release, setup, and test-stack reality.
+2.  **Rules Alignment:**
+    *   Check `.agent/rules/` for stale assumptions about architecture, tech stack, testing, Git workflow, and library boundaries.
+    *   Pay special attention to `architecture-context.md` and `tech-stack.md` whenever architecture or tooling changed.
+3.  **Workflow Alignment:**
+    *   Check `.agent/workflows/` for stale steps, especially around branches, PRs, release flow, validation commands, and documentation duties.
 
-### Phase 2: Structure & Imports (ref: `python-style.md`)
-1.  **Imports:** Sort all imports using standard sorting logic.
-2.  **Sorting:** Sort the contents of Lists (e.g., `SUPPORTED_PLATFORMS`, `CONSTANTS`) and Dictionary keys **alphabetically**.
-3.  **Filesystem:** Replace all `os.path` operations with `pathlib.Path` syntax.
-4.  **Naming:** Identify short variable names (k, v, d) and rename them to be descriptive (key, value, data).
+### Phase 2: Self-Contained Documentation Check
+1.  **Coverage:** Ensure repository-operational documentation is treated as one
+    system:
+    *   `README.md`
+    *   `AGENTS.md`
+    *   `.agent/rules/`
+    *   `.agent/workflows/`
+2.  **Durable Knowledge:** If a new insight changed how the repo is actually
+    maintained, verify that the insight is captured in the right doc file and
+    not left implicit in conversation only.
+3.  **No Silent Drift:** If a file is stale, update it as part of the task
+    instead of merely noting the discrepancy.
 
-### Phase 3: Syntax & Logging (CRITICAL!)
-1.  **Modern Python (3.14):** Update syntax to Python 3.14 standards (e.g., use `|` for Unions instead of `Optional` or `Union`, use `type` aliases).
-2.  **Logging:** Audit EVERY `_LOGGER` call:
-    *   **MUST FIX:** Convert f-strings (`f"..."`) inside logger calls to Lazy Formatting (`%s`).
-    *   Remove trailing periods `.` from log messages.
-3.  **Strings:** Convert all *other* string concatenations (outside of logging) to **f-strings**.
+### Phase 3: Required Triggers
+Treat guidance updates as mandatory when the task changed any of the following:
 
-### Phase 4: Typing & Documentation (ref: `python-docs.md`)
-1.  **Typing:**
-    *   Replace `List`, `Dict`, `Tuple` imports with native types (`list`, `dict`, `tuple`).
-    *   Remove `Any` where a specific type can be inferred.
-2.  **Docstrings:**
-    *   Ensure a file-header docstring exists.
-    *   Add docstrings for all Public Methods using **Google Style**.
-    *   **IMPORTANT:** Remove type definitions from the docstring text (e.g., change `Args: name (str):` to `Args: name:`).
+- architecture or discovery assumptions
+- tech stack, Python baseline, or dependency strategy
+- test strategy, snapshot handling, or CI authority
+- local setup commands
+- release versioning or tagging flow
+- GitHub governance such as branch protection or PR requirements
 
 ## Output
-Apply the changes directly to the file. Afterwards, provide a short bullet-point summary of what was fixed.
+Apply the necessary guidance updates directly. Afterwards:
+
+- summarize what guidance was updated
+- state which files were reviewed for drift
+- explicitly note if any checked files needed no change

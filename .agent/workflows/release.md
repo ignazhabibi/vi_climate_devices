@@ -108,6 +108,14 @@ Create a changelog snippet in the requested style.
 - Do not claim the release is live until:
   - the PR merge produced a green `main` push run, and
   - the tag run for `v<NEW_VERSION>` is green.
+- Perform a final documentation drift check for release-related guidance:
+  - `README.md`
+  - `AGENTS.md`
+  - `.agent/rules/tech-stack.md`
+  - `.agent/rules/git-workflow.md`
+  - `.agent/workflows/release.md`
+  Update them in the same task if the release changed versioning policy,
+  dependency/update policy, CI expectations, or release procedure assumptions.
 - Confirm both runs explicitly:
   ```bash
   gh run list --workflow release.yml --limit 5
