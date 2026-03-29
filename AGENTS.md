@@ -83,6 +83,9 @@ validate once in a fresh environment installed with `.[dev]`.
 ## CI and Release Notes
 
 - CI currently runs via `.github/workflows/release.yml`.
+- `main` is protected by a GitHub ruleset. Assume pull requests are required for
+  all changes, including `.agent/` guidance and documentation updates, unless
+  the user explicitly asks for a confirmed emergency bypass.
 - Python support baseline is 3.14+ across packaging, CI, and repository guidance.
 - Prefer matching the current CI Python version locally for verification.
 - Home Assistant release versioning is driven by
