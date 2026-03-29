@@ -8,7 +8,9 @@ Strict guidelines for version control and feature development.
 
 ## 1. Core Principle: The "Main is Sacred" Rule
 - **NEVER** commit directly to `main`.
-    - **EXCEPTION**: Changes strictly within the `.agent/` directory (workflows, rules) MAY be committed directly to `main` to facilitate rapid agent configuration.
+- `main` is protected by a GitHub ruleset. Treat pull requests as required for
+  all changes, including documentation and `.agent/` guidance updates, unless
+  the user explicitly asks for an emergency bypass and confirms the tradeoff.
 - `main` must always be green (passing CI).
 - All work happens in short-lived feature branches.
 
@@ -46,5 +48,6 @@ Strict guidelines for version control and feature development.
 
 ## 4. Agent Role & Permissions
 - **Allowed**: `git checkout -b`, `git add`, `git commit`, `git push`.
-- **Forbidden**: `git merge` (User does this via UI), committing to `main`.
+- **Forbidden**: `git merge` (User does this via UI), committing to `main`
+  outside an explicitly approved emergency bypass.
 - **Validation**: The Agent must run `ruff check .`, `ruff format --check .`, and `python -m pytest -q` before proposing a push.

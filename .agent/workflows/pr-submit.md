@@ -14,7 +14,9 @@ The agent must first verify:
     git branch --show-current
     ```
     > [!WARNING]
-    > If output is `main`, the Agent must **STOP** and ask the user to start a feature branch.
+    > If output is `main`, the Agent must create or request a short-lived
+    > feature branch before proceeding. `main` is protected and should not
+    > receive direct commits, including documentation and `.agent/` updates.
 
 2.  **Lint & Test**:
     ```bash

@@ -101,5 +101,5 @@ git commit -m "type: description"
 - **Always** ask user before committing
 - Commit frequently with meaningful messages
 - Keep branches short-lived (ideally < 1 day)
-- Never commit directly to `main` (except `.agent/` changes)
+- Never commit directly to `main`, including `.agent/` changes
 - For push/PR submission, use the `/pr-submit` workflow

@@ -7,7 +7,7 @@ description: analyze changes, bump version, generate changelog, and tag release
 This workflow guides the agent to create a semantic release for the Home Assistant integration.
 
 ## 1. Pre-Flight Checks
-1.  **Branch Check**: Ensure we are on `main` and fully up-to-date.
+1.  **Branch Check**: Ensure `main` is fully up-to-date.
     ```bash
     git checkout main && git pull
     ```
@@ -70,30 +70,43 @@ Create a changelog snippet in the requested style.
 ```
 
 ## 4. Execution
-1.  **Bump Version**: Update `manifest.json` and `pyproject.toml` with the new version.
+1.  **Create Release Branch**:
+    ```bash
+    git checkout -b release/v<NEW_VERSION>
+    ```
+2.  **Bump Version**: Update `manifest.json` and `pyproject.toml` with the new version on the release branch.
     ```bash
     # Update both release version sources together.
     python3.14 -c "from pathlib import Path; import json; manifest = Path('custom_components/vi_climate_devices/manifest.json'); data = json.loads(manifest.read_text()); data['version'] = '<NEW_VERSION>'; manifest.write_text(json.dumps(data, indent=2) + '\n'); pyproject = Path('pyproject.toml'); pyproject.write_text(pyproject.read_text().replace('version = \"<OLD_VERSION>\"', 'version = \"<NEW_VERSION>\"', 1)); print('Updated manifest.json and pyproject.toml')"
     ```
-2.  **Commit**:
+3.  **Commit**:
     ```bash
     git add custom_components/vi_climate_devices/manifest.json pyproject.toml
     git commit -m "chore(release): bump version to <NEW_VERSION>"
     ```
-3.  **Tag**:
+4.  **Push Release Branch & PR**:
+    ```bash
+    git push -u origin release/v<NEW_VERSION>
+    ```
+5.  **Merge PR**:
+    - Open a pull request from `release/v<NEW_VERSION>` into `main`.
+    - Wait until the PR `quality-check` is green.
+    - Merge the PR on GitHub.
+6.  **Refresh Local Main**:
+    ```bash
+    git checkout main
+    git pull origin main
+    ```
+7.  **Tag the Merged Main Commit**:
     ```bash
     git -c core.commentChar=";" tag -a v<NEW_VERSION> -m "Release v<NEW_VERSION>" -m "<PASTE_CHANGELOG_HERE>"
-    ```
-4.  **Push**:
-    ```bash
-    git push origin main
     git push origin v<NEW_VERSION>
     ```
 
 ## 5. Post-Release
 - GitHub Actions (if configured) will automatically build and publish the release.
 - Do not claim the release is live until:
-  - the `main` push run is green, and
+  - the PR merge produced a green `main` push run, and
   - the tag run for `v<NEW_VERSION>` is green.
 - Confirm both runs explicitly:
   ```bash
