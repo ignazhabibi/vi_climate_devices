@@ -125,14 +125,18 @@ logger:
 ### Running Tests
 
 ```bash
-pip install -r requirements_test.txt
-pytest tests/
+python3 -m venv .venv
+. .venv/bin/activate
+pip install --upgrade pip
+pip install .[dev]
+pytest -q
 ```
 
 ### Code Quality
 
 ```bash
-ruff check custom_components/vi_climate_devices
+ruff check .
+ruff format --check .
 ```
 
 ---
@@ -144,4 +148,3 @@ MIT License – see [LICENSE](LICENSE) for details.
 ## Acknowledgments
 
 - Built on [vi_api_client](https://github.com/ignazhabibi/vi_api_client) library
-
