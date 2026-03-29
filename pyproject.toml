@@ -14,9 +14,9 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
-    "vi_api_client @ git+https://github.com/ignazhabibi/vi_api_client.git@v1.0.1",
+    "vi_api_client @ git+https://github.com/ignazhabibi/vi_api_client.git@v1.1.0",
 ]
 
 [project.optional-dependencies]
