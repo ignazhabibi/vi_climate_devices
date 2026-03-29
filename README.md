@@ -124,9 +124,9 @@ logger:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install --upgrade pip
-pip install .[dev]
-pytest -q
+python -m pip install --upgrade pip
+python -m pip install '.[dev]'
+python -m pytest -q
 ```
 
 ### Code Quality
