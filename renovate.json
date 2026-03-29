@@ -3,22 +3,12 @@
   "extends": [
     "config:recommended"
   ],
-  "labels": [
-    "dependencies"
-  ],
   "dependencyDashboard": true,
+  "ignoreDeps": [
+    "pytest"
+  ],
   "separateMinorPatch": true,
   "packageRules": [
-    {
-      "matchManagers": [
-        "pep621"
-      ],
-      "matchDepTypes": [
-        "project.optional-dependencies",
-        "build-system.requires"
-      ],
-      "groupName": "python dev dependencies"
-    },
     {
       "matchManagers": [
         "github-actions"
@@ -30,6 +20,14 @@
         "ignazhabibi/vi_api_client"
       ],
       "groupName": "vi_api_client"
+    },
+    {
+      "matchPackageNames": [
+        "pytest-asyncio",
+        "pytest-homeassistant-custom-component",
+        "syrupy"
+      ],
+      "groupName": "python test stack"
     }
   ],
   "customManagers": [
