@@ -68,7 +68,7 @@ assert state.state == "..."
 
 ## 4. Verification
 
-1.  Run the specific test file: `pytest tests/test_target.py`
+1.  Run the specific test file: `python -m pytest tests/test_target.py`
 2.  Ensure it passes.
 3.  If the file uses snapshots or the change touches test dependencies, run the
-    test once in a fresh environment installed with `pip install .[dev]`.
+    test once in a fresh environment installed with `python -m pip install '.[dev]'`.

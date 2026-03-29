@@ -15,14 +15,24 @@ This workflow guides the agent to create a semantic release for the Home Assista
 3.  **Local Validation**: Run the same quality gates as CI before tagging.
     ```bash
     ruff check .
-    pytest -q
+    ruff format --check .
+    python -m pytest -q
     ```
 4.  **Fresh Env Check (when relevant)**: If the change touches test dependencies,
     CI config, snapshots, or packaging metadata, validate once in a fresh
     environment installed via `.[dev]` to catch resolver drift early.
+    ```bash
+    python3.14 -m venv .venv
+    source .venv/bin/activate
+    python -m pip install --upgrade pip
+    python -m pip install '.[dev]'
+    python -m pytest -q
+    ```
 
 ## 2. Analysis & Versioning
-1.  **Get Current Version**: Read `version` from `custom_components/vi_climate_devices/manifest.json`.
+1.  **Get Current Version**: Read `version` from `custom_components/vi_climate_devices/manifest.json` and `version` from `pyproject.toml`.
+    - These versions should normally match.
+    - If they do not match, the agent must call that out explicitly and include the alignment in the release work.
 2.  **Analyze Commits**:
     ```bash
     git log --pretty=format:"%h %s" $(git describe --tags --abbrev=0)..HEAD
@@ -34,6 +44,7 @@ This workflow guides the agent to create a semantic release for the Home Assista
     -   **PATCH**: Bug fixes (`fix:`), docs, chores.
 4.  **Propose**:
     -   Tell the user the Current Version.
+    -   Tell the user whether `manifest.json` and `pyproject.toml` are aligned.
     -   List the changes grouped by type.
     -   Propose the New Version.
     -   **WAIT for Confirmation**.
@@ -59,14 +70,14 @@ Create a changelog snippet in the requested style.
 ```
 
 ## 4. Execution
-1.  **Bump Version**: Update `manifest.json` with the new version.
+1.  **Bump Version**: Update `manifest.json` and `pyproject.toml` with the new version.
     ```bash
-    # Update manifest.json using python (reliable)
-    python3 -c "import json, sys; p='custom_components/vi_climate_devices/manifest.json'; d=json.load(open(p)); d['version']='<NEW_VERSION>'; json.dump(d, open(p,'w'), indent=2); print(f'Updated {p} to <NEW_VERSION>')"
+    # Update both release version sources together.
+    python3.14 -c "from pathlib import Path; import json; manifest = Path('custom_components/vi_climate_devices/manifest.json'); data = json.loads(manifest.read_text()); data['version'] = '<NEW_VERSION>'; manifest.write_text(json.dumps(data, indent=2) + '\n'); pyproject = Path('pyproject.toml'); pyproject.write_text(pyproject.read_text().replace('version = \"<OLD_VERSION>\"', 'version = \"<NEW_VERSION>\"', 1)); print('Updated manifest.json and pyproject.toml')"
     ```
 2.  **Commit**:
     ```bash
-    git add custom_components/vi_climate_devices/manifest.json
+    git add custom_components/vi_climate_devices/manifest.json pyproject.toml
     git commit -m "chore(release): bump version to <NEW_VERSION>"
     ```
 3.  **Tag**:

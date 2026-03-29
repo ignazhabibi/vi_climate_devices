@@ -110,9 +110,9 @@ We use a **Hybrid Strategy** combining manual assertions and snapshots.
     *   **Reason:** Ensures we don't accidentally lose entities or change IDs/Attributes across the entire portfolio (Regression Safety).
 
 ### 6.2 Snapshot Workflow
-1.  **Create:** Run `pytest ... --snapshot-update` to generate/update the `.ambr` file.
+1.  **Create:** Run `python -m pytest ... --snapshot-update` to generate/update the `.ambr` file.
 2.  **Verify:** Manually inspect the `.ambr` file. **This is the critical step.**
-3.  **Fresh Env Check:** If snapshot updates are combined with test dependency, CI, or packaging changes, validate once in a fresh environment installed with `pip install .[dev]`.
+3.  **Fresh Env Check:** If snapshot updates are combined with test dependency, CI, or packaging changes, validate once in a fresh environment installed with `python -m pip install '.[dev]'`.
 4.  **Commit:** Check the `.ambr` file into Git.
 
 ## 7. Mock Data Integrity

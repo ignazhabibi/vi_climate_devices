@@ -57,18 +57,18 @@ ruff format --check .
 
 // turbo
 ```bash
-pytest -q
+python -m pytest -q
 ```
 
 When changing test dependencies, CI config, packaging metadata, or snapshot
 files, also validate once in a fresh environment that installs the project via:
 
 ```bash
-python3 -m venv .venv
-. .venv/bin/activate
-pip install --upgrade pip
-pip install .[dev]
-pytest -q
+python3.14 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install '.[dev]'
+python -m pytest -q
 ```
 
 ### C. Commit Changes

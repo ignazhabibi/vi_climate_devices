@@ -21,7 +21,7 @@ Strict guidelines for version control and feature development.
 
 ### B. Develop (The Loop)
 1. Write code (`src/` and `tests/`).
-2. **Local Tests**: Run `pytest -q` frequently.
+2. **Local Tests**: Run `python -m pytest -q` frequently.
 3. **Local Lint**: Run `ruff check .` and `ruff format --check .` before every commit.
 4. **Commit**: `git commit -m "type: description"` (Conventional Commits).
 
@@ -47,4 +47,4 @@ Strict guidelines for version control and feature development.
 ## 4. Agent Role & Permissions
 - **Allowed**: `git checkout -b`, `git add`, `git commit`, `git push`.
 - **Forbidden**: `git merge` (User does this via UI), committing to `main`.
-- **Validation**: The Agent must run `ruff check .`, `ruff format --check .`, and `pytest -q` before proposing a push.
+- **Validation**: The Agent must run `ruff check .`, `ruff format --check .`, and `python -m pytest -q` before proposing a push.

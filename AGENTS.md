@@ -60,10 +60,10 @@ Pick the matching workflow before making substantial changes:
 Use the same local install path as CI whenever possible:
 
 ```bash
-python3 -m venv .venv
+python3.14 -m venv .venv
 source .venv/bin/activate
-pip install --upgrade pip
-pip install .[dev]
+python -m pip install --upgrade pip
+python -m pip install '.[dev]'
 ```
 
 Primary local quality gates:
@@ -71,7 +71,7 @@ Primary local quality gates:
 ```bash
 ruff check .
 ruff format --check .
-pytest -q
+python -m pytest -q
 ```
 
 If a change touches snapshots, test dependencies, CI config, or packaging,
@@ -84,8 +84,9 @@ validate once in a fresh environment installed with `.[dev]`.
 - Prefer matching the current CI Python version locally for verification.
 - Home Assistant release versioning is driven by
   `custom_components/vi_climate_devices/manifest.json`.
-- Do not assume the version in `pyproject.toml` is the Home Assistant release
-  version unless the task explicitly concerns Python package metadata.
+- Keep `pyproject.toml` package metadata version aligned with
+  `custom_components/vi_climate_devices/manifest.json` during releases unless a
+  task explicitly requires them to diverge.
 - A release is not considered live until both the `main` push run and the tag
   run are green.
 

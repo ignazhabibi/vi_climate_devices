@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vi_climate_devices"
-version = "0.5.0"
+version = "1.0.6"
 description = "Viessmann Climate Devices Integration for Home Assistant"
 authors = [
   { name = "Michael", email = "notme@bieber-home.net" },
