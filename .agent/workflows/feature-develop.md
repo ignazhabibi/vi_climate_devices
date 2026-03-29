@@ -10,7 +10,7 @@ This workflow guides you through the complete lifecycle of developing a new feat
 > **Agent Rules Compliance**: During development, you MUST strictly follow ALL rules defined in `.agent/rules/`:
 > - `python-style.md` - Code style (f-strings, naming, sorting, logging)
 > - `python-docs.md` - Documentation (Google Style docstrings)
-> - `tech-stack.md` - Technology choices (Python 3.12+, strict typing, pathlib)
+> - `tech-stack.md` - Technology choices (Python 3.14+, strict typing, pathlib)
 > - `testing.md` - Test structure (AAA pattern, fixtures, pytest)
 > - `architecture.md` - Library architecture (Flat Feature Model)
 > - `git-workflow.md` - This workflow itself

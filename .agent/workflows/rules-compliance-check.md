@@ -26,7 +26,7 @@ Act as a strict Code Reviewer and Refactoring Agent. Analyze the code and apply 
 4.  **Naming:** Identify short variable names (k, v, d) and rename them to be descriptive (key, value, data).
 
 ### Phase 3: Syntax & Logging (CRITICAL!)
-1.  **Modern Python (3.12):** Update syntax to Python 3.12 standards (e.g., use `|` for Unions instead of `Optional` or `Union`, use `type` aliases).
+1.  **Modern Python (3.14):** Update syntax to Python 3.14 standards (e.g., use `|` for Unions instead of `Optional` or `Union`, use `type` aliases).
 2.  **Logging:** Audit EVERY `_LOGGER` call:
     *   **MUST FIX:** Convert f-strings (`f"..."`) inside logger calls to Lazy Formatting (`%s`).
     *   Remove trailing periods `.` from log messages.

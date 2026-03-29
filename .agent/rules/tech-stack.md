@@ -5,7 +5,7 @@ trigger: always_on
 # Tech Stack & Patterns
 
 ## 1. Python Version
-- Runtime target is Python 3.12+.
+- Runtime target is Python 3.14+.
 - Prefer matching the current CI interpreter for local verification when possible.
 
 ## 2. Typing (Strict)

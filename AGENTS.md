@@ -80,6 +80,7 @@ validate once in a fresh environment installed with `.[dev]`.
 ## CI and Release Notes
 
 - CI currently runs via `.github/workflows/release.yml`.
+- Python support baseline is 3.14+ across packaging, CI, and repository guidance.
 - Prefer matching the current CI Python version locally for verification.
 - Home Assistant release versioning is driven by
   `custom_components/vi_climate_devices/manifest.json`.
