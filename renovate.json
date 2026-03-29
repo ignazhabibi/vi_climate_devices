@@ -1,0 +1,49 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "labels": [
+    "dependencies"
+  ],
+  "dependencyDashboard": true,
+  "separateMinorPatch": true,
+  "packageRules": [
+    {
+      "matchManagers": [
+        "pep621"
+      ],
+      "matchDepTypes": [
+        "project.optional-dependencies",
+        "build-system.requires"
+      ],
+      "groupName": "python dev dependencies"
+    },
+    {
+      "matchManagers": [
+        "github-actions"
+      ],
+      "groupName": "github actions"
+    },
+    {
+      "matchPackageNames": [
+        "ignazhabibi/vi_api_client"
+      ],
+      "groupName": "vi_api_client"
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/(^|/)pyproject\\.toml$/",
+        "/(^|/)custom_components/vi_climate_devices/manifest\\.json$/"
+      ],
+      "matchStrings": [
+        "vi_api_client @ git\\+https://github\\.com/(?<depName>[^/]+/[^.]+)\\.git@(?<currentValue>v[^\"\\s,\\]]+)"
+      ],
+      "datasourceTemplate": "github-tags",
+      "versioningTemplate": "semver-coerced"
+    }
+  ]
+}
