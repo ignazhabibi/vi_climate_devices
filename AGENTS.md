@@ -92,6 +92,9 @@ validate once in a fresh environment installed with `.[dev]`.
   task explicitly requires them to diverge.
 - A release is not considered live until both the `main` push run and the tag
   run are green.
+- Snapshot and Home Assistant test stack changes must be validated against the
+  Linux CI run, not only against local macOS runs. A local green snapshot test
+  does not guarantee the same result on GitHub Actions.
 
 ## Practical Agent Notes
 

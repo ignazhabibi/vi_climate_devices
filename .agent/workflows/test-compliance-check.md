@@ -28,6 +28,9 @@ Analyze the target file against these critical criteria:
         `tests/__snapshots__/`?
     *   If the snapshot was updated, was it validated against the current
         `.[dev]` dependency stack?
+    *   If the change touches snapshots or `pytest-homeassistant-custom-component`,
+        was the resulting behavior also confirmed in Linux CI and not only on
+        local macOS?
 *   **Style (Ref: .agent/rules/python-style.md)**:
     *   **NO single-letter variables** (e.g., `k, v` in loops -> `key, value`).
     *   **Comments**: Full sentences with periods.
@@ -72,3 +75,5 @@ assert state.state == "..."
 2.  Ensure it passes.
 3.  If the file uses snapshots or the change touches test dependencies, run the
     test once in a fresh environment installed with `python -m pip install '.[dev]'`.
+4.  If snapshots or `pytest-homeassistant-custom-component` were touched, confirm
+    the Linux GitHub Actions run is green before treating the work as complete.

@@ -118,7 +118,8 @@ We use a **Hybrid Strategy** combining manual assertions and snapshots.
 1.  **Create:** Run `python -m pytest ... --snapshot-update` to generate/update the `.ambr` file.
 2.  **Verify:** Manually inspect the `.ambr` file. **This is the critical step.**
 3.  **Fresh Env Check:** If snapshot updates are combined with test dependency, CI, or packaging changes, validate once in a fresh environment installed with `python -m pip install '.[dev]'`.
-4.  **Commit:** Check the `.ambr` file into Git.
+4.  **Linux CI Validation:** If snapshot updates or `pytest-homeassistant-custom-component` changes are involved, treat the Linux GitHub Actions run as the authoritative final check. A local macOS pass is necessary, but not sufficient.
+5.  **Commit:** Check the `.ambr` file into Git.
 
 ## 7. Mock Data Integrity
 - **Authenticity:** When mocking response data for `ViClient`, try to use data structures that match reality.
