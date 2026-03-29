@@ -43,14 +43,46 @@ Pick the matching workflow before making substantial changes:
 - Rules review / agent guidance cleanup: `.agent/workflows/rules-compliance-check.md`
 - Documentation-only work: `.agent/workflows/doc-update.md`
 
+## Self-Contained Repository Documentation
+
+Treat the repository-operational documentation as a self-contained system that
+must stay current together:
+
+- `README.md`
+- `AGENTS.md`
+- `.agent/rules/`, especially `architecture-context.md` and `tech-stack.md`
+- `.agent/workflows/`
+
+After any task that changes repository behavior or expectations, the agent must
+perform an explicit documentation drift check before considering the work
+complete.
+
+This is mandatory for changes affecting:
+
+- architecture or feature model assumptions
+- tech stack or Python/dependency policy
+- local setup commands
+- testing strategy or snapshot handling
+- CI behavior or required checks
+- release flow or versioning rules
+- GitHub governance such as branch protection, rulesets, merge policy, or PR requirements
+
+The agent must then do one of the following:
+
+- update the affected documentation in the same task, or
+- explicitly state that the documentation was checked and no update is needed
+
+Do not keep durable repository knowledge implicit when the repository guidance
+should be updated to reflect it.
+
 ## Project Context
 
 - This is a Home Assistant custom integration for Viessmann climate devices.
 - Main integration code lives in `custom_components/vi_climate_devices/`.
 - Tests live in `tests/`.
 - The integration depends on `vi_api_client`, which uses a flat feature model.
-- Treat `vi_api_client` as a separate codebase. Do not edit files in
-  `/Users/michael/Projekte/vi_api_client/` from this repo workflow.
+- Treat `vi_api_client` as a separate codebase. Do not edit library files
+  outside this repository as part of this repo workflow.
 - `MockViClient` with the `Vitocal250A` fixture is the preferred test client.
 - Snapshot coverage is centered on discovery behavior in
   `tests/test_discovery_snapshot.py`.
@@ -107,7 +139,5 @@ validate once in a fresh environment installed with `.[dev]`.
 - For snapshot updates, inspect the `.ambr` diff instead of blindly accepting it.
 - If rules or workflows look stale, update them as part of the task instead of
   working around them silently.
-- If important new insights emerge during the work, and those insights should
-  be preserved in `AGENTS.md`, a workflow, or a rule file, the agent must
-  explicitly propose that documentation update instead of keeping the knowledge
-  implicit.
+- End substantial tasks with an explicit repository documentation drift check
+  against `README.md`, `AGENTS.md`, `.agent/rules/`, and `.agent/workflows/`.

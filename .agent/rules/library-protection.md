@@ -3,7 +3,7 @@
 # Library Code Protection
 
 ## CRITICAL RULE
-**I am STRICTLY FORBIDDEN from modifying any files in `/Users/michael/Projekte/vi_api_client/`**
+**I am STRICTLY FORBIDDEN from modifying files in the separate `vi_api_client` library repository as part of this integration workflow**
 
 Even though you own both projects, the library is a separate codebase that requires:
 - Version management
@@ -31,13 +31,13 @@ When I identify a need for library changes, I must:
 4. I update manifest.json and simplify test_analytics.py
 
 ### ❌ Wrong Approach:
-- I directly edit `/Users/michael/Projekte/vi_api_client/src/vi_api_client/mock_client.py`
+- I directly edit library source files in the `vi_api_client` repository
 - I create commits in the library repository
 - I modify library code without explicitly asking you first
 
 ## Scope
-- **Integration files**: `/Users/michael/Projekte/vi_climate_devices/` - I CAN modify
-- **Library files**: `/Users/michael/Projekte/vi_api_client/` - I CANNOT modify (INFORM YOU instead)
+- **Integration files**: Files in this repository - I CAN modify
+- **Library files**: Files in the separate `vi_api_client` repository - I CANNOT modify (INFORM YOU instead)
 
 ## Key Principle
 **"Inform, don't modify"** - My role is to identify what needs to change in the library and let you handle the actual modifications.
