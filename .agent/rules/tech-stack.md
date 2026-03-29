@@ -5,7 +5,8 @@ trigger: always_on
 # Tech Stack & Patterns
 
 ## 1. Python Version
-- Target Python 3.12+ (Use features like `match/case` and `|` union operator).
+- Runtime target is Python 3.12+.
+- Prefer matching the current CI interpreter for local verification when possible.
 
 ## 2. Typing (Strict)
 - **No Any:** Avoid `Any` at all costs. Use strict typing (`TypeVar`, `Protocol`).

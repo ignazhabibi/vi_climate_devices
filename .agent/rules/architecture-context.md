@@ -5,7 +5,7 @@ trigger: always_on
 # Home Assistant Integration Context & Rules (Viessmann)
 
 **Target Agent**: HA Integration Developer Agent
-**Library Version**: 0.3.3 (Flat Architecture)
+**Library Contract**: `vi_api_client` with flat feature architecture
 **GitHub**: [https://github.com/ignazhabibi/vi_api_client](https://github.com/ignazhabibi/vi_api_client)
 
 ## 1. High-Level Context
@@ -16,7 +16,7 @@ The integration utilizes the asynchronous Python library `vi_api_client`.
 > **Primary Directive**: The library uses a **FLAT ARCHITECTURE**. Do not look for nested properties. All data points are flattened into a simple list of `Feature` objects with dot-notation names (e.g., `heating.sensors.temperature.outside`).
 
 > [!TIP]
-> **Source Code**: When in doubt, strictly inspect the library source code! The library is installed from GitHub, so you have full access to the implementation details which act as the source of truth.
+> **Source Code**: When in doubt, inspect the library source code and the current dependency declaration in `manifest.json` / `pyproject.toml`. Do not hardcode a library version in this rule file; the current pinned version can change independently of this architectural guidance.
 
 ## 2. Library Architecture
 
@@ -43,13 +43,13 @@ Instead of navigating deep JSON trees, you search for features by name in the fl
 ## 3. Mocking & Verification Strategy (MANDATORY)
 To ensure robustness without requiring a live device, you **MUST** use the Mocking capabilities during development and testing.
 
-*   **`ViMockClient`**: A drop-in replacement for `ViClient` that loads data from local JSON fixtures.
+*   **`MockViClient`**: A drop-in replacement for `ViClient` that loads data from local JSON fixtures.
 *   **Preferred Fixture**: `Vitocal250A` (Heat Pump). It is the most modern and feature-rich device reference.
 *   **Usage**:
     ```python
-    from vi_api_client.mock_client import ViMockClient
+    from vi_api_client.mock_client import MockViClient
     # Argument is 'device_name' which must match a filename in fixtures/ (e.g., Vitocal250A.json)
-    client = ViMockClient(device_name="Vitocal250A")
+    client = MockViClient(device_name="Vitocal250A")
     # ... usage is identical to ViClient ...
     device = await client.get_devices(...)
     # Now you can test entity creation against real data structures
@@ -118,6 +118,6 @@ The integration must use a **Hybrid Discovery** approach to balance quality and 
 
 ## 5. Development Checklist
 1.  Implement Coordinator with `update_device`.
-2.  Implement "Defined" entities (refer to `HA_INTEGRATION_HANDOVER.md` for specific mappings).
+2.  Implement "Defined" entities by referencing the current manual entity definitions in the integration code and tests.
 3.  Implement "Auto" discovery logic.
-4.  **VERIFY** all entities using `ViMockClient` with `Vitocal250A`. Ensure no crashes on missing fields.
+4.  **VERIFY** all entities using `MockViClient` with `Vitocal250A`. Ensure no crashes on missing fields.

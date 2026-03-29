@@ -24,10 +24,10 @@ When I identify a need for library changes, I must:
 
 ## Examples
 
-### ✅ Correct Approach (What YOU did for v0.3.4):
+### ✅ Correct Approach:
 1. I identified: "MockViClient doesn't recognize Vitocal devices as heating type"
 2. I should have informed you: "We need to add DEVICE_TYPE_MAP to mock_client.py"
-3. You make the library changes and bump to v0.3.4
+3. You make the library changes and bump the library to an appropriate new version
 4. I update manifest.json and simplify test_analytics.py
 
 ### ❌ Wrong Approach:

@@ -52,12 +52,12 @@ Visually separate these sections with comments if the test is longer than 5 line
 ## 4. Data & Mocking
 - **Mocking Strategy:** Do **NOT** mock HTTP calls (`respx`) directly.
     - **Why?** This is an integration, not the API library. We assume the library (`vi_api_client`) works.
-    - **What to Mock:** Mock the `vi_api_client.ViClient` class or use `vi_api_client.ViMockClient`.
+    - **What to Mock:** Mock the `vi_api_client.ViClient` class or use `vi_api_client.MockViClient`.
 - **Integration Setup:** Always use `MockConfigEntry` from `pytest_homeassistant_custom_component.common`.
 - **Async:** Mark async tests explicitly with `@pytest.mark.asyncio`.
 
 ## 5. One-Shot Example
-Follow this exact style for writing entity tests, PREFERRING `ViMockClient` over manual mocks:
+Follow this exact style for writing entity tests, PREFERRING `MockViClient` over manual mocks:
 
 ```python
 import pytest
@@ -105,14 +105,15 @@ We use a **Hybrid Strategy** combining manual assertions and snapshots.
     *   **Goal:** Verify the **Business Logic** (Value Parsing, Unit Conversion).
     *   **Reason:** Explicit assertions document the expected behavior and make it easy to debug *why* a logic change failed.
 *   **Snapshot Testing (`syrupy`):**
-    *   Use for **Discovery Tests** (`test_init_snapshot.py`) and **Diagnostics**.
+    *   Use for **Discovery Tests** (for example `tests/test_discovery_snapshot.py`) and diagnostics-style coverage.
     *   **Goal:** Verify the **Mass Creation** of entities (Registry consistency).
     *   **Reason:** Ensures we don't accidentally lose entities or change IDs/Attributes across the entire portfolio (Regression Safety).
 
 ### 6.2 Snapshot Workflow
 1.  **Create:** Run `pytest ... --snapshot-update` to generate/update the `.ambr` file.
 2.  **Verify:** Manually inspect the `.ambr` file. **This is the critical step.**
-3.  **Commit:** Check the `.ambr` file into Git.
+3.  **Fresh Env Check:** If snapshot updates are combined with test dependency, CI, or packaging changes, validate once in a fresh environment installed with `pip install .[dev]`.
+4.  **Commit:** Check the `.ambr` file into Git.
 
 ## 7. Mock Data Integrity
 - **Authenticity:** When mocking response data for `ViClient`, try to use data structures that match reality.
