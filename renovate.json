@@ -27,7 +27,10 @@
         "pytest-homeassistant-custom-component",
         "syrupy"
       ],
-      "groupName": "python test stack"
+      "groupName": "python test stack",
+      "groupSlug": "python-test-stack",
+      "minimumGroupSize": 2,
+      "separateMinorPatch": false
     }
   ],
   "customManagers": [
