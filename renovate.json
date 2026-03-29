@@ -4,9 +4,6 @@
     "config:recommended"
   ],
   "dependencyDashboard": true,
-  "ignoreDeps": [
-    "pytest"
-  ],
   "separateMinorPatch": true,
   "packageRules": [
     {
@@ -20,17 +17,6 @@
         "ignazhabibi/vi_api_client"
       ],
       "groupName": "vi_api_client"
-    },
-    {
-      "matchPackageNames": [
-        "pytest-asyncio",
-        "pytest-homeassistant-custom-component",
-        "syrupy"
-      ],
-      "groupName": "python test stack",
-      "groupSlug": "python-test-stack",
-      "minimumGroupSize": 2,
-      "separateMinorPatch": false
     }
   ],
   "customManagers": [

@@ -54,6 +54,9 @@ Pick the matching workflow before making substantial changes:
 - `MockViClient` with the `Vitocal250A` fixture is the preferred test client.
 - Snapshot coverage is centered on discovery behavior in
   `tests/test_discovery_snapshot.py`.
+- Treat `pytest-homeassistant-custom-component` as the authoritative Home
+  Assistant test stack. Avoid separately pinning `pytest` ecosystem packages
+  unless there is a concrete repo-specific reason.
 
 ## Development Baseline
 

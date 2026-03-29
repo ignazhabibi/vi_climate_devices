@@ -16,6 +16,11 @@ These rules apply strictly to the `tests/` directory of the `vi_climate_devices`
 
 ## 2. Framework & Style
 - **Framework:** Use `pytest` exclusively.
+- **Test Stack Ownership:** Treat `pytest-homeassistant-custom-component` as the
+  authoritative Home Assistant test stack. Do not separately pin `pytest`,
+  `pytest-asyncio`, `syrupy`, or similar pytest ecosystem packages unless there
+  is a concrete repo-specific reason and the extra pin is intentionally
+  maintained.
 - **No Classes:** Use simple functions (`def test_...():`), NEVER use `unittest.TestCase` classes.
 - **Naming:** Test files start with `test_`. Test functions start with `test_`.
 - **Code Style:** Tests MUST follow all rules from `.agent/rules/python-style.md`:
