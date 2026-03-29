@@ -83,7 +83,7 @@ def get_feature_bool_value(value: Any, strict: bool = False) -> bool | None:
         try:
             if isinstance(value, (int, float)):
                 return bool(value)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             pass
 
     return None
