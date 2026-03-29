@@ -23,6 +23,11 @@ Analyze the target file against these critical criteria:
     *   Does it use `respx`? (Forbidden -> Must Change)
     *   Does it use `AsyncMock` for data objects? (Discouraged -> Prefer `MockViClient`)
     *   Does it usage `MockViClient`? (Required/Preferred)
+*   **Snapshot Tests**:
+    *   If the test uses `snapshot`, does the matching file exist under
+        `tests/__snapshots__/`?
+    *   If the snapshot was updated, was it validated against the current
+        `.[dev]` dependency stack?
 *   **Style (Ref: .agent/rules/python-style.md)**:
     *   **NO single-letter variables** (e.g., `k, v` in loops -> `key, value`).
     *   **Comments**: Full sentences with periods.
@@ -65,3 +70,5 @@ assert state.state == "..."
 
 1.  Run the specific test file: `pytest tests/test_target.py`
 2.  Ensure it passes.
+3.  If the file uses snapshots or the change touches test dependencies, run the
+    test once in a fresh environment installed with `pip install .[dev]`.

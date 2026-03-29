@@ -47,12 +47,28 @@ Before each commit:
 
 // turbo
 ```bash
-ruff format .
+ruff check .
 ```
 
 // turbo
 ```bash
-python3 -m pytest
+ruff format --check .
+```
+
+// turbo
+```bash
+pytest -q
+```
+
+When changing test dependencies, CI config, packaging metadata, or snapshot
+files, also validate once in a fresh environment that installs the project via:
+
+```bash
+python3 -m venv .venv
+. .venv/bin/activate
+pip install --upgrade pip
+pip install .[dev]
+pytest -q
 ```
 
 ### C. Commit Changes
@@ -80,6 +96,8 @@ git commit -m "type: description"
 
 ## Notes
 - **Always** run format + tests before committing
+- **Prefer** the same `.[dev]` install path locally that CI uses
+- **Use a fresh environment** for snapshot or dependency-stack changes
 - **Always** ask user before committing
 - Commit frequently with meaningful messages
 - Keep branches short-lived (ideally < 1 day)

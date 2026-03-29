@@ -12,6 +12,14 @@ This workflow guides the agent to create a semantic release for the Home Assista
     git checkout main && git pull
     ```
 2.  **Clean State**: `git status` must show no modified files.
+3.  **Local Validation**: Run the same quality gates as CI before tagging.
+    ```bash
+    ruff check .
+    pytest -q
+    ```
+4.  **Fresh Env Check (when relevant)**: If the change touches test dependencies,
+    CI config, snapshots, or packaging metadata, validate once in a fresh
+    environment installed via `.[dev]` to catch resolver drift early.
 
 ## 2. Analysis & Versioning
 1.  **Get Current Version**: Read `version` from `custom_components/vi_climate_devices/manifest.json`.
@@ -73,4 +81,11 @@ Create a changelog snippet in the requested style.
 
 ## 5. Post-Release
 - GitHub Actions (if configured) will automatically build and publish the release.
-- The Agent should notify the user that the release is live.
+- Do not claim the release is live until:
+  - the `main` push run is green, and
+  - the tag run for `v<NEW_VERSION>` is green.
+- Confirm both runs explicitly:
+  ```bash
+  gh run list --workflow release.yml --limit 5
+  ```
+- The Agent should notify the user only after those checks pass.
