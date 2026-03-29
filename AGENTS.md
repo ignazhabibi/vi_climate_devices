@@ -97,3 +97,7 @@ validate once in a fresh environment installed with `.[dev]`.
 - For snapshot updates, inspect the `.ambr` diff instead of blindly accepting it.
 - If rules or workflows look stale, update them as part of the task instead of
   working around them silently.
+- If important new insights emerge during the work, and those insights should
+  be preserved in `AGENTS.md`, a workflow, or a rule file, the agent must
+  explicitly propose that documentation update instead of keeping the knowledge
+  implicit.
