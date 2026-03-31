@@ -49,27 +49,38 @@ This workflow guides the agent to create a semantic release for the Home Assista
     -   Propose the New Version.
     -   **WAIT for Confirmation**.
 
-## 3. Generate Changelog
+## 3. Message Hierarchy
+Use different message styles for commits, pull requests, and releases.
+
+- **Commit messages**: Atomic and technical. Follow the repository format
+  `type: description`.
+- **PR titles and bodies**: Summarize the full branch for reviewers.
+- **Release notes**: Summarize multiple merged PRs for users. Favor user-facing
+  outcomes over raw commit history.
+
+## 4. Generate Changelog
 Create a changelog snippet in the requested style.
-**IMPORTANT:** Do NOT summarize. Use the exact commit scope and message from `git log`. Include the commit hash.
+**IMPORTANT:** Do summarize at the release level. Group related merged work into
+user-facing entries instead of replaying raw commit subjects line by line.
+Reference PRs or commits when useful, but do not depend on scopes being present.
 
 ```markdown
 # Changelog
 
 ## Breaking Changes 🚨
-<commit_hash> <scope>: <message> (BC)
+<summary> (PR #xx, commit <hash>) (BC)
 
 ## New Features 💫
-<commit_hash> <scope>: <message>
+<summary> (PR #xx, commit <hash>)
 
 ## Bug Fixes 🐞
-<commit_hash> <scope>: <message>
+<summary> (PR #xx, commit <hash>)
 
 ## Other Changes ☀️
-<commit_hash> <scope>: <message>
+<summary> (PR #xx, commit <hash>)
 ```
 
-## 4. Execution
+## 5. Execution
 1.  **Create Release Branch**:
     ```bash
     git checkout -b release/v<NEW_VERSION>
@@ -82,7 +93,7 @@ Create a changelog snippet in the requested style.
 3.  **Commit**:
     ```bash
     git add custom_components/vi_climate_devices/manifest.json pyproject.toml
-    git commit -m "chore(release): bump version to <NEW_VERSION>"
+    git commit -m "chore: bump version to <NEW_VERSION>"
     ```
 4.  **Push Release Branch & PR**:
     ```bash
@@ -103,7 +114,7 @@ Create a changelog snippet in the requested style.
     git push origin v<NEW_VERSION>
     ```
 
-## 5. Post-Release
+## 6. Post-Release
 - GitHub Actions (if configured) will automatically build and publish the release.
 - Do not claim the release is live until:
   - the PR merge produced a green `main` push run, and

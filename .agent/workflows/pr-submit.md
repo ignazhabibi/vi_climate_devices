@@ -55,11 +55,25 @@ The agent must first verify:
     git push -u origin HEAD
     ```
 
-2.  **Create PR**:
+2.  **Prepare PR Title & Body**:
+    - **PR Title**: Write a user-facing summary of the full branch in plain
+      language, without prefixes like `[codex]`.
+    - **PR Body**: Summarize the whole PR, not the individual commits. Use this
+      structure:
+      - `What changed`
+      - `Why`
+      - `Impact`
+      - `Validation`
+    - Because this repository uses squash merge, the PR title should read well
+      as the final commit title on `main`.
+
+3.  **Create PR**:
     *   **Option A (Best)**: If `gh` CLI is installed:
         ```bash
-        gh pr create --fill --web
+        gh pr create --title "<PR_TITLE>" --body-file <PR_BODY_FILE> --web
         ```
+        Do not rely on `--fill` alone when it would copy commit wording that is
+        too narrow or too technical for the full PR.
     *   **Option B (Fallback)**: If `gh` fails or is missing, **construct and display the URL** for the user:
         `https://github.com/ignazhabibi/vi_climate_devices/pull/new/<BRANCH_NAME>`
 
