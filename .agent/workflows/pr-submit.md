@@ -40,8 +40,12 @@ The agent must first verify:
 ## 2. Commit (Agent)
 
 1.  **Stage**: `git add .`
-2.  **Commit**: Generate a comprehensive commit message `type(scope): description`.
+2.  **Commit**: Follow `.agent/rules/git-workflow.md` and generate a commit
+    message in the format `type: description`.
     - `feat`, `fix`, `refactor`, `docs`, `test`, `chore`.
+    - Do **not** add a required scope unless the user explicitly wants one.
+    - Examples: `feat: add analytics sensors`, `fix: handle token refresh`,
+      `test: add lifecycle and oauth coverage`.
     - Message should be under 50 chars ideally.
 
 ## 3. Push & PR (Agent)
