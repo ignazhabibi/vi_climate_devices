@@ -26,6 +26,9 @@ Strict guidelines for version control and feature development.
 2. **Local Tests**: Run `python -m pytest -q` frequently.
 3. **Local Lint**: Run `ruff check .` and `ruff format --check .` before every commit.
 4. **Commit**: `git commit -m "type: description"` (Conventional Commits).
+   - Preferred format in this repository is `type: description`.
+   - Use `feat`, `fix`, `refactor`, `docs`, `test`, or `chore`.
+   - Do not require a scope by default.
 
 ### C. Submit (The Gatekeeper)
 1. `git push -u origin feature/<name>`
