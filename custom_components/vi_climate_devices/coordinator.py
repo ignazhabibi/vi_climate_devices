@@ -129,6 +129,8 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
 
             return updated_data
 
+        except ConfigEntryAuthFailed:
+            raise
         except ViAuthError as err:
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
         except Exception as exception:
