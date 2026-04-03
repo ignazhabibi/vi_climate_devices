@@ -13,7 +13,7 @@ from vi_api_client import ViClient as ViessmannClient
 from vi_api_client.auth import AbstractAuth, ViAuthError
 
 from .const import DOMAIN
-from .coordinator import ViClimateAnalyticsCoordinator, ViClimateDataUpdateCoordinator
+from .coordinator import ViClimateDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,19 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = ViClimateDataUpdateCoordinator(hass, client)
     await coordinator.async_config_entry_first_refresh()
 
-    # 2. Analytics Coordinator (Analytics API)
-    analytics_coordinator = ViClimateAnalyticsCoordinator(hass, client, coordinator)
-
-    # Attempt to fetch initial analytics data, but don't fail setup
-    try:
-        await analytics_coordinator.async_config_entry_first_refresh()
-    except Exception as err:
-        _LOGGER.warning("Failed to fetch initial analytics data: %s", err)
-
-    hass.data[DOMAIN][entry.entry_id] = {
-        "data": coordinator,
-        "analytics": analytics_coordinator,
-    }
+    hass.data[DOMAIN][entry.entry_id] = {"data": coordinator}
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

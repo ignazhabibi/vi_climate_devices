@@ -59,21 +59,17 @@ async def test_async_setup_entry_returns_false_when_token_validation_fails(
 
 
 @pytest.mark.asyncio
-async def test_async_setup_entry_keeps_loading_when_analytics_refresh_fails(
+async def test_async_setup_entry_stores_only_main_coordinator(
     hass: HomeAssistant,
 ) -> None:
-    """Test setup keeps runtime data when only the initial analytics refresh fails."""
-    # Arrange: Build entry, coordinators, and forward-setup stub for the success path.
+    """Test setup stores only the main coordinator in runtime data."""
+    # Arrange: Build entry, coordinator, and forward-setup stub for the success path.
     entry = _build_entry()
     entry.add_to_hass(hass)
     client = MagicMock()
     auth_bridge = MagicMock()
     main_coordinator = MagicMock()
     main_coordinator.async_config_entry_first_refresh = AsyncMock(return_value=None)
-    analytics_coordinator = MagicMock()
-    analytics_coordinator.async_config_entry_first_refresh = AsyncMock(
-        side_effect=RuntimeError("analytics unavailable")
-    )
     forward_entry_setups = AsyncMock(return_value=None)
 
     with (
@@ -97,28 +93,20 @@ async def test_async_setup_entry_keeps_loading_when_analytics_refresh_fails(
             "custom_components.vi_climate_devices.ViClimateDataUpdateCoordinator",
             return_value=main_coordinator,
         ),
-        patch(
-            "custom_components.vi_climate_devices.ViClimateAnalyticsCoordinator",
-            return_value=analytics_coordinator,
-        ),
         patch.object(
             hass.config_entries,
             "async_forward_entry_setups",
             forward_entry_setups,
         ),
     ):
-        # Act: Set up the integration despite the analytics warm-up failure.
+        # Act: Set up the integration and store runtime data for the entry.
         result = await async_setup_entry(hass, entry)
 
-    # Assert: Setup succeeds, stores both coordinators, and forwards all platforms.
+    # Assert: Setup succeeds, stores the main coordinator, and forwards all platforms.
     assert result is True
-    assert hass.data[DOMAIN][entry.entry_id] == {
-        "data": main_coordinator,
-        "analytics": analytics_coordinator,
-    }
+    assert hass.data[DOMAIN][entry.entry_id] == {"data": main_coordinator}
     mock_client_class.assert_called_once_with(auth=auth_bridge)
     main_coordinator.async_config_entry_first_refresh.assert_awaited_once()
-    analytics_coordinator.async_config_entry_first_refresh.assert_awaited_once()
     forward_entry_setups.assert_awaited_once_with(entry, PLATFORMS)
 
 

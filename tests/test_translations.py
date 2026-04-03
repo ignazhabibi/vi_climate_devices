@@ -14,7 +14,6 @@ from custom_components.vi_climate_devices.binary_sensor import (
 from custom_components.vi_climate_devices.number import NUMBER_TEMPLATES, NUMBER_TYPES
 from custom_components.vi_climate_devices.select import SELECT_TYPES
 from custom_components.vi_climate_devices.sensor import (
-    ANALYTICS_TYPES,
     SENSOR_TEMPLATES,
     SENSOR_TYPES,
 )
@@ -34,10 +33,9 @@ def get_entity_definitions(platform):
     descriptions = []
 
     if platform == "sensor":
-        # Static and Analytics
+        # Static sensor definitions.
         descriptions.extend(SENSOR_TYPES.values())
-        descriptions.extend(ANALYTICS_TYPES.values())
-        # Templates
+        # Templates.
         for t in SENSOR_TEMPLATES:
             descriptions.append(t["description"])
 

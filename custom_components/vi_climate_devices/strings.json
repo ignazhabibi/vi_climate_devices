@@ -201,15 +201,6 @@
             "volumetric_flow": {
                 "name": "Volumetric Flow"
             },
-            "consumption_total": {
-                "name": "Total Consumption Today"
-            },
-            "consumption_heating": {
-                "name": "Heating Consumption Today"
-            },
-            "consumption_dhw": {
-                "name": "DHW Consumption Today"
-            },
             "consumption_dhw_current_year": {
                 "name": "DHW Consumption Year"
             },
@@ -224,12 +215,6 @@
             },
             "burner_hours": {
                 "name": "Burner {index} Hours"
-            },
-            "production_dhw_current_day": {
-                "name": "DHW Production Today"
-            },
-            "production_heating_current_day": {
-                "name": "Heating Production Today"
             },
             "production_cooling_current_year": {
                 "name": "Cooling Production Year"

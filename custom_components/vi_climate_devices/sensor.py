@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import dataclasses
-import logging
 import re
 from dataclasses import dataclass
 
@@ -27,13 +26,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from vi_api_client.utils import mask_pii
 
 from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
-from .coordinator import ViClimateAnalyticsCoordinator, ViClimateDataUpdateCoordinator
+from .coordinator import ViClimateDataUpdateCoordinator
 from .utils import beautify_name, is_feature_boolean_like, is_feature_ignored
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -397,26 +393,10 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Production Summary DHW (Today)
-    "heating.heat.production.summary.dhw.currentDay": SensorEntityDescription(
-        key="heating.heat.production.summary.dhw.currentDay",
-        translation_key="production_dhw_current_day",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
     # Production Summary DHW (Current Year).
     "heating.heat.production.summary.dhw.currentYear": SensorEntityDescription(
         key="heating.heat.production.summary.dhw.currentYear",
         translation_key="production_dhw_current_year",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    # Production Summary Heating (Today)
-    "heating.heat.production.summary.heating.currentDay": SensorEntityDescription(
-        key="heating.heat.production.summary.heating.currentDay",
-        translation_key="production_heating_current_day",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -632,34 +612,6 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ),
 }
 
-# Analytics Features
-ANALYTICS_TYPES: dict[str, SensorEntityDescription] = {
-    # Analytics: DHW Consumption
-    "analytics.heating.power.consumption.dhw": SensorEntityDescription(
-        key="analytics.heating.power.consumption.dhw",
-        translation_key="consumption_dhw",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    # Analytics: Heating Consumption
-    "analytics.heating.power.consumption.heating": SensorEntityDescription(
-        key="analytics.heating.power.consumption.heating",
-        translation_key="consumption_heating",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    # Analytics: Total Consumption
-    "analytics.heating.power.consumption.total": SensorEntityDescription(
-        key="analytics.heating.power.consumption.total",
-        translation_key="consumption_total",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-}
-
 
 def _get_sensor_entity_description(
     feature_name: str,
@@ -746,19 +698,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Viessmann Climate Devices sensor based on a config entry."""
-    coords = hass.data[DOMAIN][entry.entry_id]
-    coordinator: ViClimateDataUpdateCoordinator = coords["data"]
-    analytics_coordinator: ViClimateAnalyticsCoordinator = coords["analytics"]
-
+    coordinator: ViClimateDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        "data"
+    ]
     entities = []
-
-    # --- 1. Viessmann IoT API ---
     if coordinator.data:
         entities.extend(_discover_realtime_sensors(coordinator))
-
-    # --- 2. Viessmann Analytics API ---
-    if coordinator.data and analytics_coordinator:
-        entities.extend(_discover_analytics_sensors(coordinator, analytics_coordinator))
 
     async_add_entities(entities)
 
@@ -812,47 +757,6 @@ def _discover_realtime_sensors(
                         enabled_default=not is_tested,
                     )
                 )
-    return entities
-
-
-def _discover_analytics_sensors(
-    coordinator: ViClimateDataUpdateCoordinator,
-    analytics_coordinator: ViClimateAnalyticsCoordinator,
-) -> list[SensorEntity]:
-    """Discover and return analytics sensor entities."""
-    entities = []
-    # 1. Identify heating devices (Mirroring coordinator logic)
-    heating_devices = [
-        device
-        for device in coordinator.data.values()
-        if getattr(device, "device_type", "unknown") == "heating"
-    ]
-
-    # Fallback
-    if not heating_devices and len(coordinator.data) == 1:
-        heating_devices.append(next(iter(coordinator.data.values())))
-
-    if heating_devices:
-        for heating_device in heating_devices:
-            _LOGGER.debug(
-                mask_pii(
-                    f"Analytics attached to device: {heating_device.id} "
-                    f"(Serial: {heating_device.gateway_serial})"
-                )
-            )
-            for feature_name, description in ANALYTICS_TYPES.items():
-                # Skip ignored features
-                if is_feature_ignored(feature_name, IGNORED_FEATURES):
-                    continue
-
-                entities.append(
-                    ViClimateConsumptionSensor(
-                        analytics_coordinator, heating_device, description
-                    )
-                )
-    else:
-        _LOGGER.warning("No heating device found for Analytics Setup.")
-
     return entities
 
 
@@ -953,91 +857,3 @@ class ViClimateSensor(CoordinatorEntity, SensorEntity):
         """Return True if entity is available."""
         feat = self.feature_data
         return self.coordinator.last_update_success and feat and feat.is_enabled
-
-
-class ViClimateConsumptionSensor(CoordinatorEntity, SensorEntity):
-    """Representation of a Viessmann Consumption Sensor (Analytics)."""
-
-    def __init__(
-        self,
-        coordinator: ViClimateAnalyticsCoordinator,
-        device,
-        description: SensorEntityDescription,
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self.device = device
-        self._feature_name = description.key
-
-        self._attr_unique_id = (
-            f"{device.gateway_serial}-{device.id}-{self._feature_name}"
-        )
-        self._attr_has_entity_name = True
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information (linked to the main device)."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"{self.device.gateway_serial}-{self.device.id}")},
-            name=self.device.model_id,
-            manufacturer="Viessmann",
-            model=self.device.model_id,
-            serial_number=self.device.gateway_serial,
-        )
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        # Check if coordinator has data for THIS device
-        if not self.coordinator.last_update_success:
-            return False
-
-        device_key = f"{self.device.gateway_serial}_{self.device.id}"
-        device_data = self.coordinator.data.get(device_key)
-
-        if not device_data:
-            return False
-
-        # Check if feature exists
-        return self._feature_name in device_data
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the consumption value."""
-        # coordinator.data is a Dict[device_key, Dict[feature_name, Feature]]
-        data = self.coordinator.data
-        if not data:
-            return None
-
-        device_key = f"{self.device.gateway_serial}_{self.device.id}"
-        device_features = data.get(device_key)
-
-        if not device_features:
-            return None
-
-        feature = device_features.get(self._feature_name)
-        if feature:
-            val = feature.value
-            if isinstance(val, (dict, list)):
-                # Return primitive summary for state
-                if isinstance(val, list):
-                    return len(val)
-                return "Complex Data"
-            return val
-
-        return None
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        attrs = {}
-        data = self.coordinator.data
-        if data:
-            device_key = f"{self.device.gateway_serial}_{self.device.id}"
-            device_features = data.get(device_key)
-            if device_features:
-                feature = device_features.get(self._feature_name)
-                if feature and isinstance(feature.value, (dict, list)):
-                    attrs["raw_value"] = feature.value
-        return attrs

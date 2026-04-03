@@ -28,7 +28,7 @@ When I identify a need for library changes, I must:
 1. I identified: "MockViClient doesn't recognize Vitocal devices as heating type"
 2. I should have informed you: "We need to add DEVICE_TYPE_MAP to mock_client.py"
 3. You make the library changes and bump the library to an appropriate new version
-4. I update manifest.json and simplify test_analytics.py
+4. I update manifest.json and align the integration tests and snapshots
 
 ### ❌ Wrong Approach:
 - I directly edit library source files in the `vi_api_client` repository

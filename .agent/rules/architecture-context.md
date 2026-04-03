@@ -106,15 +106,10 @@ The integration must use a **Hybrid Discovery** approach to balance quality and 
     *   **Do not** construct raw JSON payloads manually.
 3.  **Constraints**: Initialize `min_value`, `max_value`, `step`, and `options` from `feature.control` during entity setup.
 
-### 4.4 Analytics Feature
-*   **Dedicated Coordinator**: Analytics data must be handled by a separate Coordinator to decouple high-frequency state updates from heavy historical data processing.
-*   **Polling Frequency**: Update interval of **60 minutes**.
-*   **Scope**: Fetch consumption data only for **Heating** devices (`device_type == "heating"`).
-*   **API Usage**:
-    *   Use `client.get_consumption(device, start_dt, end_dt, metric="summary")`.
-    *   Time Range: Current Day (00:00:00 to 23:59:59).
-    *   The `summary` metric returns a flattened list of `Feature` objects (e.g., `analytics.heating.power.consumption.total`).
-*   **State Management**: Store results in a separate structure, keyed by Device ID, mapping feature names to `Feature` objects.
+### 4.4 Energy Summary Scope
+*   **Single Coordinator Model**: Energy entities are discovered from the main device refresh only. Do not introduce a dedicated analytics coordinator unless the product explicitly brings back separate analytics coverage.
+*   **Year-Based Focus**: The integration keeps the defined year-based consumption and production sensors as the stable energy summary surface.
+*   **Current-Day Exception**: `heating.solar.power.production.day` remains a defined realtime sensor. Removed `Heute`/`Today` consumption and non-solar production sensors should not be recreated through a fallback path.
 
 ## 5. Development Checklist
 1.  Implement Coordinator with `update_device`.
