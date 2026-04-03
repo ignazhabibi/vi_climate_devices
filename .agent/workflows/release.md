@@ -6,6 +6,16 @@ description: analyze changes, bump version, generate changelog, and tag release
 
 This workflow guides the agent to create a semantic release for the Home Assistant integration.
 
+## Stable vs. Pre-release Tags
+
+- This workflow describes the stable release path for tags like `vX.Y.Z`.
+- Prerelease validation builds use the dedicated GitHub Actions workflow
+  `.github/workflows/pre-release.yml`.
+- Supported prerelease tag formats are `vX.Y.Z-alpha.N`,
+  `vX.Y.Z-beta.N`, and `vX.Y.Z-rc.N`.
+- Hyphenated prerelease tags are intentionally excluded from the stable release
+  publish step so they create GitHub prereleases instead of full releases.
+
 ## 1. Pre-Flight Checks
 1.  **Branch Check**: Ensure `main` is fully up-to-date.
     ```bash
@@ -119,6 +129,8 @@ Reference PRs or commits when useful, but do not depend on scopes being present.
 - Do not claim the release is live until:
   - the PR merge produced a green `main` push run, and
   - the tag run for `v<NEW_VERSION>` is green.
+- For prerelease validation tags, use the matching `pre-release.yml` run instead
+  of the stable tag run.
 - Perform a final documentation drift check for release-related guidance:
   - `README.md`
   - `AGENTS.md`

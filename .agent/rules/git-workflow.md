@@ -48,6 +48,11 @@ Strict guidelines for version control and feature development.
 3. **Tag**: `git tag -a vX.Y.Z -m "Release vX.Y.Z"`
 4. **Push Tag**: `git push origin vX.Y.Z`
    - *This triggers the Release Workflow on GitHub.*
+5. **Optional Pre-release Tags**: For Home Assistant validation before a stable
+   release, use semver prerelease tags such as `vX.Y.Z-alpha.N`,
+   `vX.Y.Z-beta.N`, or `vX.Y.Z-rc.N`.
+   - *These trigger the dedicated Pre-release Workflow and create a GitHub
+     prerelease instead of a stable release.*
 
 ## 4. Agent Role & Permissions
 - **Allowed**: `git checkout -b`, `git add`, `git commit`, `git push`.

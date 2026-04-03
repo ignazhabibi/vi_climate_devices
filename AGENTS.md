@@ -114,7 +114,9 @@ validate once in a fresh environment installed with `.[dev]`.
 
 ## CI and Release Notes
 
-- CI currently runs via `.github/workflows/release.yml`.
+- CI currently runs via `.github/workflows/release.yml` for `main`, pull
+  requests, and stable release tags, plus `.github/workflows/pre-release.yml`
+  for prerelease tags.
 - `main` is protected by a GitHub ruleset. Assume pull requests are required for
   all changes, including `.agent/` guidance and documentation updates, unless
   the user explicitly asks for a confirmed emergency bypass.
@@ -125,8 +127,13 @@ validate once in a fresh environment installed with `.[dev]`.
 - Keep `pyproject.toml` package metadata version aligned with
   `custom_components/vi_climate_devices/manifest.json` during releases unless a
   task explicitly requires them to diverge.
+- Stable tags use the format `vX.Y.Z`.
+- Prerelease tags use semver prerelease suffixes such as
+  `vX.Y.Z-alpha.N`, `vX.Y.Z-beta.N`, or `vX.Y.Z-rc.N`.
 - A release is not considered live until both the `main` push run and the tag
   run are green.
+- A prerelease is not considered available for testing until the prerelease tag
+  run is green.
 - Snapshot and Home Assistant test stack changes must be validated against the
   Linux CI run, not only against local macOS runs. A local green snapshot test
   does not guarantee the same result on GitHub Actions.

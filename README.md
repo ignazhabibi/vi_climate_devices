@@ -54,6 +54,11 @@ Tested with:
 2. Copy the `custom_components/vi_climate_devices` folder to your HA `config/custom_components/` directory
 3. Restart Home Assistant
 
+### Testing Pre-releases
+
+If a GitHub prerelease is available, enable beta versions for this repository in
+HACS and install the prerelease there before promoting it to a stable release.
+
 ---
 
 ### Configuration
