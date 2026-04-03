@@ -464,21 +464,21 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     # Heating Rod Consumption DHW (Current Year).
     "heating.heatingRod.power.consumption.summary.dhw.currentYear": (
         SensorEntityDescription(
-        key="heating.heatingRod.power.consumption.summary.dhw.currentYear",
-        translation_key="heating_rod_consumption_dhw_current_year",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+            key="heating.heatingRod.power.consumption.summary.dhw.currentYear",
+            translation_key="heating_rod_consumption_dhw_current_year",
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
         )
     ),
     # Heating Rod Consumption Heating (Current Year).
     "heating.heatingRod.power.consumption.summary.heating.currentYear": (
         SensorEntityDescription(
-        key="heating.heatingRod.power.consumption.summary.heating.currentYear",
-        translation_key="heating_rod_consumption_heating_current_year",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+            key="heating.heatingRod.power.consumption.summary.heating.currentYear",
+            translation_key="heating_rod_consumption_heating_current_year",
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
         )
     ),
     # Heating Rod (Diagnostic) - Hours
