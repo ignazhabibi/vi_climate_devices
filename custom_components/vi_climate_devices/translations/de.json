@@ -185,6 +185,15 @@
             "consumption_dhw": {
                 "name": "Verbrauch Warmwasser (Heute)"
             },
+            "consumption_dhw_current_year": {
+                "name": "Verbrauch Warmwasser Aktuelles Jahr"
+            },
+            "consumption_heating_current_year": {
+                "name": "Verbrauch Heizung Aktuelles Jahr"
+            },
+            "consumption_total_current_year": {
+                "name": "Verbrauch Gesamt Aktuelles Jahr"
+            },
             "burner_starts": {
                 "name": "Brennerstarts {index}"
             },
@@ -196,6 +205,21 @@
             },
             "production_heating_current_day": {
                 "name": "Erzeugte Energie Heizung (Heute)"
+            },
+            "production_cooling_current_year": {
+                "name": "Erzeugung Kuehlung Aktuelles Jahr"
+            },
+            "production_dhw_current_year": {
+                "name": "Erzeugung Warmwasser Aktuelles Jahr"
+            },
+            "production_heating_current_year": {
+                "name": "Erzeugung Heizung Aktuelles Jahr"
+            },
+            "heating_rod_consumption_dhw_current_year": {
+                "name": "Heizstab Verbrauch Warmwasser Aktuelles Jahr"
+            },
+            "heating_rod_consumption_heating_current_year": {
+                "name": "Heizstab Verbrauch Heizung Aktuelles Jahr"
             },
             "inverter_power_output": {
                 "name": "Aktueller Stromverbrauch {index}"
