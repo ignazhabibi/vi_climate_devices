@@ -5,6 +5,9 @@
   ],
   "dependencyDashboard": true,
   "separateMinorPatch": true,
+  "homeassistant-manifest": {
+    "enabled": false
+  },
   "packageRules": [
     {
       "matchManagers": [
