@@ -853,94 +853,6 @@
     dict({
       'attributes': dict({
         'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Consumption Cooling Current Day',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.power.consumption.summary.cooling.currentDay',
-      }),
-      'entity_id': 'sensor.vitocal250a_consumption_cooling_current_day',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Consumption Cooling Current Month',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.power.consumption.summary.cooling.currentMonth',
-      }),
-      'entity_id': 'sensor.vitocal250a_consumption_cooling_current_month',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Consumption Cooling Current Year',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.power.consumption.summary.cooling.currentYear',
-      }),
-      'entity_id': 'sensor.vitocal250a_consumption_cooling_current_year',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Consumption Cooling Last Month',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.power.consumption.summary.cooling.lastMonth',
-      }),
-      'entity_id': 'sensor.vitocal250a_consumption_cooling_last_month',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Consumption Cooling Last Seven Days',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.power.consumption.summary.cooling.lastSevenDays',
-      }),
-      'entity_id': 'sensor.vitocal250a_consumption_cooling_last_seven_days',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Consumption Cooling Last Year',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.power.consumption.summary.cooling.lastYear',
-      }),
-      'entity_id': 'sensor.vitocal250a_consumption_cooling_last_year',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Consumption Dhw Current Day',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.power.consumption.summary.dhw.currentDay',
-      }),
-      'entity_id': 'sensor.vitocal250a_consumption_dhw_current_day',
-      'state': '2.6',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Consumption Dhw Current Month',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.power.consumption.summary.dhw.currentMonth',
-      }),
-      'entity_id': 'sensor.vitocal250a_consumption_dhw_current_month',
-      'state': '16',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
         'friendly_name': 'Vitocal250A Consumption Dhw Current Year',
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -952,72 +864,6 @@
     dict({
       'attributes': dict({
         'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Consumption Dhw Current Year',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.power.consumption.summary.dhw.currentYear',
-      }),
-      'entity_id': 'sensor.vitocal250a_consumption_dhw_current_year_2',
-      'state': '875.1',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Consumption Dhw Last Month',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.power.consumption.summary.dhw.lastMonth',
-      }),
-      'entity_id': 'sensor.vitocal250a_consumption_dhw_last_month',
-      'state': '89.7',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Consumption Dhw Last Seven Days',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.power.consumption.summary.dhw.lastSevenDays',
-      }),
-      'entity_id': 'sensor.vitocal250a_consumption_dhw_last_seven_days',
-      'state': '24.5',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Consumption Dhw Last Year',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.power.consumption.summary.dhw.lastYear',
-      }),
-      'entity_id': 'sensor.vitocal250a_consumption_dhw_last_year',
-      'state': '1536.8',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Consumption Heating Current Day',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.power.consumption.summary.heating.currentDay',
-      }),
-      'entity_id': 'sensor.vitocal250a_consumption_heating_current_day',
-      'state': '4.6',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Consumption Heating Current Month',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.power.consumption.summary.heating.currentMonth',
-      }),
-      'entity_id': 'sensor.vitocal250a_consumption_heating_current_month',
-      'state': '32.3',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
         'friendly_name': 'Vitocal250A Consumption Heating Current Year',
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -1025,50 +871,6 @@
       }),
       'entity_id': 'sensor.vitocal250a_consumption_heating_current_year',
       'state': '2565.7',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Consumption Heating Current Year',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.power.consumption.summary.heating.currentYear',
-      }),
-      'entity_id': 'sensor.vitocal250a_consumption_heating_current_year_2',
-      'state': '2565.7',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Consumption Heating Last Month',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.power.consumption.summary.heating.lastMonth',
-      }),
-      'entity_id': 'sensor.vitocal250a_consumption_heating_last_month',
-      'state': '32.1',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Consumption Heating Last Seven Days',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.power.consumption.summary.heating.lastSevenDays',
-      }),
-      'entity_id': 'sensor.vitocal250a_consumption_heating_last_seven_days',
-      'state': '39.4',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Consumption Heating Last Year',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.power.consumption.summary.heating.lastYear',
-      }),
-      'entity_id': 'sensor.vitocal250a_consumption_heating_last_year',
-      'state': '3809.6',
     }),
     dict({
       'attributes': dict({
@@ -1195,28 +997,6 @@
     dict({
       'attributes': dict({
         'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Heating Rod Consumption Dhw Current Day',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.heatingRod.power.consumption.summary.dhw.currentDay',
-      }),
-      'entity_id': 'sensor.vitocal250a_heating_rod_consumption_dhw_current_day',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Heating Rod Consumption Dhw Current Month',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.heatingRod.power.consumption.summary.dhw.currentMonth',
-      }),
-      'entity_id': 'sensor.vitocal250a_heating_rod_consumption_dhw_current_month',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
         'friendly_name': 'Vitocal250A Heating Rod Consumption Dhw Current Year',
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -1228,61 +1008,6 @@
     dict({
       'attributes': dict({
         'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Heating Rod Consumption Dhw Last Month',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.heatingRod.power.consumption.summary.dhw.lastMonth',
-      }),
-      'entity_id': 'sensor.vitocal250a_heating_rod_consumption_dhw_last_month',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Heating Rod Consumption Dhw Last Seven Days',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.heatingRod.power.consumption.summary.dhw.lastSevenDays',
-      }),
-      'entity_id': 'sensor.vitocal250a_heating_rod_consumption_dhw_last_seven_days',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Heating Rod Consumption Dhw Last Year',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.heatingRod.power.consumption.summary.dhw.lastYear',
-      }),
-      'entity_id': 'sensor.vitocal250a_heating_rod_consumption_dhw_last_year',
-      'state': '28',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Heating Rod Consumption Heating Current Day',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.heatingRod.power.consumption.summary.heating.currentDay',
-      }),
-      'entity_id': 'sensor.vitocal250a_heating_rod_consumption_heating_current_day',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Heating Rod Consumption Heating Current Month',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.heatingRod.power.consumption.summary.heating.currentMonth',
-      }),
-      'entity_id': 'sensor.vitocal250a_heating_rod_consumption_heating_current_month',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
         'friendly_name': 'Vitocal250A Heating Rod Consumption Heating Current Year',
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -1290,39 +1015,6 @@
       }),
       'entity_id': 'sensor.vitocal250a_heating_rod_consumption_heating_current_year',
       'state': '29.5',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Heating Rod Consumption Heating Last Month',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.heatingRod.power.consumption.summary.heating.lastMonth',
-      }),
-      'entity_id': 'sensor.vitocal250a_heating_rod_consumption_heating_last_month',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Heating Rod Consumption Heating Last Seven Days',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.heatingRod.power.consumption.summary.heating.lastSevenDays',
-      }),
-      'entity_id': 'sensor.vitocal250a_heating_rod_consumption_heating_last_seven_days',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Heating Rod Consumption Heating Last Year',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.heatingRod.power.consumption.summary.heating.lastYear',
-      }),
-      'entity_id': 'sensor.vitocal250a_heating_rod_consumption_heating_last_year',
-      'state': '53.6',
     }),
     dict({
       'attributes': dict({
@@ -1566,28 +1258,6 @@
     dict({
       'attributes': dict({
         'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Production Cooling Current Day',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.heat.production.summary.cooling.currentDay',
-      }),
-      'entity_id': 'sensor.vitocal250a_production_cooling_current_day',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Production Cooling Current Month',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.heat.production.summary.cooling.currentMonth',
-      }),
-      'entity_id': 'sensor.vitocal250a_production_cooling_current_month',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
         'friendly_name': 'Vitocal250A Production Cooling Current Year',
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -1595,50 +1265,6 @@
       }),
       'entity_id': 'sensor.vitocal250a_production_cooling_current_year',
       'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Production Cooling Last Month',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.heat.production.summary.cooling.lastMonth',
-      }),
-      'entity_id': 'sensor.vitocal250a_production_cooling_last_month',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Production Cooling Last Seven Days',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.heat.production.summary.cooling.lastSevenDays',
-      }),
-      'entity_id': 'sensor.vitocal250a_production_cooling_last_seven_days',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Production Cooling Last Year',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.heat.production.summary.cooling.lastYear',
-      }),
-      'entity_id': 'sensor.vitocal250a_production_cooling_last_year',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Production Dhw Current Month',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.heat.production.summary.dhw.currentMonth',
-      }),
-      'entity_id': 'sensor.vitocal250a_production_dhw_current_month',
-      'state': '61.8',
     }),
     dict({
       'attributes': dict({
@@ -1654,50 +1280,6 @@
     dict({
       'attributes': dict({
         'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Production Dhw Last Month',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.heat.production.summary.dhw.lastMonth',
-      }),
-      'entity_id': 'sensor.vitocal250a_production_dhw_last_month',
-      'state': '389.9',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Production Dhw Last Seven Days',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.heat.production.summary.dhw.lastSevenDays',
-      }),
-      'entity_id': 'sensor.vitocal250a_production_dhw_last_seven_days',
-      'state': '96.7',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Production Dhw Last Year',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.heat.production.summary.dhw.lastYear',
-      }),
-      'entity_id': 'sensor.vitocal250a_production_dhw_last_year',
-      'state': '5903.8',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Production Heating Current Month',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.heat.production.summary.heating.currentMonth',
-      }),
-      'entity_id': 'sensor.vitocal250a_production_heating_current_month',
-      'state': '164.3',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
         'friendly_name': 'Vitocal250A Production Heating Current Year',
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -1705,39 +1287,6 @@
       }),
       'entity_id': 'sensor.vitocal250a_production_heating_current_year',
       'state': '10024.2',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Production Heating Last Month',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.heat.production.summary.heating.lastMonth',
-      }),
-      'entity_id': 'sensor.vitocal250a_production_heating_last_month',
-      'state': '183.1',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Production Heating Last Seven Days',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.heat.production.summary.heating.lastSevenDays',
-      }),
-      'entity_id': 'sensor.vitocal250a_production_heating_last_seven_days',
-      'state': '206.3',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'energy',
-        'friendly_name': 'Vitocal250A Production Heating Last Year',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-        'viessmann_feature_name': 'heating.heat.production.summary.heating.lastYear',
-      }),
-      'entity_id': 'sensor.vitocal250a_production_heating_last_year',
-      'state': '15472.4',
     }),
     dict({
       'attributes': dict({

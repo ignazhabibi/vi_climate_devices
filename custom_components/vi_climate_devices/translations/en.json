@@ -185,6 +185,15 @@
             "consumption_dhw": {
                 "name": "Power Consumption DHW (Today)"
             },
+            "consumption_dhw_current_year": {
+                "name": "Consumption Dhw Current Year"
+            },
+            "consumption_heating_current_year": {
+                "name": "Consumption Heating Current Year"
+            },
+            "consumption_total_current_year": {
+                "name": "Consumption Total Current Year"
+            },
             "burner_starts": {
                 "name": "Burner {index} Starts"
             },
@@ -196,6 +205,21 @@
             },
             "production_heating_current_day": {
                 "name": "Produced Energy Heating (Today)"
+            },
+            "production_cooling_current_year": {
+                "name": "Production Cooling Current Year"
+            },
+            "production_dhw_current_year": {
+                "name": "Production Dhw Current Year"
+            },
+            "production_heating_current_year": {
+                "name": "Production Heating Current Year"
+            },
+            "heating_rod_consumption_dhw_current_year": {
+                "name": "Heating Rod Consumption Dhw Current Year"
+            },
+            "heating_rod_consumption_heating_current_year": {
+                "name": "Heating Rod Consumption Heating Current Year"
             },
             "inverter_power_output": {
                 "name": "Inverter {index} Power Output"

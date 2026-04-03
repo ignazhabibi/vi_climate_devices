@@ -405,6 +405,14 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
+    # Production Summary DHW (Current Year).
+    "heating.heat.production.summary.dhw.currentYear": SensorEntityDescription(
+        key="heating.heat.production.summary.dhw.currentYear",
+        translation_key="production_dhw_current_year",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
     # Production Summary Heating (Today)
     "heating.heat.production.summary.heating.currentDay": SensorEntityDescription(
         key="heating.heat.production.summary.heating.currentDay",
@@ -412,6 +420,66 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    # Production Summary Heating (Current Year).
+    "heating.heat.production.summary.heating.currentYear": SensorEntityDescription(
+        key="heating.heat.production.summary.heating.currentYear",
+        translation_key="production_heating_current_year",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    # Production Summary Cooling (Current Year).
+    "heating.heat.production.summary.cooling.currentYear": SensorEntityDescription(
+        key="heating.heat.production.summary.cooling.currentYear",
+        translation_key="production_cooling_current_year",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    # Realtime Consumption DHW (Current Year).
+    "heating.power.consumption.dhw.currentYear": SensorEntityDescription(
+        key="heating.power.consumption.dhw.currentYear",
+        translation_key="consumption_dhw_current_year",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    # Realtime Consumption Heating (Current Year).
+    "heating.power.consumption.heating.currentYear": SensorEntityDescription(
+        key="heating.power.consumption.heating.currentYear",
+        translation_key="consumption_heating_current_year",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    # Realtime Consumption Total (Current Year).
+    "heating.power.consumption.total.currentYear": SensorEntityDescription(
+        key="heating.power.consumption.total.currentYear",
+        translation_key="consumption_total_current_year",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    # Heating Rod Consumption DHW (Current Year).
+    "heating.heatingRod.power.consumption.summary.dhw.currentYear": (
+        SensorEntityDescription(
+            key="heating.heatingRod.power.consumption.summary.dhw.currentYear",
+            translation_key="heating_rod_consumption_dhw_current_year",
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        )
+    ),
+    # Heating Rod Consumption Heating (Current Year).
+    "heating.heatingRod.power.consumption.summary.heating.currentYear": (
+        SensorEntityDescription(
+            key="heating.heatingRod.power.consumption.summary.heating.currentYear",
+            translation_key="heating_rod_consumption_heating_current_year",
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        )
     ),
     # Heating Rod (Diagnostic) - Hours
     "heating.heatingRod.statistics.hours": SensorEntityDescription(
