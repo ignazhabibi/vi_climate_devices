@@ -3,15 +3,13 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
 from vi_api_client import (
     Device,
-    Feature,
     ViAuthError,
     ViClient as ViessmannClient,
 )
@@ -30,7 +28,6 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
         hass: HomeAssistant,
         client: ViessmannClient,
         update_interval: timedelta | None = None,
-        analytics_enabled: bool = True,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -41,7 +38,6 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self.client = client
         self._known_devices: list[Device] = []
-        self.analytics_enabled = analytics_enabled
 
     async def _perform_discovery(self):
         """Perform initial device discovery.
@@ -135,96 +131,3 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
         except Exception as exception:
             raise UpdateFailed(exception) from exception
-
-
-class ViClimateAnalyticsCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching Viessmann Analytics data."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        client: ViessmannClient,
-        main_coordinator: ViClimateDataUpdateCoordinator,
-    ) -> None:
-        """Initialize the analytics coordinator.
-
-        Args:
-            hass: The Home Assistant instance.
-            client: The authenticated Viessmann API client.
-            main_coordinator: Reference to the main data coordinator to access
-                discovered devices.
-        """
-        self.client = client
-        self.main_coordinator = main_coordinator
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=f"{DOMAIN}_analytics",
-            update_interval=timedelta(minutes=15),
-        )
-
-    async def _async_update_data(self) -> dict:
-        """Update data (Analytics).
-
-        Fetches daily energy consumption summaries for all heating devices.
-
-        Returns:
-            dict: A nested dictionary mapping device keys to analytics features.
-        """
-        devices = (
-            self.main_coordinator.data.values() if self.main_coordinator.data else []
-        )
-
-        if not devices:
-            return {}
-
-        heating_devices: list[Device] = [
-            device for device in devices if device.device_type == "heating"
-        ]
-
-        if not heating_devices:
-            _LOGGER.warning("No heating devices found for analytics.")
-            return {}
-
-        results: dict[str, dict[str, Feature]] = {}
-
-        for device in heating_devices:
-            _LOGGER.debug("Fetching analytics for device %s", device.id)
-            device_key = f"{device.gateway_serial}_{device.id}"
-            try:
-                start_today, end_today = self._get_today_time_range()
-
-                features_list = await self.client.get_consumption(
-                    device, start_dt=start_today, end_dt=end_today, metric="summary"
-                )
-
-                # Map Features for this device
-                device_features: dict[str, Feature] = {}
-                for feature in features_list:
-                    device_features[feature.name] = feature
-
-                results[device_key] = device_features
-
-            except ViAuthError as err:
-                raise ConfigEntryAuthFailed(
-                    f"Analytics Auth failed for {device.id}: {err}"
-                ) from err
-
-            except Exception as err:
-                _LOGGER.error(
-                    "Failed to fetch analytics for device %s: %s", device.id, err
-                )
-
-        _LOGGER.debug("Analytics Data Refreshed: %s devices", len(results))
-        return results
-
-    def _get_today_time_range(self) -> tuple[datetime, datetime]:
-        """Calculate the start and end datetime for the current day.
-
-        Returns:
-            tuple[datetime, datetime]: A tuple containing (start_of_day, end_of_day).
-        """
-        now = dt_util.now()
-        start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
-        return start, end

@@ -176,15 +176,6 @@
             "volumetric_flow": {
                 "name": "Volumenstrom"
             },
-            "consumption_total": {
-                "name": "Verbrauch Gesamt Heute"
-            },
-            "consumption_heating": {
-                "name": "Verbrauch Heizung Heute"
-            },
-            "consumption_dhw": {
-                "name": "Verbrauch Warmwasser Heute"
-            },
             "consumption_dhw_current_year": {
                 "name": "Verbrauch Warmwasser Jahr"
             },
@@ -199,12 +190,6 @@
             },
             "burner_hours": {
                 "name": "Brennerbetriebsstunden {index}"
-            },
-            "production_dhw_current_day": {
-                "name": "Erzeugung Warmwasser Heute"
-            },
-            "production_heating_current_day": {
-                "name": "Erzeugung Heizung Heute"
             },
             "production_cooling_current_year": {
                 "name": "Erzeugung Kuehlung Jahr"

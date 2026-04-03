@@ -99,6 +99,29 @@ async def test_no_duplicate_entity_creation(hass: HomeAssistant, mock_client):
 
 
 @pytest.mark.asyncio
+async def test_removed_today_energy_sensors_are_not_created(
+    hass: HomeAssistant, mock_client
+):
+    """Test removed today energy sensors are no longer created."""
+    # Arrange: Set up the integration with the Vitocal250A fixture.
+    await _setup_integration(hass, mock_client)
+
+    # Assert: The removed today sensors are absent after setup.
+    assert hass.states.get("sensor.vitocal250a_dhw_consumption_today") is None
+    assert hass.states.get("sensor.vitocal250a_heating_consumption_today") is None
+    assert hass.states.get("sensor.vitocal250a_total_consumption_today") is None
+    assert hass.states.get("sensor.vitocal250a_dhw_production_today") is None
+    assert hass.states.get("sensor.vitocal250a_heating_production_today") is None
+    assert hass.states.get("sensor.vitocal250a_production_dhw_current_day") is None
+    assert hass.states.get("sensor.vitocal250a_production_heating_current_day") is None
+
+    # Cleanup: Unload the integration to prevent thread leaks.
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.asyncio
 async def test_auto_discovery_unit_mapping(hass: HomeAssistant, mock_client):
     """Test that auto-discovered sensors get correct unit mapping based on feature.unit."""
     # Arrange: Create a mock device with features that have specific units but are NOT in SENSOR_TYPES.
