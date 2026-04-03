@@ -42,8 +42,8 @@ async def test_analytics_sensors_setup_and_data(hass: HomeAssistant, mock_client
         await hass.async_block_till_done()
 
         # Assert: Verify total consumption sensor.
-        # Entity ID derived from translation key "consumption_total" -> "Power Consumption Total Today"
-        state = hass.states.get("sensor.vitocal250a_power_consumption_total_today")
+        # Entity ID derived from translation key "consumption_total" -> "Total Consumption Today"
+        state = hass.states.get("sensor.vitocal250a_total_consumption_today")
         assert state is not None
         assert state.state == "41.8"
         assert state.attributes["unit_of_measurement"] == "kWh"
@@ -51,12 +51,12 @@ async def test_analytics_sensors_setup_and_data(hass: HomeAssistant, mock_client
         assert state.attributes["state_class"] == "total_increasing"
 
         # Assert: Verify heating consumption sensor.
-        state = hass.states.get("sensor.vitocal250a_power_consumption_heating_today")
+        state = hass.states.get("sensor.vitocal250a_heating_consumption_today")
         assert state is not None
         assert state.state == "31.6"
 
         # Assert: Verify DHW consumption sensor.
-        state = hass.states.get("sensor.vitocal250a_power_consumption_dhw_today")
+        state = hass.states.get("sensor.vitocal250a_dhw_consumption_today")
         assert state is not None
         assert state.state == "10.2"
 

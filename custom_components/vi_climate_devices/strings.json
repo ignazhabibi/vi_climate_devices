@@ -202,22 +202,22 @@
                 "name": "Volumetric Flow"
             },
             "consumption_total": {
-                "name": "Power Consumption Total (Today)"
+                "name": "Total Consumption Today"
             },
             "consumption_heating": {
-                "name": "Power Consumption Heating (Today)"
+                "name": "Heating Consumption Today"
             },
             "consumption_dhw": {
-                "name": "Power Consumption DHW (Today)"
+                "name": "DHW Consumption Today"
             },
             "consumption_dhw_current_year": {
-                "name": "Consumption Dhw Current Year"
+                "name": "DHW Consumption Year"
             },
             "consumption_heating_current_year": {
-                "name": "Consumption Heating Current Year"
+                "name": "Heating Consumption Year"
             },
             "consumption_total_current_year": {
-                "name": "Consumption Total Current Year"
+                "name": "Total Consumption Year"
             },
             "burner_starts": {
                 "name": "Burner {index} Starts"
@@ -226,25 +226,25 @@
                 "name": "Burner {index} Hours"
             },
             "production_dhw_current_day": {
-                "name": "Produced Energy DHW (Today)"
+                "name": "DHW Production Today"
             },
             "production_heating_current_day": {
-                "name": "Produced Energy Heating (Today)"
+                "name": "Heating Production Today"
             },
             "production_cooling_current_year": {
-                "name": "Production Cooling Current Year"
+                "name": "Cooling Production Year"
             },
             "production_dhw_current_year": {
-                "name": "Production Dhw Current Year"
+                "name": "DHW Production Year"
             },
             "production_heating_current_year": {
-                "name": "Production Heating Current Year"
+                "name": "Heating Production Year"
             },
             "heating_rod_consumption_dhw_current_year": {
-                "name": "Heating Rod Consumption Dhw Current Year"
+                "name": "Heating Rod DHW Consumption Year"
             },
             "heating_rod_consumption_heating_current_year": {
-                "name": "Heating Rod Consumption Heating Current Year"
+                "name": "Heating Rod Heating Consumption Year"
             },
             "inverter_power_output": {
                 "name": "Inverter {index} Power Output"
@@ -292,7 +292,7 @@
                 "name": "Solar Hot Water Temperature"
             },
             "solar_production_today": {
-                "name": "Solar Power Production (Day)"
+                "name": "Solar Production Today"
             },
             "compressor_phase": {
                 "name": "Compressor {index} Phase"

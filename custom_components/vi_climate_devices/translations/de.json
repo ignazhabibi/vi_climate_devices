@@ -177,22 +177,22 @@
                 "name": "Volumenstrom"
             },
             "consumption_total": {
-                "name": "Verbrauch Gesamt (Heute)"
+                "name": "Verbrauch Gesamt Heute"
             },
             "consumption_heating": {
-                "name": "Verbrauch Heizung (Heute)"
+                "name": "Verbrauch Heizung Heute"
             },
             "consumption_dhw": {
-                "name": "Verbrauch Warmwasser (Heute)"
+                "name": "Verbrauch Warmwasser Heute"
             },
             "consumption_dhw_current_year": {
-                "name": "Verbrauch Warmwasser Aktuelles Jahr"
+                "name": "Verbrauch Warmwasser Jahr"
             },
             "consumption_heating_current_year": {
-                "name": "Verbrauch Heizung Aktuelles Jahr"
+                "name": "Verbrauch Heizung Jahr"
             },
             "consumption_total_current_year": {
-                "name": "Verbrauch Gesamt Aktuelles Jahr"
+                "name": "Verbrauch Gesamt Jahr"
             },
             "burner_starts": {
                 "name": "Brennerstarts {index}"
@@ -201,25 +201,25 @@
                 "name": "Brennerbetriebsstunden {index}"
             },
             "production_dhw_current_day": {
-                "name": "Erzeugte Energie Warmwasser (Heute)"
+                "name": "Erzeugung Warmwasser Heute"
             },
             "production_heating_current_day": {
-                "name": "Erzeugte Energie Heizung (Heute)"
+                "name": "Erzeugung Heizung Heute"
             },
             "production_cooling_current_year": {
-                "name": "Erzeugung Kuehlung Aktuelles Jahr"
+                "name": "Erzeugung Kuehlung Jahr"
             },
             "production_dhw_current_year": {
-                "name": "Erzeugung Warmwasser Aktuelles Jahr"
+                "name": "Erzeugung Warmwasser Jahr"
             },
             "production_heating_current_year": {
-                "name": "Erzeugung Heizung Aktuelles Jahr"
+                "name": "Erzeugung Heizung Jahr"
             },
             "heating_rod_consumption_dhw_current_year": {
-                "name": "Heizstab Verbrauch Warmwasser Aktuelles Jahr"
+                "name": "Verbrauch Heizstab Warmwasser Jahr"
             },
             "heating_rod_consumption_heating_current_year": {
-                "name": "Heizstab Verbrauch Heizung Aktuelles Jahr"
+                "name": "Verbrauch Heizstab Heizung Jahr"
             },
             "inverter_power_output": {
                 "name": "Aktueller Stromverbrauch {index}"
@@ -267,7 +267,7 @@
                 "name": "Solar Warmwassertemperatur"
             },
             "solar_production_today": {
-                "name": "Solarertrag (Tag)"
+                "name": "Solarertrag Heute"
             },
             "compressor_phase": {
                 "name": "Verdichter {index} Phase"
