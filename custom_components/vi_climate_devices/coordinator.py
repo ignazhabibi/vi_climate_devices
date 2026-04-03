@@ -34,7 +34,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=f"{DOMAIN}_data",
-            update_interval=update_interval or timedelta(minutes=5),
+            update_interval=update_interval or timedelta(minutes=3),
         )
         self.client = client
         self._known_devices: list[Device] = []
