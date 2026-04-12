@@ -56,7 +56,7 @@ jobs:
         echo "$TAG_MSG" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
     - name: GitHub Release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       with:
         files: dist/*
         body: ${{ steps.tag_message.outputs.body }}
