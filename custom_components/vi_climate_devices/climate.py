@@ -60,15 +60,24 @@ HA_TO_API_HVAC_MODE: dict[HVACMode, list[str]] = {
 API_TO_HA_PRESET = {
     "comfort": PRESET_COMFORT,
     "comfortCooling": PRESET_COMFORT,
+    "comfortCoolingEnergySaving": PRESET_COMFORT,
+    "comfortEnergySaving": PRESET_COMFORT,
     "comfortHeating": PRESET_COMFORT,
+    "eco": PRESET_ECO,
     "frostprotection": PRESET_ECO,
     "holiday": PRESET_AWAY,
+    "holidayAtHome": PRESET_AWAY,
     "normal": PRESET_HOME,
     "normalCooling": PRESET_HOME,
+    "normalCoolingEnergySaving": PRESET_HOME,
+    "normalEnergySaving": PRESET_HOME,
     "normalHeating": PRESET_HOME,
     "reduced": PRESET_SLEEP,
     "reducedCooling": PRESET_SLEEP,
+    "reducedCoolingEnergySaving": PRESET_SLEEP,
+    "reducedEnergySaving": PRESET_SLEEP,
     "reducedHeating": PRESET_SLEEP,
+    "summerEco": PRESET_ECO,
 }
 
 
@@ -105,9 +114,7 @@ class ViClimate(CoordinatorEntity, ClimateEntity):
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "heating_circuit"
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
-    )
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
     def __init__(
         self,
@@ -150,6 +157,50 @@ class ViClimate(CoordinatorEntity, ClimateEntity):
             return None
         return device.get_feature(name)
 
+    def _get_program_base_name(self, program_name: str) -> str:
+        """Get the base prefix of a program name (e.g., 'normalHeating' -> 'normal')."""
+        program_lower = program_name.lower()
+        known_bases = [
+            "comfort",
+            "normal",
+            "reduced",
+            "eco",
+            "holiday",
+            "frostprotection",
+        ]
+        for base in known_bases:
+            if program_lower.startswith(base):
+                return base
+        return program_lower
+
+    def _get_program_temperature_feature(self, program_name: str) -> Feature | None:
+        """Get the temperature feature for a program with prefix fallback matching."""
+        # 1. Try exact name match.
+        feature_name = (
+            f"heating.circuits.{self._circuit_index}."
+            f"operating.programs.{program_name}.temperature"
+        )
+        feature = self._get_feature(feature_name)
+        if feature:
+            return feature
+
+        # 2. Match based on normalized base names.
+        target_base = self._get_program_base_name(program_name)
+        device = self.coordinator.data.get(self._map_key)
+        if not device:
+            return None
+
+        prefix = f"heating.circuits.{self._circuit_index}.operating.programs."
+        for feat in device.features:
+            if feat.name.startswith(prefix) and feat.name.endswith(".temperature"):
+                # Extract program name part:
+                # e.g., '...normalHeating.temperature' -> 'normalHeating'
+                prog_part = feat.name[len(prefix) : -len(".temperature")]
+                if self._get_program_base_name(prog_part) == target_base:
+                    return feat
+
+        return None
+
     def _get_active_temp_feature(self) -> Feature | None:
         """Get the temperature feature corresponding to the active operating program."""
         active_program_feature = self._get_feature(
@@ -158,10 +209,7 @@ class ViClimate(CoordinatorEntity, ClimateEntity):
         if not active_program_feature or not active_program_feature.value:
             return None
 
-        program_name = str(active_program_feature.value)
-        return self._get_feature(
-            f"heating.circuits.{self._circuit_index}.operating.programs.{program_name}.temperature"
-        )
+        return self._get_program_temperature_feature(str(active_program_feature.value))
 
     # --- Properties ---
 
@@ -313,11 +361,7 @@ class ViClimate(CoordinatorEntity, ClimateEntity):
             raise HomeAssistantError("Could not determine the active program")
 
         program_name = str(active_program_feature.value)
-        temp_feature_name = (
-            f"heating.circuits.{self._circuit_index}."
-            f"operating.programs.{program_name}.temperature"
-        )
-        temp_feature = self._get_feature(temp_feature_name)
+        temp_feature = self._get_program_temperature_feature(program_name)
         if not temp_feature:
             raise HomeAssistantError(
                 "No temperature control feature found for the active program: "
@@ -428,3 +472,31 @@ class ViClimate(CoordinatorEntity, ClimateEntity):
             "Preset modes are read-only on this device and follow the "
             "configured schedule"
         )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return entity specific state attributes."""
+        attributes = {}
+
+        # Current active program.
+        active_prog_feat = self._get_feature(
+            f"heating.circuits.{self._circuit_index}.operating.programs.active"
+        )
+        if active_prog_feat and active_prog_feat.value:
+            attributes["active_program"] = str(active_prog_feat.value)
+
+        # Curve Slope.
+        slope_feat = self._get_feature(
+            f"heating.circuits.{self._circuit_index}.heating.curve.slope"
+        )
+        if slope_feat and slope_feat.value is not None:
+            attributes["heating_curve_slope"] = float(slope_feat.value)
+
+        # Curve Shift.
+        shift_feat = self._get_feature(
+            f"heating.circuits.{self._circuit_index}.heating.curve.shift"
+        )
+        if shift_feat and shift_feat.value is not None:
+            attributes["heating_curve_shift"] = float(shift_feat.value)
+
+        return attributes
