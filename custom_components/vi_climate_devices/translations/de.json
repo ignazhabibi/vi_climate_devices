@@ -121,6 +121,11 @@
                 "name": "Abtauvorgang"
             }
         },
+        "climate": {
+            "heating_circuit": {
+                "name": "Heizkreis {index}"
+            }
+        },
         "sensor": {
             "outside_temperature": {
                 "name": "Außentemperatur"

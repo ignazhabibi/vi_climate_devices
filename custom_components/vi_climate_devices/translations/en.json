@@ -121,6 +121,11 @@
                 "name": "Outdoor Defrosting"
             }
         },
+        "climate": {
+            "heating_circuit": {
+                "name": "Heating Circuit {index}"
+            }
+        },
         "sensor": {
             "outside_temperature": {
                 "name": "Outside Temperature"

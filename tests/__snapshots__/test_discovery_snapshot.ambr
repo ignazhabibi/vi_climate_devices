@@ -323,6 +323,30 @@
     }),
     dict({
       'attributes': dict({
+        'current_temperature': None,
+        'friendly_name': 'Vitocal250A Heating Circuit 0',
+        'hvac_modes': list([
+          <HVACMode.HEAT: 'heat'>,
+          <HVACMode.OFF: 'off'>,
+        ]),
+        'max_temp': 37.0,
+        'min_temp': 3.0,
+        'preset_mode': 'home',
+        'preset_modes': list([
+          'comfort',
+          'eco',
+          'home',
+          'sleep',
+        ]),
+        'supported_features': <ClimateEntityFeature.TARGET_TEMPERATURE|PRESET_MODE: 17>,
+        'target_temp_step': 1.0,
+        'temperature': 20.0,
+      }),
+      'entity_id': 'climate.vitocal250a_heating_circuit_0',
+      'state': 'heat',
+    }),
+    dict({
+      'attributes': dict({
         'device_class': 'temperature',
         'friendly_name': 'Vitocal250A Circuit 0 Comfort Heating Temperature',
         'icon': 'mdi:thermometer',

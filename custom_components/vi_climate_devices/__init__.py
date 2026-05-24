@@ -18,11 +18,12 @@ from .coordinator import ViClimateDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
-    Platform.SENSOR,
     Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
     Platform.NUMBER,
-    Platform.SWITCH,
     Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
     Platform.WATER_HEATER,
 ]
 
