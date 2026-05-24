@@ -18,7 +18,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client.models import CommandResponse
+from vi_api_client.models import CommandResponse, Device, Feature, FeatureControl
 
 from custom_components.vi_climate_devices.const import DOMAIN
 
@@ -84,13 +84,19 @@ async def test_climate_creation_and_services(hass: HomeAssistant, mock_client) -
         assert state.attributes["min_temp"] == 3.0
         assert state.attributes["max_temp"] == 37.0
         assert state.attributes["target_temp_step"] == 1.0
-        assert state.attributes["preset_mode"] == PRESET_HOME
-        assert sorted(state.attributes["preset_modes"]) == sorted(
+        # Verify preset properties directly on Python entity since PRESET_MODE feature is not declared.
+        component = hass.data.get("climate")
+        entity = component.get_entity(entity_id)
+        assert entity.preset_mode == PRESET_HOME
+        assert sorted(entity.preset_modes) == sorted(
             [PRESET_COMFORT, PRESET_ECO, PRESET_HOME, PRESET_SLEEP]
         )
         assert sorted(state.attributes["hvac_modes"]) == sorted(
             [HVACMode.HEAT, HVACMode.OFF]
         )
+        assert state.attributes["active_program"] == "normalHeating"
+        assert state.attributes["heating_curve_slope"] == 0.6
+        assert state.attributes["heating_curve_shift"] == 4.0
 
         # Act: Set temperature to 22.0.
         await hass.services.async_call(
@@ -126,8 +132,11 @@ async def test_climate_creation_and_services(hass: HomeAssistant, mock_client) -
         assert args[1].name == "heating.circuits.0.operating.modes.active"
         assert args[2] == "standby"
 
-        # Act & Assert: Attempting to set preset mode raises HomeAssistantError.
-        with pytest.raises(HomeAssistantError, match="Preset modes are read-only"):
+        # Act & Assert: Attempting to set preset mode raises HomeAssistantError since it is not supported.
+        with pytest.raises(
+            HomeAssistantError,
+            match=r"does not support action climate\.set_preset_mode",
+        ):
             await hass.services.async_call(
                 "climate",
                 SERVICE_SET_PRESET_MODE,
@@ -187,6 +196,155 @@ async def test_climate_error_handling_and_rollback(
         # Assert: Rollback occurred.
         state = hass.states.get(entity_id)
         assert float(state.attributes["temperature"]) == original_temp
+
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+@pytest.mark.asyncio
+async def test_climate_program_matching_variations(
+    hass: HomeAssistant, mock_client
+) -> None:
+    """Test that program matching correctly resolves prefix-based name variations."""
+    # Arrange: Setup custom device with different program feature naming patterns.
+    custom_device = Device(
+        id="0",
+        gateway_serial="1234567890123456",
+        installation_id="99999",
+        model_id="Vitocal250A",
+        device_type="heating",
+        status="connected",
+        features=[
+            Feature(
+                name="heating.circuits.0.operating.modes.active",
+                value="heating",
+                unit=None,
+                is_enabled=True,
+                is_ready=True,
+                control=FeatureControl(
+                    command_name="setMode",
+                    param_name="mode",
+                    required_params=["mode"],
+                    parent_feature_name="heating.circuits.0.operating.modes.active",
+                    uri="...",
+                    options=["heating", "standby"],
+                ),
+            ),
+            Feature(
+                name="heating.circuits.0.operating.programs.active",
+                value="normal",
+                unit=None,
+                is_enabled=True,
+                is_ready=True,
+            ),
+            # Suffix variations: normalHeating.temperature
+            Feature(
+                name="heating.circuits.0.operating.programs.normalHeating.temperature",
+                value=21.5,
+                unit="celsius",
+                is_enabled=True,
+                is_ready=True,
+                control=FeatureControl(
+                    command_name="setNormalTemperature",
+                    param_name="targetTemperature",
+                    required_params=["targetTemperature"],
+                    parent_feature_name="heating.circuits.0.operating.programs.normalHeating.temperature",
+                    uri="...",
+                ),
+            ),
+            # Complex suffix: comfortCoolingEnergySaving.temperature
+            Feature(
+                name="heating.circuits.0.operating.programs.comfortCoolingEnergySaving.temperature",
+                value=23.0,
+                unit="celsius",
+                is_enabled=True,
+                is_ready=True,
+                control=FeatureControl(
+                    command_name="setComfortTemperature",
+                    param_name="targetTemperature",
+                    required_params=["targetTemperature"],
+                    parent_feature_name="heating.circuits.0.operating.programs.comfortCoolingEnergySaving.temperature",
+                    uri="...",
+                ),
+            ),
+            # No suffix: eco.temperature
+            Feature(
+                name="heating.circuits.0.operating.programs.eco.temperature",
+                value=18.0,
+                unit="celsius",
+                is_enabled=True,
+                is_ready=True,
+                control=FeatureControl(
+                    command_name="setEcoTemperature",
+                    param_name="targetTemperature",
+                    required_params=["targetTemperature"],
+                    parent_feature_name="heating.circuits.0.operating.programs.eco.temperature",
+                    uri="...",
+                ),
+            ),
+        ],
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "client_id": "123",
+            "token": {
+                "access_token": "mock",
+                "refresh_token": "mock",
+                "expires_at": 9999999999,
+                "token_type": "Bearer",
+            },
+        },
+    )
+    entry.add_to_hass(hass)
+
+    # Initialize mock methods on the client.
+    mock_client.get_full_installation_status = AsyncMock(return_value=[custom_device])
+    mock_client.update_device = AsyncMock(return_value=custom_device)
+
+    with (
+        patch(
+            "custom_components.vi_climate_devices.ViessmannClient",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+            return_value=None,
+        ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
+    ):
+        # Act: Set up the integration.
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Retrieve the Python entity to call helper methods directly.
+        entity_id = "climate.vitocal250a_heating_circuit_0"
+        component = hass.data.get("climate")
+        entity = component.get_entity(entity_id)
+
+        # Assert: Verify that the helper maps the variations to the correct features.
+        feat_normal = entity._get_program_temperature_feature("normal")
+        assert feat_normal is not None
+        assert (
+            feat_normal.name
+            == "heating.circuits.0.operating.programs.normalHeating.temperature"
+        )
+
+        feat_comfort = entity._get_program_temperature_feature("comfort")
+        assert feat_comfort is not None
+        assert (
+            feat_comfort.name
+            == "heating.circuits.0.operating.programs.comfortCoolingEnergySaving.temperature"
+        )
+
+        feat_eco = entity._get_program_temperature_feature("eco")
+        assert feat_eco is not None
+        assert feat_eco.name == "heating.circuits.0.operating.programs.eco.temperature"
 
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
