@@ -77,11 +77,12 @@ HACS and install the prerelease there before promoting it to a stable release.
 
 | Platform | Examples |
 |----------|----------|
-| `sensor` | Outside temperature, return temperature, SCOP, compressor statistics |
 | `binary_sensor` | Compressor active, pumps running, frost protection |
+| `climate` | Heating and cooling circuit temperature control |
 | `number` | Target temperatures, heating curves, hysteresis settings |
-| `switch` | One-time DHW charge, hygiene function |
 | `select` | DHW operation mode |
+| `sensor` | Outside temperature, return temperature, SCOP, compressor statistics |
+| `switch` | One-time DHW charge, hygiene function |
 | `water_heater` | Hot water temperature and mode control |
 
 All entities are grouped under their respective device and support German and English translations.

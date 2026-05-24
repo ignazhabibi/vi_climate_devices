@@ -124,6 +124,11 @@
                 "name": "Outdoor Defrosting"
             }
         },
+        "climate": {
+            "heating_circuit": {
+                "name": "Heating Circuit {index}"
+            }
+        },
         "select": {
             "dhw_mode": {
                 "name": "DHW Mode",
