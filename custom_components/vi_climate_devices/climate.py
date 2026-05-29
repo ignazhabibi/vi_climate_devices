@@ -396,6 +396,7 @@ class ViClimate(CoordinatorEntity, ClimateEntity):
 
             # Clear optimistic value.
             self._optimistic_temp = None
+            self.async_write_ha_state()
         except Exception as err:
             # ROLLBACK on error.
             self._optimistic_temp = None
@@ -460,6 +461,7 @@ class ViClimate(CoordinatorEntity, ClimateEntity):
 
             # Clear optimistic mode.
             self._optimistic_mode = None
+            self.async_write_ha_state()
         except Exception as err:
             # ROLLBACK on error.
             self._optimistic_mode = None
