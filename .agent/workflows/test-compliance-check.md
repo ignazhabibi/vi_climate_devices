@@ -25,7 +25,7 @@ Analyze the target file against these critical criteria:
     *   Does it usage `MockViClient`? (Required/Preferred)
 *   **Snapshot Tests**:
     *   If the test uses `snapshot`, does the matching file exist under
-        `tests/__snapshots__/`?
+        `tests/snapshots/`?
     *   If the snapshot was updated, was it validated against the current
         `.[dev]` dependency stack?
     *   If the change touches snapshots or `pytest-homeassistant-custom-component`,
