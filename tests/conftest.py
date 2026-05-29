@@ -12,3 +12,12 @@ def mock_client():
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
     yield
+
+
+@pytest.fixture
+def snapshot(snapshot):
+    """Override the snapshot fixture to force using the Home Assistant extension."""
+    from pytest_homeassistant_custom_component.syrupy import HomeAssistantSnapshotExtension
+
+    return snapshot.use_extension(HomeAssistantSnapshotExtension)
+
