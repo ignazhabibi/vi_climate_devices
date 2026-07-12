@@ -21,7 +21,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest-homeassistant-custom-component==0.13.334",
+    "pytest-homeassistant-custom-component==0.13.346",
     "ruff==0.15.21",
 ]
 [tool.ruff]
