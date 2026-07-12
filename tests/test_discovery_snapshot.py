@@ -59,7 +59,7 @@ async def test_discovery_snapshot(
                 "entity_id": state.entity_id,
                 "state": state.state,
                 "attributes": {
-                    key: sorted(value) if isinstance(value, list) else value
+                    str(key): sorted(value) if isinstance(value, list) else value
                     for key, value in state.attributes.items()
                 },
             }
