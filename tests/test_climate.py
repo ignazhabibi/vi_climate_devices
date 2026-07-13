@@ -7,6 +7,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.components.climate.const import (
@@ -18,9 +19,228 @@ from homeassistant.components.climate.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+from vi_api_client.mock_client import MockViClient
 from vi_api_client.models import CommandResponse, Device, Feature, FeatureControl
 
+from custom_components.vi_climate_devices.climate import ViClimate
 from custom_components.vi_climate_devices.const import DOMAIN
+
+ACTIVE_PROGRAM_FEATURE = "heating.circuits.0.operating.programs.active"
+BURNER_ACTIVE_FEATURE = "heating.burners.0.active"
+CIRCUIT_MODE_FEATURE = "heating.circuits.0.operating.modes.active"
+CIRCUIT_PUMP_FEATURE = "heating.circuits.0.circulation.pump.status"
+COMPRESSOR_ACTIVE_FEATURE = "heating.compressors.0.active"
+COOLING_DEMAND_FEATURE = (
+    "heating.circuits.0.operating.programs.normalCoolingEnergySaving.demand"
+)
+DEFROSTING_FEATURE = "heating.outdoor.defrosting.active"
+HEATING_DEMAND_FEATURE = "heating.circuits.0.operating.programs.normalHeating.demand"
+HEATING_ROD_ACTIVE_FEATURE = "heating.heatingRod.active"
+VALVE_POSITION_FEATURE = "heating.valves.fourThreeWay.position"
+
+
+async def _create_hvac_action_entity(
+    mock_client: MockViClient,
+    feature_values: dict[str, object],
+    removed_feature_names: frozenset[str],
+) -> ViClimate:
+    """Create a climate entity from an adjusted Vitocal250A fixture."""
+    fixture_devices = await mock_client.get_full_installation_status("99999")
+    fixture_device = fixture_devices[0]
+    fixture_feature_names = {feature.name for feature in fixture_device.features}
+
+    updated_features = [
+        Feature(
+            name=feature.name,
+            value=feature_values.get(feature.name, feature.value),
+            unit=feature.unit,
+            is_enabled=feature.is_enabled,
+            is_ready=feature.is_ready,
+            control=feature.control,
+        )
+        for feature in fixture_device.features
+        if feature.name not in removed_feature_names
+    ]
+    updated_features.extend(
+        Feature(
+            name=feature_name,
+            value=feature_value,
+            unit=None,
+            is_enabled=True,
+            is_ready=True,
+        )
+        for feature_name, feature_value in feature_values.items()
+        if feature_name not in fixture_feature_names
+    )
+
+    device = Device(
+        id=fixture_device.id,
+        gateway_serial=fixture_device.gateway_serial,
+        installation_id=fixture_device.installation_id,
+        model_id=fixture_device.model_id,
+        device_type=fixture_device.device_type,
+        status=fixture_device.status,
+        features=updated_features,
+    )
+    map_key = f"{device.gateway_serial}_{device.id}"
+    coordinator = MagicMock()
+    coordinator.data = {map_key: device}
+    return ViClimate(coordinator, map_key, "0")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("feature_values", "removed_feature_names", "expected_action"),
+    [
+        pytest.param(
+            {CIRCUIT_MODE_FEATURE: "standby"},
+            frozenset(),
+            HVACAction.OFF,
+            id="standby-is-off",
+        ),
+        pytest.param(
+            {CIRCUIT_MODE_FEATURE: "standby", DEFROSTING_FEATURE: True},
+            frozenset(),
+            HVACAction.DEFROSTING,
+            id="defrosting-takes-priority",
+        ),
+        pytest.param(
+            {
+                COMPRESSOR_ACTIVE_FEATURE: True,
+                DEFROSTING_FEATURE: False,
+                VALVE_POSITION_FEATURE: "climatCircuitTwoDefrost",
+            },
+            frozenset(),
+            HVACAction.HEATING,
+            id="defrost-valve-position-is-not-defrosting",
+        ),
+        pytest.param(
+            {VALVE_POSITION_FEATURE: "domesticHotWater"},
+            frozenset(),
+            HVACAction.IDLE,
+            id="domestic-hot-water-valve-idles-circuit",
+        ),
+        pytest.param(
+            {CIRCUIT_PUMP_FEATURE: "off"},
+            frozenset(),
+            HVACAction.IDLE,
+            id="stopped-circuit-pump-is-idle",
+        ),
+        pytest.param(
+            {
+                CIRCUIT_PUMP_FEATURE: "on",
+                COMPRESSOR_ACTIVE_FEATURE: True,
+                HEATING_DEMAND_FEATURE: "heating",
+            },
+            frozenset(),
+            HVACAction.HEATING,
+            id="active-compressor-with-heating-demand",
+        ),
+        pytest.param(
+            {
+                ACTIVE_PROGRAM_FEATURE: "normalCoolingEnergySaving",
+                CIRCUIT_MODE_FEATURE: "cooling",
+                CIRCUIT_PUMP_FEATURE: "on",
+                COMPRESSOR_ACTIVE_FEATURE: True,
+                COOLING_DEMAND_FEATURE: "cooling",
+            },
+            frozenset(),
+            HVACAction.COOLING,
+            id="active-compressor-with-cooling-demand",
+        ),
+        pytest.param(
+            {
+                CIRCUIT_PUMP_FEATURE: "on",
+                COMPRESSOR_ACTIVE_FEATURE: False,
+            },
+            frozenset(),
+            None,
+            id="inactive-compressor-is-unknown",
+        ),
+        pytest.param(
+            {
+                CIRCUIT_MODE_FEATURE: "dhwAndHeatingCooling",
+                CIRCUIT_PUMP_FEATURE: "on",
+                COMPRESSOR_ACTIVE_FEATURE: True,
+            },
+            frozenset({HEATING_DEMAND_FEATURE}),
+            None,
+            id="combined-mode-without-demand-is-unknown",
+        ),
+        pytest.param(
+            {
+                CIRCUIT_PUMP_FEATURE: "on",
+                COMPRESSOR_ACTIVE_FEATURE: False,
+                HEATING_ROD_ACTIVE_FEATURE: True,
+            },
+            frozenset(),
+            None,
+            id="heating-rod-does-not-drive-action",
+        ),
+        pytest.param(
+            {
+                BURNER_ACTIVE_FEATURE: True,
+                CIRCUIT_PUMP_FEATURE: "on",
+                COMPRESSOR_ACTIVE_FEATURE: False,
+                HEATING_DEMAND_FEATURE: "heating",
+            },
+            frozenset(),
+            HVACAction.HEATING,
+            id="active-burner-drives-action",
+        ),
+        pytest.param(
+            {
+                CIRCUIT_MODE_FEATURE: "heating",
+                CIRCUIT_PUMP_FEATURE: "on",
+                COMPRESSOR_ACTIVE_FEATURE: True,
+            },
+            frozenset({HEATING_DEMAND_FEATURE}),
+            HVACAction.HEATING,
+            id="heating-mode-is-demand-fallback",
+        ),
+        pytest.param(
+            {
+                ACTIVE_PROGRAM_FEATURE: "normalCoolingEnergySaving",
+                CIRCUIT_MODE_FEATURE: "cooling",
+                CIRCUIT_PUMP_FEATURE: "on",
+                COMPRESSOR_ACTIVE_FEATURE: True,
+            },
+            frozenset({COOLING_DEMAND_FEATURE}),
+            HVACAction.COOLING,
+            id="cooling-mode-is-demand-fallback",
+        ),
+        pytest.param(
+            {
+                "heating.circuits.1.circulation.pump.status": "on",
+                "heating.circuits.1.operating.programs.active": "normalCooling",
+                "heating.circuits.1.operating.programs.normalCooling.demand": "cooling",
+                CIRCUIT_PUMP_FEATURE: "on",
+                COMPRESSOR_ACTIVE_FEATURE: True,
+                HEATING_DEMAND_FEATURE: "heating",
+            },
+            frozenset(),
+            None,
+            id="opposite-running-circuit-demand-is-unknown",
+        ),
+    ],
+)
+async def test_hvac_action(
+    mock_client: MockViClient,
+    feature_values: dict[str, object],
+    removed_feature_names: frozenset[str],
+    expected_action: HVACAction | None,
+) -> None:
+    """Test current HVAC action from authoritative Viessmann signals."""
+    # Arrange: Build a climate entity from the adjusted Vitocal250A signals.
+    entity = await _create_hvac_action_entity(
+        mock_client, feature_values, removed_feature_names
+    )
+
+    # Act: Resolve the circuit's current HVAC action.
+    action = entity.hvac_action
+
+    # Assert: Report only the action supported by the supplied signals.
+    assert action == expected_action
 
 
 @pytest.mark.asyncio
