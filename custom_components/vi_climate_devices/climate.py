@@ -8,6 +8,7 @@ from typing import Any
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.components.climate.const import (
@@ -31,6 +32,13 @@ from .coordinator import ViClimateDataUpdateCoordinator
 from .utils import get_suggested_precision
 
 _LOGGER = logging.getLogger(__name__)
+
+# Mapping from Viessmann demand directions to Home Assistant HVACAction.
+# Sort the keys alphabetically.
+API_TO_HA_HVAC_ACTION = {
+    "cooling": HVACAction.COOLING,
+    "heating": HVACAction.HEATING,
+}
 
 # Mapping from Viessmann API operation modes to Home Assistant HVACMode.
 # Sort the keys alphabetically.
@@ -156,6 +164,120 @@ class ViClimate(CoordinatorEntity, ClimateEntity):
         if not device:
             return None
         return device.get_feature(name)
+
+    def _get_circuit_pump_state(self, circuit_index: str | None = None) -> bool | None:
+        """Return whether a heating circuit pump is running."""
+        target_circuit_index = circuit_index or self._circuit_index
+        pump_feature = self._get_feature(
+            f"heating.circuits.{target_circuit_index}.circulation.pump.status"
+        )
+        if not pump_feature:
+            return None
+
+        if isinstance(pump_feature.value, bool):
+            return pump_feature.value
+        if isinstance(pump_feature.value, str):
+            pump_status = pump_feature.value.lower()
+            if pump_status == "off":
+                return False
+            if pump_status == "on":
+                return True
+        return None
+
+    def _get_generator_active_state(self) -> bool | None:
+        """Return whether a compressor or burner is currently active."""
+        device = self.coordinator.data.get(self._map_key)
+        if not device:
+            return None
+
+        generator_states: list[bool] = []
+        has_unknown_state = False
+        for feature in device.features:
+            feature_parts = feature.name.split(".")
+            if (
+                len(feature_parts) != 4
+                or feature_parts[0] != "heating"
+                or feature_parts[1] not in {"burners", "compressors"}
+                or feature_parts[3] != "active"
+            ):
+                continue
+
+            if isinstance(feature.value, bool):
+                generator_states.append(feature.value)
+            else:
+                has_unknown_state = True
+
+        if any(generator_states):
+            return True
+        if generator_states and not has_unknown_state:
+            return False
+        return None
+
+    def _has_conflicting_circuit_demand(self, action: HVACAction) -> bool:
+        """Return whether another running circuit has an opposite demand."""
+        device = self.coordinator.data.get(self._map_key)
+        if not device:
+            return False
+
+        for feature in device.features:
+            feature_parts = feature.name.split(".")
+            if (
+                len(feature_parts) != 6
+                or feature_parts[0] != "heating"
+                or feature_parts[1] != "circuits"
+                or feature_parts[2] == self._circuit_index
+                or feature_parts[3:] != ["operating", "programs", "active"]
+                or not feature.value
+            ):
+                continue
+
+            circuit_index = feature_parts[2]
+            if self._get_circuit_pump_state(circuit_index) is not True:
+                continue
+
+            demand_feature = self._get_feature(
+                f"heating.circuits.{circuit_index}.operating.programs."
+                f"{feature.value}.demand"
+            )
+            if not demand_feature:
+                continue
+
+            circuit_action = API_TO_HA_HVAC_ACTION.get(str(demand_feature.value))
+            if circuit_action is not None and circuit_action != action:
+                return True
+
+        return False
+
+    def _determine_current_action(self) -> HVACAction | None:
+        """Determine the current heating or cooling direction."""
+        action: HVACAction | None = None
+        active_program_feature = self._get_feature(
+            f"heating.circuits.{self._circuit_index}.operating.programs.active"
+        )
+        if active_program_feature and active_program_feature.value:
+            active_program = str(active_program_feature.value)
+            demand_feature = self._get_feature(
+                f"heating.circuits.{self._circuit_index}.operating.programs."
+                f"{active_program}.demand"
+            )
+            if demand_feature:
+                action = API_TO_HA_HVAC_ACTION.get(str(demand_feature.value))
+                if (
+                    action == HVACAction.COOLING and self.hvac_mode == HVACMode.HEAT
+                ) or (action == HVACAction.HEATING and self.hvac_mode == HVACMode.COOL):
+                    action = None
+            elif self.hvac_mode == HVACMode.COOL:
+                action = HVACAction.COOLING
+            elif self.hvac_mode == HVACMode.HEAT:
+                action = HVACAction.HEATING
+        elif self.hvac_mode == HVACMode.COOL:
+            action = HVACAction.COOLING
+        elif self.hvac_mode == HVACMode.HEAT:
+            action = HVACAction.HEATING
+
+        if action is not None and self._has_conflicting_circuit_demand(action):
+            action = None
+        return action
 
     def _get_program_base_name(self, program_name: str) -> str:
         """Get the base prefix of a program name (e.g., 'normalHeating' -> 'normal')."""
@@ -288,6 +410,33 @@ class ViClimate(CoordinatorEntity, ClimateEntity):
         if mode_feature and mode_feature.value:
             return API_TO_HA_HVAC_MODE.get(str(mode_feature.value))
         return None
+
+    @property
+    def hvac_action(self) -> HVACAction | None:
+        """Return the current HVAC action."""
+        action: HVACAction | None = None
+        defrosting_feature = self._get_feature("heating.outdoor.defrosting.active")
+        if defrosting_feature and defrosting_feature.value is True:
+            action = HVACAction.DEFROSTING
+        elif self.hvac_mode == HVACMode.OFF:
+            action = HVACAction.OFF
+        else:
+            valve_position_feature = self._get_feature(
+                "heating.valves.fourThreeWay.position"
+            )
+            if (
+                valve_position_feature
+                and valve_position_feature.value == "domesticHotWater"
+            ):
+                action = HVACAction.IDLE
+            else:
+                pump_state = self._get_circuit_pump_state()
+                if pump_state is False:
+                    action = HVACAction.IDLE
+                elif pump_state is True and self._get_generator_active_state() is True:
+                    action = self._determine_current_action()
+
+        return action
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
