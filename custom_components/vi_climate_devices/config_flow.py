@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from vi_api_client.const import DEFAULT_SCOPES
 
@@ -30,3 +31,35 @@ class OAuth2FlowHandler(
         return {
             "scope": DEFAULT_SCOPES,
         }
+
+    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
+        """Handle re-authentication when the refresh token is rejected."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Confirm re-authentication and restart the OAuth flow."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+
+        return await self.async_step_pick_implementation(
+            user_input={
+                "implementation": (
+                    self._get_reauth_entry().data.get("auth_implementation")
+                ),
+            },
+        )
+
+    async def async_oauth_create_entry(
+        self,
+        data: dict[str, Any],
+    ) -> ConfigFlowResult:
+        """Create or update the config entry after OAuth authentication."""
+        if reauth_entry := self.reauth_entry:
+            return self.async_update_reload_and_abort(
+                reauth_entry,
+                data=data,
+            )
+        return await super().async_oauth_create_entry(data)
