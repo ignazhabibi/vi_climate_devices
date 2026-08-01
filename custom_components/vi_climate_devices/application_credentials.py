@@ -30,11 +30,17 @@ async def async_get_auth_implementation(
     hass: HomeAssistant, auth_domain: str, credential: ClientCredential
 ) -> AbstractOAuth2Implementation:
     """Return auth implementation for a custom auth implementation."""
-    return LocalOAuth2ImplementationWithPkce(
-        hass,
-        auth_domain,
-        credential.client_id,
-        authorize_url=ENDPOINT_AUTHORIZE,
-        token_url=ENDPOINT_TOKEN,
-        client_secret=credential.client_secret,
-    )
+    hass.data.setdefault(auth_domain, {})
+    cache = hass.data[auth_domain].setdefault("oauth_impls", {})
+
+    key = (auth_domain, credential.client_id, credential.client_secret)
+    if key not in cache:
+        cache[key] = LocalOAuth2ImplementationWithPkce(
+            hass,
+            auth_domain,
+            credential.client_id,
+            authorize_url=ENDPOINT_AUTHORIZE,
+            token_url=ENDPOINT_TOKEN,
+            client_secret=credential.client_secret,
+        )
+    return cache[key]
