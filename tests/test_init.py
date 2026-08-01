@@ -4,13 +4,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client.auth import ViAuthError
 
 from custom_components.vi_climate_devices import (
     PLATFORMS,
@@ -85,10 +84,10 @@ async def test_async_setup_entry_raises_config_entry_auth_failed_on_reauth_error
 
 
 @pytest.mark.asyncio
-async def test_async_setup_entry_returns_false_on_transient_token_error(
+async def test_async_setup_entry_raises_not_ready_on_transient_token_error(
     hass: HomeAssistant,
 ) -> None:
-    """Test setup returns False on non-reauth token errors without raising."""
+    """Test setup schedules a retry for a transient OAuth token error."""
     # Arrange: Register a config entry and force a transient token error.
     entry = _build_entry()
     entry.add_to_hass(hass)
@@ -102,12 +101,12 @@ async def test_async_setup_entry_returns_false_on_transient_token_error(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
             side_effect=_make_token_error(),
         ),
+        pytest.raises(ConfigEntryNotReady),
     ):
-        # Act: Attempt to set up the integration entry.
-        result = await async_setup_entry(hass, entry)
+        # Act: Attempt to set up the integration while OAuth is unavailable.
+        await async_setup_entry(hass, entry)
 
-    # Assert: Setup fails gracefully without raising.
-    assert result is False
+    # Assert: Setup leaves no runtime data while Home Assistant schedules a retry.
     assert hass.data[DOMAIN] == {}
 
 
@@ -232,16 +231,17 @@ async def test_haauth_async_get_access_token_returns_refreshed_token(
 
 
 @pytest.mark.asyncio
-async def test_haauth_wraps_reauth_error_as_vi_auth_error(
+async def test_haauth_propagates_reauth_token_error(
     hass: HomeAssistant,
 ) -> None:
-    """Test the auth bridge wraps reauth-class errors as ViAuthError for the client."""
+    """Test the auth bridge preserves a reauth-class OAuth error."""
     # Arrange: Provide a session that fails with a reauth-class error.
+    reauth_error = _make_reauth_error()
     oauth_session = MagicMock()
     oauth_session.hass = hass
     oauth_session.token = {"access_token": "stale-token"}
     oauth_session.async_ensure_token_valid = AsyncMock(
-        side_effect=_make_reauth_error(),
+        side_effect=reauth_error,
     )
 
     with patch(
@@ -250,22 +250,24 @@ async def test_haauth_wraps_reauth_error_as_vi_auth_error(
     ):
         auth_bridge = HAAuth(oauth_session)
 
-    # Act and Assert: The client receives a ViAuthError with the original context.
-    with pytest.raises(ViAuthError, match="expired or revoked"):
+    # Act and Assert: The coordinator can classify the original reauth error.
+    with pytest.raises(OAuth2TokenRequestReauthError) as raised_error:
         await auth_bridge.async_get_access_token()
+    assert raised_error.value is reauth_error
 
 
 @pytest.mark.asyncio
-async def test_haauth_wraps_token_error_as_vi_auth_error(
+async def test_haauth_propagates_transient_token_error(
     hass: HomeAssistant,
 ) -> None:
-    """Test the auth bridge wraps transient token errors as ViAuthError for the client."""
+    """Test the auth bridge preserves a transient OAuth token error."""
     # Arrange: Provide a session that fails with a transient token error.
+    token_error = _make_token_error()
     oauth_session = MagicMock()
     oauth_session.hass = hass
     oauth_session.token = {"access_token": "stale-token"}
     oauth_session.async_ensure_token_valid = AsyncMock(
-        side_effect=_make_token_error(),
+        side_effect=token_error,
     )
 
     with patch(
@@ -274,6 +276,7 @@ async def test_haauth_wraps_token_error_as_vi_auth_error(
     ):
         auth_bridge = HAAuth(oauth_session)
 
-    # Act and Assert: The client receives a ViAuthError with the refresh failure message.
-    with pytest.raises(ViAuthError, match="Failed to refresh HA token"):
+    # Act and Assert: The coordinator can classify the original transient error.
+    with pytest.raises(OAuth2TokenRequestError) as raised_error:
         await auth_bridge.async_get_access_token()
+    assert raised_error.value is token_error

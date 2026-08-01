@@ -6,12 +6,13 @@ import logging
 from datetime import timedelta
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, OAuth2TokenRequestError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from vi_api_client import (
     Device,
     ViAuthError,
     ViClient as ViessmannClient,
+    ViError,
 )
 from vi_api_client.utils import mask_pii
 
@@ -20,7 +21,7 @@ from .const import DOMAIN, IGNORED_DEVICES
 _LOGGER = logging.getLogger(__name__)
 
 
-class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
+class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     """Class to manage fetching Viessmann data."""
 
     def __init__(
@@ -39,7 +40,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
         self.client = client
         self._known_devices: list[Device] = []
 
-    async def _perform_discovery(self):
+    async def _perform_discovery(self) -> None:
         """Perform initial device discovery.
 
         Fetches all installations and their devices/features to populate the
@@ -70,17 +71,19 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
             self._known_devices = [
                 device for device in all_devices if device.id not in IGNORED_DEVICES
             ]
+        except OAuth2TokenRequestError:
+            raise
         except ViAuthError as err:
             raise ConfigEntryAuthFailed(
                 f"Authentication failed during discovery: {err}"
             ) from err
-        except Exception as e:
-            raise UpdateFailed(f"Failed to perform full discovery: {e}") from e
+        except ViError as err:
+            raise UpdateFailed(f"Failed to perform full discovery: {err}") from err
 
         if not self._known_devices:
             _LOGGER.warning("No devices found during discovery")
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> dict[str, Device]:
         """Update data via library.
 
         Refreshes the state of all known devices.
@@ -107,13 +110,16 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
                         new_device = await self.client.update_device(device)
                         updated_data[key] = new_device
 
+                    except OAuth2TokenRequestError:
+                        raise
+
                     except ViAuthError as err:
                         # Trigger HA re-auth flow immediately
                         raise ConfigEntryAuthFailed(
                             f"Authentication failed for device {device.id}: {err}"
                         ) from err
 
-                    except Exception as err:
+                    except ViError as err:
                         _LOGGER.warning(
                             "Failed to update device %s: %s", device.id, err
                         )
@@ -127,7 +133,9 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator):
 
         except ConfigEntryAuthFailed:
             raise
+        except OAuth2TokenRequestError:
+            raise
         except ViAuthError as err:
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except Exception as exception:
-            raise UpdateFailed(exception) from exception
+        except ViError as err:
+            raise UpdateFailed(err) from err

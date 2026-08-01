@@ -1,4 +1,7 @@
 {
+    "application_credentials": {
+        "description": "Gib deine Viessmann Client-ID ein. Home Assistant verlangt einen Wert im Feld Client Secret; gib dort einen beliebigen Platzhalter ein. Die Integration ignoriert ihn, da Viessmann PKCE ohne Client Secret verwendet."
+    },
     "config": {
         "step": {
             "user": {

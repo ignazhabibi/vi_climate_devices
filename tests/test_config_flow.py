@@ -97,6 +97,7 @@ async def test_reauth_flow_shows_confirm_form_and_redirects_to_oauth(
         domain=DOMAIN,
         data={
             "auth_implementation": "fake-provider",
+            "retained_setting": "keep-me",
             "token": {
                 "access_token": "expired-token",
                 "expires_at": 0,
@@ -126,6 +127,24 @@ async def test_reauth_flow_shows_confirm_form_and_redirects_to_oauth(
             user_input={},
         )
 
-    # Assert: The flow redirects to the external OAuth step.
+        # Act: Complete the external callback with a fresh authorization code.
+        callback_result = await hass.config_entries.flow.async_configure(
+            reauth_result["flow_id"],
+            user_input={"code": "fresh-code"},
+        )
+
+        # Act: Resolve the authorization code and persist the returned token.
+        creation_result = await hass.config_entries.flow.async_configure(
+            reauth_result["flow_id"],
+        )
+
+    # Assert: The flow redirects, updates the existing entry, and completes reauth.
     assert confirm_result["type"] is FlowResultType.EXTERNAL_STEP
     assert confirm_result["step_id"] == "auth"
+    assert callback_result["type"] is FlowResultType.EXTERNAL_STEP_DONE
+    assert creation_result["type"] is FlowResultType.ABORT
+    assert creation_result["reason"] == "reauth_successful"
+    assert entry.data["auth_implementation"] == "fake-provider"
+    assert entry.data["retained_setting"] == "keep-me"
+    assert entry.data["token"]["access_token"] == "token"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
