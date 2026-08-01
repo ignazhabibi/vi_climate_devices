@@ -4,6 +4,10 @@
             "user": {
                 "title": "Verbinde mit Viessmann CLimate Devices",
                 "description": "Klicke auf den Link unten, um dich bei Viessmann anzumelden."
+            },
+            "reauth_confirm": {
+                "title": "Erneut bei Viessmann anmelden",
+                "description": "Deine Viessmann-Sitzung ist abgelaufen. Bitte melde dich erneut an, um die Verbindung wiederherzustellen."
             }
         },
         "abort": {
