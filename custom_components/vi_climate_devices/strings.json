@@ -4,6 +4,10 @@
             "user": {
                 "title": "Connect to Viessmann Heat",
                 "description": "Click the link below to authenticate with Viessmann."
+            },
+            "reauth_confirm": {
+                "title": "Re-authenticate with Viessmann",
+                "description": "Your Viessmann session has expired. Please re-authenticate to restore the connection."
             }
         },
         "abort": {

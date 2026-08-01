@@ -7,8 +7,13 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from vi_api_client import ViClient as ViessmannClient
 from vi_api_client.auth import AbstractAuth, ViAuthError
 
@@ -45,10 +50,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
-    # Ensure token is valid before starting
+    # Ensure token is valid before starting.
     try:
         await session.async_ensure_token_valid()
-    except Exception as err:
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed(
+            "OAuth refresh token rejected by Viessmann - re-authentication required"
+        ) from err
+    except OAuth2TokenRequestError as err:
         _LOGGER.error("Error ensuring token validity: %s", err)
         return False
 
@@ -92,5 +101,7 @@ class HAAuth(AbstractAuth):
         try:
             await self._session.async_ensure_token_valid()
             return self._session.token["access_token"]
-        except Exception as err:
+        except OAuth2TokenRequestReauthError as err:
+            raise ViAuthError(f"OAuth refresh token expired or revoked: {err}") from err
+        except OAuth2TokenRequestError as err:
             raise ViAuthError(f"Failed to refresh HA token: {err}") from err

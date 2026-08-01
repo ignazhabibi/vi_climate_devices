@@ -8,6 +8,7 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 from vi_api_client.const import DEFAULT_SCOPES
 from yarl import URL
 
@@ -84,3 +85,47 @@ async def test_user_flow_shows_picker_and_starts_external_step(
     authorize_url = URL(auth_result["url"])
     assert authorize_url.query["existing"] == "1"
     assert authorize_url.query["scope"] == DEFAULT_SCOPES
+
+
+@pytest.mark.asyncio
+async def test_reauth_flow_shows_confirm_form_and_redirects_to_oauth(
+    hass: HomeAssistant,
+) -> None:
+    """Test the reauth flow shows a confirmation form then starts the OAuth flow."""
+    # Arrange: Create a config entry with expired token data and register it.
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": "fake-provider",
+            "token": {
+                "access_token": "expired-token",
+                "expires_at": 0,
+                "refresh_token": "dead-refresh",
+                "token_type": "Bearer",
+            },
+        },
+    )
+    entry.add_to_hass(hass)
+
+    implementation = FakeOAuthImplementation()
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_implementations",
+        return_value={implementation.domain: implementation},
+    ):
+        # Act: Start the reauth flow (triggered by ConfigEntryAuthFailed).
+        reauth_result = await entry.start_reauth_flow(hass)
+
+        # Assert: The first step shows the reauth confirmation form.
+        assert reauth_result["type"] is FlowResultType.FORM
+        assert reauth_result["step_id"] == "reauth_confirm"
+
+        # Act: User confirms the reauth form.
+        confirm_result = await hass.config_entries.flow.async_configure(
+            reauth_result["flow_id"],
+            user_input={},
+        )
+
+    # Assert: The flow redirects to the external OAuth step.
+    assert confirm_result["type"] is FlowResultType.EXTERNAL_STEP
+    assert confirm_result["step_id"] == "auth"
