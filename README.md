@@ -68,7 +68,7 @@ HACS and install the prerelease there before promoting it to a stable release.
 3. Search for "Viessmann Climate Devices"
 4. Follow the setup wizard:
    - You will be asked to enter your **Client ID** (from Viessmann Developer Portal)
-   - **Client Secret**: Enter any dummy value (e.g., `123`) since we use PKCE, but the field cannot be empty.
+   - **Client Secret**: Home Assistant requires a non-empty value, so enter any placeholder (for example `123`). The integration ignores it and never sends it to Viessmann because the OAuth flow uses PKCE without a client secret.
    - Perform the OAuth login to authorize with your Viessmann account
 
 ---
@@ -93,10 +93,13 @@ All entities are grouped under their respective device and support German and En
 
 ### Common Issues
 
+**"Bad Request" when refreshing a token**
+- Viessmann refresh tokens expire after 180 days. Home Assistant will then ask you to re-authenticate the existing integration.
+- Complete the re-authentication prompt to issue and store a new refresh token. You do not need to remove the integration or recreate its entities.
+
 **"Invalid Grant" or "Bad Request" during Login**
-This is often a timing issue with the OAuth code. 
-- **Solution:** Simply try the login process again. It usually works on the second attempt.
-- Ensure your browser clock is synchronized.
+- OAuth authorization codes are short-lived and can only be used once. Start a new re-authentication attempt instead of reopening an old callback URL.
+- Ensure your browser clock is synchronized and the login returns promptly to Home Assistant.
 
 **"Invalid redirect URI"**
 - Ensure `https://my.home-assistant.io/redirect/oauth` is added in Viessmann Developer Portal

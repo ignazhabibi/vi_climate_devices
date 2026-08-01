@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from collections.abc import Mapping
 
-from homeassistant.config_entries import ConfigFlowResult
+import voluptuous as vol
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from vi_api_client.const import DEFAULT_SCOPES
 
@@ -26,40 +27,43 @@ class OAuth2FlowHandler(
         return logging.getLogger(__name__)
 
     @property
-    def extra_authorize_data(self) -> dict[str, Any]:
+    def extra_authorize_data(self) -> dict[str, str]:
         """Extra data that needs to be appended to the authorize url."""
         return {
             "scope": DEFAULT_SCOPES,
         }
 
-    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, object]
+    ) -> ConfigFlowResult:
         """Handle re-authentication when the refresh token is rejected."""
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self,
-        user_input: dict[str, Any] | None = None,
+        user_input: dict[str, object] | None = None,
     ) -> ConfigFlowResult:
         """Confirm re-authentication and restart the OAuth flow."""
         if user_input is None:
-            return self.async_show_form(step_id="reauth_confirm")
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema({}),
+            )
 
         return await self.async_step_pick_implementation(
             user_input={
-                "implementation": (
-                    self._get_reauth_entry().data.get("auth_implementation")
-                ),
+                "implementation": self._get_reauth_entry().data["auth_implementation"],
             },
         )
 
     async def async_oauth_create_entry(
         self,
-        data: dict[str, Any],
+        data: dict[str, object],
     ) -> ConfigFlowResult:
         """Create or update the config entry after OAuth authentication."""
-        if reauth_entry := self.reauth_entry:
+        if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
-                reauth_entry,
-                data=data,
+                self._get_reauth_entry(),
+                data_updates=data,
             )
         return await super().async_oauth_create_entry(data)
