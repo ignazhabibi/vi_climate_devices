@@ -72,6 +72,7 @@ from homeassistant.core import HomeAssistant
 from custom_components.vi_climate_devices.const import DOMAIN
 from vi_api_client.mock_client import MockViClient
 
+
 @pytest.mark.asyncio
 async def test_sensor_creation_manual_discovery(hass: HomeAssistant):
     # Arrange: Setup Viessmann integration with MockConfigEntry and MockViClient.
@@ -86,8 +87,7 @@ async def test_sensor_creation_manual_discovery(hass: HomeAssistant):
     # Since the integration instantiates ViClient (aliased), we can patch the class itself
     # to return our mock_client instance.
     with patch(
-        "custom_components.vi_climate_devices.ViessmannClient",
-        return_value=mock_client
+        "custom_components.vi_climate_devices.ViessmannClient", return_value=mock_client
     ):
         # Act: Initialize the integration (setup entry)
         await hass.config_entries.async_setup(entry.entry_id)
@@ -96,7 +96,7 @@ async def test_sensor_creation_manual_discovery(hass: HomeAssistant):
         # Assert: Verify the 'outside value' sensor has the correct state from the fixture.
         state = hass.states.get("sensor.viessmann_outside_temperature")
         assert state is not None
-        assert state.state == "5.5" # Example value from fixture
+        assert state.state == "5.5"  # Example value from fixture
         assert state.attributes["unit_of_measurement"] == "°C"
 ```
 

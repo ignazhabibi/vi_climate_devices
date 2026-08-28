@@ -219,7 +219,7 @@ async def async_setup_entry(
 class ViClimateBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Representation of a generic Viessmann Climate Devices Binary Sensor."""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(  # noqa: PLR0913, PLR0917
         self,
         coordinator: ViClimateDataUpdateCoordinator,
         map_key: str,

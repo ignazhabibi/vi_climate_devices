@@ -49,8 +49,11 @@ mock_device.features = [...]
 
 # New
 from vi_api_client.mock_client import MockViClient
+
 mock_client = MockViClient(device_name="Vitocal250A")
-with patch("custom_components.vi_climate_devices.ViessmannClient", return_value=mock_client):
+with patch(
+    "custom_components.vi_climate_devices.ViessmannClient", return_value=mock_client
+):
     ...
 ```
 

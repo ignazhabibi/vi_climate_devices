@@ -48,6 +48,7 @@ To ensure robustness without requiring a live device, you **MUST** use the Mocki
 *   **Usage**:
     ```python
     from vi_api_client.mock_client import MockViClient
+
     # Argument is 'device_name' which must match a filename in fixtures/ (e.g., Vitocal250A.json)
     client = MockViClient(device_name="Vitocal250A")
     # ... usage is identical to ViClient ...

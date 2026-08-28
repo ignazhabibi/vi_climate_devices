@@ -253,7 +253,7 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
 
     entity_description: ViClimateNumberEntityDescription
 
-    def __init__(  # noqa: PLR0913
+    def __init__(  # noqa: PLR0913, PLR0917
         self,
         coordinator: ViClimateDataUpdateCoordinator,
         map_key: str,
