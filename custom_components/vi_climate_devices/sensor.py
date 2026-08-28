@@ -763,7 +763,7 @@ def _discover_realtime_sensors(
 class ViClimateSensor(CoordinatorEntity, SensorEntity):
     """Representation of a generic Viessmann Climate Devices Sensor."""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(  # noqa: PLR0913, PLR0917
         self,
         coordinator: ViClimateDataUpdateCoordinator,
         map_key: str,
