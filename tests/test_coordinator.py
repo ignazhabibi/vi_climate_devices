@@ -113,6 +113,20 @@ async def test_data_coordinator_raises_when_no_installations_exist(
 
 
 @pytest.mark.asyncio
+async def test_data_coordinator_raises_reauth_when_installation_lookup_loses_auth(
+    hass: HomeAssistant, mock_client
+) -> None:
+    """Test discovery triggers reauth when listing installations loses auth."""
+    # Arrange: Reject the initial installation lookup with an auth failure.
+    mock_client.get_installations = AsyncMock(side_effect=ViAuthError("token expired"))
+    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+
+    # Act and Assert: Convert the discovery auth failure into a reauth trigger.
+    with pytest.raises(ConfigEntryAuthFailed, match="token expired"):
+        await coordinator._async_update_data()
+
+
+@pytest.mark.asyncio
 async def test_data_coordinator_discovers_devices_and_filters_ignored_ids(
     hass: HomeAssistant, mock_client
 ) -> None:
