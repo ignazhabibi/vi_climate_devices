@@ -15,8 +15,6 @@
         },
         "abort": {
             "already_configured": "Account is already configured",
-            "account_lookup_failed": "Unable to identify the authenticated account",
-            "wrong_account": "Please re-authenticate with the originally configured account",
             "reauth_successful": "Re-authentication was successful"
         }
     },

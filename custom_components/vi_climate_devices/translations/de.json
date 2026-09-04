@@ -15,8 +15,6 @@
         },
         "abort": {
             "already_configured": "Konto ist bereits konfiguriert",
-            "account_lookup_failed": "Das angemeldete Konto konnte nicht bestimmt werden",
-            "wrong_account": "Bitte melde dich erneut mit dem ursprünglich konfigurierten Konto an",
             "reauth_successful": "Erneute Authentifizierung war erfolgreich"
         }
     },
