@@ -71,15 +71,15 @@ async def async_setup_entry(
 
     if coordinator.data:
         for map_key, device in coordinator.data.items():
-            # Check if we have the main target temperature feature
-            # We treat the generic DHW capability as dependent on having
-            # a target temp control AND a mode control.
-            # Let's verify essential features exist.
-
-            # Find features by name in the device list
             target_feat = device.get_feature(FEATURE_TARGET_TEMP)
+            mode_feat = device.get_feature(FEATURE_MODE)
 
-            if target_feat:
+            if (
+                target_feat
+                and target_feat.is_writable
+                and mode_feat
+                and mode_feat.is_writable
+            ):
                 entities.append(ViClimateWaterHeater(coordinator, map_key, target_feat))
 
     async_add_entities(entities)
