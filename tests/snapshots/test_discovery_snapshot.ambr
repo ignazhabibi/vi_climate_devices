@@ -503,7 +503,7 @@
       'attributes': dict({
         'friendly_name': 'Vitocal250A Boiler Pumps Internal Current',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': '%',
+        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
         'viessmann_feature_name': 'heating.boiler.pumps.internal.current',
       }),
       'entity_id': 'sensor.vitocal250a_boiler_pumps_internal_current',
@@ -513,7 +513,7 @@
       'attributes': dict({
         'friendly_name': 'Vitocal250A Boiler Pumps Internal Target',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': '%',
+        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
         'viessmann_feature_name': 'heating.boiler.pumps.internal.target',
       }),
       'entity_id': 'sensor.vitocal250a_boiler_pumps_internal_target',
@@ -939,7 +939,7 @@
         'friendly_name': 'Vitocal250A Fan 0 Speed',
         'icon': 'mdi:fan',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': '%',
+        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
         'viessmann_feature_name': 'heating.primaryCircuit.fans.0.current',
       }),
       'entity_id': 'sensor.vitocal250a_fan_0_speed',
@@ -950,7 +950,7 @@
         'friendly_name': 'Vitocal250A Fan 1 Speed',
         'icon': 'mdi:fan',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': '%',
+        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
         'viessmann_feature_name': 'heating.primaryCircuit.fans.1.current',
       }),
       'entity_id': 'sensor.vitocal250a_fan_1_speed',
@@ -1057,7 +1057,7 @@
       'attributes': dict({
         'friendly_name': 'Vitocal250A Internal Pump One Default Limit',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': '%',
+        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
         'viessmann_feature_name': 'heating.configuration.internalPumpOne.defaultLimit',
       }),
       'entity_id': 'sensor.vitocal250a_internal_pump_one_default_limit',
@@ -1067,7 +1067,7 @@
       'attributes': dict({
         'friendly_name': 'Vitocal250A Internal Pump One Maximum Limit',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': '%',
+        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
         'viessmann_feature_name': 'heating.configuration.internalPumpOne.maximumLimit',
       }),
       'entity_id': 'sensor.vitocal250a_internal_pump_one_maximum_limit',
@@ -1077,7 +1077,7 @@
       'attributes': dict({
         'friendly_name': 'Vitocal250A Internal Pump One Minimum Limit',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': '%',
+        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
         'viessmann_feature_name': 'heating.configuration.internalPumpOne.minimumLimit',
       }),
       'entity_id': 'sensor.vitocal250a_internal_pump_one_minimum_limit',
@@ -1087,7 +1087,7 @@
       'attributes': dict({
         'friendly_name': 'Vitocal250A Internal Pump Two Default Limit',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': '%',
+        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
         'viessmann_feature_name': 'heating.configuration.internalPumpTwo.defaultLimit',
       }),
       'entity_id': 'sensor.vitocal250a_internal_pump_two_default_limit',
@@ -1097,7 +1097,7 @@
       'attributes': dict({
         'friendly_name': 'Vitocal250A Internal Pump Two Maximum Limit',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': '%',
+        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
         'viessmann_feature_name': 'heating.configuration.internalPumpTwo.maximumLimit',
       }),
       'entity_id': 'sensor.vitocal250a_internal_pump_two_maximum_limit',
@@ -1107,7 +1107,7 @@
       'attributes': dict({
         'friendly_name': 'Vitocal250A Internal Pump Two Minimum Limit',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': '%',
+        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
         'viessmann_feature_name': 'heating.configuration.internalPumpTwo.minimumLimit',
       }),
       'entity_id': 'sensor.vitocal250a_internal_pump_two_minimum_limit',
@@ -1117,7 +1117,7 @@
       'attributes': dict({
         'friendly_name': 'Vitocal250A Internal Pumps Default Limit',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': '%',
+        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
         'viessmann_feature_name': 'heating.configuration.internalPumps.defaultLimit',
       }),
       'entity_id': 'sensor.vitocal250a_internal_pumps_default_limit',
@@ -1127,7 +1127,7 @@
       'attributes': dict({
         'friendly_name': 'Vitocal250A Internal Pumps Maximum Limit',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': '%',
+        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
         'viessmann_feature_name': 'heating.configuration.internalPumps.maximumLimit',
       }),
       'entity_id': 'sensor.vitocal250a_internal_pumps_maximum_limit',
@@ -1137,7 +1137,7 @@
       'attributes': dict({
         'friendly_name': 'Vitocal250A Internal Pumps Minimum Limit',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': '%',
+        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
         'viessmann_feature_name': 'heating.configuration.internalPumps.minimumLimit',
       }),
       'entity_id': 'sensor.vitocal250a_internal_pumps_minimum_limit',
@@ -1281,7 +1281,7 @@
       'attributes': dict({
         'friendly_name': 'Vitocal250A Secondary Circuit Valves Four Three Way Current',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': '%',
+        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
         'viessmann_feature_name': 'heating.secondaryCircuit.valves.fourThreeWay.current',
       }),
       'entity_id': 'sensor.vitocal250a_secondary_circuit_valves_four_three_way_current',
@@ -1291,7 +1291,7 @@
       'attributes': dict({
         'friendly_name': 'Vitocal250A Secondary Circuit Valves Four Three Way Target',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': '%',
+        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
         'viessmann_feature_name': 'heating.secondaryCircuit.valves.fourThreeWay.target',
       }),
       'entity_id': 'sensor.vitocal250a_secondary_circuit_valves_four_three_way_target',

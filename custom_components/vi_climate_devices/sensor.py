@@ -15,12 +15,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    PERCENTAGE,
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -57,7 +57,7 @@ SENSOR_TEMPLATES = [
         "description": SensorEntityDescription(
             key="placeholder",
             translation_key="burner_modulation",
-            native_unit_of_measurement=PERCENTAGE,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
             icon="mdi:fire",
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -230,7 +230,7 @@ SENSOR_TEMPLATES = [
         "description": SensorEntityDescription(
             key="placeholder",
             translation_key="fan_speed",
-            native_unit_of_measurement=PERCENTAGE,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
             icon="mdi:fan",
             state_class=SensorStateClass.MEASUREMENT,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -538,7 +538,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "heating.sensors.humidity.outside": SensorEntityDescription(
         key="heating.sensors.humidity.outside",
         translation_key="outside_humidity",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -653,7 +653,7 @@ def _get_auto_discovery_description(feature) -> SensorEntityDescription:
             native_unit = UnitOfPressure.BAR
             state_class = SensorStateClass.MEASUREMENT
         case "percent":
-            native_unit = PERCENTAGE
+            native_unit = UnitOfRatio.PERCENTAGE
             state_class = SensorStateClass.MEASUREMENT
         case "kilowattHour":
             device_class = SensorDeviceClass.ENERGY
