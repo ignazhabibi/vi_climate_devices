@@ -83,6 +83,8 @@ async def test_async_get_auth_implementation_uses_fresh_pkce_verifier(
     )
 
     # Assert: Each flow uses its own implementation and PKCE verifier.
+    assert isinstance(first_implementation, LocalOAuth2ImplementationWithPkce)
+    assert isinstance(second_implementation, LocalOAuth2ImplementationWithPkce)
     assert first_implementation is not second_implementation
     assert first_implementation.code_verifier != second_implementation.code_verifier
 

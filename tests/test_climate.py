@@ -3,18 +3,16 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from homeassistant.components.climate import (
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
-    HVACAction,
-    HVACMode,
-)
 from homeassistant.components.climate.const import (
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_HOME,
     PRESET_SLEEP,
+    SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_TEMPERATURE,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -398,6 +396,7 @@ async def test_climate_error_handling_and_rollback(
 
         entity_id = "climate.vitocal250a_heating_circuit_0"
         state = hass.states.get(entity_id)
+        assert state is not None
         original_temp = float(state.attributes["temperature"])
 
         # Act: Set temperature to 25.0 (should fail).

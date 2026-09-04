@@ -76,7 +76,9 @@ async def test_water_heater_creation_and_services(hass: HomeAssistant, mock_clie
         assert state.attributes["max_temp"] == 60.0
         # Verify constraints on entity
         component = hass.data.get("water_heater")
+        assert component is not None
         entity = component.get_entity(entity_id)
+        assert entity is not None
         # Use getattr because property might not exist in all HA versions
         assert (
             getattr(entity, "target_temperature_step", None) == 1.0
@@ -109,6 +111,7 @@ async def test_water_heater_creation_and_services(hass: HomeAssistant, mock_clie
 
         # Verify Optimistic Update (Temp).
         state = hass.states.get(entity_id)
+        assert state is not None
         assert float(state.attributes["temperature"]) == 45.0
 
         # Reset Mock.
@@ -132,6 +135,7 @@ async def test_water_heater_creation_and_services(hass: HomeAssistant, mock_clie
 
         # Verify Optimistic Update (Mode).
         state = hass.states.get(entity_id)
+        assert state is not None
         assert state.state == STATE_PERFORMANCE
 
         await hass.config_entries.async_unload(entry.entry_id)
@@ -171,6 +175,7 @@ async def test_water_heater_error_handling(hass: HomeAssistant, mock_client):
 
         entity_id = "water_heater.vitocal250a_dhw_water_heater"
         state = hass.states.get(entity_id)
+        assert state is not None
         original_temp = float(state.attributes["temperature"])
 
         # Act: Try to set temperature (Should fail).
@@ -184,7 +189,7 @@ async def test_water_heater_error_handling(hass: HomeAssistant, mock_client):
 
         # Assert: Rollback occurred.
         state = hass.states.get(entity_id)
-        state = hass.states.get(entity_id)
+        assert state is not None
         assert float(state.attributes["temperature"]) == original_temp
 
         await hass.config_entries.async_unload(entry.entry_id)
@@ -226,6 +231,7 @@ async def test_water_heater_api_rejection(hass: HomeAssistant, mock_client):
 
         entity_id = "water_heater.vitocal250a_dhw_water_heater"
         state = hass.states.get(entity_id)
+        assert state is not None
         original_temp = float(state.attributes["temperature"])
 
         # Act: Try to set temperature.
@@ -239,6 +245,7 @@ async def test_water_heater_api_rejection(hass: HomeAssistant, mock_client):
 
         # Assert: Rollback occurred.
         state = hass.states.get(entity_id)
+        assert state is not None
         assert float(state.attributes["temperature"]) == original_temp
 
         await hass.config_entries.async_unload(entry.entry_id)

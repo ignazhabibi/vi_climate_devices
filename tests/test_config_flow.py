@@ -78,11 +78,13 @@ async def test_user_flow_shows_picker_and_starts_external_step(
         )
 
     # Assert: The flow shows the picker first and then redirects to OAuth auth.
-    assert start_result["type"] is FlowResultType.FORM
-    assert start_result["step_id"] == "pick_implementation"
-    assert auth_result["type"] is FlowResultType.EXTERNAL_STEP
-    assert auth_result["step_id"] == "auth"
-    authorize_url = URL(auth_result["url"])
+    assert start_result.get("type") is FlowResultType.FORM
+    assert start_result.get("step_id") == "pick_implementation"
+    assert auth_result.get("type") is FlowResultType.EXTERNAL_STEP
+    assert auth_result.get("step_id") == "auth"
+    url = auth_result.get("url")
+    assert url is not None
+    authorize_url = URL(url)
     assert authorize_url.query["existing"] == "1"
     assert authorize_url.query["scope"] == DEFAULT_SCOPES
 
@@ -118,8 +120,8 @@ async def test_reauth_flow_shows_confirm_form_and_redirects_to_oauth(
         reauth_result = await entry.start_reauth_flow(hass)
 
         # Assert: The first step shows the reauth confirmation form.
-        assert reauth_result["type"] is FlowResultType.FORM
-        assert reauth_result["step_id"] == "reauth_confirm"
+        assert reauth_result.get("type") is FlowResultType.FORM
+        assert reauth_result.get("step_id") == "reauth_confirm"
 
         # Act: User confirms the reauth form.
         confirm_result = await hass.config_entries.flow.async_configure(
@@ -139,11 +141,11 @@ async def test_reauth_flow_shows_confirm_form_and_redirects_to_oauth(
         )
 
     # Assert: The flow redirects, updates the existing entry, and completes reauth.
-    assert confirm_result["type"] is FlowResultType.EXTERNAL_STEP
-    assert confirm_result["step_id"] == "auth"
-    assert callback_result["type"] is FlowResultType.EXTERNAL_STEP_DONE
-    assert creation_result["type"] is FlowResultType.ABORT
-    assert creation_result["reason"] == "reauth_successful"
+    assert confirm_result.get("type") is FlowResultType.EXTERNAL_STEP
+    assert confirm_result.get("step_id") == "auth"
+    assert callback_result.get("type") is FlowResultType.EXTERNAL_STEP_DONE
+    assert creation_result.get("type") is FlowResultType.ABORT
+    assert creation_result.get("reason") == "reauth_successful"
     assert entry.data["auth_implementation"] == "fake-provider"
     assert entry.data["retained_setting"] == "keep-me"
     assert entry.data["token"]["access_token"] == "token"
