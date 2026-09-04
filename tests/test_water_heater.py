@@ -40,14 +40,8 @@ async def test_water_heater_creation_and_services(hass: HomeAssistant, mock_clie
     )
     entry.add_to_hass(hass)
 
-    # Spy on set_feature to verify service calls (returns tuple in v1.0.0).
-    async def mock_set_feature(device, feature, value):
-        response = CommandResponse(
-            success=True, message=None, reason="COMMAND_EXECUTION_SUCCESS"
-        )
-        return (response, device)
-
-    mock_client.set_feature = AsyncMock(side_effect=mock_set_feature)
+    # Spy on set_feature to verify service calls.
+    mock_client.set_feature = AsyncMock(wraps=mock_client.set_feature)
 
     with (
         patch(

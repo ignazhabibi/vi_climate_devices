@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from vi_api_client.mock_client import MockViClient
-from vi_api_client.models import CommandResponse, Device, Feature, FeatureControl
+from vi_api_client.models import Device, Feature, FeatureControl
 
 from custom_components.vi_climate_devices.climate import ViClimate
 from custom_components.vi_climate_devices.const import DOMAIN
@@ -262,13 +262,7 @@ async def test_climate_creation_and_services(hass: HomeAssistant, mock_client) -
     entry.add_to_hass(hass)
 
     # Spy on set_feature to verify service calls.
-    async def mock_set_feature(device, feature, value):
-        response = CommandResponse(
-            success=True, message=None, reason="COMMAND_EXECUTION_SUCCESS"
-        )
-        return (response, device)
-
-    mock_client.set_feature = AsyncMock(side_effect=mock_set_feature)
+    mock_client.set_feature = AsyncMock(wraps=mock_client.set_feature)
 
     with (
         patch(
@@ -306,7 +300,9 @@ async def test_climate_creation_and_services(hass: HomeAssistant, mock_client) -
         assert state.attributes["target_temp_step"] == 1.0
         # Verify preset properties directly on Python entity since PRESET_MODE feature is not declared.
         component = hass.data.get("climate")
+        assert component is not None
         entity = component.get_entity(entity_id)
+        assert entity is not None
         assert entity.preset_mode == PRESET_HOME
         assert sorted(entity.preset_modes) == sorted(
             [PRESET_COMFORT, PRESET_ECO, PRESET_HOME, PRESET_SLEEP]
@@ -415,6 +411,7 @@ async def test_climate_error_handling_and_rollback(
 
         # Assert: Rollback occurred.
         state = hass.states.get(entity_id)
+        assert state is not None
         assert float(state.attributes["temperature"]) == original_temp
 
         await hass.config_entries.async_unload(entry.entry_id)
@@ -545,7 +542,9 @@ async def test_climate_program_matching_variations(
         # Retrieve the Python entity to call helper methods directly.
         entity_id = "climate.vitocal250a_heating_circuit_0"
         component = hass.data.get("climate")
+        assert component is not None
         entity = component.get_entity(entity_id)
+        assert entity is not None
 
         # Assert: Verify that the helper maps the variations to the correct features.
         feat_normal = entity._get_program_temperature_feature("normal")
