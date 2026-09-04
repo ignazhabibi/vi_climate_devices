@@ -387,7 +387,7 @@ class ViClimateNumber(CoordinatorEntity[ViClimateDataUpdateCoordinator], NumberE
 
             # 4. Clear optimistic value - let next poll pick up real value
             self._optimistic_value = None
-
+            self.async_write_ha_state()
         except Exception as err:
             # 5. ROLLBACK on error
             self._optimistic_value = None

@@ -31,14 +31,8 @@ async def test_switch_creation_and_services(hass: HomeAssistant, mock_client):
     )
     entry.add_to_hass(hass)
 
-    # Spy on set_feature to verify service calls (returns tuple in v1.0.0).
-    async def mock_set_feature(device, feature, value):
-        response = CommandResponse(
-            success=True, message=None, reason="COMMAND_EXECUTION_SUCCESS"
-        )
-        return (response, device)
-
-    mock_client.set_feature = AsyncMock(side_effect=mock_set_feature)
+    # Spy on set_feature to verify service calls.
+    mock_client.set_feature = AsyncMock(wraps=mock_client.set_feature)
 
     with (
         patch(
@@ -79,7 +73,7 @@ async def test_switch_creation_and_services(hass: HomeAssistant, mock_client):
         await hass.services.async_call(
             "switch",
             "turn_on",
-            {"entity_id": "switch.vitocal250a_dhw_hygiene"},
+            {"entity_id": "switch.vitocal250a_one_time_dhw_charge"},
             blocking=True,
         )
 
@@ -89,13 +83,13 @@ async def test_switch_creation_and_services(hass: HomeAssistant, mock_client):
         assert mock_client.set_feature.call_count == 1
         args, _ = mock_client.set_feature.call_args
         # args[0] is Device, args[1] is Feature, args[2] is Value.
-        assert args[1].name == "heating.dhw.hygiene.enabled"
+        assert args[1].name == "heating.dhw.oneTimeCharge.active"
         assert args[2] is True
 
         # Verify Optimistic State Update.
         # The switch should match the requested state immediately.
-        hygiene_switch = hass.states.get("switch.vitocal250a_dhw_hygiene")
-        assert hygiene_switch.state == "on"
+        one_time_charge = hass.states.get("switch.vitocal250a_one_time_dhw_charge")
+        assert one_time_charge.state == "on"
 
         # Test 3: Service Calls (turn_off).
 
@@ -106,19 +100,19 @@ async def test_switch_creation_and_services(hass: HomeAssistant, mock_client):
         await hass.services.async_call(
             "switch",
             "turn_off",
-            {"entity_id": "switch.vitocal250a_dhw_hygiene"},
+            {"entity_id": "switch.vitocal250a_one_time_dhw_charge"},
             blocking=True,
         )
 
         # Verify set_feature called with value=False.
         assert mock_client.set_feature.call_count == 1
         args, _ = mock_client.set_feature.call_args
-        assert args[1].name == "heating.dhw.hygiene.enabled"
+        assert args[1].name == "heating.dhw.oneTimeCharge.active"
         assert args[2] is False
 
         # Verify Optimistic State Update.
-        hygiene_switch = hass.states.get("switch.vitocal250a_dhw_hygiene")
-        assert hygiene_switch.state == STATE_OFF
+        one_time_charge = hass.states.get("switch.vitocal250a_one_time_dhw_charge")
+        assert one_time_charge.state == STATE_OFF
 
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
@@ -166,7 +160,9 @@ async def test_switch_error_handling(hass: HomeAssistant, mock_client):
 
         # Initial State Check (should be OFF according to fixture).
         switch_id = "switch.vitocal250a_dhw_hygiene"
-        assert hass.states.get(switch_id).state == STATE_OFF
+        state = hass.states.get(switch_id)
+        assert state is not None
+        assert state.state == STATE_OFF
 
         # Act: Call turn_on service which will fail.
         # We expect a HomeAssistantError to be raised to the caller.
@@ -180,7 +176,9 @@ async def test_switch_error_handling(hass: HomeAssistant, mock_client):
 
         # Assert: State Rollback.
         # The switch should NOT be stuck in 'on' state; it should revert to 'off'.
-        assert hass.states.get(switch_id).state == STATE_OFF
+        state = hass.states.get(switch_id)
+        assert state is not None
+        assert state.state == STATE_OFF
 
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
@@ -232,7 +230,9 @@ async def test_switch_api_rejection(hass: HomeAssistant):
         await hass.async_block_till_done()
 
         switch_id = "switch.vitocal250a_dhw_hygiene"
-        assert hass.states.get(switch_id).state == STATE_OFF
+        state = hass.states.get(switch_id)
+        assert state is not None
+        assert state.state == STATE_OFF
 
         # Act: Call turn_on.
         # We expect HomeAssistantError because success=False.
@@ -247,7 +247,9 @@ async def test_switch_api_rejection(hass: HomeAssistant):
             )
 
         # Assert: Rollback occurred (State remains OFF).
-        assert hass.states.get(switch_id).state == STATE_OFF
+        state = hass.states.get(switch_id)
+        assert state is not None
+        assert state.state == STATE_OFF
 
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()

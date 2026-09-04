@@ -30,14 +30,8 @@ async def test_select_creation_and_services(hass: HomeAssistant, mock_client):
     )
     entry.add_to_hass(hass)
 
-    # Spy on set_feature to verify service calls (returns tuple in v1.0.0).
-    async def mock_set_feature(device, feature, value):
-        response = CommandResponse(
-            success=True, message=None, reason="COMMAND_EXECUTION_SUCCESS"
-        )
-        return (response, device)
-
-    mock_client.set_feature = AsyncMock(side_effect=mock_set_feature)
+    # Spy on set_feature to verify service calls.
+    mock_client.set_feature = AsyncMock(wraps=mock_client.set_feature)
 
     with (
         patch(
@@ -85,6 +79,7 @@ async def test_select_creation_and_services(hass: HomeAssistant, mock_client):
 
         # Verify Optimistic Update (Option A).
         dhw_mode = hass.states.get("select.vitocal250a_dhw_mode")
+        assert dhw_mode is not None
         assert dhw_mode.state == "efficientWithMinComfort"
 
         # Test 2: Circuit Mode (Circuit 0).
@@ -120,13 +115,13 @@ async def test_select_creation_and_services(hass: HomeAssistant, mock_client):
         circuit_mode = hass.states.get(
             "select.vitocal250a_heating_circuit_0_operation_mode"
         )
+        assert circuit_mode is not None
         assert circuit_mode.state == "standby"
 
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
 
 
-@pytest.mark.asyncio
 @pytest.mark.asyncio
 async def test_select_error_handling(hass: HomeAssistant, mock_client):
     """Test select error handling and rollback (Option B)."""
@@ -168,6 +163,7 @@ async def test_select_error_handling(hass: HomeAssistant, mock_client):
         # Initial State Check.
         entity_id = "select.vitocal250a_dhw_mode"
         state = hass.states.get(entity_id)
+        assert state is not None
         original_state = state.state
         assert original_state == "efficient"
 
@@ -184,6 +180,7 @@ async def test_select_error_handling(hass: HomeAssistant, mock_client):
 
         # Assert: Rollback occurred.
         state = hass.states.get(entity_id)
+        assert state is not None
         assert state.state == original_state
 
         await hass.config_entries.async_unload(entry.entry_id)
@@ -234,6 +231,7 @@ async def test_select_api_rejection(hass: HomeAssistant, mock_client):
 
         entity_id = "select.vitocal250a_dhw_mode"
         state = hass.states.get(entity_id)
+        assert state is not None
         original_state = state.state  # "efficient"
 
         # Act: Try to change option.
@@ -247,6 +245,7 @@ async def test_select_api_rejection(hass: HomeAssistant, mock_client):
 
         # Assert: Rollback occurred.
         state = hass.states.get(entity_id)
+        assert state is not None
         assert state.state == original_state
 
         await hass.config_entries.async_unload(entry.entry_id)

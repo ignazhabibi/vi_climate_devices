@@ -220,7 +220,7 @@ class ViClimateSwitch(CoordinatorEntity[ViClimateDataUpdateCoordinator], SwitchE
 
             # 4. Clear optimistic state
             self._optimistic_state = None
-
+            self.async_write_ha_state()
         except Exception as err:
             # 5. ROLLBACK on error
             self._optimistic_state = None

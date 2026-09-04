@@ -35,14 +35,8 @@ async def test_number_creation_and_services(hass: HomeAssistant, mock_client):
     )
     entry.add_to_hass(hass)
 
-    # Spy on set_feature to verify service calls (returns tuple in v1.0.0).
-    async def mock_set_feature(device, feature, value):
-        response = CommandResponse(
-            success=True, message=None, reason="COMMAND_EXECUTION_SUCCESS"
-        )
-        return (response, device)
-
-    mock_client.set_feature = AsyncMock(side_effect=mock_set_feature)
+    # Spy on set_feature to verify service calls.
+    mock_client.set_feature = AsyncMock(wraps=mock_client.set_feature)
 
     with (
         patch(
@@ -100,6 +94,7 @@ async def test_number_creation_and_services(hass: HomeAssistant, mock_client):
         # Verify Optimistic Update (Option A).
         # State should update immediately to 1.6.
         slope = hass.states.get("number.vitocal250a_heating_circuit_0_curve_slope")
+        assert slope is not None
         assert slope.state == "1.6"
 
         # Test 2: DHW Target Temperature (Standard Entity).
@@ -130,6 +125,7 @@ async def test_number_creation_and_services(hass: HomeAssistant, mock_client):
 
         # Verify Optimistic Update.
         dhw_temp = hass.states.get("number.vitocal250a_dhw_target_temperature")
+        assert dhw_temp is not None
         assert float(dhw_temp.state) == 45.0
 
         await hass.config_entries.async_unload(entry.entry_id)
@@ -177,6 +173,7 @@ async def test_number_error_handling(hass: HomeAssistant, mock_client):
         # Check Initial State.
         entity_id = "number.vitocal250a_heating_circuit_0_curve_slope"
         state = hass.states.get(entity_id)
+        assert state is not None
         assert state.state == "0.6"
 
         # Act: Try to set value to 2.0 (Should fail).
@@ -191,6 +188,7 @@ async def test_number_error_handling(hass: HomeAssistant, mock_client):
         # Assert: Rollback occurred.
         # State should still be 0.6, not 2.0.
         state = hass.states.get(entity_id)
+        assert state is not None
         assert state.state == "0.6"
 
         await hass.config_entries.async_unload(entry.entry_id)
@@ -241,6 +239,7 @@ async def test_number_api_rejection(hass: HomeAssistant, mock_client):
 
         entity_id = "number.vitocal250a_heating_circuit_0_curve_slope"
         state = hass.states.get(entity_id)
+        assert state is not None
         original_state = state.state  # "0.6"
 
         # Act: Try to set value.
@@ -256,6 +255,7 @@ async def test_number_api_rejection(hass: HomeAssistant, mock_client):
 
         # Assert: Rollback occurred.
         state = hass.states.get(entity_id)
+        assert state is not None
         assert state.state == original_state
 
         await hass.config_entries.async_unload(entry.entry_id)

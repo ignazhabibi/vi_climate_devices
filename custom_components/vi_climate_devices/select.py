@@ -273,7 +273,7 @@ class ViClimateSelect(CoordinatorEntity[ViClimateDataUpdateCoordinator], SelectE
 
             # 4. Clear optimistic value
             self._optimistic_option = None
-
+            self.async_write_ha_state()
         except Exception as err:
             # 5. ROLLBACK on error
             self._optimistic_option = None
