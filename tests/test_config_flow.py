@@ -1,7 +1,7 @@
 """Tests for the OAuth config flow wrapper."""
 
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from homeassistant import config_entries
@@ -12,7 +12,10 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from vi_api_client.const import DEFAULT_SCOPES
 from yarl import URL
 
-from custom_components.vi_climate_devices.config_flow import OAuth2FlowHandler
+from custom_components.vi_climate_devices.config_flow import (
+    USER_PROFILE_URL,
+    OAuth2FlowHandler,
+)
 from custom_components.vi_climate_devices.const import DOMAIN
 
 
@@ -42,6 +45,29 @@ class FakeOAuthImplementation(config_entry_oauth2_flow.AbstractOAuth2Implementat
         return token
 
 
+async def _complete_user_oauth_flow(
+    hass: HomeAssistant, implementation: FakeOAuthImplementation
+) -> dict[str, Any]:
+    """Complete a user-initiated OAuth flow."""
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_implementations",
+        return_value={implementation.domain: implementation},
+    ):
+        start_result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+        await hass.config_entries.flow.async_configure(
+            start_result["flow_id"],
+            {"implementation": implementation.domain},
+        )
+        await hass.config_entries.flow.async_configure(
+            start_result["flow_id"],
+            user_input={"code": "authorization-code"},
+        )
+        return await hass.config_entries.flow.async_configure(start_result["flow_id"])
+
+
 @pytest.mark.asyncio
 async def test_flow_handler_exposes_viessmann_scope() -> None:
     """Test the flow handler appends the Viessmann OAuth scopes to the authorize URL."""
@@ -53,6 +79,35 @@ async def test_flow_handler_exposes_viessmann_scope() -> None:
 
     # Assert: The flow publishes the library-defined Viessmann scope string.
     assert authorize_data == {"scope": DEFAULT_SCOPES}
+
+
+@pytest.mark.asyncio
+async def test_flow_handler_uses_logged_in_user_identity(
+    hass: HomeAssistant,
+) -> None:
+    """Use the logged-in user identity as the account unique ID."""
+    response = MagicMock()
+    response.json = AsyncMock(return_value={"data": {"identity": {"id": "account-1"}}})
+    flow_handler = OAuth2FlowHandler()
+    flow_handler.hass = hass
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_oauth2_request",
+        return_value=response,
+    ) as oauth_request:
+        account_id = await flow_handler._async_get_account_id(
+            {"token": {"access_token": "token"}}
+        )
+
+    assert account_id == "account-1"
+    oauth_request.assert_awaited_once_with(
+        hass,
+        {"access_token": "token"},
+        "GET",
+        USER_PROFILE_URL,
+    )
+    response.raise_for_status.assert_called_once()
+    response.release.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -112,9 +167,16 @@ async def test_reauth_flow_shows_confirm_form_and_redirects_to_oauth(
 
     implementation = FakeOAuthImplementation()
 
-    with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_implementations",
-        return_value={implementation.domain: implementation},
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_implementations",
+            return_value={implementation.domain: implementation},
+        ),
+        patch.object(
+            OAuth2FlowHandler,
+            "_async_get_account_id",
+            return_value="account-1",
+        ),
     ):
         # Act: Start the reauth flow (triggered by ConfigEntryAuthFailed).
         reauth_result = await entry.start_reauth_flow(hass)
@@ -149,4 +211,74 @@ async def test_reauth_flow_shows_confirm_form_and_redirects_to_oauth(
     assert entry.data["auth_implementation"] == "fake-provider"
     assert entry.data["retained_setting"] == "keep-me"
     assert entry.data["token"]["access_token"] == "token"
+    assert entry.unique_id == "account-1"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+@pytest.mark.asyncio
+async def test_user_flow_prevents_duplicate_account_entries(
+    hass: HomeAssistant,
+) -> None:
+    """Abort a second user flow for an already configured account."""
+    implementation = FakeOAuthImplementation()
+
+    with patch.object(
+        OAuth2FlowHandler,
+        "_async_get_account_id",
+        return_value="account-1",
+    ):
+        creation_result = await _complete_user_oauth_flow(hass, implementation)
+        duplicate_result = await _complete_user_oauth_flow(hass, implementation)
+
+    assert creation_result.get("type") is FlowResultType.CREATE_ENTRY
+    assert creation_result.get("result").unique_id == "account-1"
+    assert duplicate_result.get("type") is FlowResultType.ABORT
+    assert duplicate_result.get("reason") == "already_configured"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+@pytest.mark.asyncio
+async def test_reauth_rejects_a_different_account(hass: HomeAssistant) -> None:
+    """Do not replace an entry's token with another account's token."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="account-1",
+        data={
+            "auth_implementation": "fake-provider",
+            "token": {
+                "access_token": "expired-token",
+                "expires_at": 0,
+                "refresh_token": "dead-refresh",
+                "token_type": "Bearer",
+            },
+        },
+    )
+    entry.add_to_hass(hass)
+    implementation = FakeOAuthImplementation()
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_implementations",
+            return_value={implementation.domain: implementation},
+        ),
+        patch.object(
+            OAuth2FlowHandler,
+            "_async_get_account_id",
+            return_value="account-2",
+        ),
+    ):
+        reauth_result = await entry.start_reauth_flow(hass)
+        await hass.config_entries.flow.async_configure(
+            reauth_result["flow_id"], user_input={}
+        )
+        await hass.config_entries.flow.async_configure(
+            reauth_result["flow_id"],
+            user_input={"code": "fresh-code"},
+        )
+        creation_result = await hass.config_entries.flow.async_configure(
+            reauth_result["flow_id"]
+        )
+
+    assert creation_result.get("type") is FlowResultType.ABORT
+    assert creation_result.get("reason") == "wrong_account"
+    assert entry.data["token"]["access_token"] == "expired-token"
