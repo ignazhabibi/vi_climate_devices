@@ -296,3 +296,39 @@ async def test_data_coordinator_serializes_writes_per_device(
     assert calls[1][0] is slope_updated_device
     assert calls[1][1].value == 0.0
     assert coordinator.data[device_key] is final_device
+
+
+@pytest.mark.asyncio
+async def test_data_coordinator_notifies_entities_after_successful_write(
+    hass: HomeAssistant, mock_client
+) -> None:
+    """Test a successful write publishes the updated device to listeners."""
+    # Arrange: Register a listener for a device whose curve slope will change.
+    device_key = "gw-main_device-0"
+    initial_device = _build_curve_device(slope=0.7, shift=0.0)
+    updated_device = _build_curve_device(slope=1.2, shift=0.0)
+    mock_client.set_feature = AsyncMock(
+        return_value=(
+            CommandResponse(success=True, message=None, reason=None),
+            updated_device,
+        )
+    )
+    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator.data = {device_key: initial_device}
+    listener_data: list[Device] = []
+    coordinator.async_add_listener(
+        lambda: listener_data.append(coordinator.data[device_key])
+    )
+
+    try:
+        # Act: Set the slope through the shared coordinator write path.
+        await coordinator.async_set_feature(
+            device_key,
+            "heating.circuits.0.heating.curve.slope",
+            1.2,
+        )
+
+        # Assert: Every coordinator entity receives the new immutable device object.
+        assert listener_data == [updated_device]
+    finally:
+        await coordinator.async_shutdown()
