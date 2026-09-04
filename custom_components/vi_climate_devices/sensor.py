@@ -26,11 +26,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from vi_api_client.api import Feature
 
 from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
+from .entity import ViClimateEntity
 from .utils import beautify_name, is_feature_boolean_like, is_feature_ignored
 
 _LOGGER = logging.getLogger(__name__)
@@ -759,7 +759,7 @@ def _discover_realtime_sensors(
     return entities
 
 
-class ViClimateSensor(CoordinatorEntity[ViClimateDataUpdateCoordinator], SensorEntity):
+class ViClimateSensor(ViClimateEntity, SensorEntity):
     """Representation of a generic Viessmann Climate Devices Sensor."""
 
     def __init__(  # noqa: PLR0913, PLR0917
@@ -857,8 +857,4 @@ class ViClimateSensor(CoordinatorEntity[ViClimateDataUpdateCoordinator], SensorE
     def available(self) -> bool:
         """Return True if entity is available."""
         feat = self.feature_data
-        return (
-            self.coordinator.last_update_success
-            and feat is not None
-            and feat.is_enabled
-        )
+        return super().available and feat is not None and feat.is_enabled

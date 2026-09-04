@@ -16,11 +16,11 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from vi_api_client.api import Feature
 
 from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
+from .entity import ViClimateEntity
 from .utils import (
     beautify_name,
     get_feature_bool_value,
@@ -210,9 +210,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ViClimateBinarySensor(
-    CoordinatorEntity[ViClimateDataUpdateCoordinator], BinarySensorEntity
-):
+class ViClimateBinarySensor(ViClimateEntity, BinarySensorEntity):
     """Representation of a generic Viessmann Climate Devices Binary Sensor."""
 
     def __init__(  # noqa: PLR0913, PLR0917
@@ -289,4 +287,4 @@ class ViClimateBinarySensor(
     def available(self) -> bool:
         """Return True if entity is available."""
         feat = self.feature_data
-        return self.coordinator.last_update_success and feat and feat.is_enabled
+        return super().available and feat is not None and feat.is_enabled

@@ -16,11 +16,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from vi_api_client import Feature
 
 from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
+from .entity import ViClimateEntity
 from .utils import (
     beautify_name,
     get_feature_bool_value,
@@ -101,7 +101,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ViClimateSwitch(CoordinatorEntity[ViClimateDataUpdateCoordinator], SwitchEntity):
+class ViClimateSwitch(ViClimateEntity, SwitchEntity):
     """Representation of a Viessmann Climate Devices Switch Entity."""
 
     entity_description: SwitchEntityDescription
