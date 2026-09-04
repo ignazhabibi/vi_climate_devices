@@ -257,7 +257,7 @@ class ViClimateNumber(ViClimateEntity, NumberEntity):
         feature_name: str,
         description: NumberEntityDescription,
         translation_placeholders: dict[str, str] | None = None,
-        enabled_default: bool = True,
+        enabled_default: bool | None = None,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
@@ -265,7 +265,8 @@ class ViClimateNumber(ViClimateEntity, NumberEntity):
         self._map_key = map_key
         self._feature_name = feature_name
         self._attr_translation_placeholders = translation_placeholders or {}
-        self._attr_entity_registry_enabled_default = enabled_default
+        if enabled_default is not None:
+            self._attr_entity_registry_enabled_default = enabled_default
         self._optimistic_value: float | None = None
 
         device = coordinator.data.get(map_key)

@@ -11,6 +11,7 @@ from homeassistant.components.number.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from vi_api_client.models import CommandResponse
 
@@ -75,6 +76,12 @@ async def test_number_creation_and_services(hass: HomeAssistant, mock_client):
         entity = component.get_entity(entity_id)
         assert entity is not None
         assert entity.suggested_display_precision == 1
+
+        # Assert: The noisy DHW hysteresis control stays disabled by default.
+        registry = er.async_get(hass)
+        hysteresis_entry = registry.async_get("number.vitocal250a_dhw_hysteresis")
+        assert hysteresis_entry is not None
+        assert hysteresis_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
         # Act: Set slope to 1.6.
         await hass.services.async_call(
