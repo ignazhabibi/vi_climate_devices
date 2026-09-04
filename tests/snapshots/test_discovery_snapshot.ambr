@@ -365,21 +365,6 @@
     dict({
       'attributes': dict({
         'device_class': 'temperature_delta',
-        'friendly_name': 'Vitocal250A DHW Hysteresis',
-        'icon': 'mdi:thermometer-lines',
-        'max': 10.0,
-        'min': 1.0,
-        'mode': <NumberMode.BOX: 'box'>,
-        'step': 0.5,
-        'unit_of_measurement': <UnitOfTemperature.KELVIN: 'K'>,
-        'viessmann_feature_name': 'heating.dhw.temperature.hysteresis',
-      }),
-      'entity_id': 'number.vitocal250a_dhw_hysteresis',
-      'state': '5',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'temperature_delta',
         'friendly_name': 'Vitocal250A DHW Hysteresis Switch Off',
         'icon': 'mdi:thermometer-minus',
         'max': 2.5,
