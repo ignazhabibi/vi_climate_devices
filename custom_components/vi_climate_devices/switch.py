@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.switch import (
@@ -32,23 +31,15 @@ from .utils import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class ViClimateSwitchEntityDescription(SwitchEntityDescription):
-    """Custom description for ViClimate switch entities."""
-
-    # Optional override for logic mapping
-    property_name: str | None = None
-
-
-SWITCH_TYPES: dict[str, ViClimateSwitchEntityDescription] = {
+SWITCH_TYPES: dict[str, SwitchEntityDescription] = {
     # Updated keys for Flat Architecture
-    "heating.dhw.oneTimeCharge.active": ViClimateSwitchEntityDescription(
+    "heating.dhw.oneTimeCharge.active": SwitchEntityDescription(
         key="heating.dhw.oneTimeCharge.active",
         translation_key="dhw_one_time_charge",
         icon="mdi:water-boiler",
         device_class=SwitchDeviceClass.SWITCH,
     ),
-    "heating.dhw.hygiene.enabled": ViClimateSwitchEntityDescription(
+    "heating.dhw.hygiene.enabled": SwitchEntityDescription(
         key="heating.dhw.hygiene.enabled",
         translation_key="dhw_hygiene",
         icon="mdi:shield-check",
@@ -110,17 +101,17 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
+class ViClimateSwitch(CoordinatorEntity[ViClimateDataUpdateCoordinator], SwitchEntity):
     """Representation of a Viessmann Climate Devices Switch Entity."""
 
-    entity_description: ViClimateSwitchEntityDescription
+    entity_description: SwitchEntityDescription
 
     def __init__(
         self,
         coordinator: ViClimateDataUpdateCoordinator,
         map_key: str,
         feature_name: str,
-        description: ViClimateSwitchEntityDescription,
+        description: SwitchEntityDescription,
         enabled_default: bool = True,
     ) -> None:
         """Initialize the entity."""
@@ -128,10 +119,12 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
         self.entity_description = description
         self._map_key = map_key
         self._feature_name = feature_name
-        self._property_name = description.property_name
         self._attr_entity_registry_enabled_default = enabled_default
+        self._optimistic_state: bool | None = None
 
         device = coordinator.data.get(map_key)
+        if not device:
+            raise ValueError(f"Device {map_key} not found in coordinator data")
 
         # Unique ID: gateway-device-key
         self._attr_unique_id = f"{device.gateway_serial}-{device.id}-{description.key}"
@@ -142,7 +135,7 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
             not hasattr(description, "translation_key")
             or not description.translation_key
         ):
-            if description.name:
+            if isinstance(description.name, str):
                 self._attr_name = description.name
             else:
                 self._attr_name = beautify_name(feature_name)
@@ -156,7 +149,7 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
         return device.get_feature(self._feature_name)
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo | None:
         """Return device information."""
         device = self.coordinator.data.get(self._map_key)
         if not device:
@@ -173,7 +166,7 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
         # Return optimistic state if set
-        if hasattr(self, "_optimistic_state") and self._optimistic_state is not None:
+        if self._optimistic_state is not None:
             return self._optimistic_state
 
         feat = self.feature_data
@@ -228,8 +221,10 @@ class ViClimateSwitch(CoordinatorEntity, SwitchEntity):
             # 4. Clear optimistic state
             self._optimistic_state = None
 
-        except Exception as e:
+        except Exception as err:
             # 5. ROLLBACK on error
             self._optimistic_state = None
             self.async_write_ha_state()
-            raise HomeAssistantError(f"Failed to set state: {e}") from e
+            if isinstance(err, HomeAssistantError):
+                raise
+            raise HomeAssistantError(f"Failed to set state: {err}") from err

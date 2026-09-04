@@ -85,7 +85,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
+class ViClimateWaterHeater(
+    CoordinatorEntity[ViClimateDataUpdateCoordinator], WaterHeaterEntity
+):
     """Representation of a Viessmann Water Heater."""
 
     _attr_translation_key = "dhw_water_heater"
@@ -108,6 +110,9 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
         self._target_feature_name = target_feature.name
 
         device = coordinator.data.get(map_key)
+        if not device:
+            raise ValueError(f"Device {map_key} not found in coordinator data")
+
         self._attr_unique_id = f"{device.gateway_serial}-{device.id}-water_heater"
         self._attr_has_entity_name = True
 
@@ -115,7 +120,7 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
         self._update_constraints(target_feature)
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo | None:
         """Return device information."""
         device = self.coordinator.data.get(self._map_key)
         if not device:
@@ -136,10 +141,10 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
             return None
         return device.get_feature(name)
 
-    def _update_constraints(self, feature: Feature):
+    def _update_constraints(self, feature: Feature | None) -> None:
         """Extract min/max/step from target temp command."""
         # Use new FeatureControl object
-        if feature.control:
+        if feature and feature.control:
             if feature.control.min is not None:
                 self._attr_min_temp = feature.control.min
             if feature.control.max is not None:
@@ -235,6 +240,8 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
             raise HomeAssistantError("Target temperature feature not found")
 
         device = self.coordinator.data.get(self._map_key)
+        if not device:
+            raise HomeAssistantError("Device not found")
 
         # 1. OPTIMISTIC UPDATE
         self._optimistic_temp = value
@@ -274,6 +281,8 @@ class ViClimateWaterHeater(CoordinatorEntity, WaterHeaterEntity):
             raise HomeAssistantError("Mode feature not found")
 
         device = self.coordinator.data.get(self._map_key)
+        if not device:
+            raise HomeAssistantError("Device not found")
 
         # Get available API modes from device
         available_api_modes = self._get_available_api_modes(feat)

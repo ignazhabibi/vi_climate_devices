@@ -1,6 +1,7 @@
 """Shared utility functions for the Viessmann Climate Devices integration."""
 
 import re
+from collections.abc import Sequence
 from typing import Any
 
 
@@ -33,7 +34,9 @@ def beautify_name(name: str) -> str:
     # This handles start, middle, and end occurrences cleanly.
     segments = name.split(".")
     filtered_segments = [
-        s for s in segments if s not in ("summary", "Power", "configuration")
+        segment
+        for segment in segments
+        if segment not in ("summary", "Power", "configuration")
     ]
     name = ".".join(filtered_segments)
 
@@ -91,7 +94,7 @@ def get_feature_bool_value(value: Any, strict: bool = False) -> bool | None:
 
 def is_feature_ignored(
     feature_name: str,
-    ignored_features: list[str | re.Pattern],
+    ignored_features: Sequence[str | re.Pattern],
 ) -> bool:
     """Check if a feature should be ignored based on list of patterns."""
     for pattern in ignored_features:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
-from dataclasses import dataclass, replace
+from dataclasses import replace
 from typing import Any
 
 from homeassistant.components.number import (
@@ -29,16 +29,11 @@ from .utils import beautify_name, get_suggested_precision, is_feature_ignored
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class ViClimateNumberEntityDescription(NumberEntityDescription):
-    """Custom description for ViClimate number entities."""
-
-
 # Templates with regex patterns for dynamic feature names
 NUMBER_TEMPLATES = [
     {
         "pattern": re.compile(r"^heating\.circuits\.(\d+)\.heating\.curve\.slope$"),
-        "description": ViClimateNumberEntityDescription(
+        "description": NumberEntityDescription(
             key="placeholder",
             translation_key="heating_curve_slope",
             icon="mdi:slope-uphill",
@@ -48,7 +43,7 @@ NUMBER_TEMPLATES = [
     },
     {
         "pattern": re.compile(r"^heating\.circuits\.(\d+)\.heating\.curve\.shift$"),
-        "description": ViClimateNumberEntityDescription(
+        "description": NumberEntityDescription(
             key="placeholder",
             translation_key="heating_curve_shift",
             icon="mdi:arrow-up-down",
@@ -65,7 +60,7 @@ NUMBER_TEMPLATES = [
             r"^heating\.circuits\.(\d+)\.operating\.programs\."
             r"((?:comfort|normal|reduced|eco)(?:Cooling|Heating|))\.temperature$"
         ),
-        "description": ViClimateNumberEntityDescription(
+        "description": NumberEntityDescription(
             key="placeholder",
             translation_key="heating_circuit_program_temperature",
             icon="mdi:thermometer",
@@ -77,7 +72,7 @@ NUMBER_TEMPLATES = [
     },
     {
         "pattern": re.compile(r"^heating\.circuits\.(\d+)\.temperature\.levels\.min$"),
-        "description": ViClimateNumberEntityDescription(
+        "description": NumberEntityDescription(
             key="placeholder",
             translation_key="heating_circuit_temperature_limit_min",
             icon="mdi:thermometer-low",
@@ -89,7 +84,7 @@ NUMBER_TEMPLATES = [
     },
     {
         "pattern": re.compile(r"^heating\.circuits\.(\d+)\.temperature\.levels\.max$"),
-        "description": ViClimateNumberEntityDescription(
+        "description": NumberEntityDescription(
             key="placeholder",
             translation_key="heating_circuit_temperature_limit_max",
             icon="mdi:thermometer-high",
@@ -101,40 +96,40 @@ NUMBER_TEMPLATES = [
     },
 ]
 
-NUMBER_TYPES: dict[str, ViClimateNumberEntityDescription] = {
-    "heating.dhw.temperature.hysteresis": ViClimateNumberEntityDescription(
+NUMBER_TYPES: dict[str, NumberEntityDescription] = {
+    "heating.dhw.temperature.hysteresis": NumberEntityDescription(
         key="heating.dhw.temperature.hysteresis",
         translation_key="dhw_hysteresis",
         icon="mdi:thermometer-lines",
         mode=NumberMode.BOX,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.KELVIN,
-        device_class=NumberDeviceClass.TEMPERATURE,
+        device_class=NumberDeviceClass.TEMPERATURE_DELTA,
         entity_registry_enabled_default=False,
     ),
     "heating.dhw.temperature.hysteresis.switchOnValue": (
-        ViClimateNumberEntityDescription(
+        NumberEntityDescription(
             key="heating.dhw.temperature.hysteresis.switchOnValue",
             translation_key="dhw_hysteresis_on",
             icon="mdi:thermometer-plus",
             mode=NumberMode.BOX,
             entity_category=EntityCategory.CONFIG,
             native_unit_of_measurement=UnitOfTemperature.KELVIN,
-            device_class=NumberDeviceClass.TEMPERATURE,
+            device_class=NumberDeviceClass.TEMPERATURE_DELTA,
         )
     ),
     "heating.dhw.temperature.hysteresis.switchOffValue": (
-        ViClimateNumberEntityDescription(
+        NumberEntityDescription(
             key="heating.dhw.temperature.hysteresis.switchOffValue",
             translation_key="dhw_hysteresis_off",
             icon="mdi:thermometer-minus",
             mode=NumberMode.BOX,
             entity_category=EntityCategory.CONFIG,
             native_unit_of_measurement=UnitOfTemperature.KELVIN,
-            device_class=NumberDeviceClass.TEMPERATURE,
+            device_class=NumberDeviceClass.TEMPERATURE_DELTA,
         )
     ),
-    "heating.dhw.temperature.main": ViClimateNumberEntityDescription(
+    "heating.dhw.temperature.main": NumberEntityDescription(
         key="heating.dhw.temperature.main",
         translation_key="dhw_target_temperature",
         icon="mdi:thermometer",
@@ -148,35 +143,37 @@ NUMBER_TYPES: dict[str, ViClimateNumberEntityDescription] = {
 
 def _get_number_entity_description(
     feature_name: str,
-) -> tuple[ViClimateNumberEntityDescription, dict[str, str] | None] | None:
+) -> tuple[NumberEntityDescription, dict[str, str] | None] | None:
     """Find a matching entity description for a dynamic feature name."""
     for template in NUMBER_TEMPLATES:
-        match = template["pattern"].match(feature_name)
-        if match:
-            groups = match.groups()
-            index = groups[0]
-            # If pattern has 2 groups, second is program
-            program = groups[1] if len(groups) > 1 else None
+        pattern = template["pattern"]
+        if hasattr(pattern, "match"):
+            match = pattern.match(feature_name)
+            if match:
+                groups = match.groups()
+                index = groups[0]
+                # If pattern has 2 groups, second is program
+                program = groups[1] if len(groups) > 1 else None
 
-            base_desc: ViClimateNumberEntityDescription = template["description"]
+                base_desc: NumberEntityDescription = template["description"]
 
-            placeholders = {"index": index}
-            new_key = feature_name  # We use the actual feature name
-            new_trans_key = base_desc.translation_key
+                placeholders = {"index": index}
+                new_key = feature_name  # We use the actual feature name
+                new_trans_key = base_desc.translation_key
 
-            # Program specific logic
-            if program:
-                program_snake = re.sub(r"(?<!^)(?=[A-Z])", "_", program).lower()
-                new_trans_key = f"heating_circuit_program_{program_snake}_temperature"
-                # No program in placeholder for specific key if desired
-                # but we kept index.
+                # Program specific logic
+                if program:
+                    program_snake = re.sub(r"(?<!^)(?=[A-Z])", "_", program).lower()
+                    new_trans_key = (
+                        f"heating_circuit_program_{program_snake}_temperature"
+                    )
 
-            new_desc = replace(
-                base_desc,
-                key=new_key,
-                translation_key=new_trans_key,
-            )
-            return new_desc, placeholders
+                new_desc = replace(
+                    base_desc,
+                    key=new_key,
+                    translation_key=new_trans_key,
+                )
+                return new_desc, placeholders
     return None
 
 
@@ -248,17 +245,17 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ViClimateNumber(CoordinatorEntity, NumberEntity):
+class ViClimateNumber(CoordinatorEntity[ViClimateDataUpdateCoordinator], NumberEntity):
     """Representation of a Viessmann Climate Devices Number Entity."""
 
-    entity_description: ViClimateNumberEntityDescription
+    entity_description: NumberEntityDescription
 
     def __init__(  # noqa: PLR0913, PLR0917
         self,
         coordinator: ViClimateDataUpdateCoordinator,
         map_key: str,
         feature_name: str,
-        description: ViClimateNumberEntityDescription,
+        description: NumberEntityDescription,
         translation_placeholders: dict[str, str] | None = None,
         enabled_default: bool = True,
     ) -> None:
@@ -269,8 +266,11 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
         self._feature_name = feature_name
         self._attr_translation_placeholders = translation_placeholders or {}
         self._attr_entity_registry_enabled_default = enabled_default
+        self._optimistic_value: float | None = None
 
         device = coordinator.data.get(map_key)
+        if not device:
+            raise ValueError(f"Device {map_key} not found in coordinator data")
 
         # Unique ID: gateway-device-key
         self._attr_unique_id = f"{device.gateway_serial}-{device.id}-{description.key}"
@@ -281,7 +281,7 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
             not hasattr(description, "translation_key")
             or not description.translation_key
         ):
-            if description.name:
+            if isinstance(description.name, str):
                 self._attr_name = description.name
             else:
                 self._attr_name = beautify_name(feature_name)
@@ -290,9 +290,9 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
         feature = device.get_feature(feature_name)
         self._update_constraints(feature)
 
-    def _update_constraints(self, feature: Feature):
+    def _update_constraints(self, feature: Feature | None) -> None:
         """Extract min/max/step from feature control."""
-        if feature.control:
+        if feature and feature.control:
             if feature.control.min is not None:
                 self._attr_native_min_value = float(feature.control.min)
             if feature.control.max is not None:
@@ -311,7 +311,7 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
         return device.get_feature(self._feature_name)
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo | None:
         """Return device information."""
         device = self.coordinator.data.get(self._map_key)
         if not device:
@@ -340,7 +340,7 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
     def native_value(self) -> float | None:
         """Return the current value."""
         # Return optimistic value if set, otherwise from coordinator
-        if hasattr(self, "_optimistic_value") and self._optimistic_value is not None:
+        if self._optimistic_value is not None:
             return self._optimistic_value
         feat = self.feature_data
         if not feat:
@@ -388,8 +388,10 @@ class ViClimateNumber(CoordinatorEntity, NumberEntity):
             # 4. Clear optimistic value - let next poll pick up real value
             self._optimistic_value = None
 
-        except Exception as e:
+        except Exception as err:
             # 5. ROLLBACK on error
             self._optimistic_value = None
             self.async_write_ha_state()
-            raise HomeAssistantError(f"Failed to set value: {e}") from e
+            if isinstance(err, HomeAssistantError):
+                raise
+            raise HomeAssistantError(f"Failed to set value: {err}") from err
