@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import timedelta
 
@@ -14,6 +15,7 @@ from vi_api_client import (
     ViClient as ViessmannClient,
     ViError,
 )
+from vi_api_client.models import CommandResponse
 from vi_api_client.utils import mask_pii
 
 from .const import DOMAIN, IGNORED_DEVICES
@@ -40,10 +42,32 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.client = client
         self._known_devices: list[Device] = []
         self._failed_device_keys: set[str] = set()
+        self._device_write_locks: dict[str, asyncio.Lock] = {}
 
     def is_device_available(self, device_key: str) -> bool:
         """Return whether the most recent refresh succeeded for a device."""
         return device_key not in self._failed_device_keys
+
+    async def async_set_feature(
+        self, device_key: str, feature_name: str, value: object
+    ) -> CommandResponse:
+        """Set a feature while serializing writes for the same device."""
+        write_lock = self._device_write_locks.setdefault(device_key, asyncio.Lock())
+        async with write_lock:
+            device = self.data.get(device_key)
+            if device is None:
+                raise ValueError(f"Device {device_key} not found in coordinator data")
+
+            feature = device.get_feature(feature_name)
+            if feature is None:
+                raise ValueError(f"Feature {feature_name} not found in device data")
+
+            response, updated_device = await self.client.set_feature(
+                device, feature, value
+            )
+            if response.success:
+                self.data[device_key] = updated_device
+            return response
 
     async def _perform_discovery(self) -> None:
         """Perform initial device discovery.

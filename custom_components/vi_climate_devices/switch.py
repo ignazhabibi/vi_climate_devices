@@ -185,10 +185,6 @@ class ViClimateSwitch(ViClimateEntity, SwitchEntity):
 
     async def _async_set_state(self, target_state: bool) -> None:
         """Internal method to set the switch state."""
-        device = self.coordinator.data.get(self._map_key)
-        if not device:
-            raise HomeAssistantError("Device not found")
-
         feat = self.feature_data
         if not feat:
             raise HomeAssistantError("Feature not available")
@@ -199,9 +195,8 @@ class ViClimateSwitch(ViClimateEntity, SwitchEntity):
 
         # 2. EXECUTE COMMAND
         try:
-            client = self.coordinator.client
-            response, updated_device = await client.set_feature(
-                device, feat, target_state
+            response = await self.coordinator.async_set_feature(
+                self._map_key, feat.name, target_state
             )
             _LOGGER.debug(
                 "Command response: success=%s, message=%s, reason=%s",
@@ -215,10 +210,7 @@ class ViClimateSwitch(ViClimateEntity, SwitchEntity):
                     f"Command rejected: {response.message or response.reason}"
                 )
 
-            # 3. Store optimistically updated device in coordinator
-            self.coordinator.data[self._map_key] = updated_device
-
-            # 4. Clear optimistic state
+            # 3. Clear optimistic state
             self._optimistic_state = None
             self.async_write_ha_state()
         except Exception as err:

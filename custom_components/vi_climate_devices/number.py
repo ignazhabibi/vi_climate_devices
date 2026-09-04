@@ -349,10 +349,6 @@ class ViClimateNumber(ViClimateEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        device = self.coordinator.data.get(self._map_key)
-        if not device:
-            raise HomeAssistantError("Device not found")
-
         feat = self.feature_data
         if not feat:
             raise HomeAssistantError("Feature not available")
@@ -368,8 +364,9 @@ class ViClimateNumber(ViClimateEntity, NumberEntity):
             if precision is not None:
                 value = round(value, precision)
 
-            client = self.coordinator.client
-            response, updated_device = await client.set_feature(device, feat, value)
+            response = await self.coordinator.async_set_feature(
+                self._map_key, feat.name, value
+            )
             _LOGGER.debug(
                 "Command response: success=%s, message=%s, reason=%s",
                 response.success,
@@ -382,10 +379,7 @@ class ViClimateNumber(ViClimateEntity, NumberEntity):
                     f"Command rejected: {response.message or response.reason}"
                 )
 
-            # 3. Store optimistically updated device in coordinator
-            self.coordinator.data[self._map_key] = updated_device
-
-            # 4. Clear optimistic value - let next poll pick up real value
+            # 3. Clear optimistic value - let next poll pick up real value
             self._optimistic_value = None
             self.async_write_ha_state()
         except Exception as err:

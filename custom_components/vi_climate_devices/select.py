@@ -240,10 +240,6 @@ class ViClimateSelect(ViClimateEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        device = self.coordinator.data.get(self._map_key)
-        if not device:
-            raise HomeAssistantError("Device not found")
-
         feat = self.feature_data
         if not feat:
             raise HomeAssistantError("Feature not available")
@@ -254,8 +250,9 @@ class ViClimateSelect(ViClimateEntity, SelectEntity):
 
         # 2. EXECUTE COMMAND
         try:
-            client = self.coordinator.client
-            response, updated_device = await client.set_feature(device, feat, option)
+            response = await self.coordinator.async_set_feature(
+                self._map_key, feat.name, option
+            )
             _LOGGER.debug(
                 "Command response: success=%s, message=%s, reason=%s",
                 response.success,
@@ -268,10 +265,7 @@ class ViClimateSelect(ViClimateEntity, SelectEntity):
                     f"Command rejected: {response.message or response.reason}"
                 )
 
-            # 3. Store optimistically updated device in coordinator
-            self.coordinator.data[self._map_key] = updated_device
-
-            # 4. Clear optimistic value
+            # 3. Clear optimistic value
             self._optimistic_option = None
             self.async_write_ha_state()
         except Exception as err:

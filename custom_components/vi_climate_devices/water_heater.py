@@ -237,17 +237,13 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):
         if not feat:
             raise HomeAssistantError("Target temperature feature not found")
 
-        device = self.coordinator.data.get(self._map_key)
-        if not device:
-            raise HomeAssistantError("Device not found")
-
         # 1. OPTIMISTIC UPDATE
         self._optimistic_temp = value
         self.async_write_ha_state()
 
         try:
-            response, updated_device = await self.coordinator.client.set_feature(
-                device, feat, value
+            response = await self.coordinator.async_set_feature(
+                self._map_key, feat.name, value
             )
             _LOGGER.debug(
                 "Command response: success=%s, message=%s, reason=%s",
@@ -260,9 +256,6 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):
                 raise HomeAssistantError(
                     f"Command rejected: {response.message or response.reason}"
                 )
-
-            # Store optimistically updated device in coordinator
-            self.coordinator.data[self._map_key] = updated_device
 
             # Clear optimistic value - let next poll pick up real value
             self._optimistic_temp = None
@@ -278,10 +271,6 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):
         feat = self._get_feature(FEATURE_MODE)
         if not feat:
             raise HomeAssistantError("Mode feature not found")
-
-        device = self.coordinator.data.get(self._map_key)
-        if not device:
-            raise HomeAssistantError("Device not found")
 
         # Get available API modes from device
         available_api_modes = self._get_available_api_modes(feat)
@@ -310,8 +299,8 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):
         self.async_write_ha_state()
 
         try:
-            response, updated_device = await self.coordinator.client.set_feature(
-                device, feat, viessmann_mode
+            response = await self.coordinator.async_set_feature(
+                self._map_key, feat.name, viessmann_mode
             )
             _LOGGER.debug(
                 "Command response: success=%s, message=%s, reason=%s",
@@ -324,9 +313,6 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):
                 raise HomeAssistantError(
                     f"Command rejected: {response.message or response.reason}"
                 )
-
-            # Store optimistically updated device in coordinator
-            self.coordinator.data[self._map_key] = updated_device
 
             # Clear optimistic mode - let next poll pick up real value
             self._optimistic_mode = None

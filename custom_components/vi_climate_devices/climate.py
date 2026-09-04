@@ -520,17 +520,13 @@ class ViClimate(ViClimateEntity, ClimateEntity):
                 f"{program_name}"
             )
 
-        device = self.coordinator.data.get(self._map_key)
-        if not device:
-            raise HomeAssistantError("Device not found")
-
         # 1. OPTIMISTIC UPDATE
         self._optimistic_temp = value
         self.async_write_ha_state()
 
         try:
-            response, updated_device = await self.coordinator.client.set_feature(
-                device, temp_feature, value
+            response = await self.coordinator.async_set_feature(
+                self._map_key, temp_feature.name, value
             )
             _LOGGER.debug(
                 "Command response for setting temperature: success=%s, "
@@ -544,9 +540,6 @@ class ViClimate(ViClimateEntity, ClimateEntity):
                 raise HomeAssistantError(
                     f"Command rejected: {response.message or response.reason}"
                 )
-
-            # Store updated device in coordinator.
-            self.coordinator.data[self._map_key] = updated_device
 
             # Clear optimistic value.
             self._optimistic_temp = None
@@ -587,17 +580,13 @@ class ViClimate(ViClimateEntity, ClimateEntity):
             else:
                 raise HomeAssistantError(f"Unsupported HVAC mode: {hvac_mode}")
 
-        device = self.coordinator.data.get(self._map_key)
-        if not device:
-            raise HomeAssistantError("Device not found")
-
         # 1. OPTIMISTIC UPDATE
         self._optimistic_mode = hvac_mode
         self.async_write_ha_state()
 
         try:
-            response, updated_device = await self.coordinator.client.set_feature(
-                device, mode_feature, target_api_mode
+            response = await self.coordinator.async_set_feature(
+                self._map_key, mode_feature.name, target_api_mode
             )
             _LOGGER.debug(
                 "Command response for setting HVAC mode: success=%s, "
@@ -611,9 +600,6 @@ class ViClimate(ViClimateEntity, ClimateEntity):
                 raise HomeAssistantError(
                     f"Command rejected: {response.message or response.reason}"
                 )
-
-            # Store updated device in coordinator.
-            self.coordinator.data[self._map_key] = updated_device
 
             # Clear optimistic mode.
             self._optimistic_mode = None

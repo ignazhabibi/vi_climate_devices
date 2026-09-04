@@ -1,5 +1,6 @@
-"""Tests for coordinator discovery and refresh behavior."""
+"""Tests for coordinator discovery, refresh, and writes."""
 
+import asyncio
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
@@ -12,6 +13,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from vi_api_client import Device, Feature, ViAuthError, ViConnectionError
+from vi_api_client.models import CommandResponse
 
 from custom_components.vi_climate_devices.coordinator import (
     ViClimateDataUpdateCoordinator,
@@ -65,6 +67,34 @@ def _make_token_error() -> OAuth2TokenRequestError:
         message="Internal Server Error",
         headers=MagicMock(),
         domain="vi_climate_devices",
+    )
+
+
+def _build_curve_device(slope: float, shift: float) -> Device:
+    """Create a device exposing both heating-curve command parameters."""
+    return Device(
+        id="device-0",
+        gateway_serial="gw-main",
+        installation_id="installation-1",
+        model_id="Vitocal250A",
+        device_type="heating",
+        status="online",
+        features=[
+            Feature(
+                name="heating.circuits.0.heating.curve.shift",
+                value=shift,
+                unit="celsius",
+                is_enabled=True,
+                is_ready=True,
+            ),
+            Feature(
+                name="heating.circuits.0.heating.curve.slope",
+                value=slope,
+                unit="celsius",
+                is_enabled=True,
+                is_ready=True,
+            ),
+        ],
     )
 
 
@@ -210,3 +240,59 @@ async def test_data_coordinator_propagates_transient_oauth_error(
     with pytest.raises(OAuth2TokenRequestError) as raised_error:
         await coordinator._async_update_data()
     assert raised_error.value is token_error
+
+
+@pytest.mark.asyncio
+async def test_data_coordinator_serializes_writes_per_device(
+    hass: HomeAssistant, mock_client
+) -> None:
+    """Test a queued write resolves its feature from the previous write result."""
+    # Arrange: Queue a curve-shift write behind a blocked curve-slope write.
+    device_key = "gw-main_device-0"
+    initial_device = _build_curve_device(slope=0.7, shift=0.0)
+    slope_updated_device = _build_curve_device(slope=1.2, shift=0.0)
+    final_device = _build_curve_device(slope=1.2, shift=0.4)
+    first_write_started = asyncio.Event()
+    allow_first_write_to_finish = asyncio.Event()
+    calls: list[tuple[Device, Feature, object]] = []
+
+    async def mock_set_feature(
+        device: Device, feature: Feature, value: object
+    ) -> tuple[CommandResponse, Device]:
+        calls.append((device, feature, value))
+        if feature.name.endswith("slope"):
+            first_write_started.set()
+            await allow_first_write_to_finish.wait()
+            return CommandResponse(
+                success=True, message=None, reason=None
+            ), slope_updated_device
+        return CommandResponse(success=True, message=None, reason=None), final_device
+
+    mock_client.set_feature = AsyncMock(side_effect=mock_set_feature)
+    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator.data = {device_key: initial_device}
+
+    # Act: Start two writes for command parameters sharing one device.
+    slope_write = asyncio.create_task(
+        coordinator.async_set_feature(
+            device_key,
+            "heating.circuits.0.heating.curve.slope",
+            1.2,
+        )
+    )
+    await first_write_started.wait()
+    shift_write = asyncio.create_task(
+        coordinator.async_set_feature(
+            device_key,
+            "heating.circuits.0.heating.curve.shift",
+            0.4,
+        )
+    )
+    await asyncio.sleep(0)
+    allow_first_write_to_finish.set()
+    await asyncio.gather(slope_write, shift_write)
+
+    # Assert: The queued write uses the device returned by the first command.
+    assert calls[1][0] is slope_updated_device
+    assert calls[1][1].value == 0.0
+    assert coordinator.data[device_key] is final_device
