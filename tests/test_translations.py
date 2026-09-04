@@ -134,3 +134,14 @@ def test_translation_keys_exist(platform, translations):
     assert not error_msg, (
         f"Missing translations for platform '{platform}':\n" + "\n".join(error_msg)
     )
+
+
+def test_dhw_mode_translations_match_api_modes(translations):
+    """Keep the English DHW mode labels aligned with their API semantics."""
+    for translation in (translations["strings"], translations["en"]):
+        for platform in ("select", "water_heater"):
+            states = translation["entity"][platform][
+                "dhw_mode" if platform == "select" else "dhw_water_heater"
+            ]["state"]
+            assert states["efficient"] == "Eco"
+            assert states["efficientWithMinComfort"] == "Comfort"

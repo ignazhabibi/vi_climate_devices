@@ -145,8 +145,8 @@
                     "off": "Off",
                     "eco": "Eco",
                     "comfort": "Comfort",
-                    "efficient": "Comfort",
-                    "efficientWithMinComfort": "Eco",
+                    "efficient": "Eco",
+                    "efficientWithMinComfort": "Comfort",
                     "balanced": "Balanced",
                     "standby": "Standby",
                     "standard": "Standard"
@@ -351,8 +351,8 @@
                     "off": "Off",
                     "eco": "Eco",
                     "comfort": "Comfort",
-                    "efficient": "Comfort",
-                    "efficientWithMinComfort": "Eco",
+                    "efficient": "Eco",
+                    "efficientWithMinComfort": "Comfort",
                     "balanced": "Balanced",
                     "standby": "Standby",
                     "standard": "Standard"
