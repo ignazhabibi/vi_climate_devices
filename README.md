@@ -106,7 +106,7 @@ All entities are grouped under their respective device and support German and En
 
 **Entities not updating**
 - Check if your Viessmann gateway is online
-- API rate limit is respected (default: 60s polling interval)
+- API rate limit is respected (default: 3-minute polling interval)
 
 **Missing entities**
 - Not all features are available on all device models
