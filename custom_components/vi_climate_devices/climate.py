@@ -117,7 +117,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ViClimate(CoordinatorEntity, ClimateEntity):
+class ViClimate(CoordinatorEntity[ViClimateDataUpdateCoordinator], ClimateEntity):
     """Representation of a Viessmann climate circuit."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -136,6 +136,9 @@ class ViClimate(CoordinatorEntity, ClimateEntity):
         self._circuit_index = circuit_index
 
         device = coordinator.data.get(map_key)
+        if not device:
+            raise ValueError(f"Device {map_key} not found in coordinator data")
+
         self._attr_unique_id = (
             f"{device.gateway_serial}-{device.id}-heating_circuit_{circuit_index}"
         )
@@ -143,7 +146,7 @@ class ViClimate(CoordinatorEntity, ClimateEntity):
         self._attr_translation_placeholders = {"index": circuit_index}
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo | None:
         """Return device information."""
         device = self.coordinator.data.get(self._map_key)
         if not device:

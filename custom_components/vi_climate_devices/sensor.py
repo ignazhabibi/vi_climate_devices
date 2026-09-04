@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import dataclasses
+import logging
 import re
-from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -26,15 +27,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from vi_api_client.api import Feature
 
 from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
 from .utils import beautify_name, is_feature_boolean_like, is_feature_ignored
 
-
-@dataclass
-class ViClimateSensorEntityDescription(SensorEntityDescription):
-    """Custom description for ViClimate sensors."""
+_LOGGER = logging.getLogger(__name__)
 
 
 # Templates with regex patterns for dynamic feature names
@@ -760,7 +759,7 @@ def _discover_realtime_sensors(
     return entities
 
 
-class ViClimateSensor(CoordinatorEntity, SensorEntity):
+class ViClimateSensor(CoordinatorEntity[ViClimateDataUpdateCoordinator], SensorEntity):
     """Representation of a generic Viessmann Climate Devices Sensor."""
 
     def __init__(  # noqa: PLR0913, PLR0917
@@ -781,6 +780,8 @@ class ViClimateSensor(CoordinatorEntity, SensorEntity):
         self._attr_entity_registry_enabled_default = enabled_default
 
         device = coordinator.data.get(map_key)
+        if not device:
+            raise ValueError(f"Device {map_key} not found in coordinator data")
 
         # Unique ID: gateway-device-key
         self._attr_unique_id = f"{device.gateway_serial}-{device.id}-{description.key}"
@@ -791,13 +792,13 @@ class ViClimateSensor(CoordinatorEntity, SensorEntity):
             not hasattr(description, "translation_key")
             or not description.translation_key
         ):
-            if hasattr(description, "name") and description.name:
+            if isinstance(description.name, str):
                 self._attr_name = description.name
             else:
                 self._attr_name = beautify_name(feature_name)
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo | None:
         """Return device information."""
         device = self.coordinator.data.get(self._map_key)
         if not device:
@@ -811,7 +812,7 @@ class ViClimateSensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def feature_data(self):
+    def feature_data(self) -> Feature | None:
         """Retrieve the specific feature from coordinator data."""
         device = self.coordinator.data.get(self._map_key)
         if not device:
@@ -820,7 +821,7 @@ class ViClimateSensor(CoordinatorEntity, SensorEntity):
         return device.get_feature(self._feature_name)
 
     @property
-    def native_value(self):
+    def native_value(self) -> Any:
         """Return the state of the sensor."""
         feat = self.feature_data
         if feat:
@@ -844,9 +845,9 @@ class ViClimateSensor(CoordinatorEntity, SensorEntity):
         return None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        attrs = {"viessmann_feature_name": self._feature_name}
+        attrs: dict[str, Any] = {"viessmann_feature_name": self._feature_name}
         feat = self.feature_data
         if feat and isinstance(feat.value, (dict, list)):
             attrs["raw_value"] = feat.value
@@ -856,4 +857,8 @@ class ViClimateSensor(CoordinatorEntity, SensorEntity):
     def available(self) -> bool:
         """Return True if entity is available."""
         feat = self.feature_data
-        return self.coordinator.last_update_success and feat and feat.is_enabled
+        return (
+            self.coordinator.last_update_success
+            and feat is not None
+            and feat.is_enabled
+        )

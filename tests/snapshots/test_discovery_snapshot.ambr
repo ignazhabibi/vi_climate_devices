@@ -11,30 +11,6 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Circuits 0 Active',
-        'viessmann_feature_name': 'heating.circuits.0.active',
-      }),
-      'entity_id': 'binary_sensor.vitocal250a_circuits_0_active',
-      'state': 'on',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Circuits 0 Operating Modes Heating Active',
-        'viessmann_feature_name': 'heating.circuits.0.operating.modes.heating.active',
-      }),
-      'entity_id': 'binary_sensor.vitocal250a_circuits_0_operating_modes_heating_active',
-      'state': 'on',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Circuits 0 Operating Modes Standby Active',
-        'viessmann_feature_name': 'heating.circuits.0.operating.modes.standby.active',
-      }),
-      'entity_id': 'binary_sensor.vitocal250a_circuits_0_operating_modes_standby_active',
-      'state': 'off',
-    }),
-    dict({
-      'attributes': dict({
         'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Comfort Cooling Energy Saving Active',
         'viessmann_feature_name': 'heating.circuits.0.operating.programs.comfortCoolingEnergySaving.active',
       }),
@@ -388,7 +364,7 @@
     }),
     dict({
       'attributes': dict({
-        'device_class': 'temperature',
+        'device_class': 'temperature_delta',
         'friendly_name': 'Vitocal250A DHW Hysteresis',
         'icon': 'mdi:thermometer-lines',
         'max': 10.0,
@@ -403,7 +379,7 @@
     }),
     dict({
       'attributes': dict({
-        'device_class': 'temperature',
+        'device_class': 'temperature_delta',
         'friendly_name': 'Vitocal250A DHW Hysteresis Switch Off',
         'icon': 'mdi:thermometer-minus',
         'max': 2.5,
@@ -418,7 +394,7 @@
     }),
     dict({
       'attributes': dict({
-        'device_class': 'temperature',
+        'device_class': 'temperature_delta',
         'friendly_name': 'Vitocal250A DHW Hysteresis Switch On',
         'icon': 'mdi:thermometer-plus',
         'max': 10.0,
@@ -718,14 +694,6 @@
       }),
       'entity_id': 'sensor.vitocal250a_circuits_0_operating_programs_reduced_heating_demand',
       'state': 'heating',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Circuits 0 Sensors Temperature Supply Status',
-        'viessmann_feature_name': 'heating.circuits.0.sensors.temperature.supply.status',
-      }),
-      'entity_id': 'sensor.vitocal250a_circuits_0_sensors_temperature_supply_status',
-      'state': 'connected',
     }),
     dict({
       'attributes': dict({

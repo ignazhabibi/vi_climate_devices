@@ -5,7 +5,6 @@ from __future__ import annotations
 import dataclasses
 import logging
 import re
-from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -30,11 +29,6 @@ from .utils import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class ViClimateBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Custom description for ViClimate binary sensors."""
 
 
 # Templates with regex patterns for dynamic feature names
@@ -216,7 +210,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ViClimateBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class ViClimateBinarySensor(
+    CoordinatorEntity[ViClimateDataUpdateCoordinator], BinarySensorEntity
+):
     """Representation of a generic Viessmann Climate Devices Binary Sensor."""
 
     def __init__(  # noqa: PLR0913, PLR0917
@@ -237,6 +233,8 @@ class ViClimateBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._attr_entity_registry_enabled_default = enabled_default
 
         device = coordinator.data.get(map_key)
+        if not device:
+            raise ValueError(f"Device {map_key} not found in coordinator data")
 
         # Unique ID: gateway-device-key
         self._attr_unique_id = f"{device.gateway_serial}-{device.id}-{description.key}"
@@ -247,13 +245,13 @@ class ViClimateBinarySensor(CoordinatorEntity, BinarySensorEntity):
             not hasattr(description, "translation_key")
             or not description.translation_key
         ):
-            if description.name:
+            if isinstance(description.name, str):
                 self._attr_name = description.name
             else:
                 self._attr_name = beautify_name(feature_name)
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo | None:
         """Return device information."""
         device = self.coordinator.data.get(self._map_key)
         if not device:
