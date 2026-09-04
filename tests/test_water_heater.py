@@ -13,7 +13,7 @@ from homeassistant.components.water_heater import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client.models import CommandResponse
+from vi_api_client.models import CommandResponse, Device, Feature
 
 from custom_components.vi_climate_devices.const import DOMAIN
 from custom_components.vi_climate_devices.water_heater import (
@@ -137,6 +137,76 @@ async def test_water_heater_creation_and_services(hass: HomeAssistant, mock_clie
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_PERFORMANCE
+
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("missing_feature_name", "read_only_feature_name"),
+    [
+        pytest.param(FEATURE_MODE, None, id="missing-mode-control"),
+        pytest.param(None, FEATURE_TARGET_TEMP, id="read-only-target-control"),
+    ],
+)
+async def test_water_heater_requires_writable_target_and_mode(
+    hass: HomeAssistant,
+    mock_client,
+    missing_feature_name: str | None,
+    read_only_feature_name: str | None,
+) -> None:
+    """Do not create a water heater without both writable controls."""
+    fixture_device = (await mock_client.get_full_installation_status("99999"))[0]
+    device_without_controls = Device(
+        id=fixture_device.id,
+        gateway_serial=fixture_device.gateway_serial,
+        installation_id=fixture_device.installation_id,
+        model_id=fixture_device.model_id,
+        device_type=fixture_device.device_type,
+        status=fixture_device.status,
+        features=[
+            Feature(
+                name=feature.name,
+                value=feature.value,
+                unit=feature.unit,
+                is_enabled=feature.is_enabled,
+                is_ready=feature.is_ready,
+                control=None,
+            )
+            if feature.name == read_only_feature_name
+            else feature
+            for feature in fixture_device.features
+            if feature.name != missing_feature_name
+        ],
+    )
+    mock_client.get_full_installation_status = AsyncMock(
+        return_value=[device_without_controls]
+    )
+    mock_client.update_device = AsyncMock(return_value=device_without_controls)
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"client_id": "123", "token": "abc"})
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "custom_components.vi_climate_devices.ViessmannClient",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+            return_value=None,
+        ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert hass.states.get("water_heater.vitocal250a_dhw_water_heater") is None
 
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
