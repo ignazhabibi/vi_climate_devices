@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from custom_components.vi_climate_devices.const import DOMAIN
 

@@ -179,7 +179,7 @@ async def test_auto_discovery_unit_mapping(hass: HomeAssistant, mock_client):
     mock_device = Device(
         id="0",
         gateway_serial="mock_gateway",
-        installation_id=123,
+        installation_id="123",
         features=[
             feat_celsius,
             feat_bar,

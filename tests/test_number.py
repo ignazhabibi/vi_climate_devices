@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from homeassistant.components.number import (
+from homeassistant.components.number.const import (
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,
@@ -70,8 +70,10 @@ async def test_number_creation_and_services(hass: HomeAssistant, mock_client):
 
         # Verify precision on entity
         component = hass.data.get("number")
+        assert component is not None
         entity_id = "number.vitocal250a_heating_circuit_0_curve_slope"
         entity = component.get_entity(entity_id)
+        assert entity is not None
         assert entity.suggested_display_precision == 1
 
         # Act: Set slope to 1.6.

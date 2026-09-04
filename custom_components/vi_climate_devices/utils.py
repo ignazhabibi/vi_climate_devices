@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from typing import Any
 
 
-def beautify_name(name: str) -> str:
+def beautify_name(name: str | None) -> str | None:
     """Convert a dot-separated name to a Title Cased string.
 
     Removes leading 'heating.' if present.
@@ -94,13 +94,13 @@ def get_feature_bool_value(value: Any, strict: bool = False) -> bool | None:
 
 def is_feature_ignored(
     feature_name: str,
-    ignored_features: Sequence[str | re.Pattern],
+    ignored_features: Sequence[str | re.Pattern[str]],
 ) -> bool:
     """Check if a feature should be ignored based on list of patterns."""
     for pattern in ignored_features:
         if isinstance(pattern, str) and feature_name == pattern:
             return True
-        if hasattr(pattern, "match") and pattern.match(feature_name):
+        if isinstance(pattern, re.Pattern) and pattern.match(feature_name):
             return True
     return False
 

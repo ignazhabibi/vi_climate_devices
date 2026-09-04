@@ -89,6 +89,7 @@ async def test_switch_creation_and_services(hass: HomeAssistant, mock_client):
         # Verify Optimistic State Update.
         # The switch should match the requested state immediately.
         one_time_charge = hass.states.get("switch.vitocal250a_one_time_dhw_charge")
+        assert one_time_charge is not None
         assert one_time_charge.state == "on"
 
         # Test 3: Service Calls (turn_off).
@@ -112,6 +113,7 @@ async def test_switch_creation_and_services(hass: HomeAssistant, mock_client):
 
         # Verify Optimistic State Update.
         one_time_charge = hass.states.get("switch.vitocal250a_one_time_dhw_charge")
+        assert one_time_charge is not None
         assert one_time_charge.state == STATE_OFF
 
         await hass.config_entries.async_unload(entry.entry_id)
