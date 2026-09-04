@@ -22,7 +22,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest-homeassistant-custom-component==0.13.363",
-    "ruff==0.16.5",
+    "ruff==0.16.6",
 ]
 [tool.ruff]
 line-length = 88
