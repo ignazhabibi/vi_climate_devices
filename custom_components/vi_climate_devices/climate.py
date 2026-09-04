@@ -521,6 +521,8 @@ class ViClimate(CoordinatorEntity[ViClimateDataUpdateCoordinator], ClimateEntity
             )
 
         device = self.coordinator.data.get(self._map_key)
+        if not device:
+            raise HomeAssistantError("Device not found")
 
         # 1. OPTIMISTIC UPDATE
         self._optimistic_temp = value
@@ -586,6 +588,8 @@ class ViClimate(CoordinatorEntity[ViClimateDataUpdateCoordinator], ClimateEntity
                 raise HomeAssistantError(f"Unsupported HVAC mode: {hvac_mode}")
 
         device = self.coordinator.data.get(self._map_key)
+        if not device:
+            raise HomeAssistantError("Device not found")
 
         # 1. OPTIMISTIC UPDATE
         self._optimistic_mode = hvac_mode

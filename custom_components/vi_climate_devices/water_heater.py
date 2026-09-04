@@ -240,6 +240,8 @@ class ViClimateWaterHeater(
             raise HomeAssistantError("Target temperature feature not found")
 
         device = self.coordinator.data.get(self._map_key)
+        if not device:
+            raise HomeAssistantError("Device not found")
 
         # 1. OPTIMISTIC UPDATE
         self._optimistic_temp = value
@@ -279,6 +281,8 @@ class ViClimateWaterHeater(
             raise HomeAssistantError("Mode feature not found")
 
         device = self.coordinator.data.get(self._map_key)
+        if not device:
+            raise HomeAssistantError("Device not found")
 
         # Get available API modes from device
         available_api_modes = self._get_available_api_modes(feat)
