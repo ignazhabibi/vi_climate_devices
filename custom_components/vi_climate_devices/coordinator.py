@@ -82,11 +82,11 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         """
         _LOGGER.debug("Performing initial discovery...")
 
-        installations = await self.client.get_installations()
-        if not installations:
-            raise UpdateFailed("No installations found")
-
         try:
+            installations = await self.client.get_installations()
+            if not installations:
+                raise UpdateFailed("No installations found")
+
             # Fetch devices from ALL installations
             all_devices: list[Device] = []
             for installation in installations:
