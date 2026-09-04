@@ -13,11 +13,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from vi_api_client import Feature
 
 from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
+from .entity import ViClimateEntity
 from .utils import beautify_name, is_feature_ignored
 
 _LOGGER = logging.getLogger(__name__)
@@ -137,7 +137,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ViClimateSelect(CoordinatorEntity[ViClimateDataUpdateCoordinator], SelectEntity):
+class ViClimateSelect(ViClimateEntity, SelectEntity):
     """Representation of a Viessmann Climate Devices Select Entity."""
 
     entity_description: SelectEntityDescription

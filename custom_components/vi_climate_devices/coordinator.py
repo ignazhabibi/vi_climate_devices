@@ -39,6 +39,11 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         )
         self.client = client
         self._known_devices: list[Device] = []
+        self._failed_device_keys: set[str] = set()
+
+    def is_device_available(self, device_key: str) -> bool:
+        """Return whether the most recent refresh succeeded for a device."""
+        return device_key not in self._failed_device_keys
 
     async def _perform_discovery(self) -> None:
         """Perform initial device discovery.
@@ -101,6 +106,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
             # 2. Update Loop (Refresh each device)
             updated_data: dict[str, Device] = {}
+            failed_device_keys: set[str] = set()
 
             if self._known_devices:
                 _LOGGER.debug("Updating %s known devices", len(self._known_devices))
@@ -123,8 +129,13 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                         _LOGGER.warning(
                             "Failed to update device %s: %s", device.id, err
                         )
-                        # Graceful degradation: keep old data so entities stay available
+                        failed_device_keys.add(key)
+                        # Keep old data for recovery, but mark its entities unavailable.
                         updated_data[key] = device
+
+                self._failed_device_keys = failed_device_keys
+                if failed_device_keys and len(failed_device_keys) == len(updated_data):
+                    raise UpdateFailed("Failed to update all devices")
 
                 # Update local reference with fresh immutable objects
                 self._known_devices = list(updated_data.values())

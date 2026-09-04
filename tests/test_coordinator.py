@@ -112,10 +112,10 @@ async def test_data_coordinator_discovers_devices_and_filters_ignored_ids(
 
 
 @pytest.mark.asyncio
-async def test_data_coordinator_keeps_last_device_state_when_refresh_fails(
+async def test_data_coordinator_raises_when_all_device_updates_fail(
     hass: HomeAssistant, mock_client
 ) -> None:
-    """Test refresh falls back to the previous immutable device when one update fails."""
+    """Test refresh fails when no known device can be updated."""
     # Arrange: Seed one known device and make its refresh raise a transient error.
     known_device = _build_device(device_id="device-0", gateway_serial="gw-main")
     mock_client.update_device = AsyncMock(
@@ -124,12 +124,40 @@ async def test_data_coordinator_keeps_last_device_state_when_refresh_fails(
     coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
     coordinator._known_devices = [known_device]
 
-    # Act: Refresh the coordinator with the failing device update.
+    # Act and Assert: Treat the failed poll as an unavailable coordinator update.
+    with pytest.raises(UpdateFailed, match="Failed to update all devices"):
+        await coordinator._async_update_data()
+
+    # Assert: Keep the immutable device reference for a later recovery attempt.
+    assert coordinator._known_devices == [known_device]
+    assert not coordinator.is_device_available("gw-main_device-0")
+
+
+@pytest.mark.asyncio
+async def test_data_coordinator_marks_only_failed_device_unavailable(
+    hass: HomeAssistant, mock_client
+) -> None:
+    """Test partial refresh failures only make the affected device unavailable."""
+    # Arrange: Refresh one device and fail the second device with a transient error.
+    refreshed_device = _build_device(device_id="device-0", gateway_serial="gw-main")
+    failing_device = _build_device(device_id="device-1", gateway_serial="gw-backup")
+    mock_client.update_device = AsyncMock(
+        side_effect=[refreshed_device, ViConnectionError("device offline")]
+    )
+    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator._known_devices = [refreshed_device, failing_device]
+    coordinator._failed_device_keys = {"gw-main_device-0"}
+
+    # Act: Refresh the coordinator with one successful and one failed device poll.
     result = await coordinator._async_update_data()
 
-    # Assert: The previous device object stays available in coordinator data.
-    assert result == {"gw-main_device-0": known_device}
-    assert coordinator._known_devices == [known_device]
+    # Assert: Preserve the failed device for recovery while exposing its outage.
+    assert result == {
+        "gw-main_device-0": refreshed_device,
+        "gw-backup_device-1": failing_device,
+    }
+    assert coordinator.is_device_available("gw-main_device-0")
+    assert not coordinator.is_device_available("gw-backup_device-1")
 
 
 @pytest.mark.asyncio
