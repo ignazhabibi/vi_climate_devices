@@ -409,7 +409,7 @@
     }),
     dict({
       'attributes': dict({
-        'device_class': 'temperature',
+        'device_class': 'temperature_delta',
         'friendly_name': 'Vitocal250A Heating Circuit 0 Curve Shift',
         'icon': 'mdi:arrow-up-down',
         'max': 40.0,

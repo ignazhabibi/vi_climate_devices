@@ -12,6 +12,7 @@ from homeassistant.components.number.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from vi_api_client.models import CommandResponse
 
@@ -136,6 +137,56 @@ async def test_number_creation_and_services(hass: HomeAssistant, mock_client):
         dhw_temp = hass.states.get("number.vitocal250a_dhw_target_temperature")
         assert dhw_temp is not None
         assert float(dhw_temp.state) == 45.0
+
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+@pytest.mark.asyncio
+async def test_curve_shift_uses_temperature_delta_conversion(
+    hass: HomeAssistant, mock_client
+) -> None:
+    """Test the heating curve shift converts as a temperature difference."""
+    # Arrange: Use Fahrenheit as the Home Assistant display unit.
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "client_id": "123",
+            "token": {
+                "access_token": "mock_access_token",
+                "refresh_token": "mock_refresh_token",
+                "expires_at": 3800000000,
+                "token_type": "Bearer",
+            },
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "custom_components.vi_climate_devices.ViessmannClient",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+            return_value=None,
+        ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
+    ):
+        # Act: Load the integration with the fixture's four-degree Celsius shift.
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Assert: Temperature-delta values remain in their native Celsius unit.
+        shift = hass.states.get("number.vitocal250a_heating_circuit_0_curve_shift")
+        assert shift is not None
+        assert shift.attributes["unit_of_measurement"] == "°C"
+        assert float(shift.state) == 4.0
 
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
