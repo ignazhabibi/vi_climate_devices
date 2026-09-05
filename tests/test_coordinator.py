@@ -313,6 +313,59 @@ async def test_data_coordinator_serializes_writes_per_device(
 
 
 @pytest.mark.asyncio
+async def test_data_coordinator_does_not_overwrite_a_write_with_stale_refresh(
+    hass: HomeAssistant, mock_client
+) -> None:
+    """Test a write waits for an in-progress refresh before updating coordinator data."""
+    # Arrange: Start a refresh whose response still contains the old curve slope.
+    device_key = "gw-main_device-0"
+    initial_device = _build_curve_device(slope=0.7, shift=0.0)
+    refreshed_device = _build_curve_device(slope=0.7, shift=0.0)
+    written_device = _build_curve_device(slope=1.2, shift=0.0)
+    refresh_started = asyncio.Event()
+    allow_refresh_to_finish = asyncio.Event()
+
+    async def mock_update_device(device: Device) -> Device:
+        refresh_started.set()
+        await allow_refresh_to_finish.wait()
+        return refreshed_device
+
+    mock_client.update_device = AsyncMock(side_effect=mock_update_device)
+    mock_client.set_feature = AsyncMock(
+        return_value=(
+            CommandResponse(success=True, message=None, reason=None),
+            written_device,
+        )
+    )
+    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator.data = {device_key: initial_device}
+    coordinator._known_devices = [initial_device]
+
+    # Act: Begin a refresh, then write a new slope before its stale response returns.
+    refresh_task = asyncio.create_task(coordinator.async_refresh())
+    await refresh_started.wait()
+    write_task = asyncio.create_task(
+        coordinator.async_set_feature(
+            device_key,
+            "heating.circuits.0.heating.curve.slope",
+            1.2,
+        )
+    )
+    await asyncio.sleep(0)
+    assert mock_client.set_feature.call_count == 0
+    allow_refresh_to_finish.set()
+    await asyncio.gather(refresh_task, write_task)
+
+    # Assert: The completed write remains the coordinator's current device data.
+    assert (
+        coordinator.data[device_key]
+        .get_feature("heating.circuits.0.heating.curve.slope")
+        .value
+        == 1.2
+    )
+
+
+@pytest.mark.asyncio
 async def test_data_coordinator_notifies_entities_after_successful_write(
     hass: HomeAssistant, mock_client
 ) -> None:

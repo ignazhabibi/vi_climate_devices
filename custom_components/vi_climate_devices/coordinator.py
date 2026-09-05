@@ -43,6 +43,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self._known_devices: list[Device] = []
         self._failed_device_keys: set[str] = set()
         self._device_write_locks: dict[str, asyncio.Lock] = {}
+        self._refresh_write_lock = asyncio.Lock()
 
     def is_device_available(self, device_key: str) -> bool:
         """Return whether the most recent refresh succeeded for a device."""
@@ -52,24 +53,43 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self, device_key: str, feature_name: str, value: object
     ) -> CommandResponse:
         """Set a feature while serializing writes for the same device."""
-        write_lock = self._device_write_locks.setdefault(device_key, asyncio.Lock())
-        async with write_lock:
-            device = self.data.get(device_key)
-            if device is None:
-                raise ValueError(f"Device {device_key} not found in coordinator data")
+        async with self._refresh_write_lock:
+            write_lock = self._device_write_locks.setdefault(device_key, asyncio.Lock())
+            async with write_lock:
+                device = self.data.get(device_key)
+                if device is None:
+                    raise ValueError(
+                        f"Device {device_key} not found in coordinator data"
+                    )
 
-            feature = device.get_feature(feature_name)
-            if feature is None:
-                raise ValueError(f"Feature {feature_name} not found in device data")
+                feature = device.get_feature(feature_name)
+                if feature is None:
+                    raise ValueError(f"Feature {feature_name} not found in device data")
 
-            response, updated_device = await self.client.set_feature(
-                device, feature, value
+                response, updated_device = await self.client.set_feature(
+                    device, feature, value
+                )
+                if response.success:
+                    updated_data = dict(self.data)
+                    updated_data[device_key] = updated_device
+                    self.async_set_updated_data(updated_data)
+                return response
+
+    async def _async_refresh(
+        self,
+        log_failures: bool = True,
+        raise_on_auth_failed: bool = False,
+        scheduled: bool = False,
+        raise_on_entry_error: bool = False,
+    ) -> None:
+        """Refresh data without racing successful writes."""
+        async with self._refresh_write_lock:
+            await super()._async_refresh(
+                log_failures=log_failures,
+                raise_on_auth_failed=raise_on_auth_failed,
+                scheduled=scheduled,
+                raise_on_entry_error=raise_on_entry_error,
             )
-            if response.success:
-                updated_data = dict(self.data)
-                updated_data[device_key] = updated_device
-                self.async_set_updated_data(updated_data)
-            return response
 
     async def _perform_discovery(self) -> None:
         """Perform initial device discovery.
