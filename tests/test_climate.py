@@ -14,6 +14,7 @@ from homeassistant.components.climate.const import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -242,7 +243,9 @@ async def test_hvac_action(
 
 
 @pytest.mark.asyncio
-async def test_climate_creation_and_services(hass: HomeAssistant, mock_client) -> None:
+async def test_climate_creation_and_services(  # noqa: PLR0915
+    hass: HomeAssistant, mock_client
+) -> None:
     """Test climate entity creation, attributes, and service calls."""
     # Arrange: Mock Config Entry and setup integration.
     entry = MockConfigEntry(
@@ -353,6 +356,24 @@ async def test_climate_creation_and_services(hass: HomeAssistant, mock_client) -
         args, _ = mock_client.set_feature.call_args
         assert args[1].name == "heating.circuits.0.operating.modes.active"
         assert args[2] == "heating"
+
+        # Act: Use the supported Climate turn actions.
+        mock_client.set_feature.reset_mock()
+        await hass.services.async_call(
+            "climate", SERVICE_TURN_ON, {"entity_id": entity_id}, blocking=True
+        )
+        await hass.services.async_call(
+            "climate", SERVICE_TURN_OFF, {"entity_id": entity_id}, blocking=True
+        )
+
+        # Assert: The actions change the operating mode instead of being rejected.
+        assert mock_client.set_feature.call_count == 2
+        args, _ = mock_client.set_feature.call_args_list[0]
+        assert args[1].name == "heating.circuits.0.operating.modes.active"
+        assert args[2] == "heating"
+        args, _ = mock_client.set_feature.call_args_list[1]
+        assert args[1].name == "heating.circuits.0.operating.modes.active"
+        assert args[2] == "standby"
 
         # Act & Assert: Attempting to set preset mode raises HomeAssistantError since it is not supported.
         with pytest.raises(
