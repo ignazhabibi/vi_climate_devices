@@ -1,5 +1,6 @@
 """Tests for ViClimate climate entities."""
 
+from dataclasses import replace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -444,6 +445,34 @@ async def test_climate_error_handling_and_rollback(
 
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
+
+
+@pytest.mark.asyncio
+async def test_dhw_only_circuit_mode_is_reported_as_off() -> None:
+    """Test a DHW-only circuit does not report an unknown HVAC state."""
+    # Arrange: Use a fixture where a heating circuit offers the DHW-only mode.
+    client = MockViClient(device_name="Vitocal333G-with-Vitovent300F", auth=None)
+    device = (await client.get_full_installation_status("99999"))[0]
+    mode_feature_name = "heating.circuits.0.operating.modes.active"
+    device = replace(
+        device,
+        features=[
+            replace(feature, value="dhw")
+            if feature.name == mode_feature_name
+            else feature
+            for feature in device.features
+        ],
+    )
+    map_key = f"{device.gateway_serial}_{device.id}"
+    coordinator = MagicMock()
+    coordinator.data = {map_key: device}
+    entity = ViClimate(coordinator, map_key, "0")
+
+    # Act: Read the active Viessmann DHW-only operation mode.
+    hvac_mode = entity.hvac_mode
+
+    # Assert: The heating circuit is off while domestic hot water stays available.
+    assert hvac_mode == HVACMode.OFF
 
 
 @pytest.mark.asyncio
