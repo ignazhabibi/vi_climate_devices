@@ -45,6 +45,7 @@ API_TO_HA_HVAC_ACTION = {
 # Sort the keys alphabetically.
 API_TO_HA_HVAC_MODE = {
     "cooling": HVACMode.COOL,
+    "dhw": HVACMode.OFF,
     "dhwAndHeating": HVACMode.HEAT,
     "dhwAndHeatingCooling": HVACMode.HEAT_COOL,
     "heating": HVACMode.HEAT,
