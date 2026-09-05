@@ -146,6 +146,20 @@ class ViClimate(ViClimateEntity, ClimateEntity):
         self._attr_has_entity_name = True
         self._attr_translation_placeholders = {"index": circuit_index}
 
+        mode_feature = self._get_feature(
+            f"heating.circuits.{self._circuit_index}.operating.modes.active"
+        )
+        available_hvac_modes = self.hvac_modes
+        if (
+            mode_feature
+            and mode_feature.is_writable
+            and HVACMode.OFF in available_hvac_modes
+            and any(mode != HVACMode.OFF for mode in available_hvac_modes)
+        ):
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+            )
+
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return device information."""
