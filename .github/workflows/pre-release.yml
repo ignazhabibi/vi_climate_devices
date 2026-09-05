@@ -28,6 +28,8 @@ jobs:
       run: |
         ruff check .
         ruff format --check .
+    - name: Type check (Pyright)
+      run: pyright --pythonpath "$(which python)"
     - name: Tests
       run: python -m pytest -q
 

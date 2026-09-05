@@ -357,12 +357,11 @@ async def test_data_coordinator_does_not_overwrite_a_write_with_stale_refresh(
     await asyncio.gather(refresh_task, write_task)
 
     # Assert: The completed write remains the coordinator's current device data.
-    assert (
-        coordinator.data[device_key]
-        .get_feature("heating.circuits.0.heating.curve.slope")
-        .value
-        == 1.2
+    updated_feature = coordinator.data[device_key].get_feature(
+        "heating.circuits.0.heating.curve.slope"
     )
+    assert updated_feature is not None
+    assert updated_feature.value == 1.2
 
 
 @pytest.mark.asyncio

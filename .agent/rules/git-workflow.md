@@ -24,7 +24,8 @@ Strict guidelines for version control and feature development.
 ### B. Develop (The Loop)
 1. Write code (`src/` and `tests/`).
 2. **Local Tests**: Run `python -m pytest -q` frequently.
-3. **Local Lint**: Run `ruff check .` and `ruff format --check .` before every commit.
+3. **Local Quality Checks**: Run `ruff check .`, `ruff format --check .`, and
+   `pyright --pythonpath .venv/bin/python` before every commit.
 4. **Commit**: `git commit -m "type: description"` (Conventional Commits).
    - Preferred format in this repository is `type: description`.
    - Use `feat`, `fix`, `refactor`, `docs`, `test`, or `chore`.
@@ -58,4 +59,6 @@ Strict guidelines for version control and feature development.
 - **Allowed**: `git checkout -b`, `git add`, `git commit`, `git push`.
 - **Forbidden**: `git merge` (User does this via UI), committing to `main`
   outside an explicitly approved emergency bypass.
-- **Validation**: The Agent must run `ruff check .`, `ruff format --check .`, and `python -m pytest -q` before proposing a push.
+- **Validation**: The Agent must run `ruff check .`, `ruff format --check .`,
+  `pyright --pythonpath .venv/bin/python`, and `python -m pytest -q` before
+  proposing a push.

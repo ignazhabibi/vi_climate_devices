@@ -57,6 +57,11 @@ ruff format --check .
 
 // turbo
 ```bash
+pyright --pythonpath .venv/bin/python
+```
+
+// turbo
+```bash
 python -m pytest -q
 ```
 
