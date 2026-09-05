@@ -12,6 +12,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.climate.const import (
+    ATTR_HVAC_MODE,
     PRESET_AWAY,
     PRESET_COMFORT,
     PRESET_ECO,
@@ -503,6 +504,7 @@ class ViClimate(ViClimateEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         value = kwargs.get(ATTR_TEMPERATURE)
+        hvac_mode = kwargs.get(ATTR_HVAC_MODE)
         if value is None:
             return
 
@@ -540,6 +542,9 @@ class ViClimate(ViClimateEntity, ClimateEntity):
                 raise HomeAssistantError(
                     f"Command rejected: {response.message or response.reason}"
                 )
+
+            if hvac_mode is not None:
+                await self.async_set_hvac_mode(hvac_mode)
 
             # Clear optimistic value.
             self._optimistic_temp = None
