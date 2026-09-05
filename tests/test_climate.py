@@ -312,39 +312,47 @@ async def test_climate_creation_and_services(hass: HomeAssistant, mock_client) -
         assert state.attributes["heating_curve_slope"] == 0.6
         assert state.attributes["heating_curve_shift"] == 4.0
 
-        # Act: Set temperature to 22.0.
+        # Act: Set temperature to 22.0 and turn the circuit off in one service call.
         await hass.services.async_call(
             "climate",
             SERVICE_SET_TEMPERATURE,
-            {"entity_id": entity_id, "temperature": 22.0},
+            {
+                "entity_id": entity_id,
+                "temperature": 22.0,
+                "hvac_mode": HVACMode.OFF,
+            },
             blocking=True,
         )
 
-        # Assert: We expect set_feature to be called with the target program's feature name and 22.0.
-        assert mock_client.set_feature.call_count == 1
-        args, _ = mock_client.set_feature.call_args
+        # Assert: The temperature and requested HVAC mode were both written.
+        assert mock_client.set_feature.call_count == 2
+        args, _ = mock_client.set_feature.call_args_list[0]
         assert (
             args[1].name
             == "heating.circuits.0.operating.programs.normalHeating.temperature"
         )
         assert args[2] == 22.0
+        args, _ = mock_client.set_feature.call_args_list[1]
+        assert args[1].name == "heating.circuits.0.operating.modes.active"
+        assert args[2] == "standby"
+        assert hass.states.get(entity_id).state == HVACMode.OFF
 
         # Reset Mock.
         mock_client.set_feature.reset_mock()
 
-        # Act: Set HVAC mode to HVACMode.OFF.
+        # Act: Set HVAC mode to HVACMode.HEAT.
         await hass.services.async_call(
             "climate",
             SERVICE_SET_HVAC_MODE,
-            {"entity_id": entity_id, "hvac_mode": HVACMode.OFF},
+            {"entity_id": entity_id, "hvac_mode": HVACMode.HEAT},
             blocking=True,
         )
 
-        # Assert: We expect set_feature to write 'standby' to the operating modes active feature.
+        # Assert: We expect set_feature to write 'heating' to the operating modes active feature.
         assert mock_client.set_feature.call_count == 1
         args, _ = mock_client.set_feature.call_args
         assert args[1].name == "heating.circuits.0.operating.modes.active"
-        assert args[2] == "standby"
+        assert args[2] == "heating"
 
         # Act & Assert: Attempting to set preset mode raises HomeAssistantError since it is not supported.
         with pytest.raises(
