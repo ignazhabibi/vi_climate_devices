@@ -50,7 +50,7 @@ NUMBER_TEMPLATES = [
             mode=NumberMode.BOX,
             entity_category=EntityCategory.CONFIG,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            device_class=NumberDeviceClass.TEMPERATURE,
+            device_class=NumberDeviceClass.TEMPERATURE_DELTA,
         ),
     },
     {
