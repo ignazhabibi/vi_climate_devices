@@ -106,6 +106,7 @@ Primary local quality gates:
 ```bash
 ruff check .
 ruff format --check .
+pyright --pythonpath .venv/bin/python
 python -m pytest -q
 ```
 
@@ -114,7 +115,7 @@ validate once in a fresh environment installed with `.[dev]`.
 
 ## CI and Release Notes
 
-- CI currently runs via `.github/workflows/release.yml` for `main`, pull
+- CI currently runs Ruff, Pyright, and pytest via `.github/workflows/release.yml` for `main`, pull
   requests, and stable release tags, plus `.github/workflows/pre-release.yml`
   for prerelease tags.
 - `main` is protected by a GitHub ruleset. Assume pull requests are required for

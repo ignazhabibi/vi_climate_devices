@@ -339,7 +339,9 @@ async def test_climate_creation_and_services(  # noqa: PLR0915
         args, _ = mock_client.set_feature.call_args_list[1]
         assert args[1].name == "heating.circuits.0.operating.modes.active"
         assert args[2] == "standby"
-        assert hass.states.get(entity_id).state == HVACMode.OFF
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == HVACMode.OFF
 
         # Reset Mock.
         mock_client.set_feature.reset_mock()

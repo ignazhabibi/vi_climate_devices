@@ -135,6 +135,7 @@ python3.14 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install '.[dev]'
+pyright --pythonpath .venv/bin/python
 python -m pytest -q
 ```
 
@@ -143,6 +144,7 @@ python -m pytest -q
 ```bash
 ruff check .
 ruff format --check .
+pyright --pythonpath .venv/bin/python
 ```
 
 ---

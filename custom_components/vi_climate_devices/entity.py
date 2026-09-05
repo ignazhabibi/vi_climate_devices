@@ -10,6 +10,8 @@ from .coordinator import ViClimateDataUpdateCoordinator
 class ViClimateEntity(CoordinatorEntity[ViClimateDataUpdateCoordinator]):
     """Base entity that reflects per-device refresh availability."""
 
+    _map_key: str
+
     @property
     def available(self) -> bool:
         """Return whether the coordinator has current data for this device."""

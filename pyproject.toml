@@ -21,9 +21,21 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    "pyright==1.1.411",
     "pytest-homeassistant-custom-component==0.13.363",
     "ruff==0.16.6",
 ]
+
+[tool.pyright]
+include = ["custom_components", "tests"]
+exclude = [".venv", "build", "dist"]
+pythonVersion = "3.14"
+extraPaths = []
+typeCheckingMode = "standard"
+# Home Assistant declares cached properties in base classes, while integrations
+# may validly override them with properties.
+reportIncompatibleVariableOverride = "none"
+
 [tool.ruff]
 line-length = 88
 target-version = "py314"
