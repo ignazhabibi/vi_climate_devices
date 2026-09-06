@@ -19,13 +19,18 @@ trigger: always_on
   its active interpreter explicitly.
 - Keep the Pylance type-checking mode aligned with Pyright's configured mode.
 
-## 4. Error Handling & Logic
+## 4. Quality Gate
+- Run `python scripts/quality_check.py` for the complete local gate.
+- Install the versioned pre-commit hook after the development dependencies.
+- The hook and CI both use the same quality-check script.
+
+## 5. Error Handling & Logic
 - **Specific Exceptions:** NEVER catch a bare `Exception`. Catch specific errors (e.g., `ValueError`, `FileNotFoundError`).
 - **EAFP:** Prefer "Easier to Ask for Forgiveness than Permission" (try/except) over extensive `if` checks where Pythonic.
 - **Custom Exceptions:** Define custom exceptions in `exceptions.py`.
 - **No Leaking:** Do not raise HTTP-specific exceptions (like `HTTPException`) in the service/library layer. Keep the core logic clean.
 
-## 5. Filesystem
+## 6. Filesystem
 - **Pathlib:** Always use `pathlib.Path`.
     - ❌ Wrong: `os.path.join(a, b)`
     - ✅ Right: `pathlib.Path(a) / b`
