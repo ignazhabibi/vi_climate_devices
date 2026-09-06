@@ -41,16 +41,32 @@ affect the solution.
   `should_`. Sort collections when their order has no semantic meaning.
 - Use `pathlib.Path` for filesystem paths. Keep log messages free of trailing
   periods.
-- Write concise docstrings that explain purpose and behavior rather than
-  repeating type annotations. Public integration APIs need docstrings; keep
-  comments meaningful and scenario-specific.
+- Start every Python file, including test files, with a module docstring
+  describing its purpose.
+- Use Google-style docstrings for classes and functions. Docstrings are
+  required for all public classes and methods, including public functions.
+  Explain purpose and behavior (why and what), not merely implementation steps.
+  Do not repeat parameter or return types already present in the signature.
+  Document exceptions callers can encounter in a `Raises:` section.
+- Keep comments meaningful and scenario-specific. Explain non-obvious reasons
+  and constraints; omit code paraphrases, agent reasoning notes, and abandoned
+  implementation plans.
 - Use pytest functions and the Home Assistant test stack. Prefer
   `MockViClient` with the `Vitocal250A` fixture; do not mock HTTP requests in
   this integration. Use `MockConfigEntry` when setting up an integration.
-- Use Arrange-Act-Assert for nontrivial tests, with scenario-specific comments,
-  and focused assertions for behavior. Use snapshots for discovery and
-  diagnostics coverage; inspect every `.ambr` diff rather than accepting it
-  blindly.
+- Every test function must follow Arrange-Act-Assert with explicit,
+  test-specific comments: `# Arrange: ...` for inputs, fixtures, mocks, and
+  initialization; `# Act: ...` for the operation under test; and `# Assert: ...`
+  for focused checks of results, mutations, or exceptions. Generic comments
+  such as "Prepare test data" or "Verify the results" are not sufficient.
+  Use native `assert` statements for values and state, mock assertion helpers
+  for interactions, and `pytest.raises` for expected exceptions.
+  Exception-focused tests may use `# Act and assert: ...` when separating the
+  phases would be artificial. In multi-step scenarios, label each additional
+  phase explicitly; do not place new mock setup or actions under an Assert
+  comment.
+- Use snapshots for discovery and diagnostics coverage; inspect every `.ambr`
+  diff rather than accepting it blindly.
 - When snapshots or `pytest-homeassistant-custom-component` change, a green
   Linux CI run is required in addition to local validation.
 
