@@ -16,14 +16,24 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from pytest_homeassistant_custom_component.common import async_fire_time_changed
-from vi_api_client import Device, Feature, ViAuthError, ViConnectionError
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+)
+from vi_api_client import Device, Feature, ViAuthError, ViClient, ViConnectionError
 from vi_api_client.models import CommandResponse
 
 from custom_components.vi_climate_devices.coordinator import (
     ViClimateDataUpdateCoordinator,
 )
 from custom_components.vi_climate_devices.number import ViClimateNumber
+
+
+def _build_coordinator(
+    hass: HomeAssistant, client: ViClient
+) -> ViClimateDataUpdateCoordinator:
+    """Create a coordinator with an explicit config entry for unit tests."""
+    return ViClimateDataUpdateCoordinator(hass, MockConfigEntry(), client)
 
 
 def _build_device(
@@ -111,7 +121,7 @@ async def test_data_coordinator_raises_when_no_installations_exist(
     """Test discovery raises UpdateFailed when the account has no installations."""
     # Arrange: Return an empty installation list from the Viessmann client.
     mock_client.get_installations = AsyncMock(return_value=[])
-    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator = _build_coordinator(hass, mock_client)
 
     # Act and Assert: The first refresh aborts with a clear update failure.
     with pytest.raises(UpdateFailed, match="No installations found"):
@@ -125,7 +135,7 @@ async def test_data_coordinator_raises_reauth_when_installation_lookup_loses_aut
     """Test discovery triggers reauth when listing installations loses auth."""
     # Arrange: Reject the initial installation lookup with an auth failure.
     mock_client.get_installations = AsyncMock(side_effect=ViAuthError("token expired"))
-    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator = _build_coordinator(hass, mock_client)
 
     # Act and Assert: Convert the discovery auth failure into a reauth trigger.
     with pytest.raises(ConfigEntryAuthFailed, match="token expired"):
@@ -151,7 +161,7 @@ async def test_data_coordinator_discovers_devices_and_filters_ignored_ids(
         return_value=[active_device, ignored_device]
     )
     mock_client.update_device = AsyncMock(return_value=active_device)
-    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator = _build_coordinator(hass, mock_client)
 
     # Act: Run the first coordinator refresh with discovery enabled.
     result = await coordinator._async_update_data()
@@ -171,7 +181,7 @@ async def test_data_coordinator_raises_when_all_device_updates_fail(
     mock_client.update_device = AsyncMock(
         side_effect=ViConnectionError("device offline")
     )
-    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator = _build_coordinator(hass, mock_client)
     coordinator._known_devices = [known_device]
 
     # Act and Assert: Treat the failed poll as an unavailable coordinator update.
@@ -194,7 +204,7 @@ async def test_data_coordinator_marks_only_failed_device_unavailable(
     mock_client.update_device = AsyncMock(
         side_effect=[refreshed_device, ViConnectionError("device offline")]
     )
-    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator = _build_coordinator(hass, mock_client)
     coordinator._known_devices = [refreshed_device, failing_device]
     coordinator._failed_device_keys = {"gw-main_device-0"}
 
@@ -218,7 +228,7 @@ async def test_data_coordinator_logs_partial_device_outage_and_recovery_once(
     # Arrange: Keep one device reachable while the other fails repeatedly.
     refreshed_device = _build_device(device_id="device-0", gateway_serial="gw-main")
     failing_device = _build_device(device_id="device-1", gateway_serial="gw-backup")
-    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator = _build_coordinator(hass, mock_client)
     coordinator._known_devices = [refreshed_device, failing_device]
 
     with caplog.at_level(
@@ -257,7 +267,7 @@ async def test_data_coordinator_logs_full_device_outage_and_recovery_once(
     """Test a full device outage does not repeat device or coordinator logs."""
     # Arrange: A single known device becomes unreachable for two refreshes.
     known_device = _build_device(device_id="device-0", gateway_serial="gw-main")
-    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator = _build_coordinator(hass, mock_client)
     coordinator._known_devices = [known_device]
 
     with caplog.at_level(
@@ -292,7 +302,7 @@ async def test_data_coordinator_raises_reauth_when_device_update_loses_auth(
     # Arrange: Seed one known device and make the update raise ViAuthError.
     known_device = _build_device(device_id="device-0", gateway_serial="gw-main")
     mock_client.update_device = AsyncMock(side_effect=ViAuthError("token expired"))
-    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator = _build_coordinator(hass, mock_client)
     coordinator._known_devices = [known_device]
 
     # Act and Assert: The auth failure is escalated to Home Assistant reauth.
@@ -309,7 +319,7 @@ async def test_data_coordinator_propagates_oauth_reauth_error(
     known_device = _build_device(device_id="device-0", gateway_serial="gw-main")
     reauth_error = _make_reauth_error()
     mock_client.update_device = AsyncMock(side_effect=reauth_error)
-    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator = _build_coordinator(hass, mock_client)
     coordinator._known_devices = [known_device]
 
     # Act and Assert: Home Assistant receives the original reauth-class error.
@@ -327,7 +337,7 @@ async def test_data_coordinator_propagates_transient_oauth_error(
     known_device = _build_device(device_id="device-0", gateway_serial="gw-main")
     token_error = _make_token_error()
     mock_client.update_device = AsyncMock(side_effect=token_error)
-    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator = _build_coordinator(hass, mock_client)
     coordinator._known_devices = [known_device]
 
     # Act and Assert: Home Assistant receives the original retryable error.
@@ -357,7 +367,7 @@ async def test_confirmed_write_survives_partial_failure_and_recovery(
         return_value=[initial_device, other_device]
     )
     mock_client.update_device = AsyncMock(side_effect=[initial_device, other_device])
-    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator = _build_coordinator(hass, mock_client)
     await coordinator.async_refresh()
     entity = ViClimateNumber(
         coordinator, device_key, feature_name, NumberEntityDescription(key=feature_name)
@@ -431,7 +441,7 @@ async def test_refresh_waits_for_write_and_polls_confirmed_device(
         return_value=[initial_device, other_device]
     )
     mock_client.update_device = AsyncMock(side_effect=[initial_device, other_device])
-    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator = _build_coordinator(hass, mock_client)
     await coordinator.async_refresh()
     write_started = asyncio.Event()
     allow_write_to_finish = asyncio.Event()
@@ -491,7 +501,7 @@ async def test_data_coordinator_serializes_writes_per_device(
         return CommandResponse(success=True, message=None, reason=None), final_device
 
     mock_client.set_feature = AsyncMock(side_effect=mock_set_feature)
-    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator = _build_coordinator(hass, mock_client)
     coordinator.data = {device_key: initial_device}
 
     # Act: Start two writes for command parameters sharing one device.
@@ -545,7 +555,7 @@ async def test_data_coordinator_does_not_overwrite_a_write_with_stale_refresh(
             written_device,
         )
     )
-    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator = _build_coordinator(hass, mock_client)
     coordinator.data = {device_key: initial_device}
     coordinator._known_devices = [initial_device]
 
@@ -587,7 +597,7 @@ async def test_data_coordinator_notifies_entities_after_successful_write(
             updated_device,
         )
     )
-    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator = _build_coordinator(hass, mock_client)
     coordinator.data = {device_key: initial_device}
     listener_data: list[Device] = []
     coordinator.async_add_listener(
@@ -613,7 +623,7 @@ async def test_frequent_writes_preserve_scheduled_poll(
     hass: HomeAssistant, mock_client, freezer
 ) -> None:
     """Commands publish immediately without postponing measurement refreshes."""
-    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator = _build_coordinator(hass, mock_client)
     await coordinator.async_refresh()
     device_key = next(iter(coordinator.data))
     feature_name = "heating.circuits.0.heating.curve.slope"
@@ -666,7 +676,7 @@ async def test_write_after_full_outage_preserves_availability_until_poll(
         return_value=[initial_device, other_device]
     )
     mock_client.update_device = AsyncMock(side_effect=lambda device: device)
-    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator = _build_coordinator(hass, mock_client)
     await coordinator.async_refresh()
     feature_name = "heating.circuits.0.heating.curve.slope"
     entity = ViClimateNumber(

@@ -2,6 +2,7 @@
 
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.core import HomeAssistant
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 from vi_api_client import Device, Feature
 
 from custom_components.vi_climate_devices.coordinator import (
@@ -38,7 +39,7 @@ def test_entity_is_unavailable_when_its_device_refresh_fails(
     # Arrange: Create an enabled sensor for a successfully refreshed device.
     device = _build_device()
     device_key = "gw-main_device-0"
-    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator = ViClimateDataUpdateCoordinator(hass, MockConfigEntry(), mock_client)
     coordinator.data = {device_key: device}
     entity = ViClimateSensor(
         coordinator,

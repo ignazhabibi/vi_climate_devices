@@ -11,13 +11,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from vi_api_client.api import Feature
 
+from . import ViClimateDevicesConfigEntry
 from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
 from .entity import ViClimateEntity
@@ -149,12 +149,11 @@ def _get_binary_sensor_entity_description(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ViClimateDevicesConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Viessmann Climate Devices binary sensor based on a config entry."""
-    coords = hass.data[DOMAIN][entry.entry_id]
-    coordinator: ViClimateDataUpdateCoordinator = coords["data"]
+    coordinator = entry.runtime_data
 
     entities = []
 

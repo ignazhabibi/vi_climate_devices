@@ -13,7 +13,6 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -21,6 +20,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from vi_api_client import Feature
 
+from . import ViClimateDevicesConfigEntry
 from .const import DOMAIN
 from .coordinator import ViClimateDataUpdateCoordinator
 from .entity import ViClimateEntity
@@ -59,12 +59,11 @@ HA_TO_VIESSMANN_MODES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ViClimateDevicesConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Viessmann Climate Devices water heater."""
-    coords = hass.data[DOMAIN][entry.entry_id]
-    coordinator: ViClimateDataUpdateCoordinator = coords["data"]
+    coordinator = entry.runtime_data
 
     entities = []
 

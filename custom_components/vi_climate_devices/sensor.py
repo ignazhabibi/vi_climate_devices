@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EntityCategory,
     UnitOfElectricCurrent,
@@ -28,6 +27,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from vi_api_client.api import Feature
 
+from . import ViClimateDevicesConfigEntry
 from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
 from .entity import ViClimateEntity
@@ -693,13 +693,11 @@ def _get_auto_discovery_description(feature) -> SensorEntityDescription:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ViClimateDevicesConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Viessmann Climate Devices sensor based on a config entry."""
-    coordinator: ViClimateDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        "data"
-    ]
+    coordinator = entry.runtime_data
     entities = []
     if coordinator.data:
         entities.extend(_discover_realtime_sensors(coordinator))
