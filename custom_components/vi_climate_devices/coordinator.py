@@ -49,6 +49,14 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         """Return whether the most recent refresh succeeded for a device."""
         return device_key not in self._failed_device_keys
 
+    def _log_device_availability(self, device_key: str, error: ViError | None) -> None:
+        """Log a device availability transition once."""
+        if error is None:
+            if device_key in self._failed_device_keys:
+                _LOGGER.info("Device %s is back online", device_key)
+        elif device_key not in self._failed_device_keys:
+            _LOGGER.info("Device %s is unavailable: %s", device_key, error)
+
     async def async_set_feature(
         self, device_key: str, feature_name: str, value: object
     ) -> CommandResponse:
@@ -165,6 +173,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                     try:
                         new_device = await self.client.update_device(device)
                         updated_data[key] = new_device
+                        self._log_device_availability(key, None)
 
                     except OAuth2TokenRequestError:
                         raise
@@ -176,9 +185,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                         ) from err
 
                     except ViError as err:
-                        _LOGGER.warning(
-                            "Failed to update device %s: %s", device.id, err
-                        )
+                        self._log_device_availability(key, err)
                         failed_device_keys.add(key)
                         # Keep old data for recovery, but mark its entities unavailable.
                         updated_data[key] = device

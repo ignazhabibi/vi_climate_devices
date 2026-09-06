@@ -1,6 +1,7 @@
 """Tests for coordinator discovery, refresh, and writes."""
 
 import asyncio
+import logging
 from dataclasses import replace
 from datetime import timedelta
 from types import SimpleNamespace
@@ -207,6 +208,80 @@ async def test_data_coordinator_marks_only_failed_device_unavailable(
     }
     assert coordinator.is_device_available("gw-main_device-0")
     assert not coordinator.is_device_available("gw-backup_device-1")
+
+
+@pytest.mark.asyncio
+async def test_data_coordinator_logs_partial_device_outage_and_recovery_once(
+    hass: HomeAssistant, mock_client, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a partial device outage and recovery are each logged once."""
+    # Arrange: Keep one device reachable while the other fails repeatedly.
+    refreshed_device = _build_device(device_id="device-0", gateway_serial="gw-main")
+    failing_device = _build_device(device_id="device-1", gateway_serial="gw-backup")
+    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator._known_devices = [refreshed_device, failing_device]
+
+    with caplog.at_level(
+        logging.INFO, logger="custom_components.vi_climate_devices.coordinator"
+    ):
+        # Act: Poll through an outage, repeated failure, and recovery.
+        mock_client.update_device = AsyncMock(
+            side_effect=[refreshed_device, ViConnectionError("device offline")]
+        )
+        await coordinator._async_update_data()
+        assert not coordinator.is_device_available("gw-backup_device-1")
+
+        mock_client.update_device = AsyncMock(
+            side_effect=[refreshed_device, ViConnectionError("device offline")]
+        )
+        await coordinator._async_update_data()
+        assert not coordinator.is_device_available("gw-backup_device-1")
+
+        mock_client.update_device = AsyncMock(
+            side_effect=[refreshed_device, failing_device]
+        )
+        await coordinator._async_update_data()
+
+    # Assert: Device-specific transitions are unambiguous and never repeated.
+    assert coordinator.is_device_available("gw-backup_device-1")
+    assert [record.getMessage() for record in caplog.records] == [
+        "Device gw-backup_device-1 is unavailable: device offline",
+        "Device gw-backup_device-1 is back online",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_data_coordinator_logs_full_device_outage_and_recovery_once(
+    hass: HomeAssistant, mock_client, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a full device outage does not repeat device or coordinator logs."""
+    # Arrange: A single known device becomes unreachable for two refreshes.
+    known_device = _build_device(device_id="device-0", gateway_serial="gw-main")
+    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    coordinator._known_devices = [known_device]
+
+    with caplog.at_level(
+        logging.INFO, logger="custom_components.vi_climate_devices.coordinator"
+    ):
+        # Act: Use coordinator refreshes to include its built-in full-outage logging.
+        mock_client.update_device = AsyncMock(
+            side_effect=ViConnectionError("device offline")
+        )
+        await coordinator.async_refresh()
+        await coordinator.async_refresh()
+        assert not coordinator.is_device_available("gw-main_device-0")
+
+        mock_client.update_device = AsyncMock(return_value=known_device)
+        await coordinator.async_refresh()
+
+    # Assert: Each device and coordinator transition is emitted once.
+    assert coordinator.is_device_available("gw-main_device-0")
+    assert [record.getMessage() for record in caplog.records] == [
+        "Device gw-main_device-0 is unavailable: device offline",
+        "Error fetching vi_climate_devices_data data: Failed to update all devices",
+        "Device gw-main_device-0 is back online",
+        "Fetching vi_climate_devices_data data recovered",
+    ]
 
 
 @pytest.mark.asyncio
