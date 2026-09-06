@@ -17,7 +17,6 @@ from homeassistant.components.climate.const import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -25,6 +24,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from vi_api_client import Feature
 
+from . import ViClimateDevicesConfigEntry
 from .const import DOMAIN
 from .coordinator import ViClimateDataUpdateCoordinator
 from .entity import ViClimateEntity
@@ -91,12 +91,11 @@ API_TO_HA_PRESET = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ViClimateDevicesConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Viessmann Climate Devices climate entities based on a config entry."""
-    coords = hass.data[DOMAIN][entry.entry_id]
-    coordinator: ViClimateDataUpdateCoordinator = coords["data"]
+    coordinator = entry.runtime_data
 
     entities = []
 

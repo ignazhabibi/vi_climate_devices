@@ -16,8 +16,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from vi_api_client import ViClient as ViessmannClient
 from vi_api_client.auth import AbstractAuth
 
-from .const import DOMAIN
 from .coordinator import ViClimateDataUpdateCoordinator
+
+type ViClimateDevicesConfigEntry = ConfigEntry[ViClimateDataUpdateCoordinator]
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -35,10 +36,10 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ViClimateDevicesConfigEntry
+) -> bool:
     """Set up Viessmann Climate Devices from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
@@ -64,22 +65,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = ViessmannClient(auth=auth)
 
     # 1. Main Coordinator (Devices API)
-    coordinator = ViClimateDataUpdateCoordinator(hass, client)
+    coordinator = ViClimateDataUpdateCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = {"data": coordinator}
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: ViClimateDevicesConfigEntry
+) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class HAAuth(AbstractAuth):

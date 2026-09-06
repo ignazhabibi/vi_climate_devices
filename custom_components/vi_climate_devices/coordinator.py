@@ -6,6 +6,7 @@ import asyncio
 import logging
 from datetime import timedelta
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, OAuth2TokenRequestError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -29,6 +30,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     def __init__(
         self,
         hass: HomeAssistant,
+        entry: ConfigEntry[ViClimateDataUpdateCoordinator],
         client: ViessmannClient,
         update_interval: timedelta | None = None,
     ) -> None:
@@ -36,6 +38,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=f"{DOMAIN}_data",
             update_interval=update_interval or timedelta(minutes=3),
         )

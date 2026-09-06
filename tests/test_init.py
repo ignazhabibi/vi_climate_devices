@@ -15,12 +15,12 @@ from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     async_fire_time_changed,
 )
+from vi_api_client.mock_client import MockViClient
 
 from custom_components.vi_climate_devices import (
     PLATFORMS,
     HAAuth,
     async_setup_entry,
-    async_unload_entry,
 )
 from custom_components.vi_climate_devices.const import DOMAIN
 
@@ -112,11 +112,11 @@ async def test_async_setup_entry_raises_not_ready_on_transient_token_error(
         await async_setup_entry(hass, entry)
 
     # Assert: Setup leaves no runtime data while Home Assistant schedules a retry.
-    assert hass.data[DOMAIN] == {}
+    assert DOMAIN not in hass.data
 
 
 @pytest.mark.asyncio
-async def test_async_setup_entry_stores_only_main_coordinator(
+async def test_async_setup_entry_stores_coordinator_in_entry_runtime_data(
     hass: HomeAssistant,
 ) -> None:
     """Test setup stores only the main coordinator in runtime data."""
@@ -126,8 +126,13 @@ async def test_async_setup_entry_stores_only_main_coordinator(
     client = MagicMock()
     auth_bridge = MagicMock()
     main_coordinator = MagicMock()
-    main_coordinator.async_config_entry_first_refresh = AsyncMock(return_value=None)
-    forward_entry_setups = AsyncMock(return_value=None)
+    call_order: list[str] = []
+    main_coordinator.async_config_entry_first_refresh = AsyncMock(
+        side_effect=lambda: call_order.append("refresh")
+    )
+    forward_entry_setups = AsyncMock(
+        side_effect=lambda *_: call_order.append("platforms")
+    )
 
     with (
         patch(
@@ -149,7 +154,7 @@ async def test_async_setup_entry_stores_only_main_coordinator(
         patch(
             "custom_components.vi_climate_devices.ViClimateDataUpdateCoordinator",
             return_value=main_coordinator,
-        ),
+        ) as mock_coordinator_class,
         patch.object(
             hass.config_entries,
             "async_forward_entry_setups",
@@ -159,53 +164,57 @@ async def test_async_setup_entry_stores_only_main_coordinator(
         # Act: Set up the integration and store runtime data for the entry.
         result = await async_setup_entry(hass, entry)
 
-    # Assert: Setup succeeds, stores the main coordinator, and forwards all platforms.
+    # Assert: Setup succeeds, stores the coordinator on the entry, and forwards all platforms.
     assert result is True
-    assert hass.data[DOMAIN][entry.entry_id] == {"data": main_coordinator}
+    assert entry.runtime_data is main_coordinator
+    assert DOMAIN not in hass.data
     mock_client_class.assert_called_once_with(auth=auth_bridge)
+    mock_coordinator_class.assert_called_once_with(hass, entry, client)
     main_coordinator.async_config_entry_first_refresh.assert_awaited_once()
     forward_entry_setups.assert_awaited_once_with(entry, PLATFORMS)
+    assert call_order == ["refresh", "platforms"]
 
 
 @pytest.mark.asyncio
-async def test_async_unload_entry_removes_runtime_data_after_platform_unload(
-    hass: HomeAssistant,
+async def test_config_entry_lifecycle_keeps_runtime_data_when_platform_unload_fails(
+    hass: HomeAssistant, mock_client: MockViClient
 ) -> None:
-    """Test unloading removes stored runtime data when platform unload succeeds."""
-    # Arrange: Seed runtime data and make platform unload succeed.
+    """Test a failed platform unload keeps the coordinator attached to the entry."""
     entry = _build_entry()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"data": MagicMock()}
-    unload_platforms = AsyncMock(return_value=True)
+    entry.add_to_hass(hass)
 
-    with patch.object(hass.config_entries, "async_unload_platforms", unload_platforms):
-        # Act: Unload the config entry.
-        result = await async_unload_entry(hass, entry)
+    with (
+        patch(
+            "custom_components.vi_climate_devices.ViessmannClient",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+            return_value=None,
+        ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
+    ):
+        # Arrange: Set up the entry through Home Assistant's lifecycle.
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        runtime_data = entry.runtime_data
+        number_component = hass.data["number"]
+        unload_platform = AsyncMock(return_value=False)
 
-    # Assert: The entry unloads cleanly and runtime data is removed.
-    assert result is True
-    assert entry.entry_id not in hass.data[DOMAIN]
-    unload_platforms.assert_awaited_once_with(entry, PLATFORMS)
-
-
-@pytest.mark.asyncio
-async def test_async_unload_entry_keeps_runtime_data_when_platform_unload_fails(
-    hass: HomeAssistant,
-) -> None:
-    """Test unloading keeps runtime data intact when platform unload fails."""
-    # Arrange: Seed runtime data and make platform unload fail.
-    entry = _build_entry()
-    runtime_data = {"data": MagicMock()}
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = runtime_data
-    unload_platforms = AsyncMock(return_value=False)
-
-    with patch.object(hass.config_entries, "async_unload_platforms", unload_platforms):
-        # Act: Attempt to unload the config entry.
-        result = await async_unload_entry(hass, entry)
+        with patch.object(number_component, "async_unload_entry", unload_platform):
+            # Act: Attempt to unload the config entry through Home Assistant.
+            result = await hass.config_entries.async_unload(entry.entry_id)
 
     # Assert: The failure is reported and runtime data stays registered.
     assert result is False
-    assert hass.data[DOMAIN][entry.entry_id] is runtime_data
-    unload_platforms.assert_awaited_once_with(entry, PLATFORMS)
+    assert entry.runtime_data is runtime_data
+    assert DOMAIN not in hass.data
+    unload_platform.assert_awaited_once_with(entry)
+    await runtime_data.async_shutdown()
 
 
 @pytest.mark.asyncio
@@ -289,7 +298,7 @@ async def test_haauth_propagates_transient_token_error(
 
 @pytest.mark.asyncio
 async def test_unload_stops_polling_after_commands(
-    hass: HomeAssistant, mock_client, freezer
+    hass: HomeAssistant, mock_client: MockViClient, freezer
 ) -> None:
     """Unloading real platforms removes polling after confirmed service writes."""
     entry = _build_entry()
@@ -312,6 +321,9 @@ async def test_unload_stops_polling_after_commands(
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+        first_coordinator = entry.runtime_data
+        assert first_coordinator.config_entry is entry
+        assert DOMAIN not in hass.data
         entity_id = "number.vitocal250a_heating_circuit_0_curve_slope"
         await hass.services.async_call(
             "number",
@@ -329,8 +341,22 @@ async def test_unload_stops_polling_after_commands(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         mock_client.update_device.assert_awaited_once()
+
+        # Reload the same entry and verify it owns one fresh coordinator.
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+        second_coordinator = entry.runtime_data
+        assert second_coordinator is not first_coordinator
+
+        mock_client.update_device.reset_mock()
+        freezer.tick(timedelta(minutes=3))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        mock_client.update_device.assert_awaited_once()
+
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
+        assert not hasattr(entry, "runtime_data")
 
         # No request remains scheduled after unload, even across several intervals.
         mock_client.update_device.reset_mock()
@@ -338,4 +364,3 @@ async def test_unload_stops_polling_after_commands(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         mock_client.update_device.assert_not_awaited()
-        assert entry.entry_id not in hass.data[DOMAIN]
