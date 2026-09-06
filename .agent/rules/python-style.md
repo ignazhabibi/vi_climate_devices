@@ -8,14 +8,12 @@ These rules apply strictly to all Python files.
 
 ## 1. String Formatting & Logging (CRITICAL)
 - **General:** Use **f-strings** for all string interpolation.
-- **EXCEPTION - Logging:** NEVER use f-strings inside `_LOGGER` calls.
-    - **Reason:** To prevent formatting overhead when logging is disabled.
-    - ❌ Wrong: `_LOGGER.info(f"Device {name} connected")`
-    - ✅ Right: `_LOGGER.info("Device %s connected", name)`
+- **EXCEPTION - Logging:** Ruff enforces that `_LOGGER` calls do not use eager
+  formatting such as f-strings.
 - **Log Content:** Log messages must NOT end with a period `.`.
 
 ## 2. Ordering & Sorting
-- **Imports:** Must be sorted.
+- **Imports and identifiers:** Ruff enforces sorted imports and PEP 8 naming.
 - **Data Structures:** Constants, content of Lists, and Dictionary Keys must be sorted **alphabetically**.
     - If you create a list of supported features, sort them A-Z.
 

@@ -90,7 +90,8 @@ def test_entity_has_translation_key(platform):
     # Act & Assert: Iterate through all descriptions and verify existence of translation_key.
     for i, desc in enumerate(descriptions):
         key_name = getattr(desc, "key", "UNKNOWN")
-        assert hasattr(desc, "translation_key") and desc.translation_key, (
+        translation_key = getattr(desc, "translation_key", None)
+        assert translation_key, (
             f"EntityDescription at index {i} in {platform} is missing a translation_key. Key: {key_name}"
         )
 
