@@ -16,6 +16,9 @@ These rules apply strictly to the `tests/` directory of the `vi_climate_devices`
 
 ## 2. Framework & Style
 - **Framework:** Use `pytest` exclusively.
+- **Mechanical pytest style:** Ruff enforces the enabled `PT` rules. Keep
+  behavioral test design requirements in this rule until the TDD workflow is
+  migrated to a shared skill.
 - **Test Stack Ownership:** Treat `pytest-homeassistant-custom-component` as the
   authoritative Home Assistant test stack. Do not separately pin `pytest`,
   `pytest-asyncio`, `syrupy`, or similar pytest ecosystem packages unless there

@@ -15,9 +15,11 @@ trigger: always_on
 
 ## 3. Static Type Checking
 - Use Pyright with the shared configuration in `pyproject.toml`.
-- Run `pyright --pythonpath .venv/bin/python` locally. The CI workflow passes
-  its active interpreter explicitly.
+- Run `python scripts/quality_check.py` locally. The runner passes its active
+  interpreter to Pyright.
 - Keep the Pylance type-checking mode aligned with Pyright's configured mode.
+- New utility scripts are checked in Pyright strict mode. Expand strict typing
+  to integration modules incrementally once they are clean.
 
 ## 4. Quality Gate
 - Run `python scripts/quality_check.py` for the complete local gate.

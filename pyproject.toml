@@ -28,11 +28,12 @@ dev = [
 ]
 
 [tool.pyright]
-include = ["custom_components", "tests"]
+include = ["custom_components", "tests", "scripts"]
 exclude = [".venv", "build", "dist"]
 pythonVersion = "3.14"
 extraPaths = []
 typeCheckingMode = "standard"
+strict = ["scripts"]
 # Home Assistant declares cached properties in base classes, while integrations
 # may validly override them with properties.
 reportIncompatibleVariableOverride = "none"
@@ -50,6 +51,9 @@ select = [
     "I",   # isort
     "UP",  # pyupgrade
     "B",   # flake8-bugbear
+    "G",   # flake8-logging-format
+    "N",   # pep8-naming
+    "PT",  # flake8-pytest-style
     "SIM", # flake8-simplify
     "PL",  # pylint
     "RUF"  # ruff specific
