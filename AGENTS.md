@@ -107,6 +107,9 @@ or explicitly state that no update was needed.
 Issues and specs live in this repository's GitHub Issues. See
 `docs/agents/issue-tracker.md`.
 
+Write GitHub issues, tickets, and specifications in English, even when the
+surrounding conversation is in another language.
+
 ### Triage labels
 
 Use the canonical triage-label vocabulary. See

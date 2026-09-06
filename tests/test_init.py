@@ -1,5 +1,6 @@
 """Tests for integration setup, unload, and auth bridge behavior."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -10,7 +11,10 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+)
 
 from custom_components.vi_climate_devices import (
     PLATFORMS,
@@ -281,3 +285,57 @@ async def test_haauth_propagates_transient_token_error(
     with pytest.raises(OAuth2TokenRequestError) as raised_error:
         await auth_bridge.async_get_access_token()
     assert raised_error.value is token_error
+
+
+@pytest.mark.asyncio
+async def test_unload_stops_polling_after_commands(
+    hass: HomeAssistant, mock_client, freezer
+) -> None:
+    """Unloading real platforms removes polling after confirmed service writes."""
+    entry = _build_entry()
+    entry.add_to_hass(hass)
+    mock_client.update_device = AsyncMock(wraps=mock_client.update_device)
+    with (
+        patch(
+            "custom_components.vi_climate_devices.ViessmannClient",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+            return_value=None,
+        ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        entity_id = "number.vitocal250a_heating_circuit_0_curve_slope"
+        await hass.services.async_call(
+            "number",
+            "set_value",
+            {"entity_id": entity_id, "value": 1.2},
+            blocking=True,
+        )
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == "1.2"
+
+        # Confirm polling is active before unloading the real entity platforms.
+        mock_client.update_device.reset_mock()
+        freezer.tick(timedelta(minutes=3))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        mock_client.update_device.assert_awaited_once()
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # No request remains scheduled after unload, even across several intervals.
+        mock_client.update_device.reset_mock()
+        freezer.tick(timedelta(minutes=9))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        mock_client.update_device.assert_not_awaited()
+        assert entry.entry_id not in hass.data[DOMAIN]

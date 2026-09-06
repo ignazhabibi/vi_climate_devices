@@ -2,6 +2,7 @@
 
 import asyncio
 from dataclasses import replace
+from datetime import timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
@@ -14,6 +15,7 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from pytest_homeassistant_custom_component.common import async_fire_time_changed
 from vi_api_client import Device, Feature, ViAuthError, ViConnectionError
 from vi_api_client.models import CommandResponse
 
@@ -528,4 +530,129 @@ async def test_data_coordinator_notifies_entities_after_successful_write(
         # Assert: Every coordinator entity receives the new immutable device object.
         assert listener_data == [updated_device]
     finally:
+        await coordinator.async_shutdown()
+
+
+@pytest.mark.asyncio
+async def test_frequent_writes_preserve_scheduled_poll(
+    hass: HomeAssistant, mock_client, freezer
+) -> None:
+    """Commands publish immediately without postponing measurement refreshes."""
+    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    await coordinator.async_refresh()
+    device_key = next(iter(coordinator.data))
+    feature_name = "heating.circuits.0.heating.curve.slope"
+    listener = MagicMock()
+    remove_listener = coordinator.async_add_listener(listener)
+    mock_client.update_device = AsyncMock(wraps=mock_client.update_device)
+
+    try:
+        # Act: Keep issuing commands more frequently than the three-minute poll.
+        for minute in range(1, 7):
+            freezer.tick(timedelta(minutes=1))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+            await coordinator.async_set_feature(device_key, feature_name, 1.2)
+
+            # Assert: Each command notifies immediately; polls still happen on time.
+            assert listener.call_count == minute + minute // 3
+            assert mock_client.update_device.await_count == minute // 3
+            feature = coordinator.data[device_key].get_feature(feature_name)
+            assert feature is not None
+            assert feature.value == 1.2
+    finally:
+        remove_listener()
+        await coordinator.async_shutdown()
+
+    # No poll or notification survives removal and shutdown.
+    listener.reset_mock()
+    mock_client.update_device.reset_mock()
+    freezer.tick(timedelta(minutes=6))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    listener.assert_not_called()
+    mock_client.update_device.assert_not_awaited()
+
+
+@pytest.mark.parametrize("is_token_failure", [False, True])
+@pytest.mark.asyncio
+async def test_write_after_full_outage_preserves_availability_until_poll(
+    hass: HomeAssistant, mock_client, freezer, is_token_failure: bool
+) -> None:
+    """Only device refreshes restore availability after device or token failures."""
+    # Arrange: Discover two devices and observe their public entity state.
+    initial_device = _build_curve_device(slope=0.7, shift=0.0)
+    other_device = replace(initial_device, id="device-1")
+    written_device = _build_curve_device(slope=1.2, shift=0.0)
+    mock_client.get_installations = AsyncMock(
+        return_value=[SimpleNamespace(id="installation-1")]
+    )
+    mock_client.get_full_installation_status = AsyncMock(
+        return_value=[initial_device, other_device]
+    )
+    mock_client.update_device = AsyncMock(side_effect=lambda device: device)
+    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    await coordinator.async_refresh()
+    feature_name = "heating.circuits.0.heating.curve.slope"
+    entity = ViClimateNumber(
+        coordinator,
+        "gw-main_device-0",
+        feature_name,
+        NumberEntityDescription(key=feature_name),
+    )
+    other_entity = ViClimateNumber(
+        coordinator,
+        "gw-main_device-1",
+        feature_name,
+        NumberEntityDescription(key=feature_name),
+    )
+    observed_states: list[tuple[bool, bool, float | None]] = []
+    remove_listener = coordinator.async_add_listener(
+        lambda: observed_states.append(
+            (entity.available, other_entity.available, entity.native_value)
+        )
+    )
+    mock_client.update_device.side_effect = (
+        _make_token_error() if is_token_failure else ViConnectionError("offline")
+    )
+    try:
+        # Act: A scheduled poll fails globally, then a command succeeds.
+        freezer.tick(timedelta(minutes=3))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert not coordinator.last_update_success
+        last_exception = coordinator.last_exception
+        assert observed_states == [(False, False, 0.7)]
+        mock_client.set_feature = AsyncMock(
+            return_value=(
+                CommandResponse(success=True, message=None, reason=None),
+                written_device,
+            )
+        )
+        await coordinator.async_set_feature("gw-main_device-0", feature_name, 1.2)
+
+        # Assert: Publish confirmed values without claiming either device recovered.
+        assert observed_states[-1] == (False, False, 1.2)
+        assert len(observed_states) == 2
+        assert not coordinator.last_update_success
+        assert coordinator.last_exception is last_exception
+
+        # Act: The next poll confirms only the written device is reachable.
+        mock_client.update_device.side_effect = [
+            written_device,
+            ViConnectionError("other device offline"),
+        ]
+        freezer.tick(timedelta(minutes=3))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert observed_states[-1] == (True, False, 1.2)
+        assert mock_client.update_device.call_args_list[-2].args[0] is written_device
+
+        mock_client.update_device.side_effect = lambda device: device
+        freezer.tick(timedelta(minutes=3))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert observed_states[-1] == (True, True, 1.2)
+    finally:
+        remove_listener()
         await coordinator.async_shutdown()
