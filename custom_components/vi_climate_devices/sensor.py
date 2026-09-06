@@ -35,6 +35,8 @@ from .utils import beautify_name, is_feature_boolean_like, is_feature_ignored
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 # Templates with regex patterns for dynamic feature names
 SENSOR_TEMPLATES = [

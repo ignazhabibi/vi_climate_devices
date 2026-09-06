@@ -30,6 +30,8 @@ from .utils import (
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 # Templates with regex patterns for dynamic feature names
 BINARY_SENSOR_TEMPLATES = [

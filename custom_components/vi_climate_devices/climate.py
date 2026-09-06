@@ -32,6 +32,8 @@ from .utils import get_suggested_precision
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 # Mapping from Viessmann demand directions to Home Assistant HVACAction.
 # Sort the keys alphabetically.
 API_TO_HA_HVAC_ACTION = {

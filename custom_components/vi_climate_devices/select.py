@@ -22,6 +22,8 @@ from .utils import beautify_name, is_feature_ignored
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 SELECT_TYPES: dict[str, SelectEntityDescription] = {
     "heating.dhw.operating.modes.active": SelectEntityDescription(

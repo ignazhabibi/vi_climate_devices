@@ -28,6 +28,8 @@ from .utils import beautify_name, get_suggested_precision, is_feature_ignored
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 # Templates with regex patterns for dynamic feature names
 NUMBER_TEMPLATES = [
