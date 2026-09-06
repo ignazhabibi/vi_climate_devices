@@ -72,6 +72,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 if response.success:
                     updated_data = dict(self.data)
                     updated_data[device_key] = updated_device
+                    self._known_devices = list(updated_data.values())
                     self.async_set_updated_data(updated_data)
                 return response
 
