@@ -1,10 +1,12 @@
 """Tests for coordinator discovery, refresh, and writes."""
 
 import asyncio
+from dataclasses import replace
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from homeassistant.components.number import NumberEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -18,6 +20,7 @@ from vi_api_client.models import CommandResponse
 from custom_components.vi_climate_devices.coordinator import (
     ViClimateDataUpdateCoordinator,
 )
+from custom_components.vi_climate_devices.number import ViClimateNumber
 
 
 def _build_device(
@@ -254,6 +257,134 @@ async def test_data_coordinator_propagates_transient_oauth_error(
     with pytest.raises(OAuth2TokenRequestError) as raised_error:
         await coordinator._async_update_data()
     assert raised_error.value is token_error
+
+
+@pytest.mark.asyncio
+async def test_confirmed_write_survives_partial_failure_and_recovery(
+    hass: HomeAssistant, mock_client
+) -> None:
+    """Keep confirmed state while only the failed device becomes unavailable."""
+    # Arrange: Discover two devices, then confirm a new slope for the first.
+    device_key = "gw-main_device-0"
+    other_key = "gw-main_device-1"
+    feature_name = "heating.circuits.0.heating.curve.slope"
+    initial_device = _build_curve_device(slope=0.7, shift=0.0)
+    written_device = _build_curve_device(slope=1.2, shift=0.0)
+    recovered_device = _build_curve_device(slope=1.3, shift=0.0)
+    other_device = replace(initial_device, id="device-1")
+    other_written_device = replace(written_device, id="device-1")
+    mock_client.get_installations = AsyncMock(
+        return_value=[SimpleNamespace(id="installation-1")]
+    )
+    mock_client.get_full_installation_status = AsyncMock(
+        return_value=[initial_device, other_device]
+    )
+    mock_client.update_device = AsyncMock(side_effect=[initial_device, other_device])
+    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    await coordinator.async_refresh()
+    entity = ViClimateNumber(
+        coordinator, device_key, feature_name, NumberEntityDescription(key=feature_name)
+    )
+    other_entity = ViClimateNumber(
+        coordinator, other_key, feature_name, NumberEntityDescription(key=feature_name)
+    )
+    mock_client.set_feature = AsyncMock(
+        return_value=(
+            CommandResponse(success=True, message=None, reason=None),
+            written_device,
+        )
+    )
+    await coordinator.async_set_feature(device_key, feature_name, 1.2)
+
+    # Act: The written device fails to poll while the second device stays reachable.
+    mock_client.update_device = AsyncMock(
+        side_effect=[ViConnectionError("device offline"), other_device]
+    )
+    await coordinator.async_refresh()
+
+    # Assert: Preserve the confirmed write internally and isolate availability.
+    assert coordinator.data[device_key] is written_device
+    assert not entity.available
+    assert other_entity.available
+    mock_client.set_feature = AsyncMock(
+        return_value=(
+            CommandResponse(success=True, message=None, reason=None),
+            other_written_device,
+        )
+    )
+    await coordinator.async_set_feature(other_key, feature_name, 1.2)
+    assert other_entity.native_value == 1.2
+    assert not entity.available
+
+    # Act: Recover the failed device and publish its current state.
+    mock_client.update_device = AsyncMock(
+        side_effect=[recovered_device, other_written_device]
+    )
+    await coordinator.async_refresh()
+
+    # Assert: Recovery polls the retained confirmed state and restores availability.
+    assert mock_client.update_device.call_args_list[0].args[0] is written_device
+    assert entity.available
+    assert entity.native_value == 1.3
+    assert other_entity.available
+    mock_client.set_feature.return_value = (
+        CommandResponse(success=True, message=None, reason=None),
+        _build_curve_device(slope=1.4, shift=0.0),
+    )
+    await coordinator.async_set_feature(device_key, feature_name, 1.4)
+    assert mock_client.set_feature.call_args.args[0] is recovered_device
+    assert entity.native_value == 1.4
+
+
+@pytest.mark.asyncio
+async def test_refresh_waits_for_write_and_polls_confirmed_device(
+    hass: HomeAssistant, mock_client
+) -> None:
+    """A queued refresh and subsequent write both use the latest device state."""
+    # Arrange: Discover two devices and block a write before it is confirmed.
+    device_key = "gw-main_device-0"
+    feature_name = "heating.circuits.0.heating.curve.slope"
+    initial_device = _build_curve_device(slope=0.7, shift=0.0)
+    written_device = _build_curve_device(slope=1.2, shift=0.0)
+    other_device = replace(initial_device, id="device-1")
+    mock_client.get_installations = AsyncMock(
+        return_value=[SimpleNamespace(id="installation-1")]
+    )
+    mock_client.get_full_installation_status = AsyncMock(
+        return_value=[initial_device, other_device]
+    )
+    mock_client.update_device = AsyncMock(side_effect=[initial_device, other_device])
+    coordinator = ViClimateDataUpdateCoordinator(hass, mock_client)
+    await coordinator.async_refresh()
+    write_started = asyncio.Event()
+    allow_write_to_finish = asyncio.Event()
+
+    async def mock_set_feature(
+        device: Device, feature: Feature, value: object
+    ) -> tuple[CommandResponse, Device]:
+        write_started.set()
+        await allow_write_to_finish.wait()
+        return CommandResponse(success=True, message=None, reason=None), written_device
+
+    mock_client.set_feature = AsyncMock(side_effect=mock_set_feature)
+    mock_client.update_device = AsyncMock(side_effect=lambda device: device)
+
+    # Act: Queue a refresh while the write is still in flight.
+    write_task = asyncio.create_task(
+        coordinator.async_set_feature(device_key, feature_name, 1.2)
+    )
+    await write_started.wait()
+    refresh_task = asyncio.create_task(coordinator.async_refresh())
+    await asyncio.sleep(0)
+    mock_client.update_device.assert_not_called()
+    allow_write_to_finish.set()
+    await asyncio.gather(write_task, refresh_task)
+
+    # Assert: The refresh retains the confirmed state for a subsequent command.
+    assert coordinator.data[device_key] is written_device
+    assert mock_client.update_device.call_args_list[0].args[0] is written_device
+    await coordinator.async_set_feature(device_key, feature_name, 1.2)
+    assert mock_client.set_feature.call_args.args[0] is written_device
 
 
 @pytest.mark.asyncio
