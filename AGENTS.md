@@ -82,7 +82,7 @@ snapshots, packaging, or CI configuration change, also validate once in a fresh
   commit or merge directly to `main` without an explicitly confirmed emergency
   bypass.
 - Stage only requested files. Before committing, show the files, summary, and
-  proposed Conventional Commit message, then obtain explicit confirmation.
+  proposed Conventional Commit message; no additional confirmation is needed.
 - Wait for the GitHub `quality-check` job before treating a PR as merge-ready.
   Use GitHub squash merge only with explicit authorization.
 - After a merge, fast-forward local `main` and delete the confirmed merged
