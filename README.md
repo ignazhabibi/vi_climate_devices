@@ -106,7 +106,9 @@ All entities are grouped under their respective device and support German and En
 
 **Entities not updating**
 - Check if your Viessmann gateway is online
-- API rate limit is respected (default: 3-minute polling interval)
+- Device measurements are polled every 3 minutes. Commands and polls are serialized; an in-flight request can delay the next request, but successful commands do not restart the polling interval.
+- Confirmed command values are published immediately. A successful command does not clear an outage: availability is restored only by successful device refreshes.
+- The polling interval alone does not guarantee API rate-limit compliance; total requests also depend on device count and command frequency.
 
 **Missing entities**
 - Not all features are available on all device models

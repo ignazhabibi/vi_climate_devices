@@ -73,7 +73,10 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                     updated_data = dict(self.data)
                     updated_data[device_key] = updated_device
                     self._known_devices = list(updated_data.values())
-                    self.async_set_updated_data(updated_data)
+                    # A command confirms values, not refresh availability. Preserve
+                    # the scheduled poll and the outcome of the last refresh.
+                    self.data = updated_data
+                    self.async_update_listeners()
                 return response
 
     async def _async_refresh(
