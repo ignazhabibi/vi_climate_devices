@@ -30,6 +30,8 @@ from .utils import (
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 SWITCH_TYPES: dict[str, SwitchEntityDescription] = {
     # Updated keys for Flat Architecture

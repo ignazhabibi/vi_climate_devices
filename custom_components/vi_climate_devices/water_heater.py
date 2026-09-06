@@ -28,6 +28,8 @@ from .utils import get_suggested_precision
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 # Features to look for
 FEATURE_TARGET_TEMP = "heating.dhw.temperature.main"
 FEATURE_CURRENT_TEMP = "heating.dhw.sensors.temperature.hotWaterStorage"

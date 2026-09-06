@@ -5,10 +5,12 @@ import logging
 from dataclasses import replace
 from datetime import timedelta
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from homeassistant.components.number import NumberEntityDescription
+from homeassistant.components.select import SelectEntityDescription
+from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -27,6 +29,8 @@ from custom_components.vi_climate_devices.coordinator import (
     ViClimateDataUpdateCoordinator,
 )
 from custom_components.vi_climate_devices.number import ViClimateNumber
+from custom_components.vi_climate_devices.select import ViClimateSelect
+from custom_components.vi_climate_devices.switch import ViClimateSwitch
 
 
 def _build_coordinator(
@@ -107,6 +111,36 @@ def _build_curve_device(slope: float, shift: float) -> Device:
                 name="heating.circuits.0.heating.curve.slope",
                 value=slope,
                 unit="celsius",
+                is_enabled=True,
+                is_ready=True,
+            ),
+        ],
+    )
+
+
+def _build_select_and_switch_device(
+    active_program: str, is_one_time_charge_active: bool
+) -> Device:
+    """Create a device exposing commands on the select and switch platforms."""
+    return Device(
+        id="device-0",
+        gateway_serial="gw-main",
+        installation_id="installation-1",
+        model_id="Vitocal250A",
+        device_type="heating",
+        status="online",
+        features=[
+            Feature(
+                name="heating.circuits.0.operating.programs.active",
+                value=active_program,
+                unit="",
+                is_enabled=True,
+                is_ready=True,
+            ),
+            Feature(
+                name="heating.dhw.oneTimeCharge.active",
+                value=is_one_time_charge_active,
+                unit="",
                 is_enabled=True,
                 is_ready=True,
             ),
@@ -528,6 +562,71 @@ async def test_data_coordinator_serializes_writes_per_device(
     assert calls[1][0] is slope_updated_device
     assert calls[1][1].value == 0.0
     assert coordinator.data[device_key] is final_device
+
+
+@pytest.mark.asyncio
+async def test_platform_commands_share_current_device_state(
+    hass: HomeAssistant, mock_client
+) -> None:
+    """Test select and switch actions serialize through the shared coordinator."""
+    # Arrange: Block a select command before dispatching a switch command.
+    device_key = "gw-main_device-0"
+    select_feature_name = "heating.circuits.0.operating.programs.active"
+    switch_feature_name = "heating.dhw.oneTimeCharge.active"
+    initial_device = _build_select_and_switch_device("eco", False)
+    select_updated_device = _build_select_and_switch_device("heating", False)
+    final_device = _build_select_and_switch_device("heating", True)
+    first_write_started = asyncio.Event()
+    allow_first_write_to_finish = asyncio.Event()
+    calls: list[tuple[Device, Feature, object]] = []
+
+    async def mock_set_feature(
+        device: Device, feature: Feature, value: object
+    ) -> tuple[CommandResponse, Device]:
+        calls.append((device, feature, value))
+        if feature.name == select_feature_name:
+            first_write_started.set()
+            await allow_first_write_to_finish.wait()
+            return CommandResponse(
+                success=True, message=None, reason=None
+            ), select_updated_device
+        return CommandResponse(success=True, message=None, reason=None), final_device
+
+    mock_client.set_feature = AsyncMock(side_effect=mock_set_feature)
+    coordinator = _build_coordinator(hass, mock_client)
+    coordinator.data = {device_key: initial_device}
+    select_entity = ViClimateSelect(
+        coordinator,
+        device_key,
+        select_feature_name,
+        SelectEntityDescription(key=select_feature_name),
+    )
+    switch_entity = ViClimateSwitch(
+        coordinator,
+        device_key,
+        switch_feature_name,
+        SwitchEntityDescription(key=switch_feature_name),
+    )
+    with (
+        patch.object(select_entity, "async_write_ha_state"),
+        patch.object(switch_entity, "async_write_ha_state"),
+    ):
+        # Act: Start platform actions concurrently while the first write is in flight.
+        select_write = asyncio.create_task(select_entity.async_select_option("heating"))
+        await asyncio.sleep(0)
+        if select_write.done():
+            select_write.result()
+        await first_write_started.wait()
+        switch_write = asyncio.create_task(switch_entity.async_turn_on())
+        await asyncio.sleep(0)
+        allow_first_write_to_finish.set()
+        await asyncio.gather(select_write, switch_write)
+
+        # Assert: The switch action received the device confirmed by the select action.
+        assert calls[1][0] is select_updated_device
+        assert calls[1][1].name == switch_feature_name
+        assert calls[1][2] is True
+        assert coordinator.data[device_key] is final_device
 
 
 @pytest.mark.asyncio
