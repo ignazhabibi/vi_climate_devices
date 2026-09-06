@@ -135,16 +135,16 @@ python3.14 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install '.[dev]'
-pyright --pythonpath .venv/bin/python
-python -m pytest -q
+pre-commit install --install-hooks
 ```
 
 ### Code Quality
 
 ```bash
-ruff check .
-ruff format --check .
-pyright --pythonpath .venv/bin/python
+python scripts/quality_check.py
+
+# Run the same gate manually through pre-commit.
+pre-commit run --all-files
 ```
 
 ---

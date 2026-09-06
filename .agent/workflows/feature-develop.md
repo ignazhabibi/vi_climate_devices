@@ -45,24 +45,8 @@ Iterate on your feature with frequent validation.
 ### B. Validate Locally
 Before each commit:
 
-// turbo
 ```bash
-ruff check .
-```
-
-// turbo
-```bash
-ruff format --check .
-```
-
-// turbo
-```bash
-pyright --pythonpath .venv/bin/python
-```
-
-// turbo
-```bash
-python -m pytest -q
+python scripts/quality_check.py
 ```
 
 When changing test dependencies, CI config, packaging metadata, or snapshot

@@ -104,10 +104,7 @@ python -m pip install '.[dev]'
 Primary local quality gates:
 
 ```bash
-ruff check .
-ruff format --check .
-pyright --pythonpath .venv/bin/python
-python -m pytest -q
+python scripts/quality_check.py
 ```
 
 If a change touches snapshots, test dependencies, CI config, or packaging,
@@ -115,7 +112,7 @@ validate once in a fresh environment installed with `.[dev]`.
 
 ## CI and Release Notes
 
-- CI currently runs Ruff, Pyright, and pytest via `.github/workflows/release.yml` for `main`, pull
+- CI currently runs `scripts/quality_check.py` via `.github/workflows/release.yml` for `main`, pull
   requests, and stable release tags, plus `.github/workflows/pre-release.yml`
   for prerelease tags.
 - `main` is protected by a GitHub ruleset. Assume pull requests are required for
@@ -123,6 +120,8 @@ validate once in a fresh environment installed with `.[dev]`.
   the user explicitly asks for a confirmed emergency bypass.
 - Python support baseline is 3.14+ across packaging, CI, and repository guidance.
 - Prefer matching the current CI Python version locally for verification.
+- Run `pre-commit install --install-hooks` after installing `.[dev]`. The
+  installed hook runs the complete quality check before each normal commit.
 - Home Assistant release versioning is driven by
   `custom_components/vi_climate_devices/manifest.json`.
 - Keep `pyproject.toml` package metadata version aligned with
