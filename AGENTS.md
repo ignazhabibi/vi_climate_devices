@@ -1,150 +1,101 @@
 # AGENTS.md
 
-This repository keeps its detailed agent guidance in `.agent/`.
+## Scope and Priorities
 
-Use this file as the bootstrap entry point. The detailed files in `.agent/` are
-the canonical source for project-specific rules and workflows.
+Follow runtime instructions first, then this file, then the repository's
+configured tooling. Treat the implementation and configuration as newer than
+examples or assumptions in documentation.
 
-## Priority and Structure
-
-When working in this repository, use this order:
-
-1. System / developer / tool instructions from the runtime
-2. This `AGENTS.md`
-3. `.agent/rules/`
-4. `.agent/workflows/`
-
-If repository guidance conflicts internally:
-
-- Rules in `.agent/rules/` override workflow convenience steps.
-- Newer repository reality overrides stale examples.
-- Do not hardcode dependency versions into guidance files unless the exact
-  version is genuinely required.
-
-## Always-Relevant Files
-
-Read these first for most non-trivial tasks:
-
-- `.agent/rules/architecture-context.md`
-- `.agent/rules/tech-stack.md`
-- `.agent/rules/python-style.md`
-- `.agent/rules/testing.md`
-- `.agent/rules/git-workflow.md`
-- `.agent/rules/library-protection.md`
-
-## Workflow Selection
-
-Pick the matching workflow before making substantial changes:
-
-- Feature work: `.agent/workflows/feature-develop.md`
-- Releases and tags: `.agent/workflows/release.md`
-- PR submission flow: `.agent/workflows/pr-submit.md`
-- Test review / test updates: `.agent/workflows/test-compliance-check.md`
-- Rules review / agent guidance cleanup: `.agent/workflows/rules-compliance-check.md`
-- Documentation-only work: `.agent/workflows/doc-update.md`
-
-## Self-Contained Repository Documentation
-
-Treat the repository-operational documentation as a self-contained system that
-must stay current together:
-
-- `README.md`
-- `AGENTS.md`
-- `.agent/rules/`, especially `architecture-context.md` and `tech-stack.md`
-- `.agent/workflows/`
-
-After any task that changes repository behavior or expectations, the agent must
-perform an explicit documentation drift check before considering the work
-complete.
-
-This is mandatory for changes affecting:
-
-- architecture or feature model assumptions
-- tech stack or Python/dependency policy
-- local setup commands
-- testing strategy or snapshot handling
-- CI behavior or required checks
-- release flow or versioning rules
-- GitHub governance such as branch protection, rulesets, merge policy, or PR requirements
-
-The agent must then do one of the following:
-
-- update the affected documentation in the same task, or
-- explicitly state that the documentation was checked and no update is needed
-
-Do not keep durable repository knowledge implicit when the repository guidance
-should be updated to reflect it.
+Keep changes small and directly related to the request. Do not refactor or
+clean up unrelated code. State assumptions and tradeoffs when they materially
+affect the solution.
 
 ## Project Context
 
 - This is a Home Assistant custom integration for Viessmann climate devices.
-- Main integration code lives in `custom_components/vi_climate_devices/`.
-- Tests live in `tests/`.
-- The integration depends on `vi_api_client`, which uses a flat feature model.
-- Treat `vi_api_client` as a separate codebase. Do not edit library files
-  outside this repository as part of this repo workflow.
-- `MockViClient` with the `Vitocal250A` fixture is the preferred test client.
-- Snapshot coverage is centered on discovery behavior in
-  `tests/test_discovery_snapshot.py`.
-- Treat `pytest-homeassistant-custom-component` as the authoritative Home
-  Assistant test stack. Avoid separately pinning `pytest` ecosystem packages
-  unless there is a concrete repo-specific reason.
+- Integration code is in `custom_components/vi_climate_devices/`; tests are in
+  `tests/`.
+- `vi_api_client` is a separate codebase. Never edit its files from this
+  repository. Explain the required library change, its rationale, and the
+  expected version bump instead.
+- The client has a flat feature model: look up dot-named `Feature` objects with
+  `device.get_feature(...)`; do not navigate nested API properties.
+- A refreshed device returned by `update_device` replaces the old object. Use
+  `set_feature` for writes; do not construct raw API payloads.
+- Preserve explicitly defined entities. Automatic discovery is a fallback for
+  unmapped features.
+- Keep the single-coordinator model. Do not poll individual features or add a
+  separate analytics coordinator without an explicit product decision.
 
-## Development Baseline
+## Python and Tests
 
-Use the same local install path as CI whenever possible:
+- Python 3.14+ is the project baseline. Follow the Ruff and Pyright
+  configuration in `pyproject.toml`; do not duplicate their mechanically
+  enforceable rules here.
+- Prefer precise types and built-in generics. Avoid expanding `Any` usage;
+  tighten existing typing incrementally.
+- Use specific exceptions and EAFP where appropriate. Do not catch bare
+  `Exception` or leak HTTP-layer exceptions into integration logic.
+- Use descriptive identifiers. Avoid single-letter local variables except for
+  conventional, short-lived uses; name booleans with `is_`, `has_`, or
+  `should_`. Sort collections when their order has no semantic meaning.
+- Use `pathlib.Path` for filesystem paths. Keep log messages free of trailing
+  periods.
+- Write concise docstrings that explain purpose and behavior rather than
+  repeating type annotations. Public integration APIs need docstrings; keep
+  comments meaningful and scenario-specific.
+- Use pytest functions and the Home Assistant test stack. Prefer
+  `MockViClient` with the `Vitocal250A` fixture; do not mock HTTP requests in
+  this integration. Use `MockConfigEntry` when setting up an integration.
+- Use Arrange-Act-Assert for nontrivial tests, with scenario-specific comments,
+  and focused assertions for behavior. Use snapshots for discovery and
+  diagnostics coverage; inspect every `.ambr` diff rather than accepting it
+  blindly.
+- When snapshots or `pytest-homeassistant-custom-component` change, a green
+  Linux CI run is required in addition to local validation.
+
+## Local Quality Gate
+
+Set up a development environment with:
 
 ```bash
 python3.14 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install '.[dev]'
+pre-commit install --install-hooks
 ```
 
-Primary local quality gates:
+Run the complete gate before proposing a commit or push:
 
 ```bash
 python scripts/quality_check.py
 ```
 
-If a change touches snapshots, test dependencies, CI config, or packaging,
-validate once in a fresh environment installed with `.[dev]`.
+The installed pre-commit hook and GitHub CI run the same gate. If dependencies,
+snapshots, packaging, or CI configuration change, also validate once in a fresh
+`.[dev]` environment.
 
-## CI and Release Notes
+## Git, Pull Requests, and Releases
 
-- CI currently runs `scripts/quality_check.py` via `.github/workflows/release.yml` for `main`, pull
-  requests, and stable release tags, plus `.github/workflows/pre-release.yml`
-  for prerelease tags.
-- `main` is protected by a GitHub ruleset. Assume pull requests are required for
-  all changes, including `.agent/` guidance and documentation updates, unless
-  the user explicitly asks for a confirmed emergency bypass.
-- Python support baseline is 3.14+ across packaging, CI, and repository guidance.
-- Prefer matching the current CI Python version locally for verification.
-- Run `pre-commit install --install-hooks` after installing `.[dev]`. The
-  installed hook runs the complete quality check before each normal commit.
-- Home Assistant release versioning is driven by
-  `custom_components/vi_climate_devices/manifest.json`.
-- Keep `pyproject.toml` package metadata version aligned with
-  `custom_components/vi_climate_devices/manifest.json` during releases unless a
-  task explicitly requires them to diverge.
-- Stable tags use the format `vX.Y.Z`.
-- Prerelease tags use semver prerelease suffixes such as
-  `vX.Y.Z-alpha.N`, `vX.Y.Z-beta.N`, or `vX.Y.Z-rc.N`.
-- A release is not considered live until both the `main` push run and the tag
-  run are green.
-- A prerelease is not considered available for testing until the prerelease tag
-  run is green.
-- Snapshot and Home Assistant test stack changes must be validated against the
-  Linux CI run, not only against local macOS runs. A local green snapshot test
-  does not guarantee the same result on GitHub Actions.
+- `main` is protected. Use short-lived branches and pull requests; never
+  commit or merge directly to `main` without an explicitly confirmed emergency
+  bypass.
+- Stage only requested files. Before committing, show the files, summary, and
+  proposed Conventional Commit message, then obtain explicit confirmation.
+- Wait for the GitHub `quality-check` job before treating a PR as merge-ready.
+  Use GitHub squash merge only with explicit authorization.
+- After a merge, fast-forward local `main` and delete the confirmed merged
+  local branch.
+- Releases must keep `pyproject.toml` and `manifest.json` versions aligned.
+  Propose the version change and changelog before committing. Tag only the
+  merged `main` commit: stable releases use `vX.Y.Z`, prereleases use
+  `vX.Y.Z-alpha.N`, `-beta.N`, or `-rc.N`. A release is live only after both
+  its `main` and tag workflows pass.
 
-## Practical Agent Notes
+## Documentation Drift
 
-- Prefer `rg` / `rg --files` for repo search.
-- Use `apply_patch` for manual file edits.
-- Keep changes minimal and consistent with existing patterns.
-- For snapshot updates, inspect the `.ambr` diff instead of blindly accepting it.
-- If rules or workflows look stale, update them as part of the task instead of
-  working around them silently.
-- End substantial tasks with an explicit repository documentation drift check
-  against `README.md`, `AGENTS.md`, `.agent/rules/`, and `.agent/workflows/`.
+After changes to architecture, dependencies, setup, tests, CI, GitHub policy,
+or releases, check `README.md`, this file, `pyproject.toml`, and relevant
+`.github/workflows/` files. Update affected documentation in the same change,
+or explicitly state that no update was needed.
