@@ -41,24 +41,28 @@ affect the solution.
   `should_`. Sort collections when their order has no semantic meaning.
 - Use `pathlib.Path` for filesystem paths. Keep log messages free of trailing
   periods.
-- Start every Python file, including test files, with a module docstring
+- Start every Python file, including test files, with a concise module docstring
   describing its purpose.
-- Use Google-style docstrings for classes and functions. Docstrings are
-  required for all public classes and methods, including public functions.
-  Explain purpose and behavior (why and what), not merely implementation steps.
-  Do not repeat parameter or return types already present in the signature.
-  Document exceptions callers can encounter in a `Raises:` section.
+- Use Google-style docstrings for public classes, functions, and methods.
+  Describe their purpose and externally observable behavior. Explain design
+  rationale or constraints when they are not apparent from the code. Do not
+  repeat parameter or return types already present in annotations.
+- Include a `Raises:` section for exceptions that are intentionally raised,
+  translated, or form a relevant part of the callable's public contract. Do
+  not list incidental implementation exceptions that callers cannot reasonably
+  handle. Test functions do not require docstrings when their name and
+  Arrange-Act-Assert structure describe the scenario clearly.
 - Keep comments meaningful and scenario-specific. Explain non-obvious reasons
   and constraints; omit code paraphrases, agent reasoning notes, and abandoned
   implementation plans.
 - Use pytest functions and the Home Assistant test stack. Prefer
   `MockViClient` with the `Vitocal250A` fixture; do not mock HTTP requests in
   this integration. Use `MockConfigEntry` when setting up an integration.
-- Every test function must follow Arrange-Act-Assert with explicit,
-  test-specific comments: `# Arrange: ...` for inputs, fixtures, mocks, and
-  initialization; `# Act: ...` for the operation under test; and `# Assert: ...`
-  for focused checks of results, mutations, or exceptions. Generic comments
-  such as "Prepare test data" or "Verify the results" are not sufficient.
+- Structure every test according to Arrange-Act-Assert. Add explicit,
+  test-specific `# Arrange:`, `# Act:`, and `# Assert:` comments when the test
+  is long enough that its phases are not immediately apparent, or when it has
+  multiple phases, state transitions, concurrent operations, or substantial
+  fixture and mock setup. Do not add comments that merely restate obvious code.
   Use native `assert` statements for values and state, mock assertion helpers
   for interactions, and `pytest.raises` for expected exceptions.
   Exception-focused tests may use `# Act and assert: ...` when separating the
