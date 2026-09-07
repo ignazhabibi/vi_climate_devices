@@ -45,50 +45,50 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.client = client
         self._known_devices: list[Device] = []
         self._failed_device_keys: set[str] = set()
-        self._device_write_locks: dict[str, asyncio.Lock] = {}
         self._refresh_write_lock = asyncio.Lock()
 
     def is_device_available(self, device_key: str) -> bool:
         """Return whether the most recent refresh succeeded for a device."""
         return device_key not in self._failed_device_keys
 
-    def _log_device_availability(self, device_key: str, error: ViError | None) -> None:
+    def _log_device_availability(
+        self,
+        device_key: str,
+        error: ViError | None,
+        previous_failed_device_keys: set[str],
+    ) -> None:
         """Log a device availability transition once."""
         if error is None:
-            if device_key in self._failed_device_keys:
+            if device_key in previous_failed_device_keys:
                 _LOGGER.info("Device %s is back online", device_key)
-        elif device_key not in self._failed_device_keys:
+        elif device_key not in previous_failed_device_keys:
             _LOGGER.info("Device %s is unavailable: %s", device_key, error)
 
     async def async_set_feature(
         self, device_key: str, feature_name: str, value: object
     ) -> CommandResponse:
-        """Set a feature while serializing writes for the same device."""
+        """Set a feature while serializing writes with refreshes."""
         async with self._refresh_write_lock:
-            write_lock = self._device_write_locks.setdefault(device_key, asyncio.Lock())
-            async with write_lock:
-                device = self.data.get(device_key)
-                if device is None:
-                    raise ValueError(
-                        f"Device {device_key} not found in coordinator data"
-                    )
+            device = self.data.get(device_key)
+            if device is None:
+                raise ValueError(f"Device {device_key} not found in coordinator data")
 
-                feature = device.get_feature(feature_name)
-                if feature is None:
-                    raise ValueError(f"Feature {feature_name} not found in device data")
+            feature = device.get_feature(feature_name)
+            if feature is None:
+                raise ValueError(f"Feature {feature_name} not found in device data")
 
-                response, updated_device = await self.client.set_feature(
-                    device, feature, value
-                )
-                if response.success:
-                    updated_data = dict(self.data)
-                    updated_data[device_key] = updated_device
-                    self._known_devices = list(updated_data.values())
-                    # A command confirms values, not refresh availability. Preserve
-                    # the scheduled poll and the outcome of the last refresh.
-                    self.data = updated_data
-                    self.async_update_listeners()
-                return response
+            response, updated_device = await self.client.set_feature(
+                device, feature, value
+            )
+            if response.success:
+                updated_data = dict(self.data)
+                updated_data[device_key] = updated_device
+                self._known_devices = list(updated_data.values())
+                # A command confirms values, not refresh availability. Preserve
+                # the scheduled poll and the outcome of the last refresh.
+                self.data = updated_data
+                self.async_update_listeners()
+            return response
 
     async def _async_refresh(
         self,
@@ -160,53 +160,46 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         Raises:
             UpdateFailed: If the update process encounters an unhandled exception.
         """
-        try:
-            # 1. Initial Discovery
-            if not self._known_devices:
-                await self._perform_discovery()
+        # 1. Initial Discovery
+        if not self._known_devices:
+            await self._perform_discovery()
 
-            # 2. Update Loop (Refresh each device)
-            updated_data: dict[str, Device] = {}
-            failed_device_keys: set[str] = set()
+        # 2. Update Loop (Refresh each device)
+        updated_data: dict[str, Device] = {}
+        failed_device_keys: set[str] = set()
+        device_errors: dict[str, ViError] = {}
+        previous_failed_device_keys = self._failed_device_keys
 
-            if self._known_devices:
-                _LOGGER.debug("Updating %s known devices", len(self._known_devices))
-                for device in self._known_devices:
-                    key = f"{device.gateway_serial}_{device.id}"
-                    try:
-                        new_device = await self.client.update_device(device)
-                        updated_data[key] = new_device
-                        self._log_device_availability(key, None)
+        if self._known_devices:
+            _LOGGER.debug("Updating %s known devices", len(self._known_devices))
+            for device in self._known_devices:
+                key = f"{device.gateway_serial}_{device.id}"
+                try:
+                    new_device = await self.client.update_device(device)
+                    updated_data[key] = new_device
 
-                    except OAuth2TokenRequestError:
-                        raise
+                except ViAuthError as err:
+                    # Trigger HA re-auth flow immediately
+                    raise ConfigEntryAuthFailed(
+                        f"Authentication failed for device {device.id}: {err}"
+                    ) from err
 
-                    except ViAuthError as err:
-                        # Trigger HA re-auth flow immediately
-                        raise ConfigEntryAuthFailed(
-                            f"Authentication failed for device {device.id}: {err}"
-                        ) from err
+                except ViError as err:
+                    failed_device_keys.add(key)
+                    device_errors[key] = err
+                    # Keep old data for recovery, but mark its entities unavailable.
+                    updated_data[key] = device
 
-                    except ViError as err:
-                        self._log_device_availability(key, err)
-                        failed_device_keys.add(key)
-                        # Keep old data for recovery, but mark its entities unavailable.
-                        updated_data[key] = device
+            self._failed_device_keys = failed_device_keys
+            for key in updated_data:
+                self._log_device_availability(
+                    key, device_errors.get(key), previous_failed_device_keys
+                )
 
-                self._failed_device_keys = failed_device_keys
-                if failed_device_keys and len(failed_device_keys) == len(updated_data):
-                    raise UpdateFailed("Failed to update all devices")
+            if failed_device_keys and len(failed_device_keys) == len(updated_data):
+                raise UpdateFailed("Failed to update all devices")
 
-                # Update local reference with fresh immutable objects
-                self._known_devices = list(updated_data.values())
+            # Update local reference with fresh immutable objects
+            self._known_devices = list(updated_data.values())
 
-            return updated_data
-
-        except ConfigEntryAuthFailed:
-            raise
-        except OAuth2TokenRequestError:
-            raise
-        except ViAuthError as err:
-            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except ViError as err:
-            raise UpdateFailed(err) from err
+        return updated_data

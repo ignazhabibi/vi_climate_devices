@@ -381,6 +381,35 @@ async def test_data_coordinator_propagates_transient_oauth_error(
 
 
 @pytest.mark.asyncio
+async def test_data_coordinator_does_not_log_recovery_before_aborted_refresh_commits(
+    hass: HomeAssistant, mock_client, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test an OAuth-aborted refresh does not prematurely recover a device."""
+    # Arrange: Device A was unavailable before device B aborts the next refresh.
+    recovered_device = _build_device(device_id="device-0", gateway_serial="gw-main")
+    auth_failed_device = _build_device(device_id="device-1", gateway_serial="gw-backup")
+    token_error = _make_token_error()
+    mock_client.update_device = AsyncMock(side_effect=[recovered_device, token_error])
+    coordinator = _build_coordinator(hass, mock_client)
+    coordinator._known_devices = [recovered_device, auth_failed_device]
+    coordinator._failed_device_keys = {"gw-main_device-0"}
+
+    with (
+        caplog.at_level(
+            logging.INFO, logger="custom_components.vi_climate_devices.coordinator"
+        ),
+        pytest.raises(OAuth2TokenRequestError) as raised_error,
+    ):
+        # Act and assert: Abort before committing the partially refreshed state.
+        await coordinator._async_update_data()
+
+    # Assert: Retain availability and defer the recovery transition log.
+    assert raised_error.value is token_error
+    assert not coordinator.is_device_available("gw-main_device-0")
+    assert [record.getMessage() for record in caplog.records] == []
+
+
+@pytest.mark.asyncio
 async def test_confirmed_write_survives_partial_failure_and_recovery(
     hass: HomeAssistant, mock_client
 ) -> None:
