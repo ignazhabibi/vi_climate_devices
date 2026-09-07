@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from aiohttp import ClientError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -39,12 +40,22 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 async def async_setup_entry(
     hass: HomeAssistant, entry: ViClimateDevicesConfigEntry
 ) -> bool:
-    """Set up Viessmann Climate Devices from a config entry."""
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
+    """Set up Viessmann Climate Devices from a config entry.
+
+    Raises:
+        ConfigEntryAuthFailed: If the OAuth refresh token is rejected.
+        ConfigEntryNotReady: If OAuth setup cannot complete temporarily.
+    """
+    try:
+        implementation = (
+            await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                hass, entry
+            )
         )
-    )
+    except config_entry_oauth2_flow.ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            "Unable to load the Viessmann OAuth implementation"
+        ) from err
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
@@ -55,7 +66,7 @@ async def async_setup_entry(
         raise ConfigEntryAuthFailed(
             "OAuth refresh token rejected by Viessmann - re-authentication required"
         ) from err
-    except OAuth2TokenRequestError as err:
+    except (OAuth2TokenRequestError, ClientError, TimeoutError) as err:
         raise ConfigEntryNotReady("Unable to refresh the Viessmann token") from err
 
     # Create the Auth Bridge

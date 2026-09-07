@@ -4,6 +4,8 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from aiohttp import ClientConnectionError
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -11,6 +13,7 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
+from homeassistant.helpers import config_entry_oauth2_flow
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     async_fire_time_changed,
@@ -113,6 +116,56 @@ async def test_async_setup_entry_raises_not_ready_on_transient_token_error(
 
     # Assert: Setup leaves no runtime data while Home Assistant schedules a retry.
     assert DOMAIN not in hass.data
+
+
+@pytest.mark.asyncio
+async def test_config_entry_setup_retries_when_oauth_implementation_is_unavailable(
+    hass: HomeAssistant,
+) -> None:
+    """Test Home Assistant retries setup when OAuth implementation lookup fails."""
+    # Arrange: Register an entry whose OAuth implementation is temporarily unavailable.
+    entry = _build_entry()
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        side_effect=config_entry_oauth2_flow.ImplementationUnavailableError(),
+    ):
+        # Act: Set up the entry through Home Assistant's config-entry lifecycle.
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Assert: Home Assistant leaves the entry queued for a later retry.
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("transport_error", [ClientConnectionError(), TimeoutError()])
+async def test_config_entry_setup_retries_when_oauth_token_refresh_transport_fails(
+    hass: HomeAssistant, transport_error: ClientConnectionError | TimeoutError
+) -> None:
+    """Test Home Assistant retries setup after OAuth refresh transport failures."""
+    # Arrange: Register an entry whose expired-token refresh cannot reach Viessmann.
+    entry = _build_entry()
+    entry.data["token"]["expires_at"] = 0
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+            side_effect=transport_error,
+        ),
+    ):
+        # Act: Set up the entry through Home Assistant's config-entry lifecycle.
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Assert: Home Assistant leaves the entry queued for a later retry.
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.asyncio
