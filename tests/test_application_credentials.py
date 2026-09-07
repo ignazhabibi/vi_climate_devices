@@ -52,10 +52,33 @@ async def test_async_get_auth_implementation_returns_pkce_implementation(
 
     # Assert: The integration uses a PKCE-capable local OAuth implementation.
     assert isinstance(implementation, LocalOAuth2ImplementationWithPkce)
+    assert implementation.name == "Viessmann"
     assert implementation.client_id == "client-id"
     assert implementation.client_secret == ""
     assert implementation.authorize_url == ENDPOINT_AUTHORIZE
     assert implementation.token_url == ENDPOINT_TOKEN
+
+
+@pytest.mark.asyncio
+async def test_async_get_auth_implementation_falls_back_to_client_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test unnamed application credentials use their client ID as the name."""
+    # Arrange: Provide stored credentials without a user-defined name.
+    credential = ClientCredential(
+        client_id="client-id",
+        client_secret="client-secret",
+    )
+
+    # Act: Create the OAuth implementation from the unnamed credentials.
+    implementation = await async_get_auth_implementation(
+        hass,
+        "vi_climate_devices",
+        credential,
+    )
+
+    # Assert: The client ID remains available as a meaningful fallback name.
+    assert implementation.name == "client-id"
 
 
 @pytest.mark.asyncio
