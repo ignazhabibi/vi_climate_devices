@@ -131,7 +131,7 @@ logger:
 
 ## Development
 
-### Running Tests
+### Development Setup
 
 ```bash
 python3.14 -m venv .venv
@@ -149,6 +149,11 @@ python scripts/quality_check.py
 # Run the same gate manually through pre-commit.
 pre-commit run --all-files
 ```
+
+### Contributor Guidance
+
+For Python and test standards, read [CONTRIBUTING.md](CONTRIBUTING.md).
+Automated coding agents must also follow [AGENTS.md](AGENTS.md).
 
 ---
 
