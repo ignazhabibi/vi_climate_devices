@@ -414,7 +414,7 @@ async def test_confirmed_write_survives_partial_failure_and_recovery(
     hass: HomeAssistant, mock_client
 ) -> None:
     """Keep confirmed state while only the failed device becomes unavailable."""
-    # Arrange: Discover two devices, then confirm a new slope for the first.
+    # Arrange: Seed two discovered devices with a confirmed slope for the first.
     device_key = "gw-main_device-0"
     other_key = "gw-main_device-1"
     feature_name = "heating.circuits.0.heating.curve.slope"
@@ -456,6 +456,8 @@ async def test_confirmed_write_survives_partial_failure_and_recovery(
     assert coordinator.data[device_key] is written_device
     assert not entity.available
     assert other_entity.available
+
+    # Act: Confirm a new slope for the reachable second device.
     mock_client.set_feature = AsyncMock(
         return_value=(
             CommandResponse(success=True, message=None, reason=None),
@@ -463,6 +465,8 @@ async def test_confirmed_write_survives_partial_failure_and_recovery(
         )
     )
     await coordinator.async_set_feature(other_key, feature_name, 1.2)
+
+    # Assert: The second device updates without recovering the first.
     assert other_entity.native_value == 1.2
     assert not entity.available
 
@@ -477,11 +481,15 @@ async def test_confirmed_write_survives_partial_failure_and_recovery(
     assert entity.available
     assert entity.native_value == 1.3
     assert other_entity.available
+
+    # Act: Update the recovered device.
     mock_client.set_feature.return_value = (
         CommandResponse(success=True, message=None, reason=None),
         _build_curve_device(slope=1.4, shift=0.0),
     )
     await coordinator.async_set_feature(device_key, feature_name, 1.4)
+
+    # Assert: The write starts from the device confirmed by recovery.
     assert mock_client.set_feature.call_args.args[0] is recovered_device
     assert entity.native_value == 1.4
 
@@ -751,6 +759,7 @@ async def test_frequent_writes_preserve_scheduled_poll(
     hass: HomeAssistant, mock_client, freezer
 ) -> None:
     """Commands publish immediately without postponing measurement refreshes."""
+    # Arrange: Start a coordinator and observe its listener and poll activity.
     coordinator = _build_coordinator(hass, mock_client)
     await coordinator.async_refresh()
     device_key = next(iter(coordinator.data))
@@ -777,12 +786,14 @@ async def test_frequent_writes_preserve_scheduled_poll(
         remove_listener()
         await coordinator.async_shutdown()
 
-    # No poll or notification survives removal and shutdown.
+    # Act: Advance time after listener removal and coordinator shutdown.
     listener.reset_mock()
     mock_client.update_device.reset_mock()
     freezer.tick(timedelta(minutes=6))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    # Assert: No poll or notification survives removal and shutdown.
     listener.assert_not_called()
     mock_client.update_device.assert_not_awaited()
 
@@ -829,13 +840,17 @@ async def test_write_after_full_outage_preserves_availability_until_poll(
         _make_token_error() if is_token_failure else ViConnectionError("offline")
     )
     try:
-        # Act: A scheduled poll fails globally, then a command succeeds.
+        # Act: A scheduled poll fails globally.
         freezer.tick(timedelta(minutes=3))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
+
+        # Assert: Both entities are unavailable after the failed poll.
         assert not coordinator.last_update_success
         last_exception = coordinator.last_exception
         assert observed_states == [(False, False, 0.7)]
+
+        # Act: A command succeeds for the first device.
         mock_client.set_feature = AsyncMock(
             return_value=(
                 CommandResponse(success=True, message=None, reason=None),
@@ -858,13 +873,18 @@ async def test_write_after_full_outage_preserves_availability_until_poll(
         freezer.tick(timedelta(minutes=3))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
+
+        # Assert: Only the written device becomes available.
         assert observed_states[-1] == (True, False, 1.2)
         assert mock_client.update_device.call_args_list[-2].args[0] is written_device
 
+        # Act: The final poll confirms both devices are reachable.
         mock_client.update_device.side_effect = lambda device: device
         freezer.tick(timedelta(minutes=3))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
+
+        # Assert: Both entities are available again.
         assert observed_states[-1] == (True, True, 1.2)
     finally:
         remove_listener()

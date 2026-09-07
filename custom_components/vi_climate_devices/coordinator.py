@@ -67,7 +67,11 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     async def async_set_feature(
         self, device_key: str, feature_name: str, value: object
     ) -> CommandResponse:
-        """Set a feature while serializing writes with refreshes."""
+        """Set a feature while serializing writes with refreshes.
+
+        Raises:
+            ValueError: If the device or feature is absent from coordinator data.
+        """
         async with self._refresh_write_lock:
             device = self.data.get(device_key)
             if device is None:
@@ -115,14 +119,13 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         Raises:
             UpdateFailed: If no installations are found or discovery fails.
         """
-        _LOGGER.debug("Performing initial discovery...")
+        _LOGGER.debug("Performing initial discovery")
 
         try:
             installations = await self.client.get_installations()
             if not installations:
                 raise UpdateFailed("No installations found")
 
-            # Fetch devices from ALL installations
             all_devices: list[Device] = []
             for installation in installations:
                 _LOGGER.debug(
@@ -133,7 +136,6 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 )
                 all_devices.extend(devices)
 
-            # Filter out ignored devices
             self._known_devices = [
                 device for device in all_devices if device.id not in IGNORED_DEVICES
             ]
@@ -160,11 +162,9 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         Raises:
             UpdateFailed: If the update process encounters an unhandled exception.
         """
-        # 1. Initial Discovery
         if not self._known_devices:
             await self._perform_discovery()
 
-        # 2. Update Loop (Refresh each device)
         updated_data: dict[str, Device] = {}
         failed_device_keys: set[str] = set()
         device_errors: dict[str, ViError] = {}
@@ -179,7 +179,6 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                     updated_data[key] = new_device
 
                 except ViAuthError as err:
-                    # Trigger HA re-auth flow immediately
                     raise ConfigEntryAuthFailed(
                         f"Authentication failed for device {device.id}: {err}"
                     ) from err
@@ -199,7 +198,6 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             if failed_device_keys and len(failed_device_keys) == len(updated_data):
                 raise UpdateFailed("Failed to update all devices")
 
-            # Update local reference with fresh immutable objects
             self._known_devices = list(updated_data.values())
 
         return updated_data
