@@ -404,6 +404,7 @@ async def test_climate_rejects_target_temperature_in_standby(
     hass: HomeAssistant,
 ) -> None:
     """Test standby circuits do not advertise target-temperature control."""
+    # Arrange: Set up the integration with the standby Vitocal333G fixture.
     client = MockViClient(device_name="Vitocal333G-with-Vitovent300F", auth=None)
     client.set_feature = AsyncMock(wraps=client.set_feature)
     entry = MockConfigEntry(domain=DOMAIN, data={"client_id": "123", "token": "abc"})
@@ -424,6 +425,7 @@ async def test_climate_rejects_target_temperature_in_standby(
         ),
         patch("custom_components.vi_climate_devices.HAAuth"),
     ):
+        # Act: Load the integration and retrieve the first heating circuit.
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -432,6 +434,8 @@ async def test_climate_rejects_target_temperature_in_standby(
             for state in hass.states.async_all("climate")
             if state.entity_id.endswith("heating_circuit_0")
         )
+
+        # Assert: Keep reporting HVAC state but reject temperature control in HA.
         assert state.state == HVACMode.HEAT
         assert not (
             state.attributes["supported_features"]
@@ -462,6 +466,7 @@ async def test_climate_requires_writable_active_program_temperature(
     temperature_feature_state: str,
 ) -> None:
     """Test unavailable program temperatures do not disable the climate entity."""
+    # Arrange: Remove one requirement from the active program temperature feature.
     device = (await mock_client.get_full_installation_status("99999"))[0]
     temperature_feature_name = (
         "heating.circuits.0.operating.programs.normalHeating.temperature"
@@ -482,9 +487,15 @@ async def test_climate_requires_writable_active_program_temperature(
     coordinator.async_set_feature = AsyncMock()
     entity = ViClimate(coordinator, map_key, "0")
 
-    assert entity.hvac_mode == HVACMode.HEAT
-    assert not (entity.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE)
-    assert entity.target_temperature is None
+    # Act: Resolve the entity's state and advertised capabilities.
+    hvac_mode = entity.hvac_mode
+    supported_features = entity.supported_features
+    target_temperature = entity.target_temperature
+
+    # Assert: Keep HVAC state but neither expose nor accept target-temperature control.
+    assert hvac_mode == HVACMode.HEAT
+    assert not (supported_features & ClimateEntityFeature.TARGET_TEMPERATURE)
+    assert target_temperature is None
 
     with pytest.raises(
         HomeAssistantError,
