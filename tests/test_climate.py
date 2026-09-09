@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from vi_api_client.mock_client import MockViClient
-from vi_api_client.models import Device, Feature, FeatureControl
+from vi_api_client.models import CommandResponse, Device, Feature, FeatureControl
 
 from custom_components.vi_climate_devices.climate import ViClimate
 from custom_components.vi_climate_devices.const import DOMAIN
@@ -504,6 +504,123 @@ async def test_climate_requires_writable_active_program_temperature(
         await entity.async_set_temperature(temperature=21.0)
 
     coordinator.async_set_feature.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("initial_mode", "initial_program", "requested_mode", "requested_program"),
+    [
+        pytest.param(
+            "heating",
+            "normalHeating",
+            HVACMode.COOL,
+            "normalCooling",
+            id="heating-to-cooling",
+        ),
+        pytest.param(
+            "cooling",
+            "normalCooling",
+            HVACMode.HEAT,
+            "normalHeating",
+            id="cooling-to-heating",
+        ),
+    ],
+)
+async def test_climate_sets_temperature_on_program_selected_by_requested_mode(
+    mock_client: MockViClient,
+    initial_mode: str,
+    initial_program: str,
+    requested_mode: HVACMode,
+    requested_program: str,
+) -> None:
+    """Test combined mode and temperature actions use the selected program."""
+    # Arrange: Model the authoritative device state before and after a mode change.
+    initial_device = (await mock_client.get_full_installation_status("99999"))[0]
+    normal_heating_temperature = next(
+        feature
+        for feature in initial_device.features
+        if feature.name
+        == "heating.circuits.0.operating.programs.normalHeating.temperature"
+    )
+    cooling_temperature = replace(
+        normal_heating_temperature,
+        name="heating.circuits.0.operating.programs.normalCooling.temperature",
+        value=18.0,
+    )
+    mode_control = next(
+        feature.control
+        for feature in initial_device.features
+        if feature.name == CIRCUIT_MODE_FEATURE
+    )
+    assert mode_control is not None
+    initial_features = [
+        replace(feature, value=initial_program)
+        if feature.name == ACTIVE_PROGRAM_FEATURE
+        else replace(
+            feature,
+            value=initial_mode,
+            control=replace(mode_control, options=["heating", "cooling", "standby"]),
+        )
+        if feature.name == CIRCUIT_MODE_FEATURE
+        else feature
+        for feature in initial_device.features
+    ]
+    initial_device = replace(
+        initial_device, features=[*initial_features, cooling_temperature]
+    )
+    transitioned_device = replace(
+        initial_device,
+        features=[
+            replace(feature, value=requested_program)
+            if feature.name == ACTIVE_PROGRAM_FEATURE
+            else replace(feature, value=requested_mode.value)
+            if feature.name == CIRCUIT_MODE_FEATURE
+            else feature
+            for feature in initial_device.features
+        ],
+    )
+    map_key = f"{initial_device.gateway_serial}_{initial_device.id}"
+    coordinator = MagicMock()
+    coordinator.data = {map_key: initial_device}
+    coordinator.async_set_feature = AsyncMock(
+        return_value=CommandResponse(success=True, message=None, reason=None)
+    )
+
+    async def refresh_after_mode_change() -> None:
+        coordinator.data = {map_key: transitioned_device}
+
+    coordinator.async_request_refresh = AsyncMock(side_effect=refresh_after_mode_change)
+    entity = ViClimate(coordinator, map_key, "0")
+
+    # Act: Apply temperature and a different HVAC mode in one climate action.
+    with patch.object(entity, "async_write_ha_state"):
+        await entity.async_set_temperature(temperature=21.0, hvac_mode=requested_mode)
+
+    # Assert: Refresh before resolving the target temperature of the new program.
+    coordinator.async_request_refresh.assert_awaited_once()
+    assert [call.args[1] for call in coordinator.async_set_feature.await_args_list] == [
+        CIRCUIT_MODE_FEATURE,
+        f"heating.circuits.0.operating.programs.{requested_program}.temperature",
+    ]
+    assert coordinator.async_set_feature.await_args_list[1].args[2] == 21.0
+
+    # Arrange: Simulate a rejected temperature write after the mode transition.
+    coordinator.data = {map_key: initial_device}
+    coordinator.async_set_feature.reset_mock()
+    coordinator.async_set_feature.side_effect = [
+        CommandResponse(success=True, message=None, reason=None),
+        CommandResponse(success=False, message="temperature rejected", reason=None),
+    ]
+
+    # Act and assert: Preserve the successful mode change in the failure message.
+    with (
+        pytest.raises(
+            HomeAssistantError,
+            match="HVAC mode changed, but failed to set temperature: Command rejected: temperature rejected",
+        ),
+        patch.object(entity, "async_write_ha_state"),
+    ):
+        await entity.async_set_temperature(temperature=21.0, hvac_mode=requested_mode)
 
 
 @pytest.mark.asyncio
