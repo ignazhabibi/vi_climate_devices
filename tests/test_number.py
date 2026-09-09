@@ -14,9 +14,69 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+from vi_api_client.mock_client import MockViClient
 from vi_api_client.models import CommandResponse
 
 from custom_components.vi_climate_devices.const import DOMAIN
+
+
+@pytest.mark.asyncio
+async def test_read_only_known_number_is_exposed_as_sensor(
+    hass: HomeAssistant,
+) -> None:
+    """Test known read-only controls remain sensors without Number services."""
+    # Arrange: Load the fixture where the known switch-off value is read-only.
+    client = MockViClient(device_name="Vitocal333G-with-Vitovent300F", auth=None)
+    client.set_feature = AsyncMock(wraps=client.set_feature)
+    entry = MockConfigEntry(domain=DOMAIN, data={"client_id": "123", "token": "abc"})
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "custom_components.vi_climate_devices.ViessmannClient",
+            return_value=client,
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+            return_value=None,
+        ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
+    ):
+        # Act: Initialize the integration.
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Assert: The read-only feature has no Number entity or service target.
+        number_entity_id = (
+            "number.vitocal333g_with_vitovent300f_dhw_hysteresis_switch_off"
+        )
+        assert hass.states.get(number_entity_id) is None
+
+        # Act: Try to set the missing Number entity.
+        await hass.services.async_call(
+            "number",
+            SERVICE_SET_VALUE,
+            {"entity_id": number_entity_id, "value": 6.0},
+            blocking=True,
+        )
+
+        # Assert: No write request reaches the client.
+        client.set_feature.assert_not_awaited()
+
+        # Assert: The value remains exposed through sensor discovery.
+        sensor = hass.states.get(
+            "sensor.vitocal333g_with_vitovent300f_dhw_temperature_hysteresis_"
+            "switch_off_value"
+        )
+        assert sensor is not None
+        assert sensor.state == "5"
+
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
 
 
 @pytest.mark.asyncio
