@@ -539,15 +539,26 @@ class ViClimate(ViClimateEntity, ClimateEntity):
         if value is None:
             return
 
-        temp_feature = self._get_active_temp_feature()
-        if not temp_feature:
-            raise HomeAssistantError("Target-temperature control is not available")
-
-        # 1. OPTIMISTIC UPDATE
-        self._optimistic_temp = value
-        self.async_write_ha_state()
-
+        mode_changed = False
+        has_optimistic_temp = False
         try:
+            if hvac_mode is not None and hvac_mode not in (
+                HVACMode.OFF,
+                self.hvac_mode,
+            ):
+                await self.async_set_hvac_mode(hvac_mode)
+                mode_changed = True
+                await self.coordinator.async_request_refresh()
+
+            temp_feature = self._get_active_temp_feature()
+            if not temp_feature:
+                raise HomeAssistantError("Target-temperature control is not available")
+
+            # 1. OPTIMISTIC UPDATE
+            self._optimistic_temp = value
+            has_optimistic_temp = True
+            self.async_write_ha_state()
+
             response = await self.coordinator.async_set_feature(
                 self._map_key, temp_feature.name, value
             )
@@ -564,7 +575,11 @@ class ViClimate(ViClimateEntity, ClimateEntity):
                     f"Command rejected: {response.message or response.reason}"
                 )
 
-            if hvac_mode is not None:
+            if (
+                hvac_mode is not None
+                and not mode_changed
+                and hvac_mode != self.hvac_mode
+            ):
                 await self.async_set_hvac_mode(hvac_mode)
 
             # Clear optimistic value.
@@ -572,8 +587,13 @@ class ViClimate(ViClimateEntity, ClimateEntity):
             self.async_write_ha_state()
         except Exception as err:
             # ROLLBACK on error.
-            self._optimistic_temp = None
-            self.async_write_ha_state()
+            if has_optimistic_temp:
+                self._optimistic_temp = None
+                self.async_write_ha_state()
+            if mode_changed:
+                raise HomeAssistantError(
+                    f"HVAC mode changed, but failed to set temperature: {err}"
+                ) from err
             raise HomeAssistantError(f"Failed to set temperature: {err}") from err
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
