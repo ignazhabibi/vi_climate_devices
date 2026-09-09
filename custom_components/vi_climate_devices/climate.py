@@ -123,7 +123,7 @@ class ViClimate(ViClimateEntity, ClimateEntity):
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "heating_circuit"
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = ClimateEntityFeature(0)
 
     def __init__(
         self,
@@ -342,16 +342,33 @@ class ViClimate(ViClimateEntity, ClimateEntity):
         return None
 
     def _get_active_temp_feature(self) -> Feature | None:
-        """Get the temperature feature corresponding to the active operating program."""
+        """Get the writable temperature feature for the active operating program."""
         active_program_feature = self._get_feature(
             f"heating.circuits.{self._circuit_index}.operating.programs.active"
         )
         if not active_program_feature or not active_program_feature.value:
             return None
 
-        return self._get_program_temperature_feature(str(active_program_feature.value))
+        temp_feature = self._get_program_temperature_feature(
+            str(active_program_feature.value)
+        )
+        if (
+            not temp_feature
+            or not temp_feature.is_enabled
+            or not temp_feature.is_writable
+        ):
+            return None
+        return temp_feature
 
     # --- Properties ---
+
+    @property
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return capabilities available for the current operating program."""
+        supported_features = self._attr_supported_features
+        if self._get_active_temp_feature():
+            supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
+        return supported_features
 
     @property
     def current_temperature(self) -> float | None:
@@ -522,19 +539,9 @@ class ViClimate(ViClimateEntity, ClimateEntity):
         if value is None:
             return
 
-        active_program_feature = self._get_feature(
-            f"heating.circuits.{self._circuit_index}.operating.programs.active"
-        )
-        if not active_program_feature or not active_program_feature.value:
-            raise HomeAssistantError("Could not determine the active program")
-
-        program_name = str(active_program_feature.value)
-        temp_feature = self._get_program_temperature_feature(program_name)
+        temp_feature = self._get_active_temp_feature()
         if not temp_feature:
-            raise HomeAssistantError(
-                "No temperature control feature found for the active program: "
-                f"{program_name}"
-            )
+            raise HomeAssistantError("Target-temperature control is not available")
 
         # 1. OPTIMISTIC UPDATE
         self._optimistic_temp = value
