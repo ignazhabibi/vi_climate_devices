@@ -196,15 +196,20 @@ async def async_setup_entry(
                 if is_feature_ignored(feature.name, IGNORED_FEATURES):
                     continue
 
+                # Numbers need a writable feature and bounded control.
+                if (
+                    not feature.is_writable
+                    or not feature.control
+                    or (feature.control.min is None and feature.control.max is None)
+                ):
+                    continue
+
                 # 1. Defined Entities
                 if feature.name in NUMBER_TYPES:
                     desc = NUMBER_TYPES[feature.name]
                     entities.append(
                         ViClimateNumber(coordinator, map_key, feature.name, desc)
                     )
-                    continue
-
-                if not feature.is_writable:
                     continue
 
                 # 2. Configured Templates
@@ -223,25 +228,22 @@ async def async_setup_entry(
 
                 # Automatic Discovery (Fallback)
                 # Control must exist and have min/max constraints
-                if feature.control and (
-                    feature.control.min is not None or feature.control.max is not None
-                ):
-                    description = NumberEntityDescription(
-                        key=feature.name,
-                        name=beautify_name(feature.name),
-                        entity_category=EntityCategory.CONFIG,
+                description = NumberEntityDescription(
+                    key=feature.name,
+                    name=beautify_name(feature.name),
+                    entity_category=EntityCategory.CONFIG,
+                )
+                # Only disable entities by default for thoroughly tested devices
+                is_tested = device.model_id in TESTED_DEVICES
+                entities.append(
+                    ViClimateNumber(
+                        coordinator,
+                        map_key,
+                        feature.name,
+                        description,
+                        enabled_default=not is_tested,
                     )
-                    # Only disable entities by default for thoroughly tested devices
-                    is_tested = device.model_id in TESTED_DEVICES
-                    entities.append(
-                        ViClimateNumber(
-                            coordinator,
-                            map_key,
-                            feature.name,
-                            description,
-                            enabled_default=not is_tested,
-                        )
-                    )
+                )
 
     async_add_entities(entities)
 
