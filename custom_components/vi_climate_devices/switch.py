@@ -67,12 +67,13 @@ async def async_setup_entry(
                 if is_feature_ignored(feature.name, IGNORED_FEATURES):
                     continue
 
-                # 1. Defined Entities (Skip writable check for known overrides)
+                # 1. Defined Entities
                 if feature.name in SWITCH_TYPES:
-                    desc = SWITCH_TYPES[feature.name]
-                    entities.append(
-                        ViClimateSwitch(coordinator, map_key, feature.name, desc)
-                    )
+                    if feature.is_enabled and feature.is_writable:
+                        desc = SWITCH_TYPES[feature.name]
+                        entities.append(
+                            ViClimateSwitch(coordinator, map_key, feature.name, desc)
+                        )
                     continue
 
                 # 2. Automatic Discovery (Must be writable)
