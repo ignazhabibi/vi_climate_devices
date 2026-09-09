@@ -35,8 +35,8 @@ FEATURE_TARGET_TEMP = "heating.dhw.temperature.main"
 FEATURE_CURRENT_TEMP = "heating.dhw.sensors.temperature.hotWaterStorage"
 FEATURE_MODE = "heating.dhw.operating.modes.active"
 
-# Mapping from Viessmann API modes to Home Assistant standard states
-# This ensures proper UI translation.
+# Mapping from Viessmann API modes to Home Assistant standard states.
+# The ``balanced`` API mode is device-family-specific and is handled separately.
 VIESSMANN_TO_HA_MODE = {
     "off": STATE_OFF,
     "standby": STATE_OFF,
@@ -44,18 +44,20 @@ VIESSMANN_TO_HA_MODE = {
     "efficient": STATE_ECO,
     "efficientWithMinComfort": STATE_PERFORMANCE,
     "comfort": STATE_PERFORMANCE,
-    "balanced": STATE_HEAT_PUMP,
     "standard": STATE_GAS,
 }
 
-# Reverse mapping: HA state -> list of possible Viessmann modes (in preference order)
-# We'll pick the first one that's actually available on the device
+# Reverse mapping for device-independent modes. The first available mode wins.
 HA_TO_VIESSMANN_MODES = {
     STATE_OFF: ["off", "standby"],
     STATE_ECO: ["eco", "efficient"],
     STATE_PERFORMANCE: ["comfort", "efficientWithMinComfort"],
-    STATE_HEAT_PUMP: ["balanced"],
     STATE_GAS: ["standard"],
+}
+
+DEVICE_FAMILY_MODE_MAPPINGS = {
+    "vitocal": {"balanced": STATE_HEAT_PUMP},
+    "vitodens": {"balanced": STATE_GAS},
 }
 
 
@@ -150,6 +152,33 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):
             if feature.control.step is not None:
                 self._attr_target_temperature_step = feature.control.step
 
+    def _get_device_family_mode_mapping(self) -> dict[str, str] | None:
+        """Return the current device family's API-to-HA mode mapping."""
+        device = self.coordinator.data.get(self._map_key)
+        if device:
+            model_id = device.model_id.lower()
+            for family, family_modes in DEVICE_FAMILY_MODE_MAPPINGS.items():
+                if model_id.startswith(family):
+                    return family_modes
+        return None
+
+    def _map_api_mode_to_ha_mode(self, api_mode: str) -> str | None:
+        """Map an API mode to the device family's HA operation mode."""
+        if family_modes := self._get_device_family_mode_mapping():
+            return family_modes.get(api_mode) or VIESSMANN_TO_HA_MODE.get(api_mode)
+        return VIESSMANN_TO_HA_MODE.get(api_mode)
+
+    def _get_api_mode_candidates(self, operation_mode: str) -> list[str]:
+        """Return API modes that represent an HA operation on this device."""
+        if family_modes := self._get_device_family_mode_mapping():
+            family_candidates = [
+                api_mode
+                for api_mode, ha_mode in family_modes.items()
+                if ha_mode == operation_mode
+            ]
+            return family_candidates + HA_TO_VIESSMANN_MODES.get(operation_mode, [])
+        return HA_TO_VIESSMANN_MODES.get(operation_mode, [])
+
     @property
     def suggested_display_precision(self) -> int | None:
         """Return the suggested number of decimal places."""
@@ -196,9 +225,7 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):
             return self._optimistic_mode
         feat = self._get_feature(FEATURE_MODE)
         if feat and feat.value:
-            # Map Viessmann mode to HA standard state
-            val = str(feat.value)
-            return VIESSMANN_TO_HA_MODE.get(val, val)
+            return self._map_api_mode_to_ha_mode(str(feat.value))
         return None
 
     @property
@@ -220,10 +247,11 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):
         # Convert to HA standard states (deduplicated)
         ha_modes = set()
         for api_mode in api_modes:
-            ha_mode = VIESSMANN_TO_HA_MODE.get(api_mode, api_mode)
-            ha_modes.add(ha_mode)
+            ha_mode = self._map_api_mode_to_ha_mode(api_mode)
+            if ha_mode:
+                ha_modes.add(ha_mode)
 
-        return list(ha_modes)
+        return sorted(ha_modes)
 
     # --- Actions ---
 
@@ -277,7 +305,7 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):
 
         # Convert HA standard state to Viessmann API mode
         # Find first candidate that's actually available on device
-        candidates = HA_TO_VIESSMANN_MODES.get(operation_mode, [operation_mode])
+        candidates = self._get_api_mode_candidates(operation_mode)
         viessmann_mode = None
         for candidate in candidates:
             if candidate in available_api_modes:

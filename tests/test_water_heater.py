@@ -1,5 +1,6 @@
 """Tests for ViClimate water heater entities."""
 
+from dataclasses import replace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -7,19 +8,132 @@ from homeassistant.components.water_heater import (
     SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_TEMPERATURE,
     STATE_ECO,
+    STATE_GAS,
+    STATE_HEAT_PUMP,
     STATE_PERFORMANCE,
     WaterHeaterEntityFeature,
 )
+from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+from vi_api_client.mock_client import MockViClient
 from vi_api_client.models import CommandResponse, Device, Feature
 
 from custom_components.vi_climate_devices.const import DOMAIN
 from custom_components.vi_climate_devices.water_heater import (
     FEATURE_MODE,
     FEATURE_TARGET_TEMP,
+    ViClimateWaterHeater,
 )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("device_name", "api_mode", "api_modes", "ha_mode", "expected_api_mode"),
+    [
+        pytest.param(
+            "Vitodens200W",
+            "balanced",
+            ["balanced", "off"],
+            STATE_GAS,
+            "balanced",
+            id="vitodens-balanced-is-gas",
+        ),
+        pytest.param(
+            "Vitodens200W",
+            "standard",
+            ["standard", "off"],
+            STATE_GAS,
+            "standard",
+            id="vitodens-standard-is-gas",
+        ),
+        pytest.param(
+            "Vitocal250A",
+            "balanced",
+            ["balanced", "off"],
+            STATE_HEAT_PUMP,
+            "balanced",
+            id="vitocal-balanced-is-heat-pump",
+        ),
+    ],
+)
+async def test_water_heater_maps_device_family_operation_modes(
+    device_name: str,
+    api_mode: str,
+    api_modes: list[str],
+    ha_mode: str,
+    expected_api_mode: str,
+) -> None:
+    """Expose and set device-family-specific water-heater operations."""
+    # Arrange: Create a device with the requested DHW mode configuration.
+    client = MockViClient(device_name=device_name)
+    fixture_device = (await client.get_full_installation_status("99999"))[0]
+    mode_feature = fixture_device.get_feature(FEATURE_MODE)
+    assert mode_feature is not None
+    assert mode_feature.control is not None
+    configured_mode_feature = replace(
+        mode_feature,
+        value=api_mode,
+        control=replace(mode_feature.control, options=api_modes),
+    )
+    device = replace(
+        fixture_device,
+        features=[
+            configured_mode_feature if feature.name == FEATURE_MODE else feature
+            for feature in fixture_device.features
+        ],
+    )
+    coordinator = MagicMock()
+    coordinator.data = {"device": device}
+    coordinator.async_set_feature = AsyncMock(
+        return_value=CommandResponse(success=True)
+    )
+    target_feature = device.get_feature(FEATURE_TARGET_TEMP)
+    assert target_feature is not None
+    entity = ViClimateWaterHeater(coordinator, "device", target_feature)
+
+    # Act and assert: Report only the standard HA operation and translate it back.
+    assert entity.current_operation == ha_mode
+    assert entity.operation_list == [ha_mode, STATE_OFF]
+    with patch.object(entity, "async_write_ha_state"):
+        await entity.async_set_operation_mode(ha_mode)
+
+    coordinator.async_set_feature.assert_awaited_once_with(
+        "device", FEATURE_MODE, expected_api_mode
+    )
+
+
+@pytest.mark.asyncio
+async def test_water_heater_omits_unknown_api_operation_modes() -> None:
+    """Do not expose unknown API modes as Home Assistant operations."""
+    # Arrange: Create a Vitocal device reporting an unsupported mode.
+    client = MockViClient(device_name="Vitocal250A")
+    fixture_device = (await client.get_full_installation_status("99999"))[0]
+    mode_feature = fixture_device.get_feature(FEATURE_MODE)
+    assert mode_feature is not None
+    assert mode_feature.control is not None
+    unknown_mode_feature = replace(
+        mode_feature,
+        value="unknownMode",
+        control=replace(mode_feature.control, options=["unknownMode"]),
+    )
+    device = replace(
+        fixture_device,
+        features=[
+            unknown_mode_feature if feature.name == FEATURE_MODE else feature
+            for feature in fixture_device.features
+        ],
+    )
+    coordinator = MagicMock()
+    coordinator.data = {"device": device}
+    target_feature = device.get_feature(FEATURE_TARGET_TEMP)
+    assert target_feature is not None
+    entity = ViClimateWaterHeater(coordinator, "device", target_feature)
+
+    # Act and assert: Do not pass unknown vendor values to Home Assistant.
+    assert entity.current_operation is None
+    assert entity.operation_list == []
 
 
 @pytest.mark.asyncio
