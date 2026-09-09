@@ -6,6 +6,7 @@ import pytest
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from vi_api_client.mock_client import MockViClient
 from vi_api_client.models import CommandResponse
@@ -55,17 +56,28 @@ async def test_switch_creation_and_services(hass: HomeAssistant, mock_client):
 
         # Test 1: Initial State (Offline/Fixture Data).
 
-        # Verify 'heating.dhw.hygiene.enabled' (Standard Switch).
-        # Fixture value is false/off.
+        # Verify the read-only hygiene state remains a binary sensor, not a switch.
         hygiene_switch = hass.states.get("switch.vitocal250a_dhw_hygiene")
-        assert hygiene_switch is not None
-        assert hygiene_switch.state == STATE_OFF
+        assert hygiene_switch is None
+        hygiene_binary_sensor = hass.states.get(
+            "binary_sensor.vitocal250a_dhw_hygiene_enabled"
+        )
+        assert hygiene_binary_sensor is not None
+        assert hygiene_binary_sensor.state == STATE_OFF
 
         # Verify 'heating.dhw.oneTimeCharge.active' (Standard Switch).
         # Fixture value is false/off.
         one_time_charge = hass.states.get("switch.vitocal250a_one_time_dhw_charge")
         assert one_time_charge is not None
         assert one_time_charge.state == STATE_OFF
+        registry_entry = er.async_get(hass).async_get(
+            "switch.vitocal250a_one_time_dhw_charge"
+        )
+        assert registry_entry is not None
+        assert (
+            registry_entry.unique_id
+            == "MOCK_GATEWAY_SERIAL-0-heating.dhw.oneTimeCharge.active"
+        )
 
         # Test 2: Service Calls (turn_on).
 
@@ -121,6 +133,61 @@ async def test_switch_creation_and_services(hass: HomeAssistant, mock_client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("device_name", "entity_prefix"),
+    [
+        ("Vitocal250A", "vitocal250a"),
+        ("Vitocal222S", "vitocal222s"),
+        ("Vitodens200W", "vitodens200w"),
+    ],
+)
+async def test_read_only_hygiene_does_not_create_switch_or_write(
+    hass: HomeAssistant, device_name: str, entity_prefix: str
+):
+    """Keep read-only hygiene state as a binary sensor without a control."""
+    # Arrange: Set up each fixture with a client-write spy.
+    entry = MockConfigEntry(domain=DOMAIN, data={"client_id": "1", "token": "x"})
+    entry.add_to_hass(hass)
+    mock_client = MockViClient(device_name=device_name)
+    mock_client.set_feature = AsyncMock(wraps=mock_client.set_feature)
+
+    with (
+        patch(
+            "custom_components.vi_climate_devices.ViessmannClient",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+            return_value=None,
+        ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
+    ):
+        # Act: Load the integration and attempt to turn on the absent switch.
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        hygiene_switch_id = f"switch.{entity_prefix}_dhw_hygiene"
+        await hass.services.async_call(
+            "switch", "turn_on", {"entity_id": hygiene_switch_id}, blocking=True
+        )
+
+        # Assert: The state remains available but cannot trigger a client write.
+        assert hass.states.get(hygiene_switch_id) is None
+        hygiene_binary_sensor = hass.states.get(
+            f"binary_sensor.{entity_prefix}_dhw_hygiene_enabled"
+        )
+        assert hygiene_binary_sensor is not None
+        mock_client.set_feature.assert_not_awaited()
+
+        # Cleanup: Unload the integration to prevent thread leaks.
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+@pytest.mark.asyncio
 async def test_switch_error_handling(hass: HomeAssistant, mock_client):
     """Test switch error handling and rollback."""
     # Arrange: Setup with a mock client that raises an error.
@@ -161,7 +228,7 @@ async def test_switch_error_handling(hass: HomeAssistant, mock_client):
         await hass.async_block_till_done()
 
         # Initial State Check (should be OFF according to fixture).
-        switch_id = "switch.vitocal250a_dhw_hygiene"
+        switch_id = "switch.vitocal250a_one_time_dhw_charge"
         state = hass.states.get(switch_id)
         assert state is not None
         assert state.state == STATE_OFF
@@ -231,7 +298,7 @@ async def test_switch_api_rejection(hass: HomeAssistant):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        switch_id = "switch.vitocal250a_dhw_hygiene"
+        switch_id = "switch.vitocal250a_one_time_dhw_charge"
         state = hass.states.get(switch_id)
         assert state is not None
         assert state.state == STATE_OFF

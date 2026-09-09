@@ -1391,15 +1391,6 @@
     dict({
       'attributes': dict({
         'device_class': 'switch',
-        'friendly_name': 'Vitocal250A DHW Hygiene',
-        'icon': 'mdi:shield-check',
-      }),
-      'entity_id': 'switch.vitocal250a_dhw_hygiene',
-      'state': 'off',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'switch',
         'friendly_name': 'Vitocal250A One Time DHW Charge',
         'icon': 'mdi:water-boiler',
       }),
