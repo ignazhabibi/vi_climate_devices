@@ -37,6 +37,28 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
+AUTO_DISCOVERED_TOTAL_INCREASING_ENERGY_FEATURES = frozenset(
+    {
+        "ess.transfer.charge.cumulated.currentDay",
+        "ess.transfer.charge.cumulated.currentWeek",
+        "ess.transfer.charge.cumulated.currentMonth",
+        "ess.transfer.charge.cumulated.currentYear",
+        "ess.transfer.charge.cumulated.lifeCycle",
+        "ess.transfer.discharge.cumulated.currentDay",
+        "ess.transfer.discharge.cumulated.currentWeek",
+        "ess.transfer.discharge.cumulated.currentMonth",
+        "ess.transfer.discharge.cumulated.currentYear",
+        "ess.transfer.discharge.cumulated.lifeCycle",
+        "photovoltaic.production.cumulated.currentDay",
+        "photovoltaic.production.cumulated.currentWeek",
+        "photovoltaic.production.cumulated.currentMonth",
+        "photovoltaic.production.cumulated.currentYear",
+        "photovoltaic.production.cumulated.lifeCycle",
+        "pcc.transfer.consumption.total",
+        "pcc.transfer.feedIn.total",
+    }
+)
+
 
 # Templates with regex patterns for dynamic feature names
 SENSOR_TEMPLATES = [
@@ -660,7 +682,6 @@ def _get_auto_discovery_description(feature) -> SensorEntityDescription:
         case "kilowattHour":
             device_class = SensorDeviceClass.ENERGY
             native_unit = UnitOfEnergy.KILO_WATT_HOUR
-            state_class = SensorStateClass.TOTAL_INCREASING
         case "watt":
             device_class = SensorDeviceClass.POWER
             native_unit = UnitOfPower.WATT
@@ -668,7 +689,6 @@ def _get_auto_discovery_description(feature) -> SensorEntityDescription:
         case "wattHour":
             device_class = SensorDeviceClass.ENERGY
             native_unit = UnitOfEnergy.WATT_HOUR
-            state_class = SensorStateClass.TOTAL_INCREASING
         case "ampere":
             device_class = SensorDeviceClass.CURRENT
             native_unit = UnitOfElectricCurrent.AMPERE
@@ -679,8 +699,18 @@ def _get_auto_discovery_description(feature) -> SensorEntityDescription:
             native_unit = "L/h"
             state_class = SensorStateClass.MEASUREMENT
 
+    if (
+        device_class is SensorDeviceClass.ENERGY
+        and feature.name in AUTO_DISCOVERED_TOTAL_INCREASING_ENERGY_FEATURES
+    ):
+        state_class = SensorStateClass.TOTAL_INCREASING
+
     # Fallback for generic numbers
-    if state_class is None and isinstance(feature.value, (int, float)):
+    if (
+        device_class is None
+        and state_class is None
+        and isinstance(feature.value, (int, float))
+    ):
         state_class = SensorStateClass.MEASUREMENT
 
     return SensorEntityDescription(
