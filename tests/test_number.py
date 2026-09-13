@@ -14,8 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client.mock_client import MockViClient
-from vi_api_client.models import CommandResponse
+from vi_api_client import CommandResponse, FixtureViClient
 
 from custom_components.vi_climate_devices.const import DOMAIN
 
@@ -26,7 +25,7 @@ async def test_read_only_known_number_is_exposed_as_sensor(
 ) -> None:
     """Test known read-only controls remain sensors without Number services."""
     # Arrange: Load the fixture where the known switch-off value is read-only.
-    client = MockViClient(device_name="Vitocal333G-with-Vitovent300F", auth=None)
+    client = FixtureViClient("Vitocal333G-with-Vitovent300F")
     client.set_feature = AsyncMock(wraps=client.set_feature)
     entry = MockConfigEntry(domain=DOMAIN, data={"client_id": "123", "token": "abc"})
     entry.add_to_hass(hass)

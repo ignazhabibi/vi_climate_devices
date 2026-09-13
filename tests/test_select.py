@@ -7,7 +7,7 @@ from homeassistant.components.select import SERVICE_SELECT_OPTION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client.models import CommandResponse
+from vi_api_client import CommandResponse
 
 from custom_components.vi_climate_devices.const import DOMAIN
 

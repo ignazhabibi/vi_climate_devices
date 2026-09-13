@@ -1,13 +1,12 @@
 import pytest
 from pytest_homeassistant_custom_component.syrupy import HomeAssistantSnapshotExtension
-from vi_api_client.mock_client import MockViClient
+from vi_api_client import FixtureViClient
 
 
 @pytest.fixture
-def mock_client():
-    """Return a mock client for testing."""
-    # Load a specific device scenario (e.g. Heat Pump)
-    return MockViClient(device_name="Vitocal250A", auth=None)
+def mock_client() -> FixtureViClient:
+    """Return the Vitocal250A fixture client for testing."""
+    return FixtureViClient("Vitocal250A")
 
 
 @pytest.fixture(autouse=True)

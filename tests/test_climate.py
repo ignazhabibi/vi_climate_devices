@@ -20,8 +20,13 @@ from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client.mock_client import MockViClient
-from vi_api_client.models import CommandResponse, Device, Feature, FeatureControl
+from vi_api_client import (
+    CommandResponse,
+    Device,
+    Feature,
+    FeatureControl,
+    FixtureViClient,
+)
 
 from custom_components.vi_climate_devices.climate import ViClimate
 from custom_components.vi_climate_devices.const import DOMAIN
@@ -41,7 +46,7 @@ VALVE_POSITION_FEATURE = "heating.valves.fourThreeWay.position"
 
 
 async def _create_hvac_action_entity(
-    mock_client: MockViClient,
+    mock_client: FixtureViClient,
     feature_values: dict[str, object],
     removed_feature_names: frozenset[str],
 ) -> ViClimate:
@@ -226,7 +231,7 @@ async def _create_hvac_action_entity(
     ],
 )
 async def test_hvac_action(
-    mock_client: MockViClient,
+    mock_client: FixtureViClient,
     feature_values: dict[str, object],
     removed_feature_names: frozenset[str],
     expected_action: HVACAction | None,
@@ -405,7 +410,7 @@ async def test_climate_rejects_target_temperature_in_standby(
 ) -> None:
     """Test standby circuits do not advertise target-temperature control."""
     # Arrange: Set up the integration with the standby Vitocal333G fixture.
-    client = MockViClient(device_name="Vitocal333G-with-Vitovent300F", auth=None)
+    client = FixtureViClient("Vitocal333G-with-Vitovent300F")
     client.set_feature = AsyncMock(wraps=client.set_feature)
     entry = MockConfigEntry(domain=DOMAIN, data={"client_id": "123", "token": "abc"})
     entry.add_to_hass(hass)
@@ -462,7 +467,7 @@ async def test_climate_rejects_target_temperature_in_standby(
     ["missing", "disabled", "read-only"],
 )
 async def test_climate_requires_writable_active_program_temperature(
-    mock_client: MockViClient,
+    mock_client: FixtureViClient,
     temperature_feature_state: str,
 ) -> None:
     """Test unavailable program temperatures do not disable the climate entity."""
@@ -527,7 +532,7 @@ async def test_climate_requires_writable_active_program_temperature(
     ],
 )
 async def test_climate_sets_temperature_on_program_selected_by_requested_mode(
-    mock_client: MockViClient,
+    mock_client: FixtureViClient,
     initial_mode: str,
     initial_program: str,
     requested_mode: HVACMode,
@@ -559,7 +564,7 @@ async def test_climate_sets_temperature_on_program_selected_by_requested_mode(
         else replace(
             feature,
             value=initial_mode,
-            control=replace(mode_control, options=["heating", "cooling", "standby"]),
+            control=replace(mode_control, options=("heating", "cooling", "standby")),
         )
         if feature.name == CIRCUIT_MODE_FEATURE
         else feature
@@ -682,7 +687,7 @@ async def test_climate_error_handling_and_rollback(
 async def test_dhw_only_circuit_mode_is_reported_as_off() -> None:
     """Test a DHW-only circuit does not report an unknown HVAC state."""
     # Arrange: Use a fixture where a heating circuit offers the DHW-only mode.
-    client = MockViClient(device_name="Vitocal333G-with-Vitovent300F", auth=None)
+    client = FixtureViClient("Vitocal333G-with-Vitovent300F")
     device = (await client.get_full_installation_status("99999"))[0]
     mode_feature_name = "heating.circuits.0.operating.modes.active"
     device = replace(
@@ -732,7 +737,7 @@ async def test_climate_program_matching_variations(
                     required_params=["mode"],
                     parent_feature_name="heating.circuits.0.operating.modes.active",
                     uri="...",
-                    options=["heating", "standby"],
+                    options=("heating", "standby"),
                 ),
             ),
             Feature(

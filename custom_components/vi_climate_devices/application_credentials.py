@@ -13,7 +13,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     AbstractOAuth2Implementation,
     LocalOAuth2ImplementationWithPkce,
 )
-from vi_api_client.const import ENDPOINT_AUTHORIZE, ENDPOINT_TOKEN
+from vi_api_client import ENDPOINT_AUTHORIZE, ENDPOINT_TOKEN
 
 
 class _OAuth2Implementation(LocalOAuth2ImplementationWithPkce):

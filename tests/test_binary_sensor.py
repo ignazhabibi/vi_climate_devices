@@ -28,8 +28,6 @@ async def test_binary_sensor_values(hass: HomeAssistant, mock_client):
     )
     entry.add_to_hass(hass)
 
-    # Note: MockViClient is provided by fixture (mock_client).
-
     with (
         patch(
             "custom_components.vi_climate_devices.ViessmannClient",

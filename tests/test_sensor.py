@@ -8,14 +8,13 @@ from homeassistant.components.sensor import SensorStateClass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client import Device, Feature
-from vi_api_client.mock_client import MockViClient
+from vi_api_client import Device, Feature, FixtureViClient
 
 from custom_components.vi_climate_devices.const import DOMAIN, IGNORED_FEATURES
 from custom_components.vi_climate_devices.sensor import SENSOR_TYPES
 from custom_components.vi_climate_devices.utils import is_feature_ignored
 
-FIXTURE_NAMES = MockViClient.get_available_mock_devices()
+FIXTURE_NAMES = FixtureViClient.get_available_fixture_devices()
 
 AUTO_DISCOVERED_TOTAL_INCREASING_ENERGY_FEATURES = frozenset(
     {
@@ -384,7 +383,7 @@ async def test_fixture_auto_discovered_energy_state_classes(
 ):
     """Test every fixture's auto-discovered energy sensor classification."""
     # Arrange: Load every feature from the selected real device fixture.
-    mock_client = MockViClient(device_name=device_name, auth=None)
+    mock_client = FixtureViClient(device_name)
     installations = await mock_client.get_installations()
     devices = await mock_client.get_full_installation_status(
         installations[0].id, only_enabled=False

@@ -237,12 +237,7 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):
             return [STATE_OFF, STATE_ECO, STATE_PERFORMANCE]
 
         # Get API modes from constraints
-        api_modes: list[str] = []
-        options = feat.control.options
-        if isinstance(options, list):
-            api_modes = [str(opt) for opt in options]
-        elif isinstance(options, dict):
-            api_modes = list(options.keys())
+        api_modes = [str(option) for option in feat.control.options]
 
         # Convert to HA standard states (deduplicated)
         ha_modes = set()

@@ -487,12 +487,7 @@ class ViClimate(ViClimateEntity, ClimateEntity):
             return [HVACMode.HEAT, HVACMode.OFF]
 
         modes = set()
-        options = mode_feature.control.options
-        api_options = []
-        if isinstance(options, list):
-            api_options = [str(opt) for opt in options]
-        elif isinstance(options, dict):
-            api_options = list(options.keys())
+        api_options = [str(option) for option in mode_feature.control.options]
 
         for option in api_options:
             if option in API_TO_HA_HVAC_MODE:
@@ -604,14 +599,11 @@ class ViClimate(ViClimateEntity, ClimateEntity):
         if not mode_feature:
             raise HomeAssistantError("Operating mode feature not found")
 
-        available_options = []
-        if mode_feature.control and mode_feature.control.options:
-            if isinstance(mode_feature.control.options, list):
-                available_options = [
-                    str(option) for option in mode_feature.control.options
-                ]
-            elif isinstance(mode_feature.control.options, dict):
-                available_options = list(mode_feature.control.options.keys())
+        available_options = (
+            [str(option) for option in mode_feature.control.options]
+            if mode_feature.control and mode_feature.control.options
+            else []
+        )
 
         candidates = HA_TO_API_HVAC_MODE.get(hvac_mode, [])
         target_api_mode = None

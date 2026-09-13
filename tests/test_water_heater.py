@@ -1,5 +1,6 @@
 """Tests for ViClimate water heater entities."""
 
+from collections.abc import Sequence
 from dataclasses import replace
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -17,8 +18,7 @@ from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client.mock_client import MockViClient
-from vi_api_client.models import CommandResponse, Device, Feature
+from vi_api_client import CommandResponse, Device, Feature, FixtureViClient
 
 from custom_components.vi_climate_devices.const import DOMAIN
 from custom_components.vi_climate_devices.water_heater import (
@@ -35,7 +35,7 @@ from custom_components.vi_climate_devices.water_heater import (
         pytest.param(
             "Vitodens200W",
             "balanced",
-            ["balanced", "off"],
+            ("balanced", "off"),
             STATE_GAS,
             "balanced",
             id="vitodens-balanced-is-gas",
@@ -43,7 +43,7 @@ from custom_components.vi_climate_devices.water_heater import (
         pytest.param(
             "Vitodens200W",
             "standard",
-            ["standard", "off"],
+            ("standard", "off"),
             STATE_GAS,
             "standard",
             id="vitodens-standard-is-gas",
@@ -51,7 +51,7 @@ from custom_components.vi_climate_devices.water_heater import (
         pytest.param(
             "Vitocal250A",
             "balanced",
-            ["balanced", "off"],
+            ("balanced", "off"),
             STATE_HEAT_PUMP,
             "balanced",
             id="vitocal-balanced-is-heat-pump",
@@ -61,13 +61,13 @@ from custom_components.vi_climate_devices.water_heater import (
 async def test_water_heater_maps_device_family_operation_modes(
     device_name: str,
     api_mode: str,
-    api_modes: list[str],
+    api_modes: Sequence[str],
     ha_mode: str,
     expected_api_mode: str,
 ) -> None:
     """Expose and set device-family-specific water-heater operations."""
     # Arrange: Create a device with the requested DHW mode configuration.
-    client = MockViClient(device_name=device_name)
+    client = FixtureViClient(device_name)
     fixture_device = (await client.get_full_installation_status("99999"))[0]
     mode_feature = fixture_device.get_feature(FEATURE_MODE)
     assert mode_feature is not None
@@ -108,7 +108,7 @@ async def test_water_heater_maps_device_family_operation_modes(
 async def test_water_heater_omits_unknown_api_operation_modes() -> None:
     """Do not expose unknown API modes as Home Assistant operations."""
     # Arrange: Create a Vitocal device reporting an unsupported mode.
-    client = MockViClient(device_name="Vitocal250A")
+    client = FixtureViClient("Vitocal250A")
     fixture_device = (await client.get_full_installation_status("99999"))[0]
     mode_feature = fixture_device.get_feature(FEATURE_MODE)
     assert mode_feature is not None
@@ -116,7 +116,7 @@ async def test_water_heater_omits_unknown_api_operation_modes() -> None:
     unknown_mode_feature = replace(
         mode_feature,
         value="unknownMode",
-        control=replace(mode_feature.control, options=["unknownMode"]),
+        control=replace(mode_feature.control, options=("unknownMode",)),
     )
     device = replace(
         fixture_device,

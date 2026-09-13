@@ -15,7 +15,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from vi_api_client.api import Feature
+from vi_api_client import Feature
 
 from . import ViClimateDevicesConfigEntry
 from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES

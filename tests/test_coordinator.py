@@ -22,8 +22,14 @@ from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     async_fire_time_changed,
 )
-from vi_api_client import Device, Feature, ViAuthError, ViClient, ViConnectionError
-from vi_api_client.models import CommandResponse
+from vi_api_client import (
+    CommandResponse,
+    Device,
+    Feature,
+    ViAuthError,
+    ViClient,
+    ViConnectionError,
+)
 
 from custom_components.vi_climate_devices.coordinator import (
     ViClimateDataUpdateCoordinator,

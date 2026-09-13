@@ -14,8 +14,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from vi_api_client import ViClient as ViessmannClient
-from vi_api_client.auth import AbstractAuth
+from vi_api_client import AbstractAuth, ViClient as ViessmannClient
 
 from .coordinator import ViClimateDataUpdateCoordinator
 
@@ -98,10 +97,8 @@ class HAAuth(AbstractAuth):
 
     def __init__(self, session: config_entry_oauth2_flow.OAuth2Session) -> None:
         """Initialize the auth bridge."""
-        # We don't use the lib's websession directly for requests here
-        super().__init__(websession=None)
         self._session = session
-        self.websession = async_get_clientsession(session.hass)
+        super().__init__(websession=async_get_clientsession(session.hass))
 
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
