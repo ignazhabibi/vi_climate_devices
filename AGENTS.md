@@ -54,9 +54,9 @@ section in `README.md`.
   merged `main` commit: stable releases use `vX.Y.Z`, prereleases use
   `vX.Y.Z-alpha.N`, `-beta.N`, or `-rc.N`. A release is live only after both
   its `main` and tag workflows pass.
-- Release tag messages use the `# Changelog` template with non-empty sections
-  named `### Breaking Changes 🚨`, `### New Features 💫`, `### Other Changes ☀️`,
-  and `### Bug Fixes 🐞`. Each entry is
+- Release tags use a concise subject and a `# Changelog` body with non-empty
+  sections named `### Breaking Changes 🚨`, `### New Features 💫`,
+  `### Other Changes ☀️`, and `### Bug Fixes 🐞`. Each entry is
   ``- `short-sha` Summary. ([#PR](https://github.com/owner/repo/pull/PR))``.
 
 ## Documentation Drift
