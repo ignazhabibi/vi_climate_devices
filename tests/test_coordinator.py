@@ -48,6 +48,15 @@ def _build_coordinator(
     return ViClimateDataUpdateCoordinator(hass, MockConfigEntry(), client)
 
 
+def test_data_coordinator_defaults_to_ninety_second_refreshes(
+    hass: HomeAssistant, mock_client
+) -> None:
+    """Test the default gateway refresh cadence preserves API quota headroom."""
+    coordinator = _build_coordinator(hass, mock_client)
+
+    assert coordinator.update_interval == timedelta(seconds=90)
+
+
 def _build_device(
     *,
     device_id: str,
@@ -864,16 +873,19 @@ async def test_frequent_writes_preserve_scheduled_poll(
     )
 
     try:
-        # Act: Keep issuing commands more frequently than the three-minute poll.
-        for minute in range(1, 7):
-            freezer.tick(timedelta(minutes=1))
+        # Act: Keep issuing commands more frequently than the 90-second poll.
+        for tick in range(1, 13):
+            freezer.tick(timedelta(seconds=30))
             async_fire_time_changed(hass)
             await hass.async_block_till_done()
             await coordinator.async_set_feature(device_key, feature_name, 1.2)
 
             # Assert: Each command notifies immediately; polls still happen on time.
-            assert listener.call_count == minute + minute // 3
-            assert mock_client.update_gateway_devices.await_count == minute // 3
+            scheduled_poll_count = tick // 3
+            assert listener.call_count == tick + scheduled_poll_count
+            assert (
+                mock_client.update_gateway_devices.await_count == scheduled_poll_count
+            )
             feature = coordinator.data[device_key].get_feature(feature_name)
             assert feature is not None
             assert feature.value == 1.2

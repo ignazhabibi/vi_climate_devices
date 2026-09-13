@@ -40,7 +40,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             _LOGGER,
             config_entry=entry,
             name=f"{DOMAIN}_data",
-            update_interval=update_interval or timedelta(minutes=3),
+            update_interval=update_interval or timedelta(seconds=90),
         )
         self.client = client
         self._known_devices: list[Device] = []
