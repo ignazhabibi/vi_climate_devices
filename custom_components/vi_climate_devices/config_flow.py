@@ -8,7 +8,7 @@ from collections.abc import Mapping
 import voluptuous as vol
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
-from vi_api_client.const import DEFAULT_SCOPES
+from vi_api_client import DEFAULT_SCOPES
 
 from .const import DOMAIN
 

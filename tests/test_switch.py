@@ -8,8 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client.mock_client import MockViClient
-from vi_api_client.models import CommandResponse
+from vi_api_client import CommandResponse, FixtureViClient
 
 from custom_components.vi_climate_devices.const import DOMAIN
 
@@ -89,7 +88,6 @@ async def test_switch_creation_and_services(hass: HomeAssistant, mock_client):
             blocking=True,
         )
 
-        # Verify MockViClient.set_feature was called.
         # Args: (Device, Feature, Value).
         # We need to verify it was called with value=True.
         assert mock_client.set_feature.call_count == 1
@@ -148,7 +146,7 @@ async def test_read_only_hygiene_does_not_create_switch_or_write(
     # Arrange: Set up each fixture with a client-write spy.
     entry = MockConfigEntry(domain=DOMAIN, data={"client_id": "1", "token": "x"})
     entry.add_to_hass(hass)
-    mock_client = MockViClient(device_name=device_name)
+    mock_client = FixtureViClient(device_name)
     mock_client.set_feature = AsyncMock(wraps=mock_client.set_feature)
 
     with (
@@ -266,7 +264,7 @@ async def test_switch_api_rejection(hass: HomeAssistant):
     )
     entry.add_to_hass(hass)
 
-    mock_client = MockViClient(device_name="Vitocal250A")
+    mock_client = FixtureViClient("Vitocal250A")
 
     # Simulate API Logical Failure (Blocked).
 

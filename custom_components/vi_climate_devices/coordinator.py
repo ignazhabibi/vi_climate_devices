@@ -11,12 +11,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, OAuth2TokenRequestError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from vi_api_client import (
+    CommandResponse,
     Device,
     ViAuthError,
     ViClient as ViessmannClient,
     ViError,
 )
-from vi_api_client.models import CommandResponse
 from vi_api_client.utils import mask_pii
 
 from .const import DOMAIN, IGNORED_DEVICES

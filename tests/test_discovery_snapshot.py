@@ -15,7 +15,7 @@ async def test_discovery_snapshot(
     hass: HomeAssistant, snapshot: SnapshotAssertion, mock_client
 ):
     """Test that all entities are created correctly and match the snapshot."""
-    # Arrange: Setup Viessmann integration with MockConfigEntry and MockViClient.
+    # Arrange: Setup Viessmann integration with MockConfigEntry and FixtureViClient.
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={

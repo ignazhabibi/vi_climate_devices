@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
     LocalOAuth2ImplementationWithPkce,
 )
-from vi_api_client.const import ENDPOINT_AUTHORIZE, ENDPOINT_TOKEN
+from vi_api_client import ENDPOINT_AUTHORIZE, ENDPOINT_TOKEN
 
 from custom_components.vi_climate_devices.application_credentials import (
     async_get_auth_implementation,

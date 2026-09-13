@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client.const import DEFAULT_SCOPES
+from vi_api_client import DEFAULT_SCOPES
 from yarl import URL
 
 from custom_components.vi_climate_devices.config_flow import OAuth2FlowHandler

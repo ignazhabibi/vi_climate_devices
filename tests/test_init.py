@@ -18,7 +18,7 @@ from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     async_fire_time_changed,
 )
-from vi_api_client.mock_client import MockViClient
+from vi_api_client import FixtureViClient
 
 from custom_components.vi_climate_devices import (
     PLATFORMS,
@@ -230,7 +230,7 @@ async def test_async_setup_entry_stores_coordinator_in_entry_runtime_data(
 
 @pytest.mark.asyncio
 async def test_config_entry_lifecycle_keeps_runtime_data_when_platform_unload_fails(
-    hass: HomeAssistant, mock_client: MockViClient
+    hass: HomeAssistant, mock_client: FixtureViClient
 ) -> None:
     """Test a failed platform unload keeps the coordinator attached to the entry."""
     entry = _build_entry()
@@ -351,7 +351,7 @@ async def test_haauth_propagates_transient_token_error(
 
 @pytest.mark.asyncio
 async def test_unload_stops_polling_after_commands(
-    hass: HomeAssistant, mock_client: MockViClient, freezer
+    hass: HomeAssistant, mock_client: FixtureViClient, freezer
 ) -> None:
     """Unloading real platforms removes polling after confirmed service writes."""
     entry = _build_entry()
