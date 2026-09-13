@@ -58,6 +58,9 @@ section in `README.md`.
   sections named `### Breaking Changes 🚨`, `### New Features 💫`,
   `### Other Changes ☀️`, and `### Bug Fixes 🐞`. Each entry is
   ``- `short-sha` Summary. ([#PR](https://github.com/owner/repo/pull/PR))``.
+  Create Markdown tag messages with `git tag --cleanup=verbatim` so headings
+  are preserved, then verify the published GitHub release body before declaring
+  the release live.
 
 ## Documentation Drift
 
