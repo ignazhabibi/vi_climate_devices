@@ -26,6 +26,7 @@ from vi_api_client import (
     Feature,
     FeatureControl,
     FixtureViClient,
+    GatewayDeviceRefreshResult,
 )
 
 from custom_components.vi_climate_devices.climate import ViClimate
@@ -811,7 +812,9 @@ async def test_climate_program_matching_variations(
 
     # Initialize mock methods on the client.
     mock_client.get_full_installation_status = AsyncMock(return_value=[custom_device])
-    mock_client.update_device = AsyncMock(return_value=custom_device)
+    mock_client.update_gateway_devices = AsyncMock(
+        return_value=GatewayDeviceRefreshResult([custom_device], {})
+    )
 
     with (
         patch(
