@@ -356,7 +356,9 @@ async def test_unload_stops_polling_after_commands(
     """Unloading real platforms removes polling after confirmed service writes."""
     entry = _build_entry()
     entry.add_to_hass(hass)
-    mock_client.update_device = AsyncMock(wraps=mock_client.update_device)
+    mock_client.update_gateway_devices = AsyncMock(
+        wraps=mock_client.update_gateway_devices
+    )
     with (
         patch(
             "custom_components.vi_climate_devices.ViessmannClient",
@@ -389,11 +391,11 @@ async def test_unload_stops_polling_after_commands(
         assert state.state == "1.2"
 
         # Confirm polling is active before unloading the real entity platforms.
-        mock_client.update_device.reset_mock()
+        mock_client.update_gateway_devices.reset_mock()
         freezer.tick(timedelta(minutes=3))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        mock_client.update_device.assert_awaited_once()
+        mock_client.update_gateway_devices.assert_awaited_once()
 
         # Reload the same entry and verify it owns one fresh coordinator.
         assert await hass.config_entries.async_reload(entry.entry_id)
@@ -401,19 +403,19 @@ async def test_unload_stops_polling_after_commands(
         second_coordinator = entry.runtime_data
         assert second_coordinator is not first_coordinator
 
-        mock_client.update_device.reset_mock()
+        mock_client.update_gateway_devices.reset_mock()
         freezer.tick(timedelta(minutes=3))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        mock_client.update_device.assert_awaited_once()
+        mock_client.update_gateway_devices.assert_awaited_once()
 
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
         assert not hasattr(entry, "runtime_data")
 
         # No request remains scheduled after unload, even across several intervals.
-        mock_client.update_device.reset_mock()
+        mock_client.update_gateway_devices.reset_mock()
         freezer.tick(timedelta(minutes=9))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        mock_client.update_device.assert_not_awaited()
+        mock_client.update_gateway_devices.assert_not_awaited()

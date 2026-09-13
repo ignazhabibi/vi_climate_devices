@@ -18,7 +18,13 @@ from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client import CommandResponse, Device, Feature, FixtureViClient
+from vi_api_client import (
+    CommandResponse,
+    Device,
+    Feature,
+    FixtureViClient,
+    GatewayDeviceRefreshResult,
+)
 
 from custom_components.vi_climate_devices.const import DOMAIN
 from custom_components.vi_climate_devices.water_heater import (
@@ -297,7 +303,9 @@ async def test_water_heater_requires_writable_target_and_mode(
     mock_client.get_full_installation_status = AsyncMock(
         return_value=[device_without_controls]
     )
-    mock_client.update_device = AsyncMock(return_value=device_without_controls)
+    mock_client.update_gateway_devices = AsyncMock(
+        return_value=GatewayDeviceRefreshResult([device_without_controls], {})
+    )
 
     entry = MockConfigEntry(domain=DOMAIN, data={"client_id": "123", "token": "abc"})
     entry.add_to_hass(hass)

@@ -172,22 +172,46 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
         if self._known_devices:
             _LOGGER.debug("Updating %s known devices", len(self._known_devices))
+            devices_by_gateway: dict[tuple[str, str], list[Device]] = {}
             for device in self._known_devices:
-                key = f"{device.gateway_serial}_{device.id}"
+                gateway_key = (device.installation_id, device.gateway_serial)
+                devices_by_gateway.setdefault(gateway_key, []).append(device)
+
+            for gateway_devices in devices_by_gateway.values():
                 try:
-                    new_device = await self.client.update_device(device)
-                    updated_data[key] = new_device
+                    refresh_result = await self.client.update_gateway_devices(
+                        gateway_devices
+                    )
 
                 except ViAuthError as err:
                     raise ConfigEntryAuthFailed(
-                        f"Authentication failed for device {device.id}: {err}"
+                        f"Authentication failed while refreshing gateway devices: {err}"
                     ) from err
 
                 except ViError as err:
-                    failed_device_keys.add(key)
-                    device_errors[key] = err
-                    # Keep old data for recovery, but mark its entities unavailable.
-                    updated_data[key] = device
+                    for device in gateway_devices:
+                        key = f"{device.gateway_serial}_{device.id}"
+                        failed_device_keys.add(key)
+                        device_errors[key] = err
+                        # Keep old data for recovery, but mark its entities unavailable.
+                        updated_data[key] = device
+
+                else:
+                    updated_devices_by_id = {
+                        device.id: device for device in refresh_result.updated_devices
+                    }
+                    for device in gateway_devices:
+                        key = f"{device.gateway_serial}_{device.id}"
+                        refreshed_device = updated_devices_by_id.get(device.id)
+                        if refreshed_device is not None:
+                            updated_data[key] = refreshed_device
+                            continue
+
+                        error = refresh_result.errors_by_device_id[device.id]
+                        failed_device_keys.add(key)
+                        device_errors[key] = error
+                        # Keep old data for recovery, but mark its entities unavailable.
+                        updated_data[key] = device
 
             self._failed_device_keys = failed_device_keys
             for key in updated_data:

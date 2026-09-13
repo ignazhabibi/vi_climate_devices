@@ -8,7 +8,7 @@ from homeassistant.components.sensor import SensorStateClass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client import Device, Feature, FixtureViClient
+from vi_api_client import Device, Feature, FixtureViClient, GatewayDeviceRefreshResult
 
 from custom_components.vi_climate_devices.const import DOMAIN, IGNORED_FEATURES
 from custom_components.vi_climate_devices.sensor import SENSOR_TYPES
@@ -265,7 +265,11 @@ async def test_auto_discovery_unit_mapping(hass: HomeAssistant, mock_client):
         patch.object(
             mock_client, "get_full_installation_status", return_value=[mock_device]
         ),
-        patch.object(mock_client, "update_device", return_value=mock_device),
+        patch.object(
+            mock_client,
+            "update_gateway_devices",
+            return_value=GatewayDeviceRefreshResult([mock_device], {}),
+        ),
     ):
         # Act
         await _setup_integration(hass, mock_client)
@@ -352,8 +356,10 @@ async def test_decreasing_unknown_energy_is_not_a_counter(
             mock_client, "get_full_installation_status", return_value=[device]
         ),
         patch.object(
-            mock_client, "update_device", return_value=device
-        ) as update_device,
+            mock_client,
+            "update_gateway_devices",
+            return_value=GatewayDeviceRefreshResult([device], {}),
+        ) as update_gateway_devices,
     ):
         await _setup_integration(hass, mock_client)
         registry = er.async_get(hass)
@@ -361,7 +367,9 @@ async def test_decreasing_unknown_energy_is_not_a_counter(
         assert registry_entry is not None
 
         # Act: Refresh after the absolute energy value decreases.
-        update_device.return_value = decreased_device
+        update_gateway_devices.return_value = GatewayDeviceRefreshResult(
+            [decreased_device], {}
+        )
         entry = hass.config_entries.async_entries(DOMAIN)[0]
         await entry.runtime_data.async_request_refresh()
         await hass.async_block_till_done()
