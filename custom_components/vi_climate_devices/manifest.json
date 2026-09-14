@@ -3,6 +3,7 @@
   "name": "Viessmann Climate Devices",
   "codeowners": [],
   "config_flow": true,
+  "single_config_entry": true,
   "dependencies": [
     "application_credentials"
   ],

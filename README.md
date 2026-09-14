@@ -91,7 +91,8 @@ stable release.
 
 The integration discovers the installations and compatible devices available to
 the authorized account during setup. It supports multiple devices in one
-installation.
+installation. Each Home Assistant instance supports one Viessmann account
+configuration.
 
 ### Reauthentication
 
