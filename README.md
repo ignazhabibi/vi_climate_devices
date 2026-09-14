@@ -284,6 +284,15 @@ When reporting an issue, include the Home Assistant version, integration
 version, device model, affected entity or feature, and relevant redacted logs.
 Never include OAuth tokens, client credentials, or personal account data.
 
+### Download diagnostics
+
+From **Settings** > **Devices & services**, open the Viessmann Climate Devices
+integration, select the three-dot menu, then choose **Download diagnostics**.
+The file contains the cached device model, status, feature states, and available
+control constraints. Installation, gateway, and device identifiers are replaced
+with document-local labels, and location, serial, and raw-message feature values
+are redacted. Review the downloaded file before sharing it.
+
 ## Removing the integration
 
 To remove an integration entry:
