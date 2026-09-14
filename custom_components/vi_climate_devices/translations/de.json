@@ -14,7 +14,6 @@
             }
         },
         "abort": {
-            "already_configured": "Konto ist bereits konfiguriert",
             "reauth_successful": "Erneute Authentifizierung war erfolgreich"
         }
     },

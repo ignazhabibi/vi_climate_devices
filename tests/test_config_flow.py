@@ -77,10 +77,10 @@ async def test_oauth_entry_creation_delegates_for_new_user_flow() -> None:
 
 
 @pytest.mark.asyncio
-async def test_user_flow_shows_picker_and_starts_external_step(
+async def test_first_user_flow_creates_config_entry(
     hass: HomeAssistant,
 ) -> None:
-    """Test the user flow offers the implementation picker and starts OAuth auth."""
+    """Test the first user flow creates a config entry after OAuth authentication."""
     # Arrange: Register one fake implementation through the OAuth helper layer.
     implementation = FakeOAuthImplementation()
 
@@ -88,17 +88,30 @@ async def test_user_flow_shows_picker_and_starts_external_step(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_implementations",
         return_value={implementation.domain: implementation},
     ):
-        # Act: Start the flow and choose the fake implementation.
+        # Act: Start the flow.
         start_result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
+
+        # Act: Select the OAuth implementation.
         auth_result = await hass.config_entries.flow.async_configure(
             start_result["flow_id"],
             {"implementation": implementation.domain},
         )
 
-    # Assert: The flow shows the picker first and then redirects to OAuth auth.
+        # Act: Complete the OAuth callback.
+        callback_result = await hass.config_entries.flow.async_configure(
+            start_result["flow_id"],
+            user_input={"code": "fresh-code"},
+        )
+
+        # Act: Resolve the authorization code and create the config entry.
+        creation_result = await hass.config_entries.flow.async_configure(
+            start_result["flow_id"],
+        )
+
+    # Assert: The flow starts OAuth authentication and creates the first entry.
     assert start_result.get("type") is FlowResultType.FORM
     assert start_result.get("step_id") == "pick_implementation"
     assert auth_result.get("type") is FlowResultType.EXTERNAL_STEP
@@ -108,6 +121,65 @@ async def test_user_flow_shows_picker_and_starts_external_step(
     authorize_url = URL(url)
     assert authorize_url.query["existing"] == "1"
     assert authorize_url.query["scope"] == DEFAULT_SCOPES
+    assert callback_result.get("type") is FlowResultType.EXTERNAL_STEP_DONE
+    assert creation_result.get("type") is FlowResultType.CREATE_ENTRY
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+@pytest.mark.asyncio
+async def test_user_flow_aborts_when_an_entry_already_exists(
+    hass: HomeAssistant,
+) -> None:
+    """Test a second user-initiated setup is rejected before OAuth begins."""
+    # Arrange: Register the integration's existing account configuration.
+    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
+
+    # Act: Attempt to start another user setup flow.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    # Assert: Home Assistant uses its standard single-entry abort.
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "single_instance_allowed"
+    assert result.get("translation_domain") == "homeassistant"
+
+
+@pytest.mark.asyncio
+async def test_user_flow_aborts_if_an_entry_is_created_during_oauth(
+    hass: HomeAssistant,
+) -> None:
+    """Test an OAuth flow does not create a second entry after a concurrent setup."""
+    # Arrange: Start OAuth setup while no entry exists.
+    implementation = FakeOAuthImplementation()
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_implementations",
+        return_value={implementation.domain: implementation},
+    ):
+        start_result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+        await hass.config_entries.flow.async_configure(
+            start_result["flow_id"],
+            {"implementation": implementation.domain},
+        )
+        await hass.config_entries.flow.async_configure(
+            start_result["flow_id"],
+            user_input={"code": "fresh-code"},
+        )
+        MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
+
+        # Act: Complete OAuth after another flow has already added an entry.
+        result = await hass.config_entries.flow.async_configure(start_result["flow_id"])
+
+    # Assert: The late guard prevents a duplicate entry with HA's standard abort.
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "single_instance_allowed"
+    assert result.get("translation_domain") == "homeassistant"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
 @pytest.mark.asyncio
