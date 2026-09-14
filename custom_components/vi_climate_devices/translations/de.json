@@ -11,7 +11,17 @@
             "reauth_confirm": {
                 "title": "Erneut bei Viessmann anmelden",
                 "description": "Deine Viessmann-Sitzung ist abgelaufen. Bitte melde dich erneut an, um die Verbindung wiederherzustellen."
+            },
+            "validate": {
+                "title": "Viessmann-Zugriff prüfen",
+                "description": "Home Assistant muss prüfen, ob dieses Konto auf mindestens eine Viessmann-Anlage zugreifen kann. Behebe das unten angezeigte Problem und versuche es dann erneut."
             }
+        },
+        "error": {
+            "invalid_auth": "Viessmann hat das neue Zugriffstoken abgelehnt. Melde dich erneut an.",
+            "cannot_connect": "Der Viessmann-Dienst ist nicht erreichbar. Prüfe deine Internetverbindung und versuche es erneut.",
+            "no_installations": "Dieses Viessmann-Konto kann auf keine Anlagen zugreifen. Füge eine Anlage hinzu oder teile sie mit diesem Konto und versuche es erneut.",
+            "unknown": "Der Zugriff auf Viessmann konnte nicht geprüft werden. Versuche es später erneut."
         },
         "abort": {
             "reauth_successful": "Erneute Authentifizierung war erfolgreich"

@@ -43,7 +43,8 @@ The following are not represented as Home Assistant devices:
 
 Before configuring the integration, you need:
 
-1. A Viessmann account with the heating system linked to it.
+1. A Viessmann account with the heating system linked to it and access to at
+   least one installation in the Viessmann API.
 2. A [Viessmann Developer Portal account](https://developer.viessmann-climatesolutions.com/start.html).
 3. An OAuth application in the Developer Portal:
    - Create an application under **My Apps**.
@@ -89,10 +90,13 @@ stable release.
    Secret.
 4. Complete the Viessmann OAuth login and grant the requested access.
 
-The integration discovers the installations and compatible devices available to
-the authorized account during setup. It supports multiple devices in one
-installation. Each Home Assistant instance supports one Viessmann account
-configuration.
+Home Assistant verifies API access before saving the OAuth token. The account
+must have access to at least one Viessmann installation. If validation cannot
+reach Viessmann, fix the connection and select **Submit** to retry with the
+same OAuth token; you do not need to sign in again. The integration discovers
+the installations and compatible devices available to the authorized account
+during setup. It supports multiple devices in one installation. Each Home
+Assistant instance supports one Viessmann account configuration.
 
 ### Reauthentication
 
@@ -228,6 +232,14 @@ If Home Assistant asks for reauthentication, complete the prompt for the
 existing integration. Viessmann refresh tokens can expire or be revoked. Do
 not reuse an old OAuth callback URL: authorization codes are short-lived and
 can be used only once.
+
+### Viessmann access cannot be verified
+
+Confirm that the account has access to at least one installation in the
+Viessmann API. If the service or your connection is temporarily unavailable,
+select **Submit** on the validation screen to retry; the new OAuth token stays
+available for that retry and you do not need to complete OAuth again. If
+Viessmann rejects the token, start the sign-in flow again.
 
 ### The OAuth flow reports an invalid redirect URI
 
