@@ -47,6 +47,8 @@ section in `README.md`.
   proposed Conventional Commit message; no additional confirmation is needed.
 - Wait for the GitHub `quality-check` job before treating a PR as merge-ready.
   Use GitHub squash merge only with explicit authorization.
+- For multi-line GitHub issue or PR bodies, use a heredoc or `--body-file` so
+  GitHub receives real newlines, then verify the rendered body.
 - After a merge, fast-forward local `main` and delete the confirmed merged
   local branch.
 - Releases must keep `pyproject.toml` and `manifest.json` versions aligned.
