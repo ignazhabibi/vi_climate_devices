@@ -43,6 +43,8 @@ section in `README.md`.
 - `main` is protected. Use short-lived branches and pull requests; never
   commit or merge directly to `main` without an explicitly confirmed emergency
   bypass.
+- When a pull request implements an issue, include `Closes #<issue-number>` in
+  its body so GitHub closes the issue when the pull request merges.
 - Stage only requested files. Before committing, show the files, summary, and
   proposed Conventional Commit message; no additional confirmation is needed.
 - Wait for the GitHub `quality-check` job before treating a PR as merge-ready.
