@@ -1,6 +1,7 @@
 """Tests for ViClimate climate entities."""
 
 from dataclasses import replace
+from typing import cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -710,6 +711,82 @@ async def test_dhw_only_circuit_mode_is_reported_as_off() -> None:
 
     # Assert: The heating circuit is off while domestic hot water stays available.
     assert hvac_mode == HVACMode.OFF
+
+
+@pytest.mark.asyncio
+async def test_climate_handles_device_removed_by_refresh() -> None:
+    """Expose unavailable climate state when its device disappears on refresh."""
+    # Arrange: Construct a heating circuit from the normal fixture data.
+    device = (
+        await FixtureViClient("Vitocal250A").get_full_installation_status("99999")
+    )[0]
+    map_key = f"{device.gateway_serial}_{device.id}"
+    coordinator = MagicMock(data={map_key: device})
+    entity = ViClimate(coordinator, map_key, "0")
+
+    # Act: A later refresh no longer contains the device.
+    coordinator.data = {}
+
+    # Assert: Public entity values fall back without retaining stale device data.
+    assert entity.device_info is None
+    assert entity.current_temperature is None
+    assert entity.hvac_mode is None
+    assert entity.hvac_modes == [HVACMode.HEAT, HVACMode.OFF]
+    assert entity.preset_mode is None
+    assert entity.preset_modes == []
+    assert entity.extra_state_attributes == {}
+
+    # Act and assert: A missing temperature is ignored, while unavailable controls fail.
+    await entity.async_set_temperature()
+    with pytest.raises(HomeAssistantError, match="Operating mode feature not found"):
+        await entity.async_set_hvac_mode(HVACMode.HEAT)
+    with pytest.raises(HomeAssistantError, match="Preset modes are read-only"):
+        await entity.async_set_preset_mode(PRESET_HOME)
+
+    # Act and assert: A climate entity requires its device at construction time.
+    with pytest.raises(ValueError, match="Device missing"):
+        ViClimate(MagicMock(data={}), "missing", "0")
+
+
+@pytest.mark.asyncio
+async def test_climate_rejects_unknown_and_rejected_hvac_commands() -> None:
+    """Reject unsupported modes and roll back an API-rejected mode change."""
+    # Arrange: Use a live mode feature with a coordinator that rejects writes.
+    device = (
+        await FixtureViClient("Vitocal250A").get_full_installation_status("99999")
+    )[0]
+    map_key = f"{device.gateway_serial}_{device.id}"
+    coordinator = MagicMock(data={map_key: device})
+    coordinator.async_set_feature = AsyncMock(
+        return_value=CommandResponse(success=False, message="Locked")
+    )
+    entity = ViClimate(coordinator, map_key, "0")
+
+    # Act and assert: An unmapped HA mode is rejected before any API write.
+    with pytest.raises(HomeAssistantError, match="Unsupported HVAC mode"):
+        await entity.async_set_hvac_mode(cast(HVACMode, "legacy-mode"))
+
+    # Act and assert: A device rejection clears the optimistic mode.
+    with (
+        patch.object(entity, "async_write_ha_state"),
+        pytest.raises(HomeAssistantError, match="Command rejected: Locked"),
+    ):
+        await entity.async_set_hvac_mode(HVACMode.OFF)
+    assert entity.hvac_mode == HVACMode.HEAT
+
+
+@pytest.mark.asyncio
+async def test_climate_ignores_an_unknown_circuit_pump_status() -> None:
+    """Do not infer an HVAC action from an unsupported pump status value."""
+    # Arrange: The API can report an unrecognised string during a transient state.
+    entity = await _create_hvac_action_entity(
+        FixtureViClient("Vitocal250A"),
+        {CIRCUIT_PUMP_FEATURE: "transitioning"},
+        frozenset(),
+    )
+
+    # Act and assert: The entity reports no action rather than a false demand.
+    assert entity.hvac_action is None
 
 
 @pytest.mark.asyncio

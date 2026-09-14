@@ -3,11 +3,49 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+from vi_api_client import FixtureViClient
 
+from custom_components.vi_climate_devices.binary_sensor import ViClimateBinarySensor
 from custom_components.vi_climate_devices.const import DOMAIN
+
+
+@pytest.mark.asyncio
+async def test_binary_sensor_handles_device_removed_by_refresh() -> None:
+    """Expose an unavailable state when a refreshed device is no longer present."""
+    # Arrange: Build an auto-discovered entity from a fixture device.
+    device = (
+        await FixtureViClient("Vitocal250A").get_full_installation_status("99999")
+    )[0]
+    feature = device.features[0]
+    coordinator = MagicMock(data={"device": device})
+    entity = ViClimateBinarySensor(
+        coordinator,
+        "device",
+        feature.name,
+        BinarySensorEntityDescription(key=feature.name),
+    )
+
+    # Act: Simulate a refresh which no longer includes the device.
+    coordinator.data = {}
+
+    # Assert: Entity state and device metadata safely become unavailable.
+    assert entity.feature_data is None
+    assert entity.is_on is None
+    assert entity.device_info is None
+    assert entity.available is False
+
+    # Act and assert: An entity cannot be created for an absent device.
+    with pytest.raises(ValueError, match="Device missing"):
+        ViClimateBinarySensor(
+            MagicMock(data={}),
+            "missing",
+            feature.name,
+            BinarySensorEntityDescription(key=feature.name),
+        )
 
 
 @pytest.mark.asyncio

@@ -1,7 +1,7 @@
 """Tests for the OAuth config flow wrapper."""
 
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from homeassistant import config_entries
@@ -53,6 +53,27 @@ async def test_flow_handler_exposes_viessmann_scope() -> None:
 
     # Assert: The flow publishes the library-defined Viessmann scope string.
     assert authorize_data == {"scope": DEFAULT_SCOPES}
+
+
+@pytest.mark.asyncio
+async def test_oauth_entry_creation_delegates_for_new_user_flow() -> None:
+    """Create a new entry through Home Assistant's standard OAuth flow."""
+    # Arrange: A non-reauthentication flow must retain the base handler behavior.
+    flow_handler = OAuth2FlowHandler()
+    flow_handler.context = {"source": config_entries.SOURCE_USER}
+    expected_result = {"type": FlowResultType.CREATE_ENTRY}
+
+    with patch.object(
+        config_entry_oauth2_flow.AbstractOAuth2FlowHandler,
+        "async_oauth_create_entry",
+        new=AsyncMock(return_value=expected_result),
+    ) as create_entry:
+        # Act: Complete OAuth authentication for a newly configured integration.
+        result = await flow_handler.async_oauth_create_entry({"token": "fresh"})
+
+    # Assert: The base flow creates the new entry rather than updating a reauth entry.
+    assert result == expected_result
+    create_entry.assert_awaited_once_with({"token": "fresh"})
 
 
 @pytest.mark.asyncio
