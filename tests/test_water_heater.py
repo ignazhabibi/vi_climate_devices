@@ -35,6 +35,99 @@ from custom_components.vi_climate_devices.water_heater import (
 
 
 @pytest.mark.asyncio
+async def test_water_heater_handles_missing_controls_after_refresh() -> None:
+    """Clear water-heater state and reject commands when controls disappear."""
+    # Arrange: Build an entity from a device that initially has both controls.
+    device = (
+        await FixtureViClient("Vitocal250A").get_full_installation_status("99999")
+    )[0]
+    target_feature = device.get_feature(FEATURE_TARGET_TEMP)
+    assert target_feature is not None
+    coordinator = MagicMock(data={"device": device})
+    entity = ViClimateWaterHeater(coordinator, "device", target_feature)
+
+    # Act: Simulate a refresh which removes the device and its controls.
+    coordinator.data = {}
+
+    # Assert: Read state falls back safely and writes explain the unavailable control.
+    assert entity.device_info is None
+    assert entity.current_temperature is None
+    assert entity.target_temperature is None
+    assert entity.current_operation is None
+    assert entity.operation_list == [STATE_OFF, STATE_ECO, STATE_PERFORMANCE]
+
+    # Act and assert: Missing controls cannot accept values or mode changes.
+    await entity.async_set_temperature()
+    with pytest.raises(
+        HomeAssistantError, match="Target temperature feature not found"
+    ):
+        await entity.async_set_temperature(temperature=45)
+    with pytest.raises(HomeAssistantError, match="Mode feature not found"):
+        await entity.async_set_operation_mode(STATE_ECO)
+
+    # Act and assert: A water-heater entity requires its device at construction time.
+    with pytest.raises(ValueError, match="Device missing"):
+        ViClimateWaterHeater(MagicMock(data={}), "missing", target_feature)
+
+
+@pytest.mark.asyncio
+async def test_water_heater_uses_requested_mode_when_device_lists_no_match() -> None:
+    """Attempt a requested operation when an older device omits its mode list."""
+    # Arrange: Use a real target feature with a coordinator that accepts writes.
+    device = (
+        await FixtureViClient("Vitocal250A").get_full_installation_status("99999")
+    )[0]
+    target_feature = device.get_feature(FEATURE_TARGET_TEMP)
+    assert target_feature is not None
+    coordinator = MagicMock(data={"device": device})
+    coordinator.async_set_feature = AsyncMock(
+        return_value=CommandResponse(success=True)
+    )
+    entity = ViClimateWaterHeater(coordinator, "device", target_feature)
+
+    # Act: Request an operation that has no known candidates for this device.
+    with patch.object(entity, "async_write_ha_state"):
+        await entity.async_set_operation_mode("legacy-mode")
+
+    # Assert: The command attempts the requested mode rather than silently ignoring it.
+    coordinator.async_set_feature.assert_awaited_once_with(
+        "device", FEATURE_MODE, "legacy-mode"
+    )
+
+
+@pytest.mark.asyncio
+async def test_water_heater_uses_standard_fallback_without_mode_constraints() -> None:
+    """Send the standard API fallback when an older device omits mode options."""
+    # Arrange: Remove only the optional mode constraint from a valid fixture device.
+    fixture_device = (
+        await FixtureViClient("Vitocal250A").get_full_installation_status("99999")
+    )[0]
+    device = replace(
+        fixture_device,
+        features=[
+            replace(feature, control=None) if feature.name == FEATURE_MODE else feature
+            for feature in fixture_device.features
+        ],
+    )
+    target_feature = device.get_feature(FEATURE_TARGET_TEMP)
+    assert target_feature is not None
+    coordinator = MagicMock(data={"device": device})
+    coordinator.async_set_feature = AsyncMock(
+        return_value=CommandResponse(success=True)
+    )
+    entity = ViClimateWaterHeater(coordinator, "device", target_feature)
+
+    # Act: Request the supported off operation without advertised API options.
+    with patch.object(entity, "async_write_ha_state"):
+        await entity.async_set_operation_mode(STATE_OFF)
+
+    # Assert: The documented off fallback is sent to the device.
+    coordinator.async_set_feature.assert_awaited_once_with(
+        "device", FEATURE_MODE, "off"
+    )
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("device_name", "api_mode", "api_modes", "ha_mode", "expected_api_mode"),
     [

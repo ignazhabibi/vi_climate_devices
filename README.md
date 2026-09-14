@@ -307,6 +307,9 @@ python scripts/quality_check.py
 pre-commit run --all-files
 ```
 
+The quality-check command includes line coverage for every integration module.
+Each module must exceed 95%, while `config_flow.py` must remain at 100%.
+
 For Python and test standards, read [CONTRIBUTING.md](CONTRIBUTING.md).
 Automated coding agents must also follow [AGENTS.md](AGENTS.md).
 

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -11,6 +12,44 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from vi_api_client import CommandResponse, FixtureViClient
 
 from custom_components.vi_climate_devices.const import DOMAIN
+from custom_components.vi_climate_devices.switch import ViClimateSwitch
+
+
+@pytest.mark.asyncio
+async def test_switch_handles_device_removed_by_refresh() -> None:
+    """Reject writes after the coordinator loses the switch's device."""
+    # Arrange: Build a switch for the writable one-time DHW charge feature.
+    device = (
+        await FixtureViClient("Vitocal250A").get_full_installation_status("99999")
+    )[0]
+    feature_name = "heating.dhw.oneTimeCharge.active"
+    coordinator = MagicMock(data={"device": device})
+    entity = ViClimateSwitch(
+        coordinator,
+        "device",
+        feature_name,
+        SwitchEntityDescription(key=feature_name),
+    )
+
+    # Act: Simulate a refresh which removes the device.
+    coordinator.data = {}
+
+    # Assert: State and metadata clear, and the requested command is rejected.
+    assert entity.feature_data is None
+    assert entity.is_on is None
+    assert entity.device_info is None
+
+    # Act and assert: A write and a new entity both require an available device.
+    with pytest.raises(HomeAssistantError, match="Feature not available"):
+        await entity.async_turn_on()
+
+    with pytest.raises(ValueError, match="Device missing"):
+        ViClimateSwitch(
+            MagicMock(data={}),
+            "missing",
+            feature_name,
+            SwitchEntityDescription(key=feature_name),
+        )
 
 
 @pytest.mark.asyncio

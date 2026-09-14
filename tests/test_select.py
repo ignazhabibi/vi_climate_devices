@@ -3,13 +3,54 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from homeassistant.components.select import SERVICE_SELECT_OPTION
+from homeassistant.components.select import (
+    SERVICE_SELECT_OPTION,
+    SelectEntityDescription,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client import CommandResponse
+from vi_api_client import CommandResponse, FixtureViClient
 
 from custom_components.vi_climate_devices.const import DOMAIN
+from custom_components.vi_climate_devices.select import ViClimateSelect
+
+
+@pytest.mark.asyncio
+async def test_select_handles_device_removed_by_refresh() -> None:
+    """Do not expose stale options after the coordinator loses a device."""
+    # Arrange: Build a select using the fixture's writable DHW mode feature.
+    device = (
+        await FixtureViClient("Vitocal250A").get_full_installation_status("99999")
+    )[0]
+    feature_name = "heating.dhw.operating.modes.active"
+    coordinator = MagicMock(data={"device": device})
+    entity = ViClimateSelect(
+        coordinator,
+        "device",
+        feature_name,
+        SelectEntityDescription(key=feature_name),
+    )
+
+    # Act: Simulate a refresh which removes the device.
+    coordinator.data = {}
+
+    # Assert: State, metadata, and attempted writes fail safely.
+    assert entity.feature_data is None
+    assert entity.current_option is None
+    assert entity.device_info is None
+
+    # Act and assert: A write and a new entity both require an available device.
+    with pytest.raises(HomeAssistantError, match="Feature not available"):
+        await entity.async_select_option("efficient")
+
+    with pytest.raises(ValueError, match="Device missing"):
+        ViClimateSelect(
+            MagicMock(data={}),
+            "missing",
+            feature_name,
+            SelectEntityDescription(key=feature_name),
+        )
 
 
 @pytest.mark.asyncio

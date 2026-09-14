@@ -142,3 +142,4 @@ def test_get_suggested_precision():
     # Act & Assert: Edge cases.
     assert get_suggested_precision(None) is None
     assert get_suggested_precision(0.0) == 0
+    assert get_suggested_precision(float("nan")) == 0
