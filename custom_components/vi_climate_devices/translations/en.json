@@ -11,7 +11,17 @@
             "reauth_confirm": {
                 "title": "Re-authenticate with Viessmann",
                 "description": "Your Viessmann session has expired. Please re-authenticate to restore the connection."
+            },
+            "validate": {
+                "title": "Verify Viessmann access",
+                "description": "Home Assistant must verify that this account can access at least one Viessmann installation. Fix the problem shown below, then try again."
             }
+        },
+        "error": {
+            "invalid_auth": "Viessmann rejected the new access token. Try signing in again.",
+            "cannot_connect": "Unable to reach the Viessmann service. Check your internet connection and try again.",
+            "no_installations": "This Viessmann account cannot access any installations. Add or share an installation with this account, then try again.",
+            "unknown": "Unable to verify access to Viessmann. Try again later."
         },
         "abort": {
             "reauth_successful": "Re-authentication was successful"
