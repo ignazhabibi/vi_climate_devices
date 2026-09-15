@@ -124,6 +124,10 @@ account, not that setup failed.
 Entities use appropriate device classes and are grouped under their Viessmann
 device. Less commonly useful auto-discovered features may be disabled by
 default on tested device models; they can be enabled from the entity settings.
+Unknown auto-discovered features use concise English names derived from their
+Viessmann API feature paths. This intentional fallback means the integration
+does not fully satisfy Home Assistant's `entity-translations` Quality Scale
+rule for dynamically discovered entities.
 
 ### Actions, triggers, and conditions
 

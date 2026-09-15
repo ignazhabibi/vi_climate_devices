@@ -38,7 +38,6 @@ SELECT_TYPES: dict[str, SelectEntityDescription] = {
     "heating.dhw.operating.modes.active": SelectEntityDescription(
         key="heating.dhw.operating.modes.active",
         translation_key="dhw_mode",
-        icon="mdi:water-boiler-auto",
         entity_category=EntityCategory.CONFIG,
     ),
 }
@@ -52,7 +51,6 @@ SELECT_TEMPLATES = [
         "description": SelectEntityDescription(
             key="placeholder",
             translation_key="heating_circuit_operation_mode",
-            icon="mdi:home-thermometer",
             entity_category=EntityCategory.CONFIG,
         ),
     },

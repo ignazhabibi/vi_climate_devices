@@ -42,25 +42,32 @@
     "entity": {
         "number": {
             "heating_curve_slope": {
-                "name": "Heizkurve Steigung Heizkreis {index}"
+                "name": "Heizkurve Steigung Heizkreis {index}",
+                "icon": "mdi:slope-uphill"
             },
             "heating_curve_shift": {
-                "name": "Heizkurve Verschiebung Heizkreis {index}"
+                "name": "Heizkurve Verschiebung Heizkreis {index}",
+                "icon": "mdi:arrow-up-down"
             },
             "dhw_hysteresis": {
-                "name": "Warmwasser Hysterese"
+                "name": "Warmwasser Hysterese",
+                "icon": "mdi:thermometer-lines"
             },
             "dhw_hysteresis_on": {
-                "name": "Warmwasser Hysterese Ein"
+                "name": "Warmwasser Hysterese Ein",
+                "icon": "mdi:thermometer-plus"
             },
             "dhw_hysteresis_off": {
-                "name": "Warmwasser Hysterese Aus"
+                "name": "Warmwasser Hysterese Aus",
+                "icon": "mdi:thermometer-minus"
             },
             "dhw_target_temperature": {
-                "name": "Warmwasser Solltemperatur"
+                "name": "Warmwasser Solltemperatur",
+                "icon": "mdi:thermometer"
             },
             "heating_circuit_program_temperature": {
-                "name": "Heizkreis {index} {program} Temperatur"
+                "name": "Heizkreis {index} {program} Temperatur",
+                "icon": "mdi:thermometer"
             },
             "heating_circuit_program_comfort_temperature": {
                 "name": "Heizkreis {index} Comfort Temperatur"
@@ -108,10 +115,12 @@
                 "name": "Heizkreis {index} Eco Heizung Temperatur"
             },
             "heating_circuit_temperature_limit_min": {
-                "name": "Heizkreis {index} Begrenzung Min"
+                "name": "Heizkreis {index} Begrenzung Min",
+                "icon": "mdi:thermometer-low"
             },
             "heating_circuit_temperature_limit_max": {
-                "name": "Heizkreis {index} Begrenzung Max"
+                "name": "Heizkreis {index} Begrenzung Max",
+                "icon": "mdi:thermometer-high"
             }
         },
         "binary_sensor": {
@@ -180,34 +189,44 @@
                 "name": "Warmwassertemperatur"
             },
             "burner_modulation": {
-                "name": "Brennermodulation {index}"
+                "name": "Brennermodulation {index}",
+                "icon": "mdi:fire"
             },
             "compressor_hours": {
-                "name": "Verdichter {index} Betriebsstunden"
+                "name": "Verdichter {index} Betriebsstunden",
+                "icon": "mdi:counter"
             },
             "compressor_starts": {
-                "name": "Verdichter {index} Starts"
+                "name": "Verdichter {index} Starts",
+                "icon": "mdi:counter"
             },
             "heating_rod_starts": {
-                "name": "Heizstab Starts"
+                "name": "Heizstab Starts",
+                "icon": "mdi:counter"
             },
             "heating_rod_hours": {
-                "name": "Heizstab Betriebsstunden"
+                "name": "Heizstab Betriebsstunden",
+                "icon": "mdi:counter"
             },
             "scop_dhw": {
-                "name": "SCOP Warmwasser"
+                "name": "SCOP Warmwasser",
+                "icon": "mdi:chart-line"
             },
             "scop_heating": {
-                "name": "SCOP Heizung"
+                "name": "SCOP Heizung",
+                "icon": "mdi:chart-line"
             },
             "scop_total": {
-                "name": "SCOP Gesamt"
+                "name": "SCOP Gesamt",
+                "icon": "mdi:chart-line"
             },
             "supply_pressure": {
-                "name": "Anlagendruck"
+                "name": "Anlagendruck",
+                "icon": "mdi:gauge"
             },
             "volumetric_flow": {
-                "name": "Volumenstrom"
+                "name": "Volumenstrom",
+                "icon": "mdi:gauge"
             },
             "consumption_dhw_current_year": {
                 "name": "Verbrauch Warmwasser Jahr"
@@ -219,10 +238,12 @@
                 "name": "Verbrauch Gesamt Jahr"
             },
             "burner_starts": {
-                "name": "Brennerstarts {index}"
+                "name": "Brennerstarts {index}",
+                "icon": "mdi:counter"
             },
             "burner_hours": {
-                "name": "Brennerbetriebsstunden {index}"
+                "name": "Brennerbetriebsstunden {index}",
+                "icon": "mdi:counter"
             },
             "production_cooling_current_year": {
                 "name": "Erzeugung Kuehlung Jahr"
@@ -288,10 +309,12 @@
                 "name": "Solarertrag Heute"
             },
             "compressor_phase": {
-                "name": "Verdichter {index} Phase"
+                "name": "Verdichter {index} Phase",
+                "icon": "mdi:state-machine"
             },
             "compressor_inlet_pressure": {
-                "name": "Verdichter {index} Einlassdruck"
+                "name": "Verdichter {index} Einlassdruck",
+                "icon": "mdi:gauge"
             },
             "compressor_inlet_temperature": {
                 "name": "Verdichter {index} Einlasstemperatur"
@@ -306,16 +329,20 @@
                 "name": "Verdichter {index} Auslasstemperatur"
             },
             "compressor_speed_current": {
-                "name": "Verdichter {index} Drehzahl"
+                "name": "Verdichter {index} Drehzahl",
+                "icon": "mdi:fan"
             },
             "compressor_speed_setpoint": {
-                "name": "Verdichter {index} Drehzahl Sollwert"
+                "name": "Verdichter {index} Drehzahl Sollwert",
+                "icon": "mdi:fan"
             },
             "condensor_liquid_temperature": {
-                "name": "Verflüssiger {index} Flüssigkeitstemperatur"
+                "name": "Verflüssiger {index} Flüssigkeitstemperatur",
+                "icon": "mdi:thermometer"
             },
             "fan_speed": {
-                "name": "Lüfter {index} Drehzahl"
+                "name": "Lüfter {index} Drehzahl",
+                "icon": "mdi:fan"
             },
             "economizer_liquid_temperature": {
                 "name": "Economizer {index} Flüssigkeitstemperatur"
@@ -324,18 +351,22 @@
                 "name": "Verdampfer {index} Flüssigkeitstemperatur"
             },
             "evaporator_overheat_temperature": {
-                "name": "Verdampfer {index} Überhitzung"
+                "name": "Verdampfer {index} Überhitzung",
+                "icon": "mdi:thermometer"
             },
             "valve_position": {
-                "name": "4/3-Wege-Ventil Position"
+                "name": "4/3-Wege-Ventil Position",
+                "icon": "mdi:valve"
             }
         },
         "switch": {
             "dhw_one_time_charge": {
-                "name": "Einmalige Warmwasserbereitung"
+                "name": "Einmalige Warmwasserbereitung",
+                "icon": "mdi:water-boiler"
             },
             "dhw_hygiene": {
-                "name": "Warmwasser Hygieneprogramm"
+                "name": "Warmwasser Hygieneprogramm",
+                "icon": "mdi:shield-check"
             }
         },
         "select": {
@@ -350,14 +381,16 @@
                     "balanced": "Normal",
                     "standby": "Standby",
                     "standard": "Standard"
-                }
+                },
+                "icon": "mdi:water-boiler-auto"
             },
             "heating_circuit_operation_mode": {
                 "name": "Betriebsart Heizkreis {index}",
                 "state": {
                     "heating": "Heizen",
                     "standby": "Standby"
-                }
+                },
+                "icon": "mdi:home-thermometer"
             }
         },
         "water_heater": {
