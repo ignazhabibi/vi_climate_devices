@@ -20,7 +20,7 @@ from vi_api_client import Feature
 from . import ViClimateDevicesConfigEntry
 from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
-from .entity import ViClimateEntity
+from .entity import ViClimateEntity, async_setup_dynamic_entities
 from .utils import (
     beautify_name,
     get_feature_bool_value,
@@ -156,7 +156,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up Viessmann Climate Devices binary sensor based on a config entry."""
     coordinator = entry.runtime_data
+    async_setup_dynamic_entities(
+        hass,
+        entry,
+        coordinator,
+        async_add_entities,
+        lambda: _discover_binary_sensors(coordinator),
+    )
 
+
+def _discover_binary_sensors(
+    coordinator: ViClimateDataUpdateCoordinator,
+) -> list[ViClimateBinarySensor]:
+    """Discover binary sensors from the current coordinator data."""
     entities = []
 
     if coordinator.data:
@@ -207,8 +219,7 @@ async def async_setup_entry(
                             enabled_default=not is_tested,
                         )
                     )
-
-    async_add_entities(entities)
+    return entities
 
 
 class ViClimateBinarySensor(ViClimateEntity, BinarySensorEntity):
@@ -228,6 +239,7 @@ class ViClimateBinarySensor(ViClimateEntity, BinarySensorEntity):
         self.entity_description = description
         self._map_key = map_key
         self._feature_name = feature_name
+        self._availability_feature_names = (feature_name,)
         self._attr_translation_placeholders = translation_placeholders or {}
         self._attr_entity_registry_enabled_default = enabled_default
 

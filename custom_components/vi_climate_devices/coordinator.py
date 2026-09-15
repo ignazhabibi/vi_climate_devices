@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import OAuth2TokenRequestError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import dt as dt_util
 from vi_api_client import (
     CommandResponse,
     Device,
@@ -23,6 +24,8 @@ from .const import DOMAIN, IGNORED_DEVICES
 from .exceptions import config_entry_auth_failed, update_failed
 
 _LOGGER = logging.getLogger(__name__)
+
+INVENTORY_INTERVAL = timedelta(hours=24)
 
 
 class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
@@ -45,6 +48,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         )
         self.client = client
         self._known_devices: list[Device] = []
+        self._last_inventory_at: datetime | None = None
         self._failed_device_keys: set[str] = set()
         self._refresh_write_lock = asyncio.Lock()
 
@@ -128,6 +132,18 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         """
         _LOGGER.debug("Performing initial discovery")
 
+        self._known_devices = await self.async_get_full_inventory()
+        self._last_inventory_at = dt_util.utcnow()
+
+        if not self._known_devices:
+            _LOGGER.warning("No devices found during discovery")
+
+    async def async_get_full_inventory(self) -> list[Device]:
+        """Return every non-ignored device in a complete account inventory.
+
+        Raises:
+            UpdateFailed: If the inventory cannot be completed.
+        """
         try:
             installations = await self.client.get_installations()
             if not installations:
@@ -142,10 +158,6 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                     installation.id
                 )
                 all_devices.extend(devices)
-
-            self._known_devices = [
-                device for device in all_devices if device.id not in IGNORED_DEVICES
-            ]
         except OAuth2TokenRequestError:
             raise
         except ViAuthError as err:
@@ -155,8 +167,32 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             _LOGGER.warning("Viessmann discovery failed: %s", err)
             raise update_failed() from err
 
+        return [device for device in all_devices if device.id not in IGNORED_DEVICES]
+
+    async def _async_refresh_inventory(self) -> None:
+        """Merge a complete inventory into the retained polling device set."""
+        inventory = await self.async_get_full_inventory()
+        known_devices = {
+            f"{device.gateway_serial}_{device.id}": device
+            for device in self._known_devices
+        }
+        for device in inventory:
+            known_devices.setdefault(f"{device.gateway_serial}_{device.id}", device)
+        self._known_devices = list(known_devices.values())
+        self._last_inventory_at = dt_util.utcnow()
+
+    def _is_inventory_due(self) -> bool:
+        """Return whether a periodic complete account inventory is due."""
+        return self._last_inventory_at is not None and (
+            dt_util.utcnow() - self._last_inventory_at >= INVENTORY_INTERVAL
+        )
+
+    async def _async_ensure_inventory(self) -> None:
+        """Populate initial devices or merge a due periodic inventory."""
         if not self._known_devices:
-            _LOGGER.warning("No devices found during discovery")
+            await self._perform_discovery()
+        elif self._is_inventory_due():
+            await self._async_refresh_inventory()
 
     async def _async_update_data(self) -> dict[str, Device]:
         """Update data via library.
@@ -169,8 +205,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         Raises:
             UpdateFailed: If the update process encounters an unhandled exception.
         """
-        if not self._known_devices:
-            await self._perform_discovery()
+        await self._async_ensure_inventory()
 
         updated_data: dict[str, Device] = {}
         failed_device_keys: set[str] = set()

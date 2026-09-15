@@ -204,7 +204,9 @@ mode: single
 ## Data updates
 
 This is a cloud-polling integration. After the initial account discovery, it
-refreshes known devices every **90 seconds** through the Viessmann API.
+refreshes known devices every **90 seconds** through the Viessmann API. It also
+performs a complete account inventory every **24 hours**, so newly available
+devices and features can take up to 24 hours to appear.
 
 Writes and refreshes are serialized to prevent concurrent API requests. A
 successful supported control action immediately updates the relevant entity
@@ -221,8 +223,10 @@ They recover after the next successful refresh.
 - The integration polls; it does not receive real-time push updates. State
   changes may take up to the next successful 90-second refresh to appear if
   they were not initiated through Home Assistant.
-- Devices added to or removed from the Viessmann account after setup currently
-  require reloading the integration to be reflected in Home Assistant.
+- Devices and features added to the Viessmann account can take up to 24 hours
+  to appear. Devices missing from an inventory are retained to avoid unsafe
+  automatic removal; Home Assistant permits manual removal only after a fresh
+  inventory confirms the device is gone.
 - The integration does not provide local-network discovery, firmware updates,
   schedules, or a local fallback when the Viessmann cloud is unavailable.
 - The polling interval does not by itself guarantee API rate-limit compliance:
