@@ -13,11 +13,12 @@ from custom_components.vi_climate_devices.binary_sensor import (
 )
 from custom_components.vi_climate_devices.exceptions import ExceptionTranslationKey
 from custom_components.vi_climate_devices.number import NUMBER_TEMPLATES, NUMBER_TYPES
-from custom_components.vi_climate_devices.select import SELECT_TYPES
+from custom_components.vi_climate_devices.select import SELECT_TEMPLATES, SELECT_TYPES
 from custom_components.vi_climate_devices.sensor import (
     SENSOR_TEMPLATES,
     SENSOR_TYPES,
 )
+from custom_components.vi_climate_devices.switch import SWITCH_TYPES
 from custom_components.vi_climate_devices.water_heater import ViClimateWaterHeater
 
 
@@ -52,6 +53,11 @@ def get_entity_definitions(platform):
 
     elif platform == "select":
         descriptions.extend(SELECT_TYPES.values())
+        for template in SELECT_TEMPLATES:
+            descriptions.append(template["description"])
+
+    elif platform == "switch":
+        descriptions.extend(SWITCH_TYPES.values())
 
     elif platform == "water_heater":
         # Arrange: Instantiate entity with mocks to read the REAL translation_key property
@@ -65,6 +71,51 @@ def get_entity_definitions(platform):
         descriptions.append(SimpleNamespace(translation_key=entity.translation_key))
 
     return descriptions
+
+
+MIGRATED_ENTITY_ICONS = {
+    "number": {
+        "dhw_hysteresis": "mdi:thermometer-lines",
+        "dhw_hysteresis_on": "mdi:thermometer-plus",
+        "dhw_hysteresis_off": "mdi:thermometer-minus",
+        "dhw_target_temperature": "mdi:thermometer",
+        "heating_curve_slope": "mdi:slope-uphill",
+        "heating_curve_shift": "mdi:arrow-up-down",
+        "heating_circuit_program_temperature": "mdi:thermometer",
+        "heating_circuit_temperature_limit_min": "mdi:thermometer-low",
+        "heating_circuit_temperature_limit_max": "mdi:thermometer-high",
+    },
+    "select": {
+        "dhw_mode": "mdi:water-boiler-auto",
+        "heating_circuit_operation_mode": "mdi:home-thermometer",
+    },
+    "sensor": {
+        "heating_rod_hours": "mdi:counter",
+        "heating_rod_starts": "mdi:counter",
+        "scop_dhw": "mdi:chart-line",
+        "scop_heating": "mdi:chart-line",
+        "scop_total": "mdi:chart-line",
+        "supply_pressure": "mdi:gauge",
+        "volumetric_flow": "mdi:gauge",
+        "valve_position": "mdi:valve",
+        "burner_modulation": "mdi:fire",
+        "burner_starts": "mdi:counter",
+        "burner_hours": "mdi:counter",
+        "compressor_hours": "mdi:counter",
+        "compressor_starts": "mdi:counter",
+        "compressor_phase": "mdi:state-machine",
+        "compressor_inlet_pressure": "mdi:gauge",
+        "compressor_speed_current": "mdi:fan",
+        "compressor_speed_setpoint": "mdi:fan",
+        "fan_speed": "mdi:fan",
+        "evaporator_overheat_temperature": "mdi:thermometer",
+        "condensor_liquid_temperature": "mdi:thermometer",
+    },
+    "switch": {
+        "dhw_one_time_charge": "mdi:water-boiler",
+        "dhw_hygiene": "mdi:shield-check",
+    },
+}
 
 
 @pytest.fixture
@@ -81,7 +132,8 @@ def translations():
 
 
 @pytest.mark.parametrize(
-    "platform", ["sensor", "binary_sensor", "number", "select", "water_heater"]
+    "platform",
+    ["sensor", "binary_sensor", "number", "select", "switch", "water_heater"],
 )
 def test_entity_has_translation_key(platform):
     """Verify that every entity description has a translation_key set."""
@@ -98,7 +150,8 @@ def test_entity_has_translation_key(platform):
 
 
 @pytest.mark.parametrize(
-    "platform", ["sensor", "binary_sensor", "number", "select", "water_heater"]
+    "platform",
+    ["sensor", "binary_sensor", "number", "select", "switch", "water_heater"],
 )
 def test_translation_keys_exist(platform, translations):
     """Verify that all used translation keys exist in translation files."""
@@ -136,6 +189,34 @@ def test_translation_keys_exist(platform, translations):
     assert not error_msg, (
         f"Missing translations for platform '{platform}':\n" + "\n".join(error_msg)
     )
+
+
+def test_migrated_entity_icons_are_translated_without_direct_descriptions(
+    translations,
+) -> None:
+    """Keep curated icons translated and out of Python entity metadata."""
+    # Arrange: The migration contract preserves the exact former icon values.
+    for platform, expected_icons in MIGRATED_ENTITY_ICONS.items():
+        descriptions = get_entity_definitions(platform)
+        descriptions_by_key = {
+            description.translation_key: description for description in descriptions
+        }
+
+        # Act and assert: Every locale defines the translated icon with an entity name.
+        for source_name, source in translations.items():
+            translated_entities = source["entity"][platform]
+            for translation_key, expected_icon in expected_icons.items():
+                translation = translated_entities[translation_key]
+                assert translation["icon"] == expected_icon, (
+                    f"{source_name} {platform}.{translation_key} changed its icon"
+                )
+                assert "name" in translation, (
+                    f"{source_name} {platform}.{translation_key} has an orphaned icon"
+                )
+
+        # Assert: Entity descriptions defer icon selection to translations.
+        for translation_key in expected_icons:
+            assert descriptions_by_key[translation_key].icon is None
 
 
 def test_dhw_mode_translations_match_api_modes(translations):

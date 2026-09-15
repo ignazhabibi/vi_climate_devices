@@ -47,13 +47,11 @@ SWITCH_TYPES: dict[str, SwitchEntityDescription] = {
     "heating.dhw.oneTimeCharge.active": SwitchEntityDescription(
         key="heating.dhw.oneTimeCharge.active",
         translation_key="dhw_one_time_charge",
-        icon="mdi:water-boiler",
         device_class=SwitchDeviceClass.SWITCH,
     ),
     "heating.dhw.hygiene.enabled": SwitchEntityDescription(
         key="heating.dhw.hygiene.enabled",
         translation_key="dhw_hygiene",
-        icon="mdi:shield-check",
         device_class=SwitchDeviceClass.SWITCH,
     ),
 }

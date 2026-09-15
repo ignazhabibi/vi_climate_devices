@@ -47,7 +47,6 @@ NUMBER_TEMPLATES = [
         "description": NumberEntityDescription(
             key="placeholder",
             translation_key="heating_curve_slope",
-            icon="mdi:slope-uphill",
             mode=NumberMode.BOX,
             entity_category=EntityCategory.CONFIG,
         ),
@@ -57,7 +56,6 @@ NUMBER_TEMPLATES = [
         "description": NumberEntityDescription(
             key="placeholder",
             translation_key="heating_curve_shift",
-            icon="mdi:arrow-up-down",
             mode=NumberMode.BOX,
             entity_category=EntityCategory.CONFIG,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -74,7 +72,6 @@ NUMBER_TEMPLATES = [
         "description": NumberEntityDescription(
             key="placeholder",
             translation_key="heating_circuit_program_temperature",
-            icon="mdi:thermometer",
             mode=NumberMode.BOX,
             entity_category=EntityCategory.CONFIG,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -86,7 +83,6 @@ NUMBER_TEMPLATES = [
         "description": NumberEntityDescription(
             key="placeholder",
             translation_key="heating_circuit_temperature_limit_min",
-            icon="mdi:thermometer-low",
             mode=NumberMode.BOX,
             entity_category=EntityCategory.CONFIG,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -98,7 +94,6 @@ NUMBER_TEMPLATES = [
         "description": NumberEntityDescription(
             key="placeholder",
             translation_key="heating_circuit_temperature_limit_max",
-            icon="mdi:thermometer-high",
             mode=NumberMode.BOX,
             entity_category=EntityCategory.CONFIG,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -111,7 +106,6 @@ NUMBER_TYPES: dict[str, NumberEntityDescription] = {
     "heating.dhw.temperature.hysteresis": NumberEntityDescription(
         key="heating.dhw.temperature.hysteresis",
         translation_key="dhw_hysteresis",
-        icon="mdi:thermometer-lines",
         mode=NumberMode.BOX,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.KELVIN,
@@ -122,7 +116,6 @@ NUMBER_TYPES: dict[str, NumberEntityDescription] = {
         NumberEntityDescription(
             key="heating.dhw.temperature.hysteresis.switchOnValue",
             translation_key="dhw_hysteresis_on",
-            icon="mdi:thermometer-plus",
             mode=NumberMode.BOX,
             entity_category=EntityCategory.CONFIG,
             native_unit_of_measurement=UnitOfTemperature.KELVIN,
@@ -133,7 +126,6 @@ NUMBER_TYPES: dict[str, NumberEntityDescription] = {
         NumberEntityDescription(
             key="heating.dhw.temperature.hysteresis.switchOffValue",
             translation_key="dhw_hysteresis_off",
-            icon="mdi:thermometer-minus",
             mode=NumberMode.BOX,
             entity_category=EntityCategory.CONFIG,
             native_unit_of_measurement=UnitOfTemperature.KELVIN,
@@ -143,7 +135,6 @@ NUMBER_TYPES: dict[str, NumberEntityDescription] = {
     "heating.dhw.temperature.main": NumberEntityDescription(
         key="heating.dhw.temperature.main",
         translation_key="dhw_target_temperature",
-        icon="mdi:thermometer",
         mode=NumberMode.BOX,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,

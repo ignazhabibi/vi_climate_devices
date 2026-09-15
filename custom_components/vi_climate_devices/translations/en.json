@@ -42,25 +42,32 @@
     "entity": {
         "number": {
             "heating_curve_slope": {
-                "name": "Heating Circuit {index} Curve Slope"
+                "name": "Heating Circuit {index} Curve Slope",
+                "icon": "mdi:slope-uphill"
             },
             "heating_curve_shift": {
-                "name": "Heating Circuit {index} Curve Shift"
+                "name": "Heating Circuit {index} Curve Shift",
+                "icon": "mdi:arrow-up-down"
             },
             "dhw_hysteresis": {
-                "name": "DHW Hysteresis"
+                "name": "DHW Hysteresis",
+                "icon": "mdi:thermometer-lines"
             },
             "dhw_hysteresis_on": {
-                "name": "DHW Hysteresis Switch On"
+                "name": "DHW Hysteresis Switch On",
+                "icon": "mdi:thermometer-plus"
             },
             "dhw_hysteresis_off": {
-                "name": "DHW Hysteresis Switch Off"
+                "name": "DHW Hysteresis Switch Off",
+                "icon": "mdi:thermometer-minus"
             },
             "dhw_target_temperature": {
-                "name": "DHW Target Temperature"
+                "name": "DHW Target Temperature",
+                "icon": "mdi:thermometer"
             },
             "heating_circuit_program_temperature": {
-                "name": "Circuit {index} {program} Temperature"
+                "name": "Circuit {index} {program} Temperature",
+                "icon": "mdi:thermometer"
             },
             "heating_circuit_program_comfort_temperature": {
                 "name": "Circuit {index} Comfort Temperature"
@@ -108,10 +115,12 @@
                 "name": "Circuit {index} Eco Heating Temperature"
             },
             "heating_circuit_temperature_limit_min": {
-                "name": "Heating Circuit {index} Temperature Limit Min"
+                "name": "Heating Circuit {index} Temperature Limit Min",
+                "icon": "mdi:thermometer-low"
             },
             "heating_circuit_temperature_limit_max": {
-                "name": "Heating Circuit {index} Temperature Limit Max"
+                "name": "Heating Circuit {index} Temperature Limit Max",
+                "icon": "mdi:thermometer-high"
             }
         },
         "binary_sensor": {
@@ -180,34 +189,44 @@
                 "name": "Hot Water Temperature"
             },
             "burner_modulation": {
-                "name": "Burner {index} Modulation"
+                "name": "Burner {index} Modulation",
+                "icon": "mdi:fire"
             },
             "compressor_hours": {
-                "name": "Compressor {index} Hours"
+                "name": "Compressor {index} Hours",
+                "icon": "mdi:counter"
             },
             "compressor_starts": {
-                "name": "Compressor {index} Starts"
+                "name": "Compressor {index} Starts",
+                "icon": "mdi:counter"
             },
             "heating_rod_starts": {
-                "name": "Heating Rod Starts"
+                "name": "Heating Rod Starts",
+                "icon": "mdi:counter"
             },
             "heating_rod_hours": {
-                "name": "Heating Rod Hours"
+                "name": "Heating Rod Hours",
+                "icon": "mdi:counter"
             },
             "scop_dhw": {
-                "name": "SCOP DHW"
+                "name": "SCOP DHW",
+                "icon": "mdi:chart-line"
             },
             "scop_heating": {
-                "name": "SCOP Heating"
+                "name": "SCOP Heating",
+                "icon": "mdi:chart-line"
             },
             "scop_total": {
-                "name": "SCOP Total"
+                "name": "SCOP Total",
+                "icon": "mdi:chart-line"
             },
             "supply_pressure": {
-                "name": "Supply Pressure"
+                "name": "Supply Pressure",
+                "icon": "mdi:gauge"
             },
             "volumetric_flow": {
-                "name": "Volumetric Flow"
+                "name": "Volumetric Flow",
+                "icon": "mdi:gauge"
             },
             "consumption_dhw_current_year": {
                 "name": "DHW Consumption Year"
@@ -219,10 +238,12 @@
                 "name": "Total Consumption Year"
             },
             "burner_starts": {
-                "name": "Burner {index} Starts"
+                "name": "Burner {index} Starts",
+                "icon": "mdi:counter"
             },
             "burner_hours": {
-                "name": "Burner {index} Hours"
+                "name": "Burner {index} Hours",
+                "icon": "mdi:counter"
             },
             "production_cooling_current_year": {
                 "name": "Cooling Production Year"
@@ -288,10 +309,12 @@
                 "name": "Solar Production Today"
             },
             "compressor_phase": {
-                "name": "Compressor {index} Phase"
+                "name": "Compressor {index} Phase",
+                "icon": "mdi:state-machine"
             },
             "compressor_inlet_pressure": {
-                "name": "Compressor {index} Inlet Pressure"
+                "name": "Compressor {index} Inlet Pressure",
+                "icon": "mdi:gauge"
             },
             "compressor_inlet_temperature": {
                 "name": "Compressor {index} Inlet Temperature"
@@ -306,16 +329,20 @@
                 "name": "Compressor {index} Outlet Temperature"
             },
             "compressor_speed_current": {
-                "name": "Compressor {index} Speed"
+                "name": "Compressor {index} Speed",
+                "icon": "mdi:fan"
             },
             "compressor_speed_setpoint": {
-                "name": "Compressor {index} Speed Setpoint"
+                "name": "Compressor {index} Speed Setpoint",
+                "icon": "mdi:fan"
             },
             "condensor_liquid_temperature": {
-                "name": "Condensor {index} Liquid Temperature"
+                "name": "Condensor {index} Liquid Temperature",
+                "icon": "mdi:thermometer"
             },
             "fan_speed": {
-                "name": "Fan {index} Speed"
+                "name": "Fan {index} Speed",
+                "icon": "mdi:fan"
             },
             "economizer_liquid_temperature": {
                 "name": "Economizer {index} Liquid Temperature"
@@ -324,18 +351,22 @@
                 "name": "Evaporator {index} Liquid Temperature"
             },
             "evaporator_overheat_temperature": {
-                "name": "Evaporator {index} Overheat Temperature"
+                "name": "Evaporator {index} Overheat Temperature",
+                "icon": "mdi:thermometer"
             },
             "valve_position": {
-                "name": "4/3-Way Valve Position"
+                "name": "4/3-Way Valve Position",
+                "icon": "mdi:valve"
             }
         },
         "switch": {
             "dhw_one_time_charge": {
-                "name": "One Time DHW Charge"
+                "name": "One Time DHW Charge",
+                "icon": "mdi:water-boiler"
             },
             "dhw_hygiene": {
-                "name": "DHW Hygiene"
+                "name": "DHW Hygiene",
+                "icon": "mdi:shield-check"
             }
         },
         "select": {
@@ -350,14 +381,16 @@
                     "balanced": "Balanced",
                     "standby": "Standby",
                     "standard": "Standard"
-                }
+                },
+                "icon": "mdi:water-boiler-auto"
             },
             "heating_circuit_operation_mode": {
                 "name": "Heating Circuit {index} Operation Mode",
                 "state": {
                     "heating": "Heating",
                     "standby": "Standby"
-                }
+                },
+                "icon": "mdi:home-thermometer"
             }
         },
         "water_heater": {
