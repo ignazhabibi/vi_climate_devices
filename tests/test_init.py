@@ -85,10 +85,15 @@ async def test_async_setup_entry_raises_config_entry_auth_failed_on_reauth_error
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
             side_effect=_make_reauth_error(),
         ),
-        pytest.raises(ConfigEntryAuthFailed),
+        pytest.raises(ConfigEntryAuthFailed) as error,
     ):
         # Act: A 400-class token error triggers HA's reauth flow.
         await async_setup_entry(hass, entry)
+
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "authentication_failed"
+    assert error.value.translation_placeholders is None
+    assert isinstance(error.value.__cause__, OAuth2TokenRequestReauthError)
 
 
 @pytest.mark.asyncio
@@ -109,10 +114,15 @@ async def test_async_setup_entry_raises_not_ready_on_transient_token_error(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
             side_effect=_make_token_error(),
         ),
-        pytest.raises(ConfigEntryNotReady),
+        pytest.raises(ConfigEntryNotReady) as error,
     ):
         # Act: Attempt to set up the integration while OAuth is unavailable.
         await async_setup_entry(hass, entry)
+
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "setup_not_ready"
+    assert error.value.translation_placeholders is None
+    assert isinstance(error.value.__cause__, OAuth2TokenRequestError)
 
     # Assert: Setup leaves no runtime data while Home Assistant schedules a retry.
     assert DOMAIN not in hass.data

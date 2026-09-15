@@ -33,6 +33,7 @@ from vi_api_client import (
     ViError,
 )
 
+from custom_components.vi_climate_devices.const import DOMAIN
 from custom_components.vi_climate_devices.coordinator import (
     ViClimateDataUpdateCoordinator,
 )
@@ -186,9 +187,37 @@ async def test_data_coordinator_raises_when_no_installations_exist(
     mock_client.get_installations = AsyncMock(return_value=[])
     coordinator = _build_coordinator(hass, mock_client)
 
-    # Act and Assert: The first refresh aborts with a clear update failure.
-    with pytest.raises(UpdateFailed, match="No installations found"):
+    # Act and assert: The first refresh reports a translated retryable error.
+    with pytest.raises(UpdateFailed) as error:
         await coordinator._async_update_data()
+
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "setup_not_ready"
+    assert error.value.translation_placeholders is None
+
+
+@pytest.mark.asyncio
+async def test_async_set_feature_translates_auth_and_rejects_missing_data(
+    hass: HomeAssistant, mock_client
+) -> None:
+    """Keep feature-write errors translated without leaking client details."""
+    coordinator = _build_coordinator(hass, mock_client)
+    coordinator.data = {}
+    with pytest.raises(ValueError, match="Device missing"):
+        await coordinator.async_set_feature("missing", "feature", 1)
+
+    device = _build_device(device_id="device-0", gateway_serial="gw-main")
+    coordinator.data = {"device": device}
+    with pytest.raises(ValueError, match="Feature missing"):
+        await coordinator.async_set_feature("device", "missing", 1)
+
+    feature = device.features[0]
+    mock_client.set_feature = AsyncMock(side_effect=ViAuthError("private detail"))
+    with pytest.raises(ConfigEntryAuthFailed) as error:
+        await coordinator.async_set_feature("device", feature.name, feature.value)
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "authentication_failed"
+    assert isinstance(error.value.__cause__, ViAuthError)
 
 
 @pytest.mark.asyncio
@@ -200,9 +229,14 @@ async def test_data_coordinator_raises_reauth_when_installation_lookup_loses_aut
     mock_client.get_installations = AsyncMock(side_effect=ViAuthError("token expired"))
     coordinator = _build_coordinator(hass, mock_client)
 
-    # Act and Assert: Convert the discovery auth failure into a reauth trigger.
-    with pytest.raises(ConfigEntryAuthFailed, match="token expired"):
+    # Act and assert: Convert the discovery auth failure into a safe reauth trigger.
+    with pytest.raises(ConfigEntryAuthFailed) as error:
         await coordinator._async_update_data()
+
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "authentication_failed"
+    assert error.value.translation_placeholders is None
+    assert isinstance(error.value.__cause__, ViAuthError)
 
 
 @pytest.mark.asyncio
@@ -249,9 +283,13 @@ async def test_data_coordinator_raises_when_all_device_updates_fail(
     coordinator = _build_coordinator(hass, mock_client)
     coordinator._known_devices = [known_device]
 
-    # Act and Assert: Treat the failed poll as an unavailable coordinator update.
-    with pytest.raises(UpdateFailed, match="Failed to update all devices"):
+    # Act and assert: Treat the failed poll as a translated unavailable update.
+    with pytest.raises(UpdateFailed) as error:
         await coordinator._async_update_data()
+
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "setup_not_ready"
+    assert error.value.translation_placeholders is None
 
     # Assert: Keep the immutable device reference for a later recovery attempt.
     assert coordinator._known_devices == [known_device]
@@ -408,7 +446,7 @@ async def test_data_coordinator_logs_full_device_outage_and_recovery_once(
     assert coordinator.is_device_available("gw-main_device-0")
     assert [record.getMessage() for record in caplog.records] == [
         "Device gw-main_device-0 is unavailable: device offline",
-        "Error fetching vi_climate_devices_data data: Failed to update all devices",
+        "Error fetching vi_climate_devices_data data: setup_not_ready",
         "Device gw-main_device-0 is back online",
         "Fetching vi_climate_devices_data data recovered",
     ]
@@ -427,9 +465,14 @@ async def test_data_coordinator_raises_reauth_when_device_update_loses_auth(
     coordinator = _build_coordinator(hass, mock_client)
     coordinator._known_devices = [known_device]
 
-    # Act and Assert: The auth failure is escalated to Home Assistant reauth.
-    with pytest.raises(ConfigEntryAuthFailed, match="token expired"):
+    # Act and assert: The auth failure is a translated Home Assistant reauth error.
+    with pytest.raises(ConfigEntryAuthFailed) as error:
         await coordinator._async_update_data()
+
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "authentication_failed"
+    assert error.value.translation_placeholders is None
+    assert isinstance(error.value.__cause__, ViAuthError)
 
 
 @pytest.mark.asyncio

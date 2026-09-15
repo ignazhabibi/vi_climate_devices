@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+import logging
+
 from aiohttp import ClientError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
@@ -17,6 +17,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from vi_api_client import AbstractAuth, ViClient as ViessmannClient
 
 from .coordinator import ViClimateDataUpdateCoordinator
+from .exceptions import config_entry_auth_failed, config_entry_not_ready
+
+_LOGGER = logging.getLogger(__name__)
 
 type ViClimateDevicesConfigEntry = ConfigEntry[ViClimateDataUpdateCoordinator]
 
@@ -52,9 +55,8 @@ async def async_setup_entry(
             )
         )
     except config_entry_oauth2_flow.ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            "Unable to load the Viessmann OAuth implementation"
-        ) from err
+        _LOGGER.warning("Viessmann OAuth implementation is unavailable: %s", err)
+        raise config_entry_not_ready() from err
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
@@ -62,11 +64,11 @@ async def async_setup_entry(
     try:
         await session.async_ensure_token_valid()
     except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed(
-            "OAuth refresh token rejected by Viessmann - re-authentication required"
-        ) from err
+        _LOGGER.warning("Viessmann token refresh requires reauthentication: %s", err)
+        raise config_entry_auth_failed() from err
     except (OAuth2TokenRequestError, ClientError, TimeoutError) as err:
-        raise ConfigEntryNotReady("Unable to refresh the Viessmann token") from err
+        _LOGGER.warning("Viessmann token refresh failed: %s", err)
+        raise config_entry_not_ready() from err
 
     # Create the Auth Bridge
     auth = HAAuth(session)

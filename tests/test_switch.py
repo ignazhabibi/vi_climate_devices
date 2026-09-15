@@ -6,7 +6,7 @@ import pytest
 from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from vi_api_client import CommandResponse, FixtureViClient
@@ -40,8 +40,12 @@ async def test_switch_handles_device_removed_by_refresh() -> None:
     assert entity.device_info is None
 
     # Act and assert: A write and a new entity both require an available device.
-    with pytest.raises(HomeAssistantError, match="Feature not available"):
+    with pytest.raises(HomeAssistantError) as error:
         await entity.async_turn_on()
+
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "feature_unavailable"
+    assert error.value.translation_placeholders is None
 
     with pytest.raises(ValueError, match="Device missing"):
         ViClimateSwitch(
@@ -272,13 +276,18 @@ async def test_switch_error_handling(hass: HomeAssistant, mock_client):
 
         # Act: Call turn_on service which will fail.
         # We expect a HomeAssistantError to be raised to the caller.
-        with pytest.raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError) as error:
             await hass.services.async_call(
                 "switch",
                 "turn_on",
                 {"entity_id": switch_id},
                 blocking=True,
             )
+
+        assert error.value.translation_domain == DOMAIN
+        assert error.value.translation_key == "switch_operation_failed"
+        assert error.value.translation_placeholders is None
+        assert isinstance(error.value.__cause__, HomeAssistantError)
 
         # Assert: State Rollback.
         # The switch should NOT be stuck in 'on' state; it should revert to 'off'.
@@ -342,15 +351,17 @@ async def test_switch_api_rejection(hass: HomeAssistant):
 
         # Act: Call turn_on.
         # We expect HomeAssistantError because success=False.
-        with pytest.raises(
-            HomeAssistantError, match="Command rejected: Blocked by device"
-        ):
+        with pytest.raises(ServiceValidationError) as error:
             await hass.services.async_call(
                 "switch",
                 "turn_on",
                 {"entity_id": switch_id},
                 blocking=True,
             )
+
+        assert error.value.translation_domain == DOMAIN
+        assert error.value.translation_key == "command_rejected"
+        assert error.value.translation_placeholders is None
 
         # Assert: Rollback occurred (State remains OFF).
         state = hass.states.get(switch_id)

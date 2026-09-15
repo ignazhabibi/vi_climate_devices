@@ -19,15 +19,24 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from vi_api_client import Feature
+from vi_api_client import Feature, ViError
 
 from . import ViClimateDevicesConfigEntry
 from .const import DOMAIN
 from .coordinator import ViClimateDataUpdateCoordinator
 from .entity import ViClimateEntity
+from .exceptions import (
+    ExceptionTranslationKey,
+    home_assistant_error,
+    service_validation_error,
+)
 from .utils import get_suggested_precision
 
 _LOGGER = logging.getLogger(__name__)
@@ -547,7 +556,7 @@ class ViClimate(ViClimateEntity, ClimateEntity):
 
             temp_feature = self._get_active_temp_feature()
             if not temp_feature:
-                raise HomeAssistantError("Target-temperature control is not available")
+                raise home_assistant_error(ExceptionTranslationKey.FEATURE_UNAVAILABLE)
 
             # 1. OPTIMISTIC UPDATE
             self._optimistic_temp = value
@@ -566,9 +575,7 @@ class ViClimate(ViClimateEntity, ClimateEntity):
             )
 
             if not response.success:
-                raise HomeAssistantError(
-                    f"Command rejected: {response.message or response.reason}"
-                )
+                raise service_validation_error(ExceptionTranslationKey.COMMAND_REJECTED)
 
             if (
                 hvac_mode is not None
@@ -580,16 +587,30 @@ class ViClimate(ViClimateEntity, ClimateEntity):
             # Clear optimistic value.
             self._optimistic_temp = None
             self.async_write_ha_state()
-        except Exception as err:
+        except ServiceValidationError:
+            if has_optimistic_temp:
+                self._optimistic_temp = None
+                self.async_write_ha_state()
+            raise
+        except ValueError as err:
+            if has_optimistic_temp:
+                self._optimistic_temp = None
+                self.async_write_ha_state()
+            _LOGGER.debug("Viessmann rejected requested temperature: %s", err)
+            raise service_validation_error(
+                ExceptionTranslationKey.COMMAND_REJECTED
+            ) from err
+        except (HomeAssistantError, ViError) as err:
             # ROLLBACK on error.
             if has_optimistic_temp:
                 self._optimistic_temp = None
                 self.async_write_ha_state()
-            if mode_changed:
-                raise HomeAssistantError(
-                    f"HVAC mode changed, but failed to set temperature: {err}"
-                ) from err
-            raise HomeAssistantError(f"Failed to set temperature: {err}") from err
+            if isinstance(err, HomeAssistantError) and err.translation_domain == DOMAIN:
+                raise
+            _LOGGER.debug("Unable to change Viessmann temperature: %s", err)
+            raise home_assistant_error(
+                ExceptionTranslationKey.TEMPERATURE_CHANGE_FAILED
+            ) from err
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new HVAC mode."""
@@ -597,7 +618,7 @@ class ViClimate(ViClimateEntity, ClimateEntity):
             f"heating.circuits.{self._circuit_index}.operating.modes.active"
         )
         if not mode_feature:
-            raise HomeAssistantError("Operating mode feature not found")
+            raise home_assistant_error(ExceptionTranslationKey.FEATURE_UNAVAILABLE)
 
         available_options = (
             [str(option) for option in mode_feature.control.options]
@@ -616,7 +637,7 @@ class ViClimate(ViClimateEntity, ClimateEntity):
             if candidates:
                 target_api_mode = candidates[0]
             else:
-                raise HomeAssistantError(f"Unsupported HVAC mode: {hvac_mode}")
+                raise service_validation_error(ExceptionTranslationKey.UNSUPPORTED_MODE)
 
         # 1. OPTIMISTIC UPDATE
         self._optimistic_mode = hvac_mode
@@ -635,25 +656,36 @@ class ViClimate(ViClimateEntity, ClimateEntity):
             )
 
             if not response.success:
-                raise HomeAssistantError(
-                    f"Command rejected: {response.message or response.reason}"
-                )
+                raise service_validation_error(ExceptionTranslationKey.COMMAND_REJECTED)
 
             # Clear optimistic mode.
             self._optimistic_mode = None
             self.async_write_ha_state()
-        except Exception as err:
+        except ServiceValidationError:
+            self._optimistic_mode = None
+            self.async_write_ha_state()
+            raise
+        except ValueError as err:
+            self._optimistic_mode = None
+            self.async_write_ha_state()
+            _LOGGER.debug("Viessmann rejected requested HVAC mode: %s", err)
+            raise service_validation_error(
+                ExceptionTranslationKey.COMMAND_REJECTED
+            ) from err
+        except ConfigEntryAuthFailed:
+            raise
+        except (HomeAssistantError, ViError) as err:
             # ROLLBACK on error.
             self._optimistic_mode = None
             self.async_write_ha_state()
-            raise HomeAssistantError(f"Failed to set HVAC mode: {err}") from err
+            _LOGGER.debug("Unable to change Viessmann HVAC mode: %s", err)
+            raise home_assistant_error(
+                ExceptionTranslationKey.MODE_CHANGE_FAILED
+            ) from err
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        raise HomeAssistantError(
-            "Preset modes are read-only on this device and follow the "
-            "configured schedule"
-        )
+        raise service_validation_error(ExceptionTranslationKey.UNSUPPORTED_MODE)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

@@ -8,11 +8,16 @@ from homeassistant.components.select import (
     SelectEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from vi_api_client import CommandResponse, FixtureViClient
 
 from custom_components.vi_climate_devices.const import DOMAIN
+from custom_components.vi_climate_devices.exceptions import config_entry_auth_failed
 from custom_components.vi_climate_devices.select import ViClimateSelect
 
 
@@ -41,8 +46,12 @@ async def test_select_handles_device_removed_by_refresh() -> None:
     assert entity.device_info is None
 
     # Act and assert: A write and a new entity both require an available device.
-    with pytest.raises(HomeAssistantError, match="Feature not available"):
+    with pytest.raises(HomeAssistantError) as error:
         await entity.async_select_option("efficient")
+
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "feature_unavailable"
+    assert error.value.translation_placeholders is None
 
     with pytest.raises(ValueError, match="Device missing"):
         ViClimateSelect(
@@ -211,13 +220,18 @@ async def test_select_error_handling(hass: HomeAssistant, mock_client):
         # Act: Try to change option (Should fail).
         target_option = "off"
 
-        with pytest.raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError) as error:
             await hass.services.async_call(
                 "select",
                 SERVICE_SELECT_OPTION,
                 {"entity_id": entity_id, "option": target_option},
                 blocking=True,
             )
+
+        assert error.value.translation_domain == DOMAIN
+        assert error.value.translation_key == "selection_failed"
+        assert error.value.translation_placeholders is None
+        assert isinstance(error.value.__cause__, HomeAssistantError)
 
         # Assert: Rollback occurred.
         state = hass.states.get(entity_id)
@@ -276,13 +290,17 @@ async def test_select_api_rejection(hass: HomeAssistant, mock_client):
         original_state = state.state  # "efficient"
 
         # Act: Try to change option.
-        with pytest.raises(HomeAssistantError):
+        with pytest.raises(ServiceValidationError) as error:
             await hass.services.async_call(
                 "select",
                 SERVICE_SELECT_OPTION,
-                {"entity_id": entity_id, "option": "comfort"},
+                {"entity_id": entity_id, "option": "off"},
                 blocking=True,
             )
+
+        assert error.value.translation_domain == DOMAIN
+        assert error.value.translation_key == "command_rejected"
+        assert error.value.translation_placeholders is None
 
         # Assert: Rollback occurred.
         state = hass.states.get(entity_id)
@@ -291,3 +309,29 @@ async def test_select_api_rejection(hass: HomeAssistant, mock_client):
 
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
+
+
+@pytest.mark.asyncio
+async def test_select_preserves_reauthentication_failure() -> None:
+    """Preserve reauthentication signals from a select action."""
+    device = (
+        await FixtureViClient("Vitocal250A").get_full_installation_status("99999")
+    )[0]
+    feature_name = "heating.dhw.operating.modes.active"
+    coordinator = MagicMock(data={"device": device})
+    coordinator.async_set_feature = AsyncMock(side_effect=config_entry_auth_failed())
+    entity = ViClimateSelect(
+        coordinator,
+        "device",
+        feature_name,
+        SelectEntityDescription(key=feature_name, name="Mode"),
+    )
+
+    with (
+        patch.object(entity, "async_write_ha_state"),
+        pytest.raises(ConfigEntryAuthFailed) as error,
+    ):
+        await entity.async_select_option("off")
+
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "authentication_failed"

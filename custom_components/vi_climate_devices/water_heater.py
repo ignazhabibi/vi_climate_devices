@@ -15,15 +15,24 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from vi_api_client import Feature
+from vi_api_client import Feature, ViError
 
 from . import ViClimateDevicesConfigEntry
 from .const import DOMAIN
 from .coordinator import ViClimateDataUpdateCoordinator
 from .entity import ViClimateEntity
+from .exceptions import (
+    ExceptionTranslationKey,
+    home_assistant_error,
+    service_validation_error,
+)
 from .utils import get_suggested_precision
 
 _LOGGER = logging.getLogger(__name__)
@@ -258,7 +267,7 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):
 
         feat = self._get_feature(self._target_feature_name)
         if not feat:
-            raise HomeAssistantError("Target temperature feature not found")
+            raise home_assistant_error(ExceptionTranslationKey.FEATURE_UNAVAILABLE)
 
         # 1. OPTIMISTIC UPDATE
         self._optimistic_temp = value
@@ -276,24 +285,38 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):
             )
 
             if not response.success:
-                raise HomeAssistantError(
-                    f"Command rejected: {response.message or response.reason}"
-                )
+                raise service_validation_error(ExceptionTranslationKey.COMMAND_REJECTED)
 
             # Clear optimistic value - let next poll pick up real value
             self._optimistic_temp = None
             self.async_write_ha_state()
-        except Exception as err:
+        except ServiceValidationError:
+            self._optimistic_temp = None
+            self.async_write_ha_state()
+            raise
+        except ValueError as err:
+            self._optimistic_temp = None
+            self.async_write_ha_state()
+            _LOGGER.debug("Viessmann rejected requested water temperature: %s", err)
+            raise service_validation_error(
+                ExceptionTranslationKey.COMMAND_REJECTED
+            ) from err
+        except ConfigEntryAuthFailed:
+            raise
+        except (HomeAssistantError, ViError) as err:
             # ROLLBACK on error
             self._optimistic_temp = None
             self.async_write_ha_state()
-            raise HomeAssistantError(f"Failed to set temperature: {err}") from err
+            _LOGGER.debug("Unable to change Viessmann water temperature: %s", err)
+            raise home_assistant_error(
+                ExceptionTranslationKey.TEMPERATURE_CHANGE_FAILED
+            ) from err
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         feat = self._get_feature(FEATURE_MODE)
         if not feat:
-            raise HomeAssistantError("Mode feature not found")
+            raise home_assistant_error(ExceptionTranslationKey.FEATURE_UNAVAILABLE)
 
         # Get available API modes from device
         available_api_modes = self._get_available_api_modes(feat)
@@ -333,18 +356,32 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):
             )
 
             if not response.success:
-                raise HomeAssistantError(
-                    f"Command rejected: {response.message or response.reason}"
-                )
+                raise service_validation_error(ExceptionTranslationKey.COMMAND_REJECTED)
 
             # Clear optimistic mode - let next poll pick up real value
             self._optimistic_mode = None
             self.async_write_ha_state()
-        except Exception as err:
+        except ServiceValidationError:
+            self._optimistic_mode = None
+            self.async_write_ha_state()
+            raise
+        except ValueError as err:
+            self._optimistic_mode = None
+            self.async_write_ha_state()
+            _LOGGER.debug("Viessmann rejected requested water-heater mode: %s", err)
+            raise service_validation_error(
+                ExceptionTranslationKey.COMMAND_REJECTED
+            ) from err
+        except ConfigEntryAuthFailed:
+            raise
+        except (HomeAssistantError, ViError) as err:
             # ROLLBACK on error
             self._optimistic_mode = None
             self.async_write_ha_state()
-            raise HomeAssistantError(f"Failed to set mode: {err}") from err
+            _LOGGER.debug("Unable to change Viessmann water-heater mode: %s", err)
+            raise home_assistant_error(
+                ExceptionTranslationKey.MODE_CHANGE_FAILED
+            ) from err
 
     def _get_available_api_modes(self, feat: Feature) -> list[str]:
         """Get list of available API modes from feature constraints."""
