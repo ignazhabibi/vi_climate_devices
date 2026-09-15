@@ -8,8 +8,8 @@ from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, OAuth2TokenRequestError
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.exceptions import OAuth2TokenRequestError
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from vi_api_client import (
     CommandResponse,
     Device,
@@ -20,6 +20,7 @@ from vi_api_client import (
 from vi_api_client.utils import mask_pii
 
 from .const import DOMAIN, IGNORED_DEVICES
+from .exceptions import config_entry_auth_failed, update_failed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,9 +82,15 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             if feature is None:
                 raise ValueError(f"Feature {feature_name} not found in device data")
 
-            response, updated_device = await self.client.set_feature(
-                device, feature, value
-            )
+            try:
+                response, updated_device = await self.client.set_feature(
+                    device, feature, value
+                )
+            except ViAuthError as err:
+                _LOGGER.warning(
+                    "Viessmann authentication failed while writing a feature: %s", err
+                )
+                raise config_entry_auth_failed() from err
             if response.success:
                 updated_data = dict(self.data)
                 updated_data[device_key] = updated_device
@@ -124,7 +131,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         try:
             installations = await self.client.get_installations()
             if not installations:
-                raise UpdateFailed("No installations found")
+                raise update_failed()
 
             all_devices: list[Device] = []
             for installation in installations:
@@ -142,11 +149,11 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         except OAuth2TokenRequestError:
             raise
         except ViAuthError as err:
-            raise ConfigEntryAuthFailed(
-                f"Authentication failed during discovery: {err}"
-            ) from err
+            _LOGGER.warning("Viessmann authentication failed during discovery: %s", err)
+            raise config_entry_auth_failed() from err
         except ViError as err:
-            raise UpdateFailed(f"Failed to perform full discovery: {err}") from err
+            _LOGGER.warning("Viessmann discovery failed: %s", err)
+            raise update_failed() from err
 
         if not self._known_devices:
             _LOGGER.warning("No devices found during discovery")
@@ -184,9 +191,12 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                     )
 
                 except ViAuthError as err:
-                    raise ConfigEntryAuthFailed(
-                        f"Authentication failed while refreshing gateway devices: {err}"
-                    ) from err
+                    _LOGGER.warning(
+                        "Viessmann authentication failed while refreshing "
+                        "gateway devices: %s",
+                        err,
+                    )
+                    raise config_entry_auth_failed() from err
 
                 except ViError as err:
                     for device in gateway_devices:
@@ -220,7 +230,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 )
 
             if failed_device_keys and len(failed_device_keys) == len(updated_data):
-                raise UpdateFailed("Failed to update all devices")
+                raise update_failed()
 
             self._known_devices = list(updated_data.values())
 

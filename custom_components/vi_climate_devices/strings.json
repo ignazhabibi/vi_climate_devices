@@ -27,6 +27,18 @@
             "reauth_successful": "Re-authentication was successful"
         }
     },
+    "exceptions": {
+        "feature_unavailable": "This control is currently unavailable.",
+        "unsupported_mode": "The requested operating mode is not supported.",
+        "command_rejected": "Viessmann rejected the requested command.",
+        "temperature_change_failed": "Unable to change the temperature.",
+        "mode_change_failed": "Unable to change the operating mode.",
+        "selection_failed": "Unable to change the selected option.",
+        "switch_operation_failed": "Unable to change the switch state.",
+        "number_change_failed": "Unable to change the value.",
+        "authentication_failed": "Viessmann authentication failed. Please re-authenticate.",
+        "setup_not_ready": "Viessmann is temporarily unavailable. Home Assistant will retry setup."
+    },
     "entity": {
         "number": {
             "heating_curve_slope": {

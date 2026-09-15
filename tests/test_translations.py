@@ -11,6 +11,7 @@ from custom_components.vi_climate_devices.binary_sensor import (
     BINARY_SENSOR_TEMPLATES,
     BINARY_SENSOR_TYPES,
 )
+from custom_components.vi_climate_devices.exceptions import ExceptionTranslationKey
 from custom_components.vi_climate_devices.number import NUMBER_TEMPLATES, NUMBER_TYPES
 from custom_components.vi_climate_devices.select import SELECT_TYPES
 from custom_components.vi_climate_devices.sensor import (
@@ -146,3 +147,19 @@ def test_dhw_mode_translations_match_api_modes(translations):
             ]["state"]
             assert states["efficient"] == "Eco"
             assert states["efficientWithMinComfort"] == "Comfort"
+
+
+def test_exception_translation_keys_exist_in_all_maintained_translations(
+    translations,
+) -> None:
+    """Keep every user-facing integration exception translatable."""
+    # Arrange: The semantic exception taxonomy is the source of every raised key.
+    exception_keys = {key.value for key in ExceptionTranslationKey}
+
+    # Act and assert: Each maintained source must define every exception message.
+    for source_name, source in translations.items():
+        translated_keys = set(source.get("exceptions", {}))
+        assert exception_keys <= translated_keys, (
+            f"Missing exception translations in {source_name}: "
+            f"{sorted(exception_keys - translated_keys)}"
+        )

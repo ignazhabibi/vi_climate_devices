@@ -15,15 +15,24 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from vi_api_client import Feature
+from vi_api_client import Feature, ViError
 
 from . import ViClimateDevicesConfigEntry
 from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
 from .entity import ViClimateEntity
+from .exceptions import (
+    ExceptionTranslationKey,
+    home_assistant_error,
+    service_validation_error,
+)
 from .utils import beautify_name, get_suggested_precision, is_feature_ignored
 
 _LOGGER = logging.getLogger(__name__)
@@ -355,7 +364,7 @@ class ViClimateNumber(ViClimateEntity, NumberEntity):
         """Update the current value."""
         feat = self.feature_data
         if not feat:
-            raise HomeAssistantError("Feature not available")
+            raise home_assistant_error(ExceptionTranslationKey.FEATURE_UNAVAILABLE)
 
         # 1. OPTIMISTIC UPDATE - Store locally and update UI immediately
         self._optimistic_value = value
@@ -379,17 +388,29 @@ class ViClimateNumber(ViClimateEntity, NumberEntity):
             )
 
             if not response.success:
-                raise HomeAssistantError(
-                    f"Command rejected: {response.message or response.reason}"
-                )
+                raise service_validation_error(ExceptionTranslationKey.COMMAND_REJECTED)
 
             # 3. Clear optimistic value - let next poll pick up real value
             self._optimistic_value = None
             self.async_write_ha_state()
-        except Exception as err:
+        except ServiceValidationError:
+            self._optimistic_value = None
+            self.async_write_ha_state()
+            raise
+        except ValueError as err:
+            self._optimistic_value = None
+            self.async_write_ha_state()
+            _LOGGER.debug("Viessmann rejected number value: %s", err)
+            raise service_validation_error(
+                ExceptionTranslationKey.COMMAND_REJECTED
+            ) from err
+        except ConfigEntryAuthFailed:
+            raise
+        except (HomeAssistantError, ViError) as err:
             # 5. ROLLBACK on error
             self._optimistic_value = None
             self.async_write_ha_state()
-            if isinstance(err, HomeAssistantError):
-                raise
-            raise HomeAssistantError(f"Failed to set value: {err}") from err
+            _LOGGER.debug("Unable to change Viessmann number value: %s", err)
+            raise home_assistant_error(
+                ExceptionTranslationKey.NUMBER_CHANGE_FAILED
+            ) from err

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from homeassistant.components.number import NumberEntityDescription
 from homeassistant.components.number.const import (
     ATTR_MAX,
     ATTR_MIN,
@@ -10,13 +11,14 @@ from homeassistant.components.number.const import (
     SERVICE_SET_VALUE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from vi_api_client import CommandResponse, FixtureViClient
 
 from custom_components.vi_climate_devices.const import DOMAIN
+from custom_components.vi_climate_devices.number import ViClimateNumber
 
 
 @pytest.mark.asyncio
@@ -296,13 +298,18 @@ async def test_number_error_handling(hass: HomeAssistant, mock_client):
         assert state.state == "0.6"
 
         # Act: Try to set value to 2.0 (Should fail).
-        with pytest.raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError) as error:
             await hass.services.async_call(
                 "number",
                 SERVICE_SET_VALUE,
                 {"entity_id": entity_id, "value": 2.0},
                 blocking=True,
             )
+
+        assert error.value.translation_domain == DOMAIN
+        assert error.value.translation_key == "number_change_failed"
+        assert error.value.translation_placeholders is None
+        assert isinstance(error.value.__cause__, HomeAssistantError)
 
         # Assert: Rollback occurred.
         # State should still be 0.6, not 2.0.
@@ -362,15 +369,17 @@ async def test_number_api_rejection(hass: HomeAssistant, mock_client):
         original_state = state.state  # "0.6"
 
         # Act: Try to set value.
-        with pytest.raises(
-            HomeAssistantError, match="Command rejected: Parameter out of range"
-        ):
+        with pytest.raises(ServiceValidationError) as error:
             await hass.services.async_call(
                 "number",
                 SERVICE_SET_VALUE,
                 {"entity_id": entity_id, "value": 2.0},
                 blocking=True,
             )
+
+        assert error.value.translation_domain == DOMAIN
+        assert error.value.translation_key == "command_rejected"
+        assert error.value.translation_placeholders is None
 
         # Assert: Rollback occurred.
         state = hass.states.get(entity_id)
@@ -379,6 +388,30 @@ async def test_number_api_rejection(hass: HomeAssistant, mock_client):
 
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
+
+
+@pytest.mark.asyncio
+async def test_number_translates_client_validation_error(mock_client) -> None:
+    """Translate client value validation without exposing its detail."""
+    device = (await mock_client.get_full_installation_status("99999"))[0]
+    feature_name = "heating.circuits.0.heating.curve.slope"
+    coordinator = MagicMock(data={"device": device})
+    coordinator.async_set_feature = AsyncMock(side_effect=ValueError("private detail"))
+    entity = ViClimateNumber(
+        coordinator,
+        "device",
+        feature_name,
+        NumberEntityDescription(key=feature_name, name="Slope"),
+    )
+
+    with (
+        patch.object(entity, "async_write_ha_state"),
+        pytest.raises(ServiceValidationError) as error,
+    ):
+        await entity.async_set_native_value(1.0)
+
+    assert error.value.translation_key == "command_rejected"
+    assert isinstance(error.value.__cause__, ValueError)
 
 
 @pytest.mark.asyncio

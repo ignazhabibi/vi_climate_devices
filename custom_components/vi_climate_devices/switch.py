@@ -12,15 +12,24 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from vi_api_client import Feature
+from vi_api_client import Feature, ViError
 
 from . import ViClimateDevicesConfigEntry
 from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
 from .entity import ViClimateEntity
+from .exceptions import (
+    ExceptionTranslationKey,
+    home_assistant_error,
+    service_validation_error,
+)
 from .utils import (
     beautify_name,
     get_feature_bool_value,
@@ -189,7 +198,7 @@ class ViClimateSwitch(ViClimateEntity, SwitchEntity):
         """Internal method to set the switch state."""
         feat = self.feature_data
         if not feat:
-            raise HomeAssistantError("Feature not available")
+            raise home_assistant_error(ExceptionTranslationKey.FEATURE_UNAVAILABLE)
 
         # 1. OPTIMISTIC UPDATE
         self._optimistic_state = target_state
@@ -208,17 +217,29 @@ class ViClimateSwitch(ViClimateEntity, SwitchEntity):
             )
 
             if not response.success:
-                raise HomeAssistantError(
-                    f"Command rejected: {response.message or response.reason}"
-                )
+                raise service_validation_error(ExceptionTranslationKey.COMMAND_REJECTED)
 
             # 3. Clear optimistic state
             self._optimistic_state = None
             self.async_write_ha_state()
-        except Exception as err:
+        except ServiceValidationError:
+            self._optimistic_state = None
+            self.async_write_ha_state()
+            raise
+        except ValueError as err:
+            self._optimistic_state = None
+            self.async_write_ha_state()
+            _LOGGER.debug("Viessmann rejected switch state: %s", err)
+            raise service_validation_error(
+                ExceptionTranslationKey.COMMAND_REJECTED
+            ) from err
+        except ConfigEntryAuthFailed:
+            raise
+        except (HomeAssistantError, ViError) as err:
             # 5. ROLLBACK on error
             self._optimistic_state = None
             self.async_write_ha_state()
-            if isinstance(err, HomeAssistantError):
-                raise
-            raise HomeAssistantError(f"Failed to set state: {err}") from err
+            _LOGGER.debug("Unable to change Viessmann switch state: %s", err)
+            raise home_assistant_error(
+                ExceptionTranslationKey.SWITCH_OPERATION_FAILED
+            ) from err

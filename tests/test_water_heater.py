@@ -16,7 +16,7 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from vi_api_client import (
     CommandResponse,
@@ -58,12 +58,17 @@ async def test_water_heater_handles_missing_controls_after_refresh() -> None:
 
     # Act and assert: Missing controls cannot accept values or mode changes.
     await entity.async_set_temperature()
-    with pytest.raises(
-        HomeAssistantError, match="Target temperature feature not found"
-    ):
+    with pytest.raises(HomeAssistantError) as temperature_error:
         await entity.async_set_temperature(temperature=45)
-    with pytest.raises(HomeAssistantError, match="Mode feature not found"):
+    assert temperature_error.value.translation_domain == DOMAIN
+    assert temperature_error.value.translation_key == "feature_unavailable"
+    assert temperature_error.value.translation_placeholders is None
+
+    with pytest.raises(HomeAssistantError) as mode_error:
         await entity.async_set_operation_mode(STATE_ECO)
+    assert mode_error.value.translation_domain == DOMAIN
+    assert mode_error.value.translation_key == "feature_unavailable"
+    assert mode_error.value.translation_placeholders is None
 
     # Act and assert: A water-heater entity requires its device at construction time.
     with pytest.raises(ValueError, match="Device missing"):
@@ -464,13 +469,18 @@ async def test_water_heater_error_handling(hass: HomeAssistant, mock_client):
         original_temp = float(state.attributes["temperature"])
 
         # Act: Try to set temperature (Should fail).
-        with pytest.raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError) as error:
             await hass.services.async_call(
                 "water_heater",
                 SERVICE_SET_TEMPERATURE,
                 {"entity_id": entity_id, "temperature": 40.0},
                 blocking=True,
             )
+
+        assert error.value.translation_domain == DOMAIN
+        assert error.value.translation_key == "temperature_change_failed"
+        assert error.value.translation_placeholders is None
+        assert isinstance(error.value.__cause__, HomeAssistantError)
 
         # Assert: Rollback occurred.
         state = hass.states.get(entity_id)
@@ -520,13 +530,17 @@ async def test_water_heater_api_rejection(hass: HomeAssistant, mock_client):
         original_temp = float(state.attributes["temperature"])
 
         # Act: Try to set temperature.
-        with pytest.raises(HomeAssistantError, match="Command rejected: Locked"):
+        with pytest.raises(ServiceValidationError) as error:
             await hass.services.async_call(
                 "water_heater",
                 SERVICE_SET_TEMPERATURE,
                 {"entity_id": entity_id, "temperature": 40.0},
                 blocking=True,
             )
+
+        assert error.value.translation_domain == DOMAIN
+        assert error.value.translation_key == "command_rejected"
+        assert error.value.translation_placeholders is None
 
         # Assert: Rollback occurred.
         state = hass.states.get(entity_id)
@@ -535,3 +549,43 @@ async def test_water_heater_api_rejection(hass: HomeAssistant, mock_client):
 
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
+
+
+@pytest.mark.asyncio
+async def test_water_heater_translates_mode_and_temperature_failures() -> None:
+    """Translate client failures from water-heater actions."""
+    device = (
+        await FixtureViClient("Vitocal250A").get_full_installation_status("99999")
+    )[0]
+    target_feature = device.get_feature(FEATURE_TARGET_TEMP)
+    assert target_feature is not None
+    coordinator = MagicMock(data={"device": device})
+    entity = ViClimateWaterHeater(coordinator, "device", target_feature)
+
+    coordinator.async_set_feature = AsyncMock(side_effect=ValueError("private detail"))
+    with (
+        patch.object(entity, "async_write_ha_state"),
+        pytest.raises(ServiceValidationError) as temperature_error,
+    ):
+        await entity.async_set_temperature(temperature=45)
+    assert temperature_error.value.translation_key == "command_rejected"
+    assert isinstance(temperature_error.value.__cause__, ValueError)
+
+    coordinator.async_set_feature = AsyncMock(side_effect=HomeAssistantError("detail"))
+    with (
+        patch.object(entity, "async_write_ha_state"),
+        pytest.raises(HomeAssistantError) as mode_error,
+    ):
+        await entity.async_set_operation_mode(STATE_ECO)
+    assert mode_error.value.translation_key == "mode_change_failed"
+    assert isinstance(mode_error.value.__cause__, HomeAssistantError)
+
+    coordinator.async_set_feature = AsyncMock(
+        return_value=CommandResponse(success=False, message="private detail")
+    )
+    with (
+        patch.object(entity, "async_write_ha_state"),
+        pytest.raises(ServiceValidationError) as rejection_error,
+    ):
+        await entity.async_set_operation_mode(STATE_ECO)
+    assert rejection_error.value.translation_key == "command_rejected"

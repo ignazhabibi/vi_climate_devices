@@ -27,6 +27,18 @@
             "reauth_successful": "Erneute Authentifizierung war erfolgreich"
         }
     },
+    "exceptions": {
+        "feature_unavailable": "Diese Steuerung ist derzeit nicht verfügbar.",
+        "unsupported_mode": "Der angeforderte Betriebsmodus wird nicht unterstützt.",
+        "command_rejected": "Viessmann hat den angeforderten Befehl abgelehnt.",
+        "temperature_change_failed": "Die Temperatur konnte nicht geändert werden.",
+        "mode_change_failed": "Der Betriebsmodus konnte nicht geändert werden.",
+        "selection_failed": "Die Auswahl konnte nicht geändert werden.",
+        "switch_operation_failed": "Der Schaltzustand konnte nicht geändert werden.",
+        "number_change_failed": "Der Wert konnte nicht geändert werden.",
+        "authentication_failed": "Die Viessmann-Authentifizierung ist fehlgeschlagen. Bitte erneut authentifizieren.",
+        "setup_not_ready": "Viessmann ist vorübergehend nicht verfügbar. Home Assistant versucht die Einrichtung erneut."
+    },
     "entity": {
         "number": {
             "heating_curve_slope": {

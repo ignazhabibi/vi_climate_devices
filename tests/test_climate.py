@@ -19,7 +19,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from vi_api_client import (
     CommandResponse,
@@ -504,11 +504,12 @@ async def test_climate_requires_writable_active_program_temperature(
     assert not (supported_features & ClimateEntityFeature.TARGET_TEMPERATURE)
     assert target_temperature is None
 
-    with pytest.raises(
-        HomeAssistantError,
-        match="Target-temperature control is not available",
-    ):
+    with pytest.raises(HomeAssistantError) as error:
         await entity.async_set_temperature(temperature=21.0)
+
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "feature_unavailable"
+    assert error.value.translation_placeholders is None
 
     coordinator.async_set_feature.assert_not_awaited()
 
@@ -621,13 +622,14 @@ async def test_climate_sets_temperature_on_program_selected_by_requested_mode(
 
     # Act and assert: Preserve the successful mode change in the failure message.
     with (
-        pytest.raises(
-            HomeAssistantError,
-            match="HVAC mode changed, but failed to set temperature: Command rejected: temperature rejected",
-        ),
+        pytest.raises(ServiceValidationError) as error,
         patch.object(entity, "async_write_ha_state"),
     ):
         await entity.async_set_temperature(temperature=21.0, hvac_mode=requested_mode)
+
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "command_rejected"
+    assert error.value.translation_placeholders is None
 
 
 @pytest.mark.asyncio
@@ -668,13 +670,18 @@ async def test_climate_error_handling_and_rollback(
         original_temp = float(state.attributes["temperature"])
 
         # Act: Set temperature to 25.0 (should fail).
-        with pytest.raises(HomeAssistantError, match="Connection Error"):
+        with pytest.raises(HomeAssistantError) as error:
             await hass.services.async_call(
                 "climate",
                 SERVICE_SET_TEMPERATURE,
                 {"entity_id": entity_id, "temperature": 25.0},
                 blocking=True,
             )
+
+        assert error.value.translation_domain == DOMAIN
+        assert error.value.translation_key == "temperature_change_failed"
+        assert error.value.translation_placeholders is None
+        assert isinstance(error.value.__cause__, HomeAssistantError)
 
         # Assert: Rollback occurred.
         state = hass.states.get(entity_id)
@@ -738,10 +745,17 @@ async def test_climate_handles_device_removed_by_refresh() -> None:
 
     # Act and assert: A missing temperature is ignored, while unavailable controls fail.
     await entity.async_set_temperature()
-    with pytest.raises(HomeAssistantError, match="Operating mode feature not found"):
+    with pytest.raises(HomeAssistantError) as feature_error:
         await entity.async_set_hvac_mode(HVACMode.HEAT)
-    with pytest.raises(HomeAssistantError, match="Preset modes are read-only"):
+    assert feature_error.value.translation_domain == DOMAIN
+    assert feature_error.value.translation_key == "feature_unavailable"
+    assert feature_error.value.translation_placeholders is None
+
+    with pytest.raises(ServiceValidationError) as mode_error:
         await entity.async_set_preset_mode(PRESET_HOME)
+    assert mode_error.value.translation_domain == DOMAIN
+    assert mode_error.value.translation_key == "unsupported_mode"
+    assert mode_error.value.translation_placeholders is None
 
     # Act and assert: A climate entity requires its device at construction time.
     with pytest.raises(ValueError, match="Device missing"):
@@ -763,16 +777,59 @@ async def test_climate_rejects_unknown_and_rejected_hvac_commands() -> None:
     entity = ViClimate(coordinator, map_key, "0")
 
     # Act and assert: An unmapped HA mode is rejected before any API write.
-    with pytest.raises(HomeAssistantError, match="Unsupported HVAC mode"):
+    with pytest.raises(ServiceValidationError) as mode_error:
         await entity.async_set_hvac_mode(cast(HVACMode, "legacy-mode"))
+    assert mode_error.value.translation_domain == DOMAIN
+    assert mode_error.value.translation_key == "unsupported_mode"
+    assert mode_error.value.translation_placeholders is None
 
     # Act and assert: A device rejection clears the optimistic mode.
     with (
         patch.object(entity, "async_write_ha_state"),
-        pytest.raises(HomeAssistantError, match="Command rejected: Locked"),
+        pytest.raises(ServiceValidationError) as command_error,
     ):
         await entity.async_set_hvac_mode(HVACMode.OFF)
+    assert command_error.value.translation_domain == DOMAIN
+    assert command_error.value.translation_key == "command_rejected"
+    assert command_error.value.translation_placeholders is None
     assert entity.hvac_mode == HVACMode.HEAT
+
+
+@pytest.mark.asyncio
+async def test_climate_translates_client_validation_and_mode_failures() -> None:
+    """Translate client validation and mode-write failures without provider text."""
+    device = (
+        await FixtureViClient("Vitocal250A").get_full_installation_status("99999")
+    )[0]
+    map_key = f"{device.gateway_serial}_{device.id}"
+    coordinator = MagicMock(data={map_key: device})
+    coordinator.async_set_feature = AsyncMock(side_effect=ValueError("secret detail"))
+    entity = ViClimate(coordinator, map_key, "0")
+
+    with (
+        patch.object(entity, "async_write_ha_state"),
+        pytest.raises(ServiceValidationError) as temperature_error,
+    ):
+        await entity.async_set_temperature(temperature=21.0)
+    assert temperature_error.value.translation_key == "command_rejected"
+    assert isinstance(temperature_error.value.__cause__, ValueError)
+
+    coordinator.async_set_feature = AsyncMock(side_effect=HomeAssistantError("detail"))
+    with (
+        patch.object(entity, "async_write_ha_state"),
+        pytest.raises(HomeAssistantError) as mode_error,
+    ):
+        await entity.async_set_hvac_mode(HVACMode.OFF)
+    assert mode_error.value.translation_key == "mode_change_failed"
+    assert isinstance(mode_error.value.__cause__, HomeAssistantError)
+
+    coordinator.async_set_feature = AsyncMock(side_effect=ValueError("private detail"))
+    with (
+        patch.object(entity, "async_write_ha_state"),
+        pytest.raises(ServiceValidationError) as value_mode_error,
+    ):
+        await entity.async_set_hvac_mode(HVACMode.OFF)
+    assert value_mode_error.value.translation_key == "command_rejected"
 
 
 @pytest.mark.asyncio
