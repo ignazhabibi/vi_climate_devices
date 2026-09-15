@@ -13,19 +13,24 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     async_fire_time_changed,
 )
-from vi_api_client import FixtureViClient
+from vi_api_client import Device, FixtureViClient
 
 from custom_components.vi_climate_devices import (
     PLATFORMS,
     HAAuth,
+    async_remove_config_entry_device,
     async_setup_entry,
 )
 from custom_components.vi_climate_devices.const import DOMAIN
+from custom_components.vi_climate_devices.coordinator import (
+    ViClimateDataUpdateCoordinator,
+)
 
 
 def _build_entry() -> MockConfigEntry:
@@ -236,6 +241,58 @@ async def test_async_setup_entry_stores_coordinator_in_entry_runtime_data(
     main_coordinator.async_config_entry_first_refresh.assert_awaited_once()
     forward_entry_setups.assert_awaited_once_with(entry, PLATFORMS)
     assert call_order == ["refresh", "platforms"]
+
+
+def _build_removal_device() -> Device:
+    """Return the inventory device corresponding to the removal test registry id."""
+    return Device(
+        id="device-0",
+        gateway_serial="gw-main",
+        installation_id="installation-1",
+        model_id="Vitocal250A",
+        device_type="heating",
+        status="online",
+        features=[],
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("inventory", "expected_result"),
+    [
+        ([_build_removal_device()], False),
+        ([], True),
+        (UpdateFailed(), False),
+        (TimeoutError(), False),
+    ],
+)
+async def test_device_removal_requires_a_fresh_conclusive_absent_inventory(
+    hass: HomeAssistant,
+    mock_client: FixtureViClient,
+    inventory: list[Device] | UpdateFailed | TimeoutError,
+    expected_result: bool,
+) -> None:
+    """Test removal only succeeds when fresh inventory conclusively lacks device."""
+    # Arrange: Register a Home Assistant device associated with this config entry.
+    entry = _build_entry()
+    entry.add_to_hass(hass)
+    coordinator = ViClimateDataUpdateCoordinator(hass, entry, mock_client)
+    if isinstance(inventory, Exception):
+        coordinator.async_get_full_inventory = AsyncMock(side_effect=inventory)
+    else:
+        coordinator.async_get_full_inventory = AsyncMock(return_value=inventory)
+    entry.runtime_data = coordinator
+    device_entry = dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "gw-main-device-0")},
+    )
+
+    # Act: Ask the integration whether Home Assistant may remove the device.
+    result = await async_remove_config_entry_device(hass, entry, device_entry)
+
+    # Assert: Presence and incomplete inventory both reject removal.
+    assert result is expected_result
+    coordinator.async_get_full_inventory.assert_awaited_once()
 
 
 @pytest.mark.asyncio

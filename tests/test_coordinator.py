@@ -18,6 +18,7 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.util import dt as dt_util
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     async_fire_time_changed,
@@ -56,6 +57,42 @@ def test_data_coordinator_defaults_to_ninety_second_refreshes(
     coordinator = _build_coordinator(hass, mock_client)
 
     assert coordinator.update_interval == timedelta(seconds=90)
+
+
+@pytest.mark.asyncio
+async def test_data_coordinator_merges_new_devices_from_daily_inventory(
+    hass: HomeAssistant, mock_client
+) -> None:
+    """Test a due inventory adds devices without dropping stale known devices."""
+    # Arrange: A previously known device is absent from a successful fresh inventory.
+    retained_device = _build_device(device_id="device-0", gateway_serial="gw-main")
+    discovered_device = _build_device(device_id="device-1", gateway_serial="gw-new")
+    mock_client.get_installations = AsyncMock(
+        return_value=[SimpleNamespace(id="installation-1")]
+    )
+    mock_client.get_full_installation_status = AsyncMock(
+        return_value=[discovered_device]
+    )
+    mock_client.update_gateway_devices = AsyncMock(
+        side_effect=[
+            _refresh_result([retained_device]),
+            _refresh_result([discovered_device]),
+        ]
+    )
+    coordinator = _build_coordinator(hass, mock_client)
+    coordinator._known_devices = [retained_device]
+    coordinator._last_inventory_at = dt_util.utcnow() - timedelta(days=1)
+
+    # Act: Run the regular coordinator refresh after the discovery interval elapsed.
+    data = await coordinator._async_update_data()
+
+    # Assert: Both devices remain in the polling data after fresh discovery.
+    assert data == {
+        "gw-main_device-0": retained_device,
+        "gw-new_device-1": discovered_device,
+    }
+    mock_client.get_installations.assert_awaited_once()
+    mock_client.get_full_installation_status.assert_awaited_once_with("installation-1")
 
 
 def _build_device(

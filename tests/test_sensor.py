@@ -165,6 +165,50 @@ async def test_no_duplicate_entity_creation(hass: HomeAssistant, mock_client):
 
 
 @pytest.mark.asyncio
+async def test_sensor_feature_discovered_after_setup_is_added_once(
+    hass: HomeAssistant, mock_client
+) -> None:
+    """Test a new sensor feature is added dynamically without duplicates."""
+    # Arrange: Set up the integration with the original fixture feature set.
+    await _setup_integration(hass, mock_client)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    coordinator = entry.runtime_data
+    device_key, device = next(iter(coordinator.data.items()))
+    feature = Feature(
+        name="custom.dynamic.temperature",
+        value=18.5,
+        unit="celsius",
+        is_enabled=True,
+        is_ready=True,
+    )
+    coordinator.data = {
+        device_key: dataclasses.replace(device, features=[*device.features, feature])
+    }
+
+    # Act: Publish the updated device twice through the coordinator seam.
+    coordinator.async_update_listeners()
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    # Assert: One fallback sensor appears for the newly exposed feature.
+    registry = er.async_get(hass)
+    unique_id = f"{device.gateway_serial}-{device.id}-{feature.name}"
+    entries = [
+        item
+        for item in registry.entities.values()
+        if item.platform == DOMAIN and item.unique_id == unique_id
+    ]
+    assert len(entries) == 1
+    state = hass.states.get(entries[0].entity_id)
+    assert state is not None
+    assert state.state == "18.5"
+
+    # Cleanup: Unload the integration to stop the coordinator listener.
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.asyncio
 async def test_removed_today_energy_sensors_are_not_created(
     hass: HomeAssistant, mock_client
 ):

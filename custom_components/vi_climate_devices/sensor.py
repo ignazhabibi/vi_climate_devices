@@ -30,7 +30,7 @@ from vi_api_client import Feature
 from . import ViClimateDevicesConfigEntry
 from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
-from .entity import ViClimateEntity
+from .entity import ViClimateEntity, async_setup_dynamic_entities
 from .utils import beautify_name, is_feature_boolean_like, is_feature_ignored
 
 _LOGGER = logging.getLogger(__name__)
@@ -710,11 +710,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up Viessmann Climate Devices sensor based on a config entry."""
     coordinator = entry.runtime_data
-    entities = []
-    if coordinator.data:
-        entities.extend(_discover_realtime_sensors(coordinator))
-
-    async_add_entities(entities)
+    async_setup_dynamic_entities(
+        hass,
+        entry,
+        coordinator,
+        async_add_entities,
+        lambda: _discover_realtime_sensors(coordinator),
+    )
 
 
 def _discover_realtime_sensors(
@@ -786,6 +788,7 @@ class ViClimateSensor(ViClimateEntity, SensorEntity):
         self.entity_description = description
         self._map_key = map_key
         self._feature_name = feature_name
+        self._availability_feature_names = (feature_name,)
         self._attr_translation_placeholders = translation_placeholders or {}
         self._attr_entity_registry_enabled_default = enabled_default
 

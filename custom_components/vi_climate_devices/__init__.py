@@ -9,13 +9,17 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from vi_api_client import AbstractAuth, ViClient as ViessmannClient
 
+from .const import DOMAIN
 from .coordinator import ViClimateDataUpdateCoordinator
 from .exceptions import config_entry_auth_failed, config_entry_not_ready
 
@@ -92,6 +96,30 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    entry: ViClimateDevicesConfigEntry,
+    device_entry: DeviceEntry,
+) -> bool:
+    """Allow removal only after a fresh inventory confirms the device is absent."""
+    del hass
+    try:
+        inventory = await entry.runtime_data.async_get_full_inventory()
+    except (
+        ClientError,
+        ConfigEntryAuthFailed,
+        OAuth2TokenRequestError,
+        TimeoutError,
+        UpdateFailed,
+    ):
+        return False
+
+    inventory_identifiers = {
+        (DOMAIN, f"{device.gateway_serial}-{device.id}") for device in inventory
+    }
+    return not bool(device_entry.identifiers & inventory_identifiers)
 
 
 class HAAuth(AbstractAuth):

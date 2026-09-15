@@ -31,7 +31,7 @@ from vi_api_client import Feature, ViError
 from . import ViClimateDevicesConfigEntry
 from .const import DOMAIN
 from .coordinator import ViClimateDataUpdateCoordinator
-from .entity import ViClimateEntity
+from .entity import ViClimateEntity, async_setup_dynamic_entities
 from .exceptions import (
     ExceptionTranslationKey,
     home_assistant_error,
@@ -107,7 +107,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up Viessmann Climate Devices climate entities based on a config entry."""
     coordinator = entry.runtime_data
+    async_setup_dynamic_entities(
+        hass,
+        entry,
+        coordinator,
+        async_add_entities,
+        lambda: _discover_climate_entities(coordinator),
+    )
 
+
+def _discover_climate_entities(
+    coordinator: ViClimateDataUpdateCoordinator,
+) -> list[ViClimate]:
+    """Discover climate entities from the current coordinator data."""
     entities = []
 
     if coordinator.data:
@@ -123,8 +135,7 @@ async def async_setup_entry(
                     if len(parts) >= 3:
                         circuit_index = parts[2]
                         entities.append(ViClimate(coordinator, map_key, circuit_index))
-
-    async_add_entities(entities)
+    return entities
 
 
 class ViClimate(ViClimateEntity, ClimateEntity):
@@ -144,6 +155,8 @@ class ViClimate(ViClimateEntity, ClimateEntity):
         super().__init__(coordinator)
         self._map_key = map_key
         self._circuit_index = circuit_index
+        self._feature_name = f"heating.circuits.{circuit_index}.operating.modes.active"
+        self._availability_feature_names = (self._feature_name,)
 
         device = coordinator.data.get(map_key)
         if not device:
@@ -155,9 +168,7 @@ class ViClimate(ViClimateEntity, ClimateEntity):
         self._attr_has_entity_name = True
         self._attr_translation_placeholders = {"index": circuit_index}
 
-        mode_feature = self._get_feature(
-            f"heating.circuits.{self._circuit_index}.operating.modes.active"
-        )
+        mode_feature = self._get_feature(self._feature_name)
         available_hvac_modes = self.hvac_modes
         if (
             mode_feature

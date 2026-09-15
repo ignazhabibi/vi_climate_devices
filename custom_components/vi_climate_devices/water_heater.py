@@ -27,7 +27,7 @@ from vi_api_client import Feature, ViError
 from . import ViClimateDevicesConfigEntry
 from .const import DOMAIN
 from .coordinator import ViClimateDataUpdateCoordinator
-from .entity import ViClimateEntity
+from .entity import ViClimateEntity, async_setup_dynamic_entities
 from .exceptions import (
     ExceptionTranslationKey,
     home_assistant_error,
@@ -77,7 +77,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up Viessmann Climate Devices water heater."""
     coordinator = entry.runtime_data
+    async_setup_dynamic_entities(
+        hass,
+        entry,
+        coordinator,
+        async_add_entities,
+        lambda: _discover_water_heaters(coordinator),
+    )
 
+
+def _discover_water_heaters(
+    coordinator: ViClimateDataUpdateCoordinator,
+) -> list[ViClimateWaterHeater]:
+    """Discover water heater entities from the current coordinator data."""
     entities = []
 
     if coordinator.data:
@@ -92,8 +104,7 @@ async def async_setup_entry(
                 and mode_feat.is_writable
             ):
                 entities.append(ViClimateWaterHeater(coordinator, map_key, target_feat))
-
-    async_add_entities(entities)
+    return entities
 
 
 class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):
@@ -117,6 +128,7 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):
         self._map_key = map_key
         # Primary feature is the Target Temperature control
         self._target_feature_name = target_feature.name
+        self._availability_feature_names = (target_feature.name, FEATURE_MODE)
 
         device = coordinator.data.get(map_key)
         if not device:
