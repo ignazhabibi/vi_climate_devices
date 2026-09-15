@@ -16,5 +16,5 @@
   "requirements": [
     "vi_api_client @ git+https://github.com/ignazhabibi/vi_api_client.git@v2.0.0"
   ],
-  "version": "1.7.0"
+  "version": "1.8.0-alpha.0"
 }
