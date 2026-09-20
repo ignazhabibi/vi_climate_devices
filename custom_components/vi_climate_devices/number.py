@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import replace
-from typing import Any
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -27,13 +26,18 @@ from vi_api_client import Feature, ViError
 from . import ViClimateDevicesConfigEntry
 from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
-from .entity import ViClimateEntity, async_setup_dynamic_entities
+from .entity import EntityTemplate, ViClimateEntity, async_setup_dynamic_entities
 from .exceptions import (
     ExceptionTranslationKey,
     home_assistant_error,
     service_validation_error,
 )
-from .utils import beautify_name, get_suggested_precision, is_feature_ignored
+from .utils import (
+    beautify_name,
+    get_feature_number_value,
+    get_suggested_precision,
+    is_feature_ignored,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,19 +45,19 @@ PARALLEL_UPDATES = 0
 
 
 # Templates with regex patterns for dynamic feature names
-NUMBER_TEMPLATES = [
-    {
-        "pattern": re.compile(r"^heating\.circuits\.(\d+)\.heating\.curve\.slope$"),
-        "description": NumberEntityDescription(
+NUMBER_TEMPLATES: tuple[EntityTemplate[NumberEntityDescription], ...] = (
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.circuits\.(\d+)\.heating\.curve\.slope$"),
+        description=NumberEntityDescription(
             key="placeholder",
             translation_key="heating_curve_slope",
             mode=NumberMode.BOX,
             entity_category=EntityCategory.CONFIG,
         ),
-    },
-    {
-        "pattern": re.compile(r"^heating\.circuits\.(\d+)\.heating\.curve\.shift$"),
-        "description": NumberEntityDescription(
+    ),
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.circuits\.(\d+)\.heating\.curve\.shift$"),
+        description=NumberEntityDescription(
             key="placeholder",
             translation_key="heating_curve_shift",
             mode=NumberMode.BOX,
@@ -61,15 +65,15 @@ NUMBER_TEMPLATES = [
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=NumberDeviceClass.TEMPERATURE_DELTA,
         ),
-    },
-    {
+    ),
+    EntityTemplate(
         # Matches: comfort, normal, reduced, eco, comfortCooling, comfortHeating, etc.
         # Flat name example: heating.circuits.0.operating.programs.comfort.temperature
-        "pattern": re.compile(
+        pattern=re.compile(
             r"^heating\.circuits\.(\d+)\.operating\.programs\."
             r"((?:comfort|normal|reduced|eco)(?:Cooling|Heating|))\.temperature$"
         ),
-        "description": NumberEntityDescription(
+        description=NumberEntityDescription(
             key="placeholder",
             translation_key="heating_circuit_program_temperature",
             mode=NumberMode.BOX,
@@ -77,10 +81,10 @@ NUMBER_TEMPLATES = [
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=NumberDeviceClass.TEMPERATURE,
         ),
-    },
-    {
-        "pattern": re.compile(r"^heating\.circuits\.(\d+)\.temperature\.levels\.min$"),
-        "description": NumberEntityDescription(
+    ),
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.circuits\.(\d+)\.temperature\.levels\.min$"),
+        description=NumberEntityDescription(
             key="placeholder",
             translation_key="heating_circuit_temperature_limit_min",
             mode=NumberMode.BOX,
@@ -88,10 +92,10 @@ NUMBER_TEMPLATES = [
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=NumberDeviceClass.TEMPERATURE,
         ),
-    },
-    {
-        "pattern": re.compile(r"^heating\.circuits\.(\d+)\.temperature\.levels\.max$"),
-        "description": NumberEntityDescription(
+    ),
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.circuits\.(\d+)\.temperature\.levels\.max$"),
+        description=NumberEntityDescription(
             key="placeholder",
             translation_key="heating_circuit_temperature_limit_max",
             mode=NumberMode.BOX,
@@ -99,8 +103,8 @@ NUMBER_TEMPLATES = [
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=NumberDeviceClass.TEMPERATURE,
         ),
-    },
-]
+    ),
+)
 
 NUMBER_TYPES: dict[str, NumberEntityDescription] = {
     "heating.dhw.temperature.hysteresis": NumberEntityDescription(
@@ -148,34 +152,31 @@ def _get_number_entity_description(
 ) -> tuple[NumberEntityDescription, dict[str, str] | None] | None:
     """Find a matching entity description for a dynamic feature name."""
     for template in NUMBER_TEMPLATES:
-        pattern = template["pattern"]
-        if hasattr(pattern, "match"):
-            match = pattern.match(feature_name)
-            if match:
-                groups = match.groups()
-                index = groups[0]
-                # If pattern has 2 groups, second is program
-                program = groups[1] if len(groups) > 1 else None
+        match = template.pattern.match(feature_name)
+        if not match:
+            continue
+        groups = match.groups()
+        index = groups[0]
+        # If pattern has 2 groups, second is program
+        program = groups[1] if len(groups) > 1 else None
 
-                base_desc: NumberEntityDescription = template["description"]
+        base_desc = template.description
 
-                placeholders = {"index": index}
-                new_key = feature_name  # We use the actual feature name
-                new_trans_key = base_desc.translation_key
+        placeholders = {"index": index}
+        new_key = feature_name  # We use the actual feature name
+        new_trans_key = base_desc.translation_key
 
-                # Program specific logic
-                if program:
-                    program_snake = re.sub(r"(?<!^)(?=[A-Z])", "_", program).lower()
-                    new_trans_key = (
-                        f"heating_circuit_program_{program_snake}_temperature"
-                    )
+        # Program specific logic
+        if program:
+            program_snake = re.sub(r"(?<!^)(?=[A-Z])", "_", program).lower()
+            new_trans_key = f"heating_circuit_program_{program_snake}_temperature"
 
-                new_desc = replace(
-                    base_desc,
-                    key=new_key,
-                    translation_key=new_trans_key,
-                )
-                return new_desc, placeholders
+        new_desc = replace(
+            base_desc,
+            key=new_key,
+            translation_key=new_trans_key,
+        )
+        return new_desc, placeholders
     return None
 
 
@@ -199,7 +200,7 @@ def _discover_numbers(
     coordinator: ViClimateDataUpdateCoordinator,
 ) -> list[ViClimateNumber]:
     """Discover number entities from the current coordinator data."""
-    entities = []
+    entities: list[ViClimateNumber] = []
 
     if coordinator.data:
         for map_key, device in coordinator.data.items():
@@ -315,8 +316,6 @@ class ViClimateNumber(ViClimateEntity, NumberEntity):
                 self._attr_native_max_value = float(feature.control.max)
             if feature.control.step is not None:
                 self._attr_native_step = float(feature.control.step)
-            if self._attr_native_step is None:
-                self._attr_native_step = 1.0
 
     @property
     def feature_data(self) -> Feature | None:
@@ -341,7 +340,7 @@ class ViClimateNumber(ViClimateEntity, NumberEntity):
         )
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return entity specific state attributes."""
         return {
             "viessmann_feature_name": self._feature_name,
@@ -361,7 +360,7 @@ class ViClimateNumber(ViClimateEntity, NumberEntity):
         feat = self.feature_data
         if not feat:
             return None
-        return feat.value
+        return get_feature_number_value(feat.value)
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""

@@ -2,10 +2,11 @@
 
 from dataclasses import replace
 
+import pytest
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client import Device, Feature
+from vi_api_client import Device, Feature, FeatureValue
 
 from custom_components.vi_climate_devices.coordinator import (
     ViClimateDataUpdateCoordinator,
@@ -83,6 +84,48 @@ def test_entity_is_unavailable_when_its_feature_disappears(
 
     # Assert: The existing entity is unavailable rather than deleted.
     assert not entity.available
+
+
+@pytest.mark.parametrize(
+    ("value", "expected_state", "expected_raw_value"),
+    [
+        (True, None, None),
+        (["heating", "cooling"], None, ["heating", "cooling"]),
+        ({"program": "heating"}, None, {"program": "heating"}),
+    ],
+)
+def test_sensor_normalizes_feature_values_without_affecting_availability(
+    hass: HomeAssistant,
+    mock_client,
+    value: FeatureValue,
+    expected_state: str | int | float | None,
+    expected_raw_value: list[str] | dict[str, str] | None,
+) -> None:
+    """Test a malformed sensor state remains local to that entity."""
+    # Arrange: Publish a feature value that is not necessarily a scalar state.
+    device = _build_device()
+    device_key = "gw-main_device-0"
+    feature = replace(device.features[0], value=value)
+    coordinator = ViClimateDataUpdateCoordinator(hass, MockConfigEntry(), mock_client)
+    coordinator.data = {device_key: replace(device, features=[feature])}
+    entity = ViClimateSensor(
+        coordinator,
+        device_key,
+        feature.name,
+        SensorEntityDescription(key="outside_temperature"),
+    )
+
+    # Act: Resolve the entity's state and attributes from the feature value.
+    native_value = entity.native_value
+    attributes = entity.extra_state_attributes
+
+    # Assert: The entity is available while only its invalid state becomes unknown.
+    assert entity.available
+    assert native_value == expected_state
+    if expected_raw_value is None:
+        assert "raw_value" not in attributes
+    else:
+        assert attributes["raw_value"] == expected_raw_value
 
 
 def test_water_heater_is_unavailable_when_its_mode_feature_disappears(

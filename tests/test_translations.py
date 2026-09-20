@@ -39,22 +39,22 @@ def get_entity_definitions(platform):
         descriptions.extend(SENSOR_TYPES.values())
         # Templates.
         for t in SENSOR_TEMPLATES:
-            descriptions.append(t["description"])
+            descriptions.append(t.description)
 
     elif platform == "binary_sensor":
         descriptions.extend(BINARY_SENSOR_TYPES.values())
         for t in BINARY_SENSOR_TEMPLATES:
-            descriptions.append(t["description"])
+            descriptions.append(t.description)
 
     elif platform == "number":
         descriptions.extend(NUMBER_TYPES.values())
         for t in NUMBER_TEMPLATES:
-            descriptions.append(t["description"])
+            descriptions.append(t.description)
 
     elif platform == "select":
         descriptions.extend(SELECT_TYPES.values())
         for template in SELECT_TEMPLATES:
-            descriptions.append(template["description"])
+            descriptions.append(template.description)
 
     elif platform == "switch":
         descriptions.extend(SWITCH_TYPES.values())

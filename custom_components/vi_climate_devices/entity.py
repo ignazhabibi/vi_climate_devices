@@ -2,16 +2,26 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable, Sequence
+from dataclasses import dataclass
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import ViClimateDataUpdateCoordinator
+
+
+@dataclass(frozen=True)
+class EntityTemplate[EntityDescriptionT: EntityDescription]:
+    """Pair a feature-name pattern with its concrete entity description type."""
+
+    pattern: re.Pattern[str]
+    description: EntityDescriptionT
 
 
 class ViClimateEntity(CoordinatorEntity[ViClimateDataUpdateCoordinator]):

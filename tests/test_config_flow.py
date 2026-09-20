@@ -15,6 +15,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from vi_api_client import (
     DEFAULT_SCOPES,
     FixtureViClient,
+    JsonValue,
     ViAuthError,
     ViConnectionError,
     ViError,
@@ -101,7 +102,7 @@ async def test_oauth_entry_creation_delegates_for_new_user_flow(
     flow_handler.context = {"source": config_entries.SOURCE_USER}
     flow_handler.flow_impl = FakeOAuthImplementation()
     expected_result = {"type": FlowResultType.CREATE_ENTRY}
-    data: dict[str, object] = {"token": {"access_token": "fresh"}}
+    data: dict[str, JsonValue] = {"token": {"access_token": "fresh"}}
 
     with patch.object(
         config_entry_oauth2_flow.AbstractOAuth2FlowHandler,
@@ -127,7 +128,7 @@ async def test_oauth_entry_creation_validates_installation_access(
     flow_handler.hass = hass
     flow_handler.context = {"source": config_entries.SOURCE_USER}
     flow_handler.flow_impl = FakeOAuthImplementation()
-    data: dict[str, object] = {"token": {"access_token": "fresh-token"}}
+    data: dict[str, JsonValue] = {"token": {"access_token": "fresh-token"}}
     expected_result = {"type": FlowResultType.CREATE_ENTRY}
     _, client_factory = mock_api_validation_client
 
@@ -173,7 +174,7 @@ async def test_oauth_entry_creation_shows_translated_validation_failure(
     flow_handler.hass = hass
     flow_handler.context = {"source": config_entries.SOURCE_USER}
     flow_handler.flow_impl = FakeOAuthImplementation()
-    data: dict[str, object] = {"token": {"access_token": "fresh-token"}}
+    data: dict[str, JsonValue] = {"token": {"access_token": "fresh-token"}}
     client, _ = mock_api_validation_client
     client.get_installations = AsyncMock(side_effect=api_error)
 
@@ -202,7 +203,7 @@ async def test_oauth_entry_creation_requires_an_accessible_installation(
     client.get_installations = AsyncMock(return_value=[])
 
     # Act: Complete OAuth with the otherwise-valid token.
-    data: dict[str, object] = {"token": {"access_token": "fresh-token"}}
+    data: dict[str, JsonValue] = {"token": {"access_token": "fresh-token"}}
     result = await flow_handler.async_oauth_create_entry(data)
 
     # Assert: The flow identifies the missing installation prerequisite.
@@ -220,7 +221,7 @@ async def test_validation_retry_reuses_the_oauth_token_after_a_transient_failure
     flow_handler.hass = hass
     flow_handler.context = {"source": config_entries.SOURCE_USER}
     flow_handler.flow_impl = FakeOAuthImplementation()
-    data: dict[str, object] = {"token": {"access_token": "fresh-token"}}
+    data: dict[str, JsonValue] = {"token": {"access_token": "fresh-token"}}
     client, _ = mock_api_validation_client
     client.get_installations = AsyncMock(
         side_effect=[
@@ -277,7 +278,7 @@ async def test_reauth_updates_entry_only_after_api_validation(
     flow_handler.hass = hass
     flow_handler.context = {"source": config_entries.SOURCE_REAUTH}
     entry = MagicMock()
-    data: dict[str, object] = {"token": {"access_token": "fresh-token"}}
+    data: dict[str, JsonValue] = {"token": {"access_token": "fresh-token"}}
     expected_result = {"type": FlowResultType.ABORT}
 
     with (
@@ -307,7 +308,7 @@ async def test_reauth_keeps_existing_entry_data_when_validation_fails(
     flow_handler = OAuth2FlowHandler()
     flow_handler.hass = hass
     flow_handler.context = {"source": config_entries.SOURCE_REAUTH}
-    data: dict[str, object] = {"token": {"access_token": "fresh-token"}}
+    data: dict[str, JsonValue] = {"token": {"access_token": "fresh-token"}}
     client, _ = mock_api_validation_client
     client.get_installations = AsyncMock(side_effect=ViAuthError("rejected"))
 

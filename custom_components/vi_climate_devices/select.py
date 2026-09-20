@@ -21,7 +21,7 @@ from vi_api_client import Feature, ViError
 from . import ViClimateDevicesConfigEntry
 from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
-from .entity import ViClimateEntity, async_setup_dynamic_entities
+from .entity import EntityTemplate, ViClimateEntity, async_setup_dynamic_entities
 from .exceptions import (
     ExceptionTranslationKey,
     home_assistant_error,
@@ -44,17 +44,17 @@ SELECT_TYPES: dict[str, SelectEntityDescription] = {
 
 
 # Templates with regex patterns for dynamic feature names
-SELECT_TEMPLATES = [
+SELECT_TEMPLATES: tuple[EntityTemplate[SelectEntityDescription], ...] = (
     # Heating Circuit Operating Modes (heating.circuits.N.operating.modes.active)
-    {
-        "pattern": re.compile(r"^heating\.circuits\.(\d+)\.operating\.modes\.active$"),
-        "description": SelectEntityDescription(
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.circuits\.(\d+)\.operating\.modes\.active$"),
+        description=SelectEntityDescription(
             key="placeholder",
             translation_key="heating_circuit_operation_mode",
             entity_category=EntityCategory.CONFIG,
         ),
-    },
-]
+    ),
+)
 
 
 def _get_select_entity_description(
@@ -66,10 +66,10 @@ def _get_select_entity_description(
         tuple: (description, translation_placeholders) or None
     """
     for template in SELECT_TEMPLATES:
-        match = template["pattern"].match(feature_name)
+        match = template.pattern.match(feature_name)
         if match:
             index = match.group(1)
-            base_desc: SelectEntityDescription = template["description"]
+            base_desc = template.description
 
             new_desc = dataclasses.replace(
                 base_desc,
@@ -100,7 +100,7 @@ def _discover_selects(
     coordinator: ViClimateDataUpdateCoordinator,
 ) -> list[ViClimateSelect]:
     """Discover select entities from the current coordinator data."""
-    entities = []
+    entities: list[ViClimateSelect] = []
 
     if coordinator.data:
         for map_key, device in coordinator.data.items():
@@ -208,14 +208,16 @@ class ViClimateSelect(ViClimateEntity, SelectEntity):
         if feature and feature.control and feature.control.options:
             # Options can be Dict[value, label] or List[value]
             # We normalize to list of strings
-            normalized_opts = []
+            normalized_opts: list[str] = []
             for opt in feature.control.options:
-                if isinstance(opt, dict) and "value" in opt:
-                    # Case B: Dict with value/(label)
-                    normalized_opts.append(str(opt["value"]))
-                else:
-                    # Case A: Primitive value
-                    normalized_opts.append(str(opt))
+                if isinstance(opt, dict):
+                    option_value = opt.get("value")
+                    if isinstance(option_value, str):
+                        # Case B: Dict with value/(label)
+                        normalized_opts.append(option_value)
+                elif isinstance(opt, str):
+                    # Case A: String value
+                    normalized_opts.append(opt)
             self._attr_options = normalized_opts
 
     @property
@@ -252,9 +254,8 @@ class ViClimateSelect(ViClimateEntity, SelectEntity):
             return None
 
         # Check if value is valid option
-        val = str(feat.value)
-        if val in self.options:
-            return val
+        if isinstance(feat.value, str) and feat.value in self.options:
+            return feat.value
 
         return None
 
