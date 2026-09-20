@@ -26,6 +26,15 @@ affect the solution.
   unmapped features.
 - Keep the single-coordinator model. Do not poll individual features or add a
   separate analytics coordinator without an explicit product decision.
+- The production integration and `scripts` run under Pyright strict, while
+  tests stay in standard type-checking mode; the Home Assistant
+  cached-property override documented in `pyproject.toml` is the only
+  project-wide exception.
+- Narrow client feature values only with the shared `FeatureValue` helpers in
+  `utils.py` (`get_feature_number_value`, `get_feature_string_value`,
+  `get_feature_string_options`, `get_feature_bool_value`,
+  `normalize_sensor_value`); never cast raw values or convert them with
+  `str()` or `float()` before narrowing.
 
 ## Python and Tests
 
