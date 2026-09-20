@@ -260,10 +260,10 @@ def _discover_numbers(
     return entities
 
 
-class ViClimateNumber(ViClimateEntity, NumberEntity):
+# Home Assistant declares `available` as a cached_property while ViClimateEntity
+# overrides it with a plain property; the MRO conflict is a false positive.
+class ViClimateNumber(ViClimateEntity, NumberEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """Representation of a Viessmann Climate Devices Number Entity."""
-
-    entity_description: NumberEntityDescription
 
     def __init__(  # noqa: PLR0913, PLR0917
         self,
@@ -326,7 +326,7 @@ class ViClimateNumber(ViClimateEntity, NumberEntity):
         return device.get_feature(self._feature_name)
 
     @property
-    def device_info(self) -> DeviceInfo | None:
+    def device_info(self) -> DeviceInfo | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return device information."""
         device = self.coordinator.data.get(self._map_key)
         if not device:
@@ -340,7 +340,7 @@ class ViClimateNumber(ViClimateEntity, NumberEntity):
         )
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self) -> dict[str, str]:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return entity specific state attributes."""
         return {
             "viessmann_feature_name": self._feature_name,
@@ -352,7 +352,7 @@ class ViClimateNumber(ViClimateEntity, NumberEntity):
         return get_suggested_precision(self._attr_native_step)
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the current value."""
         # Return optimistic value if set, otherwise from coordinator
         if self._optimistic_value is not None:

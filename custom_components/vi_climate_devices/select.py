@@ -156,10 +156,10 @@ def _discover_selects(
     return entities
 
 
-class ViClimateSelect(ViClimateEntity, SelectEntity):
+# Home Assistant declares `available` as a cached_property while ViClimateEntity
+# overrides it with a plain property; the MRO conflict is a false positive.
+class ViClimateSelect(ViClimateEntity, SelectEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """Representation of a Viessmann Climate Devices Select Entity."""
-
-    entity_description: SelectEntityDescription
 
     def __init__(  # noqa: PLR0913, PLR0917
         self,
@@ -229,7 +229,7 @@ class ViClimateSelect(ViClimateEntity, SelectEntity):
         return device.get_feature(self._feature_name)
 
     @property
-    def device_info(self) -> DeviceInfo | None:
+    def device_info(self) -> DeviceInfo | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return device information."""
         device = self.coordinator.data.get(self._map_key)
         if not device:
@@ -243,7 +243,7 @@ class ViClimateSelect(ViClimateEntity, SelectEntity):
         )
 
     @property
-    def current_option(self) -> str | None:
+    def current_option(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the current value."""
         # Return optimistic option if set
         if self._optimistic_option is not None:

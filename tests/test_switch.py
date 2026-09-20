@@ -1,5 +1,6 @@
 """Tests for the Viessmann Heat switch platform."""
 
+import dataclasses
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -9,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client import CommandResponse, FixtureViClient
+from vi_api_client import CommandResponse, FeatureValue, FixtureViClient
 
 from custom_components.vi_climate_devices.const import DOMAIN
 from custom_components.vi_climate_devices.switch import ViClimateSwitch
@@ -370,3 +371,71 @@ async def test_switch_api_rejection(hass: HomeAssistant):
 
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("value", "expected_is_on"),
+    [
+        (True, True),
+        ("on", True),
+        ("active", True),
+        (False, False),
+        ("off", False),
+        ("inactive", False),
+        ("standby", None),
+    ],
+)
+@pytest.mark.asyncio
+async def test_switch_preserves_boolean_representations(
+    mock_client, value: FeatureValue, expected_is_on: bool | None
+) -> None:
+    """Interpret supported boolean representations without losing availability.
+
+    The "standby" case pins that a semantically invalid value yields an
+    unknown state while the entity stays available.
+    """
+    # Arrange: Build a switch whose feature carries the given value.
+    device = (await mock_client.get_full_installation_status("99999"))[0]
+    feature_name = "heating.dhw.oneTimeCharge.active"
+    feature = dataclasses.replace(
+        device.get_feature(feature_name), value=value, is_enabled=True
+    )
+    coordinator = MagicMock(
+        data={"device": dataclasses.replace(device, features=[feature])}
+    )
+    entity = ViClimateSwitch(
+        coordinator,
+        "device",
+        feature_name,
+        SwitchEntityDescription(key=feature_name),
+    )
+
+    # Act and assert: The state reflects the value while the entity stays available.
+    assert entity.is_on is expected_is_on
+    assert entity.available
+
+
+@pytest.mark.asyncio
+async def test_switch_translates_client_validation_error(mock_client) -> None:
+    """Translate client value validation without exposing its detail."""
+    # Arrange: Reject the next write at the client's control-contract boundary.
+    device = (await mock_client.get_full_installation_status("99999"))[0]
+    feature_name = "heating.dhw.oneTimeCharge.active"
+    coordinator = MagicMock(data={"device": device})
+    coordinator.async_set_feature = AsyncMock(side_effect=ValueError("private detail"))
+    entity = ViClimateSwitch(
+        coordinator,
+        "device",
+        feature_name,
+        SwitchEntityDescription(key=feature_name, name="Charge"),
+    )
+
+    # Act and assert: The rejection surfaces as a translated error only.
+    with (
+        patch.object(entity, "async_write_ha_state"),
+        pytest.raises(ServiceValidationError) as error,
+    ):
+        await entity.async_turn_on()
+
+    assert error.value.translation_key == "command_rejected"
+    assert isinstance(error.value.__cause__, ValueError)

@@ -77,7 +77,7 @@ def _discover_switches(
     coordinator: ViClimateDataUpdateCoordinator,
 ) -> list[ViClimateSwitch]:
     """Discover switch entities from the current coordinator data."""
-    entities = []
+    entities: list[ViClimateSwitch] = []
 
     if coordinator.data:
         for map_key, device in coordinator.data.items():
@@ -121,10 +121,10 @@ def _discover_switches(
     return entities
 
 
-class ViClimateSwitch(ViClimateEntity, SwitchEntity):
+# Home Assistant declares `available` as a cached_property while ViClimateEntity
+# overrides it with a plain property; the MRO conflict is a false positive.
+class ViClimateSwitch(ViClimateEntity, SwitchEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """Representation of a Viessmann Climate Devices Switch Entity."""
-
-    entity_description: SwitchEntityDescription
 
     def __init__(
         self,
@@ -170,7 +170,7 @@ class ViClimateSwitch(ViClimateEntity, SwitchEntity):
         return device.get_feature(self._feature_name)
 
     @property
-    def device_info(self) -> DeviceInfo | None:
+    def device_info(self) -> DeviceInfo | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return device information."""
         device = self.coordinator.data.get(self._map_key)
         if not device:
@@ -184,7 +184,7 @@ class ViClimateSwitch(ViClimateEntity, SwitchEntity):
         )
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return true if the switch is on."""
         # Return optimistic state if set
         if self._optimistic_state is not None:
