@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from math import isfinite
-from typing import Any
+from typing import TypeGuard
 from urllib.parse import urlparse
 
 from homeassistant.config_entries import ConfigEntry
@@ -50,7 +50,32 @@ def _is_sensitive_value_key(key: object) -> bool:
     )
 
 
-def _serialize_value(value: Any) -> JsonValue:
+def _is_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
+    """Return whether a value is a mapping of walkable entries."""
+    return isinstance(value, Mapping)
+
+
+def _is_sequence(value: object) -> TypeGuard[Sequence[object]]:
+    """Return whether a value is a non-string sequence of walkable entries."""
+    return isinstance(value, Sequence) and not isinstance(value, (str, bytes))
+
+
+def _serialize_mapping(value: Mapping[object, object]) -> dict[str, JsonValue]:
+    """Return a redacted, sorted serialization of a mapping value."""
+    return {
+        str(key): (
+            _REDACTED_VALUE if _is_sensitive_value_key(key) else _serialize_value(item)
+        )
+        for key, item in sorted(value.items(), key=lambda entry: str(entry[0]))
+    }
+
+
+def _serialize_sequence(value: Sequence[object]) -> list[JsonValue]:
+    """Return an element-wise serialization of a sequence value."""
+    return [_serialize_value(item) for item in value]
+
+
+def _serialize_value(value: object) -> JsonValue:
     """Return a JSON-safe representation of a feature value."""
     if value is None or isinstance(value, bool):
         serialized: JsonValue = value
@@ -60,17 +85,10 @@ def _serialize_value(value: Any) -> JsonValue:
         serialized = value
     elif isinstance(value, float):
         serialized = value if isfinite(value) else None
-    elif isinstance(value, Mapping):
-        serialized = {
-            str(key): (
-                _REDACTED_VALUE
-                if _is_sensitive_value_key(key)
-                else _serialize_value(item)
-            )
-            for key, item in sorted(value.items(), key=lambda item: str(item[0]))
-        }
-    elif isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
-        serialized = [_serialize_value(item) for item in value]
+    elif _is_mapping(value):
+        serialized = _serialize_mapping(value)
+    elif _is_sequence(value):
+        serialized = _serialize_sequence(value)
     else:
         serialized = None
     return serialized

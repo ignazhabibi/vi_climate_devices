@@ -20,7 +20,7 @@ from vi_api_client import Feature
 from . import ViClimateDevicesConfigEntry
 from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
-from .entity import ViClimateEntity, async_setup_dynamic_entities
+from .entity import EntityTemplate, ViClimateEntity, async_setup_dynamic_entities
 from .utils import (
     beautify_name,
     get_feature_bool_value,
@@ -34,57 +34,55 @@ PARALLEL_UPDATES = 0
 
 
 # Templates with regex patterns for dynamic feature names
-BINARY_SENSOR_TEMPLATES = [
+BINARY_SENSOR_TEMPLATES: tuple[EntityTemplate[BinarySensorEntityDescription], ...] = (
     # Circulation Pumps (heating.circuits.N.circulation.pump.status)
-    {
-        "pattern": re.compile(r"^heating\.circuits\.(\d+)\.circulation\.pump\.status$"),
-        "description": BinarySensorEntityDescription(
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.circuits\.(\d+)\.circulation\.pump\.status$"),
+        description=BinarySensorEntityDescription(
             key="placeholder",
             translation_key="circulation_pump",  # Generic key with {index}
             device_class=BinarySensorDeviceClass.RUNNING,
         ),
-    },
+    ),
     # Frost Protection (heating.circuits.N.frostprotection.status)
-    {
-        "pattern": re.compile(r"^heating\.circuits\.(\d+)\.frostprotection\.status$"),
-        "description": BinarySensorEntityDescription(
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.circuits\.(\d+)\.frostprotection\.status$"),
+        description=BinarySensorEntityDescription(
             key="placeholder",
             translation_key="frost_protection",
             device_class=BinarySensorDeviceClass.RUNNING,
         ),
-    },
+    ),
     # Compressors Active (heating.compressors.N.active)
-    {
-        "pattern": re.compile(r"^heating\.compressors\.(\d+)\.active$"),
-        "description": BinarySensorEntityDescription(
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.compressors\.(\d+)\.active$"),
+        description=BinarySensorEntityDescription(
             key="placeholder",
             translation_key="compressor_active",  # Generic key with {index}
             device_class=BinarySensorDeviceClass.RUNNING,
         ),
-    },
+    ),
     # Crankcase Heater (heating.compressors.N.heater.crankcase.active)
-    {
-        "pattern": re.compile(
-            r"^heating\.compressors\.(\d+)\.heater\.crankcase\.active$"
-        ),
-        "description": BinarySensorEntityDescription(
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.compressors\.(\d+)\.heater\.crankcase\.active$"),
+        description=BinarySensorEntityDescription(
             key="placeholder",
             translation_key="compressor_crankcase_heater",
             device_class=BinarySensorDeviceClass.RUNNING,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-    },
+    ),
     # Evaporator Base Heater (heating.evaporators.N.heater.base.active)
-    {
-        "pattern": re.compile(r"^heating\.evaporators\.(\d+)\.heater\.base\.active$"),
-        "description": BinarySensorEntityDescription(
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.evaporators\.(\d+)\.heater\.base\.active$"),
+        description=BinarySensorEntityDescription(
             key="placeholder",
             translation_key="evaporator_base_heater",
             device_class=BinarySensorDeviceClass.RUNNING,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-    },
-]
+    ),
+)
 
 BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     # DHW Charging (heating.dhw.charging)
@@ -135,10 +133,10 @@ def _get_binary_sensor_entity_description(
         tuple: (description, translation_placeholders) or None
     """
     for template in BINARY_SENSOR_TEMPLATES:
-        match = template["pattern"].match(feature_name)
+        match = template.pattern.match(feature_name)
         if match:
             index = match.group(1)
-            base_desc: BinarySensorEntityDescription = template["description"]
+            base_desc = template.description
 
             new_desc = dataclasses.replace(
                 base_desc,
@@ -169,7 +167,7 @@ def _discover_binary_sensors(
     coordinator: ViClimateDataUpdateCoordinator,
 ) -> list[ViClimateBinarySensor]:
     """Discover binary sensors from the current coordinator data."""
-    entities = []
+    entities: list[ViClimateBinarySensor] = []
 
     if coordinator.data:
         for map_key, device in coordinator.data.items():
@@ -262,7 +260,7 @@ class ViClimateBinarySensor(ViClimateEntity, BinarySensorEntity):
                 self._attr_name = beautify_name(feature_name)
 
     @property
-    def device_info(self) -> DeviceInfo | None:
+    def device_info(self) -> DeviceInfo | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return device information."""
         device = self.coordinator.data.get(self._map_key)
         if not device:
@@ -284,7 +282,7 @@ class ViClimateBinarySensor(ViClimateEntity, BinarySensorEntity):
         return device.get_feature(self._feature_name)
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return true if the binary sensor is on."""
         feat = self.feature_data
         if feat and feat.value is not None:
@@ -292,12 +290,12 @@ class ViClimateBinarySensor(ViClimateEntity, BinarySensorEntity):
         return None
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self) -> dict[str, str]:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the state attributes."""
         return {"viessmann_feature_name": self._feature_name}
 
     @property
-    def available(self) -> bool:
+    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return True if entity is available."""
         feat = self.feature_data
         return super().available and feat is not None and feat.is_enabled

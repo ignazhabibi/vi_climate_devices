@@ -5,7 +5,6 @@ from __future__ import annotations
 import dataclasses
 import logging
 import re
-from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -25,13 +24,19 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from vi_api_client import Feature
+from homeassistant.helpers.typing import StateType
+from vi_api_client import Feature, JsonValue
 
 from . import ViClimateDevicesConfigEntry
 from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
-from .entity import ViClimateEntity, async_setup_dynamic_entities
-from .utils import beautify_name, is_feature_boolean_like, is_feature_ignored
+from .entity import EntityTemplate, ViClimateEntity, async_setup_dynamic_entities
+from .utils import (
+    beautify_name,
+    is_feature_boolean_like,
+    is_feature_ignored,
+    normalize_sensor_value,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,43 +66,41 @@ AUTO_DISCOVERED_TOTAL_INCREASING_ENERGY_FEATURES = frozenset(
 
 
 # Templates with regex patterns for dynamic feature names
-SENSOR_TEMPLATES = [
+SENSOR_TEMPLATES: tuple[EntityTemplate[SensorEntityDescription], ...] = (
     # Heating Circuits Supply Temperature
-    {
-        "pattern": re.compile(
-            r"^heating\.circuits\.(\d+)\.sensors\.temperature\.supply$"
-        ),
-        "description": SensorEntityDescription(
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.circuits\.(\d+)\.sensors\.temperature\.supply$"),
+        description=SensorEntityDescription(
             key="placeholder",
             translation_key="heating_circuit_supply_temperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-    },
+    ),
     # Burners Modulation
-    {
-        "pattern": re.compile(r"^heating\.burners\.(\d+)\.modulation$"),
-        "description": SensorEntityDescription(
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.burners\.(\d+)\.modulation$"),
+        description=SensorEntityDescription(
             key="placeholder",
             translation_key="burner_modulation",
             native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-    },
+    ),
     # Burners Statistics
-    {
-        "pattern": re.compile(r"^heating\.burners\.(\d+)\.statistics\.starts$"),
-        "description": SensorEntityDescription(
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.burners\.(\d+)\.statistics\.starts$"),
+        description=SensorEntityDescription(
             key="placeholder",
             translation_key="burner_starts",
             state_class=SensorStateClass.TOTAL_INCREASING,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-    },
-    {
-        "pattern": re.compile(r"^heating\.burners\.(\d+)\.statistics\.hours$"),
-        "description": SensorEntityDescription(
+    ),
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.burners\.(\d+)\.statistics\.hours$"),
+        description=SensorEntityDescription(
             key="placeholder",
             translation_key="burner_hours",
             native_unit_of_measurement="h",
@@ -105,11 +108,11 @@ SENSOR_TEMPLATES = [
             state_class=SensorStateClass.TOTAL_INCREASING,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-    },
+    ),
     # Compressors Statistics
-    {
-        "pattern": re.compile(r"^heating\.compressors\.(\d+)\.statistics\.hours$"),
-        "description": SensorEntityDescription(
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.compressors\.(\d+)\.statistics\.hours$"),
+        description=SensorEntityDescription(
             key="placeholder",
             translation_key="compressor_hours",  # Generic key
             native_unit_of_measurement="h",
@@ -117,31 +120,29 @@ SENSOR_TEMPLATES = [
             state_class=SensorStateClass.TOTAL_INCREASING,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-    },
-    {
-        "pattern": re.compile(r"^heating\.compressors\.(\d+)\.statistics\.starts$"),
-        "description": SensorEntityDescription(
+    ),
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.compressors\.(\d+)\.statistics\.starts$"),
+        description=SensorEntityDescription(
             key="placeholder",
             translation_key="compressor_starts",  # Generic key
             state_class=SensorStateClass.TOTAL_INCREASING,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-    },
+    ),
     # Compressor Phase
-    {
-        "pattern": re.compile(r"^heating\.compressors\.(\d+)\.phase$"),
-        "description": SensorEntityDescription(
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.compressors\.(\d+)\.phase$"),
+        description=SensorEntityDescription(
             key="placeholder",
             translation_key="compressor_phase",
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-    },
+    ),
     # Compressor Pressure Inlet
-    {
-        "pattern": re.compile(
-            r"^heating\.compressors\.(\d+)\.sensors\.pressure\.inlet$"
-        ),
-        "description": SensorEntityDescription(
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.compressors\.(\d+)\.sensors\.pressure\.inlet$"),
+        description=SensorEntityDescription(
             key="placeholder",
             translation_key="compressor_inlet_pressure",
             native_unit_of_measurement=UnitOfPressure.BAR,
@@ -149,13 +150,13 @@ SENSOR_TEMPLATES = [
             state_class=SensorStateClass.MEASUREMENT,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-    },
+    ),
     # Compressor Temperature - Inlet
-    {
-        "pattern": re.compile(
+    EntityTemplate(
+        pattern=re.compile(
             r"^heating\.compressors\.(\d+)\.sensors\.temperature\.inlet$"
         ),
-        "description": SensorEntityDescription(
+        description=SensorEntityDescription(
             key="placeholder",
             translation_key="compressor_inlet_temperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -163,13 +164,13 @@ SENSOR_TEMPLATES = [
             state_class=SensorStateClass.MEASUREMENT,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-    },
+    ),
     # Compressor Temperature - Motor Chamber
-    {
-        "pattern": re.compile(
+    EntityTemplate(
+        pattern=re.compile(
             r"^heating\.compressors\.(\d+)\.sensors\.temperature\.motorChamber$"
         ),
-        "description": SensorEntityDescription(
+        description=SensorEntityDescription(
             key="placeholder",
             translation_key="compressor_motor_temperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -177,13 +178,11 @@ SENSOR_TEMPLATES = [
             state_class=SensorStateClass.MEASUREMENT,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-    },
+    ),
     # Compressor Temperature - Oil
-    {
-        "pattern": re.compile(
-            r"^heating\.compressors\.(\d+)\.sensors\.temperature\.oil$"
-        ),
-        "description": SensorEntityDescription(
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.compressors\.(\d+)\.sensors\.temperature\.oil$"),
+        description=SensorEntityDescription(
             key="placeholder",
             translation_key="compressor_oil_temperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -191,13 +190,13 @@ SENSOR_TEMPLATES = [
             state_class=SensorStateClass.MEASUREMENT,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-    },
+    ),
     # Compressor Temperature - Outlet
-    {
-        "pattern": re.compile(
+    EntityTemplate(
+        pattern=re.compile(
             r"^heating\.compressors\.(\d+)\.sensors\.temperature\.outlet$"
         ),
-        "description": SensorEntityDescription(
+        description=SensorEntityDescription(
             key="placeholder",
             translation_key="compressor_outlet_temperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -205,57 +204,57 @@ SENSOR_TEMPLATES = [
             state_class=SensorStateClass.MEASUREMENT,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-    },
+    ),
     # Compressor Speed - Current
-    {
-        "pattern": re.compile(r"^heating\.compressors\.(\d+)\.speed\.current$"),
-        "description": SensorEntityDescription(
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.compressors\.(\d+)\.speed\.current$"),
+        description=SensorEntityDescription(
             key="placeholder",
             translation_key="compressor_speed_current",
             native_unit_of_measurement="rps",
             state_class=SensorStateClass.MEASUREMENT,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-    },
+    ),
     # Compressor Speed - Setpoint
-    {
-        "pattern": re.compile(r"^heating\.compressors\.(\d+)\.speed\.setpoint$"),
-        "description": SensorEntityDescription(
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.compressors\.(\d+)\.speed\.setpoint$"),
+        description=SensorEntityDescription(
             key="placeholder",
             translation_key="compressor_speed_setpoint",
             native_unit_of_measurement="rps",
             state_class=SensorStateClass.MEASUREMENT,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-    },
+    ),
     # Inverters Power
-    {
-        "pattern": re.compile(r"^heating\.inverters\.(\d+)\.sensors\.power\.output$"),
-        "description": SensorEntityDescription(
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.inverters\.(\d+)\.sensors\.power\.output$"),
+        description=SensorEntityDescription(
             key="placeholder",
             translation_key="inverter_power_output",
             native_unit_of_measurement=UnitOfPower.WATT,
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-    },
+    ),
     # Fans (primary circuit)
-    {
-        "pattern": re.compile(r"^heating\.primaryCircuit\.fans\.(\d+)\.current$"),
-        "description": SensorEntityDescription(
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.primaryCircuit\.fans\.(\d+)\.current$"),
+        description=SensorEntityDescription(
             key="placeholder",
             translation_key="fan_speed",
             native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
             state_class=SensorStateClass.MEASUREMENT,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-    },
+    ),
     # Economizer Temperature
-    {
-        "pattern": re.compile(
+    EntityTemplate(
+        pattern=re.compile(
             r"^heating\.economizers\.(\d+)\.sensors\.temperature\.liquid$"
         ),
-        "description": SensorEntityDescription(
+        description=SensorEntityDescription(
             key="placeholder",
             translation_key="economizer_liquid_temperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -263,13 +262,13 @@ SENSOR_TEMPLATES = [
             state_class=SensorStateClass.MEASUREMENT,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-    },
+    ),
     # Evaporator Temperatures
-    {
-        "pattern": re.compile(
+    EntityTemplate(
+        pattern=re.compile(
             r"^heating\.evaporators\.(\d+)\.sensors\.temperature\.liquid$"
         ),
-        "description": SensorEntityDescription(
+        description=SensorEntityDescription(
             key="placeholder",
             translation_key="evaporator_liquid_temperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -277,12 +276,12 @@ SENSOR_TEMPLATES = [
             state_class=SensorStateClass.MEASUREMENT,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-    },
-    {
-        "pattern": re.compile(
+    ),
+    EntityTemplate(
+        pattern=re.compile(
             r"^heating\.evaporators\.(\d+)\.sensors\.temperature\.overheat$"
         ),
-        "description": SensorEntityDescription(
+        description=SensorEntityDescription(
             key="placeholder",
             translation_key="evaporator_overheat_temperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -290,13 +289,13 @@ SENSOR_TEMPLATES = [
             state_class=SensorStateClass.MEASUREMENT,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-    },
+    ),
     # Condensor Liquid Temperature
-    {
-        "pattern": re.compile(
+    EntityTemplate(
+        pattern=re.compile(
             r"^heating\.condensors\.(\d+)\.sensors\.temperature\.liquid$"
         ),
-        "description": SensorEntityDescription(
+        description=SensorEntityDescription(
             key="placeholder",
             translation_key="condensor_liquid_temperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -304,8 +303,9 @@ SENSOR_TEMPLATES = [
             state_class=SensorStateClass.MEASUREMENT,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-    },
-]
+    ),
+)
+
 
 SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     # Boiler Common Supply Temperature
@@ -625,10 +625,10 @@ def _get_sensor_entity_description(
         tuple: (description, translation_placeholders) or None
     """
     for template in SENSOR_TEMPLATES:
-        match = template["pattern"].match(feature_name)
+        match = template.pattern.match(feature_name)
         if match:
             index = match.group(1)
-            base_desc: SensorEntityDescription = template["description"]
+            base_desc = template.description
 
             new_desc = dataclasses.replace(
                 base_desc,
@@ -639,9 +639,9 @@ def _get_sensor_entity_description(
     return None
 
 
-def _get_auto_discovery_description(feature) -> SensorEntityDescription:
+def _get_auto_discovery_description(feature: Feature) -> SensorEntityDescription:
     """Create a sensor description based on feature unit/type."""
-    unit = getattr(feature, "unit", None)
+    unit = feature.unit
 
     device_class = None
     state_class = None
@@ -678,6 +678,8 @@ def _get_auto_discovery_description(feature) -> SensorEntityDescription:
             device_class = SensorDeviceClass.VOLUME_FLOW_RATE
             native_unit = "L/h"
             state_class = SensorStateClass.MEASUREMENT
+        case _:
+            pass
 
     if (
         device_class is SensorDeviceClass.ENERGY
@@ -721,9 +723,9 @@ async def async_setup_entry(
 
 def _discover_realtime_sensors(
     coordinator: ViClimateDataUpdateCoordinator,
-) -> list[SensorEntity]:
+) -> list[ViClimateSensor]:
     """Discover and return realtime sensor entities."""
-    entities = []
+    entities: list[ViClimateSensor] = []
     for map_key, device in coordinator.data.items():
         # Iterate over FLATTENED features
         for feature in device.features:
@@ -811,7 +813,7 @@ class ViClimateSensor(ViClimateEntity, SensorEntity):
                 self._attr_name = beautify_name(feature_name)
 
     @property
-    def device_info(self) -> DeviceInfo | None:
+    def device_info(self) -> DeviceInfo | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return device information."""
         device = self.coordinator.data.get(self._map_key)
         if not device:
@@ -834,40 +836,24 @@ class ViClimateSensor(ViClimateEntity, SensorEntity):
         return device.get_feature(self._feature_name)
 
     @property
-    def native_value(self) -> Any:
+    def native_value(self) -> StateType:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the state of the sensor."""
         feat = self.feature_data
         if feat:
-            val = feat.value
-            # Handle "NotConnected" case
-            if hasattr(val, "lower") and "notconnected" in str(val).lower().replace(
-                " ", ""
-            ):
-                return None
-
-            # Handle Complex types (Dict/List) that exceed HA state limit
-            if isinstance(val, (dict, list)):
-                # We cannot return complex types as state.
-                # If it's a list, return len. If dict, return "Complex".
-                # The full data is available in extra_state_attributes fallback.
-                if isinstance(val, list):
-                    return len(val)
-                return "Complex Data"
-
-            return val
+            return normalize_sensor_value(feat.value)
         return None
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, JsonValue]:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the state attributes."""
-        attrs: dict[str, Any] = {"viessmann_feature_name": self._feature_name}
+        attrs: dict[str, JsonValue] = {"viessmann_feature_name": self._feature_name}
         feat = self.feature_data
         if feat and isinstance(feat.value, (dict, list)):
             attrs["raw_value"] = feat.value
         return attrs
 
     @property
-    def available(self) -> bool:
+    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return True if entity is available."""
         feat = self.feature_data
         return super().available and feat is not None and feat.is_enabled

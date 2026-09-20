@@ -37,7 +37,12 @@ from .exceptions import (
     home_assistant_error,
     service_validation_error,
 )
-from .utils import get_suggested_precision
+from .utils import (
+    get_feature_number_value,
+    get_feature_string_options,
+    get_feature_string_value,
+    get_suggested_precision,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,7 +125,7 @@ def _discover_climate_entities(
     coordinator: ViClimateDataUpdateCoordinator,
 ) -> list[ViClimate]:
     """Discover climate entities from the current coordinator data."""
-    entities = []
+    entities: list[ViClimate] = []
 
     if coordinator.data:
         for map_key, device in coordinator.data.items():
@@ -138,7 +143,9 @@ def _discover_climate_entities(
     return entities
 
 
-class ViClimate(ViClimateEntity, ClimateEntity):
+# Home Assistant declares `available` as a cached_property while ViClimateEntity
+# overrides it with a plain property; the MRO conflict is a false positive.
+class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """Representation of a Viessmann climate circuit."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -181,7 +188,7 @@ class ViClimate(ViClimateEntity, ClimateEntity):
             )
 
     @property
-    def device_info(self) -> DeviceInfo | None:
+    def device_info(self) -> DeviceInfo | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return device information."""
         device = self.coordinator.data.get(self._map_key)
         if not device:
@@ -202,6 +209,13 @@ class ViClimate(ViClimateEntity, ClimateEntity):
         if not device:
             return None
         return device.get_feature(name)
+
+    def _get_action_for_demand(self, demand_feature: Feature) -> HVACAction | None:
+        """Map a demand feature's string value to an HVAC action."""
+        demand = get_feature_string_value(demand_feature.value)
+        if demand is None:
+            return None
+        return API_TO_HA_HVAC_ACTION.get(demand)
 
     def _get_circuit_pump_state(self, circuit_index: str | None = None) -> bool | None:
         """Return whether a heating circuit pump is running."""
@@ -270,17 +284,20 @@ class ViClimate(ViClimateEntity, ClimateEntity):
                 continue
 
             circuit_index = feature_parts[2]
+            active_program = get_feature_string_value(feature.value)
+            if active_program is None:
+                continue
             if self._get_circuit_pump_state(circuit_index) is not True:
                 continue
 
             demand_feature = self._get_feature(
                 f"heating.circuits.{circuit_index}.operating.programs."
-                f"{feature.value}.demand"
+                f"{active_program}.demand"
             )
             if not demand_feature:
                 continue
 
-            circuit_action = API_TO_HA_HVAC_ACTION.get(str(demand_feature.value))
+            circuit_action = self._get_action_for_demand(demand_feature)
             if circuit_action is not None and circuit_action != action:
                 return True
 
@@ -292,14 +309,18 @@ class ViClimate(ViClimateEntity, ClimateEntity):
         active_program_feature = self._get_feature(
             f"heating.circuits.{self._circuit_index}.operating.programs.active"
         )
-        if active_program_feature and active_program_feature.value:
-            active_program = str(active_program_feature.value)
+        active_program = (
+            get_feature_string_value(active_program_feature.value)
+            if active_program_feature
+            else None
+        )
+        if active_program:
             demand_feature = self._get_feature(
                 f"heating.circuits.{self._circuit_index}.operating.programs."
                 f"{active_program}.demand"
             )
             if demand_feature:
-                action = API_TO_HA_HVAC_ACTION.get(str(demand_feature.value))
+                action = self._get_action_for_demand(demand_feature)
                 if (
                     action == HVACAction.COOLING and self.hvac_mode == HVACMode.HEAT
                 ) or (action == HVACAction.HEATING and self.hvac_mode == HVACMode.COOL):
@@ -366,12 +387,15 @@ class ViClimate(ViClimateEntity, ClimateEntity):
         active_program_feature = self._get_feature(
             f"heating.circuits.{self._circuit_index}.operating.programs.active"
         )
-        if not active_program_feature or not active_program_feature.value:
+        active_program = (
+            get_feature_string_value(active_program_feature.value)
+            if active_program_feature
+            else None
+        )
+        if not active_program:
             return None
 
-        temp_feature = self._get_program_temperature_feature(
-            str(active_program_feature.value)
-        )
+        temp_feature = self._get_program_temperature_feature(active_program)
         if (
             not temp_feature
             or not temp_feature.is_enabled
@@ -383,7 +407,7 @@ class ViClimate(ViClimateEntity, ClimateEntity):
     # --- Properties ---
 
     @property
-    def supported_features(self) -> ClimateEntityFeature:
+    def supported_features(self) -> ClimateEntityFeature:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return capabilities available for the current operating program."""
         supported_features = self._attr_supported_features
         if self._get_active_temp_feature():
@@ -391,28 +415,30 @@ class ViClimate(ViClimateEntity, ClimateEntity):
         return supported_features
 
     @property
-    def current_temperature(self) -> float | None:
+    def current_temperature(self) -> float | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the current room temperature."""
         room_temp_feature = self._get_feature(
             f"heating.circuits.{self._circuit_index}.sensors.temperature.room"
         )
-        if room_temp_feature and isinstance(room_temp_feature.value, (int, float)):
-            return float(room_temp_feature.value)
-        return None
+        if room_temp_feature is None:
+            return None
+        number = get_feature_number_value(room_temp_feature.value)
+        return float(number) if number is not None else None
 
     @property
-    def target_temperature(self) -> float | None:
+    def target_temperature(self) -> float | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the temperature we try to reach."""
         if hasattr(self, "_optimistic_temp") and self._optimistic_temp is not None:
             return self._optimistic_temp
 
         temp_feature = self._get_active_temp_feature()
-        if temp_feature and isinstance(temp_feature.value, (int, float)):
-            return float(temp_feature.value)
-        return None
+        if temp_feature is None:
+            return None
+        number = get_feature_number_value(temp_feature.value)
+        return float(number) if number is not None else None
 
     @property
-    def min_temp(self) -> float:
+    def min_temp(self) -> float:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the minimum temperature limit."""
         temp_feature = self._get_active_temp_feature()
         if (
@@ -424,7 +450,7 @@ class ViClimate(ViClimateEntity, ClimateEntity):
         return super().min_temp
 
     @property
-    def max_temp(self) -> float:
+    def max_temp(self) -> float:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the maximum temperature limit."""
         temp_feature = self._get_active_temp_feature()
         if (
@@ -436,7 +462,7 @@ class ViClimate(ViClimateEntity, ClimateEntity):
         return super().max_temp
 
     @property
-    def target_temperature_step(self) -> float | None:
+    def target_temperature_step(self) -> float | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the target temperature step size."""
         temp_feature = self._get_active_temp_feature()
         if (
@@ -454,7 +480,7 @@ class ViClimate(ViClimateEntity, ClimateEntity):
         return get_suggested_precision(step)
 
     @property
-    def hvac_mode(self) -> HVACMode | None:
+    def hvac_mode(self) -> HVACMode | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return current HVAC mode."""
         if hasattr(self, "_optimistic_mode") and self._optimistic_mode is not None:
             return self._optimistic_mode
@@ -462,12 +488,15 @@ class ViClimate(ViClimateEntity, ClimateEntity):
         mode_feature = self._get_feature(
             f"heating.circuits.{self._circuit_index}.operating.modes.active"
         )
-        if mode_feature and mode_feature.value:
-            return API_TO_HA_HVAC_MODE.get(str(mode_feature.value))
-        return None
+        if mode_feature is None:
+            return None
+        api_mode = get_feature_string_value(mode_feature.value)
+        if api_mode is None:
+            return None
+        return API_TO_HA_HVAC_MODE.get(api_mode)
 
     @property
-    def hvac_action(self) -> HVACAction | None:
+    def hvac_action(self) -> HVACAction | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the current HVAC action."""
         action: HVACAction | None = None
         defrosting_feature = self._get_feature("heating.outdoor.defrosting.active")
@@ -494,7 +523,7 @@ class ViClimate(ViClimateEntity, ClimateEntity):
         return action
 
     @property
-    def hvac_modes(self) -> list[HVACMode]:
+    def hvac_modes(self) -> list[HVACMode]:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the list of available HVAC modes."""
         mode_feature = self._get_feature(
             f"heating.circuits.{self._circuit_index}.operating.modes.active"
@@ -506,8 +535,8 @@ class ViClimate(ViClimateEntity, ClimateEntity):
         ):
             return [HVACMode.HEAT, HVACMode.OFF]
 
-        modes = set()
-        api_options = [str(option) for option in mode_feature.control.options]
+        modes: set[HVACMode] = set()
+        api_options = get_feature_string_options(mode_feature.control.options)
 
         for option in api_options:
             if option in API_TO_HA_HVAC_MODE:
@@ -516,20 +545,22 @@ class ViClimate(ViClimateEntity, ClimateEntity):
         return sorted(list(modes))
 
     @property
-    def preset_mode(self) -> str | None:
+    def preset_mode(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the current preset mode."""
         active_program_feature = self._get_feature(
             f"heating.circuits.{self._circuit_index}.operating.programs.active"
         )
-        if active_program_feature and active_program_feature.value:
-            program_name = str(active_program_feature.value)
-            return API_TO_HA_PRESET.get(program_name)
-        return None
+        if active_program_feature is None:
+            return None
+        program_name = get_feature_string_value(active_program_feature.value)
+        if program_name is None:
+            return None
+        return API_TO_HA_PRESET.get(program_name)
 
     @property
-    def preset_modes(self) -> list[str]:
+    def preset_modes(self) -> list[str]:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return a list of available preset modes."""
-        presets = set()
+        presets: set[str] = set()
         device = self.coordinator.data.get(self._map_key)
         if not device:
             return []
@@ -631,10 +662,8 @@ class ViClimate(ViClimateEntity, ClimateEntity):
         if not mode_feature:
             raise home_assistant_error(ExceptionTranslationKey.FEATURE_UNAVAILABLE)
 
-        available_options = (
-            [str(option) for option in mode_feature.control.options]
-            if mode_feature.control and mode_feature.control.options
-            else []
+        available_options = get_feature_string_options(
+            mode_feature.control.options if mode_feature.control else None
         )
 
         candidates = HA_TO_API_HVAC_MODE.get(hvac_mode, [])
@@ -699,29 +728,35 @@ class ViClimate(ViClimateEntity, ClimateEntity):
         raise service_validation_error(ExceptionTranslationKey.UNSUPPORTED_MODE)
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return entity specific state attributes."""
-        attributes = {}
+        attributes: dict[str, Any] = {}
 
         # Current active program.
         active_prog_feat = self._get_feature(
             f"heating.circuits.{self._circuit_index}.operating.programs.active"
         )
-        if active_prog_feat and active_prog_feat.value:
-            attributes["active_program"] = str(active_prog_feat.value)
+        if active_prog_feat:
+            active_program = get_feature_string_value(active_prog_feat.value)
+            if active_program:
+                attributes["active_program"] = active_program
 
         # Curve Slope.
         slope_feat = self._get_feature(
             f"heating.circuits.{self._circuit_index}.heating.curve.slope"
         )
-        if slope_feat and slope_feat.value is not None:
-            attributes["heating_curve_slope"] = float(slope_feat.value)
+        if slope_feat:
+            slope = get_feature_number_value(slope_feat.value)
+            if slope is not None:
+                attributes["heating_curve_slope"] = float(slope)
 
         # Curve Shift.
         shift_feat = self._get_feature(
             f"heating.circuits.{self._circuit_index}.heating.curve.shift"
         )
-        if shift_feat and shift_feat.value is not None:
-            attributes["heating_curve_shift"] = float(shift_feat.value)
+        if shift_feat:
+            shift = get_feature_number_value(shift_feat.value)
+            if shift is not None:
+                attributes["heating_curve_shift"] = float(shift)
 
         return attributes

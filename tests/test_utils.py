@@ -3,8 +3,12 @@
 from custom_components.vi_climate_devices.utils import (
     beautify_name,
     get_feature_bool_value,
+    get_feature_number_value,
+    get_feature_string_options,
+    get_feature_string_value,
     get_suggested_precision,
     is_feature_boolean_like,
+    normalize_sensor_value,
 )
 
 
@@ -118,6 +122,63 @@ def test_get_feature_bool_value():
     assert get_feature_bool_value(None) is None
     assert get_feature_bool_value("standby") is None
     assert get_feature_bool_value("some_random_string") is None
+
+
+def test_get_feature_number_value_rejects_boolean_and_non_numeric_values():
+    """Test numeric feature values preserve numbers without accepting booleans."""
+    # Act and Assert: Real JSON numbers remain available to numeric entities.
+    assert get_feature_number_value(12) == 12
+    assert get_feature_number_value(12.5) == 12.5
+
+    # Act and Assert: Booleans and non-numeric JSON values are not numbers.
+    assert get_feature_number_value(True) is None
+    assert get_feature_number_value(False) is None
+    assert get_feature_number_value("12") is None
+    assert get_feature_number_value([12]) is None
+    assert get_feature_number_value({"value": 12}) is None
+
+
+def test_get_feature_string_value_returns_only_plain_strings():
+    """Test string feature values without stringifying arbitrary JSON shapes."""
+    # Act and Assert: Plain strings pass through unchanged.
+    assert get_feature_string_value("heating") == "heating"
+    assert get_feature_string_value("") == ""
+
+    # Act and Assert: Non-string shapes never become mode or program names.
+    assert get_feature_string_value(None) is None
+    assert get_feature_string_value(5) is None
+    assert get_feature_string_value(True) is None
+    assert get_feature_string_value(["heating"]) is None
+    assert get_feature_string_value({"mode": "heating"}) is None
+
+
+def test_get_feature_string_options_keeps_only_string_entries():
+    """Test control options are built from strings without string conversion."""
+    # Act and Assert: Missing options yield an empty list.
+    assert get_feature_string_options(None) == []
+
+    # Act and Assert: Only plain strings become options, in their original order.
+    assert get_feature_string_options((5, "off", True, ["eco"], {"value": "eco"})) == [
+        "off"
+    ]
+    assert get_feature_string_options(("off", "eco")) == ["off", "eco"]
+
+
+def test_normalize_sensor_value_preserves_scalars_and_rejects_structured_values():
+    """Test generic sensor values become valid states with inspectable raw data."""
+    # Act and Assert: Scalar API values remain truthful Home Assistant states.
+    assert normalize_sensor_value("heating") == "heating"
+    assert normalize_sensor_value(12) == 12
+    assert normalize_sensor_value(12.5) == 12.5
+    assert normalize_sensor_value(None) is None
+
+    # Act and Assert: Boolean and disconnected values are unavailable sensor states.
+    assert normalize_sensor_value(True) is None
+    assert normalize_sensor_value("Not Connected") is None
+
+    # Act and Assert: Structured API values cannot become fabricated states.
+    assert normalize_sensor_value(["a", "b"]) is None
+    assert normalize_sensor_value({"state": "heating"}) is None
 
 
 def test_get_suggested_precision():

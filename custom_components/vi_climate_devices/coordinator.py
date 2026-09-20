@@ -14,6 +14,7 @@ from homeassistant.util import dt as dt_util
 from vi_api_client import (
     CommandResponse,
     Device,
+    FeatureValue,
     ViAuthError,
     ViClient as ViessmannClient,
     ViError,
@@ -70,7 +71,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             _LOGGER.info("Device %s is unavailable: %s", device_key, error)
 
     async def async_set_feature(
-        self, device_key: str, feature_name: str, value: object
+        self, device_key: str, feature_name: str, value: FeatureValue
     ) -> CommandResponse:
         """Set a feature while serializing writes with refreshes.
 

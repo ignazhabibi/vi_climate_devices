@@ -2,7 +2,9 @@
 
 import re
 from collections.abc import Sequence
-from typing import Any
+
+from homeassistant.helpers.typing import StateType
+from vi_api_client import FeatureValue, JsonValue
 
 
 def beautify_name(name: str | None) -> str | None:
@@ -50,7 +52,7 @@ def beautify_name(name: str | None) -> str | None:
     return name.title()
 
 
-def is_feature_boolean_like(value: Any) -> bool:
+def is_feature_boolean_like(value: FeatureValue) -> bool:
     """Check if a value is effectively boolean (bool or 'on'/'off' string).
 
     Used to determine if a generic feature should be a Binary Sensor
@@ -59,7 +61,7 @@ def is_feature_boolean_like(value: Any) -> bool:
     return get_feature_bool_value(value, strict=True) is not None
 
 
-def get_feature_bool_value(value: Any, strict: bool = False) -> bool | None:
+def get_feature_bool_value(value: FeatureValue, strict: bool = False) -> bool | None:
     """Interpret a feature value as a boolean if possible.
 
     If strict is True, only explicit boolean-like values (bool, specific strings)
@@ -90,6 +92,47 @@ def get_feature_bool_value(value: Any, strict: bool = False) -> bool | None:
             pass
 
     return None
+
+
+def get_feature_number_value(value: FeatureValue) -> int | float | None:
+    """Return a real numeric feature value without treating booleans as numbers."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return value
+
+
+def get_feature_string_value(value: FeatureValue) -> str | None:
+    """Return a feature value only when it is a plain string.
+
+    Arbitrary JSON shapes are never stringified into mode or program names.
+    """
+    if isinstance(value, str):
+        return value
+    return None
+
+
+def get_feature_string_options(options: Sequence[JsonValue] | None) -> list[str]:
+    """Return the string entries of a feature's control options.
+
+    Lists, objects, and other JSON shapes never become options by string
+    conversion.
+    """
+    if options is None:
+        return []
+    return [option for option in options if isinstance(option, str)]
+
+
+def normalize_sensor_value(value: FeatureValue) -> StateType:
+    """Return a Home Assistant-compatible state for a generic feature value."""
+    if value is None or isinstance(value, bool):
+        return None
+    if isinstance(value, str):
+        if "notconnected" in value.lower().replace(" ", ""):
+            return None
+        return value
+    if isinstance(value, (list, dict)):
+        return None
+    return value
 
 
 def is_feature_ignored(

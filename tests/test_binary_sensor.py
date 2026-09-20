@@ -1,5 +1,6 @@
 """Tests for the Viessmann Heat binary sensor platform."""
 
+import dataclasses
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -7,7 +8,7 @@ from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client import FixtureViClient
+from vi_api_client import Feature, FeatureValue, FixtureViClient
 
 from custom_components.vi_climate_devices.binary_sensor import ViClimateBinarySensor
 from custom_components.vi_climate_devices.const import DOMAIN
@@ -158,3 +159,107 @@ async def test_binary_sensor_discovers_generic_on_off_string(
         # Cleanup: Unload the integration to prevent thread leaks.
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("value", "expected_is_on"),
+    [
+        (True, True),
+        ("on", True),
+        ("active", True),
+        (False, False),
+        ("off", False),
+        ("inactive", False),
+        ("standby", None),
+    ],
+)
+@pytest.mark.asyncio
+async def test_binary_sensor_preserves_boolean_representations(
+    value: FeatureValue, expected_is_on: bool | None
+) -> None:
+    """Interpret supported boolean representations without losing availability.
+
+    The "standby" case pins that a semantically invalid value yields an
+    unknown state while the entity stays available.
+    """
+    # Arrange: Build a binary sensor whose feature carries the given value.
+    device = (
+        await FixtureViClient("Vitocal250A").get_full_installation_status("99999")
+    )[0]
+    feature = dataclasses.replace(device.features[0], value=value, is_enabled=True)
+    coordinator = MagicMock(
+        data={"device": dataclasses.replace(device, features=[feature])}
+    )
+    entity = ViClimateBinarySensor(
+        coordinator,
+        "device",
+        feature.name,
+        BinarySensorEntityDescription(key=feature.name),
+    )
+
+    # Act and assert: The state reflects the value while the entity stays available.
+    assert entity.is_on is expected_is_on
+    assert entity.available
+
+
+@pytest.mark.asyncio
+async def test_binary_sensor_feature_discovered_after_setup_is_added_once(
+    hass: HomeAssistant, mock_client
+) -> None:
+    """Test a new boolean-like feature is added dynamically without duplicates."""
+    # Arrange: Set up the integration with the original fixture feature set.
+    entry = MockConfigEntry(domain=DOMAIN, data={"client_id": "1", "token": "x"})
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "custom_components.vi_climate_devices.ViessmannClient",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+            return_value=None,
+        ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    coordinator = entry.runtime_data
+    device_key, device = next(iter(coordinator.data.items()))
+    feature = Feature(
+        name="custom.dynamic.status",
+        value="on",
+        unit=None,
+        is_enabled=True,
+        is_ready=True,
+    )
+    coordinator.data = {
+        device_key: dataclasses.replace(device, features=[*device.features, feature])
+    }
+
+    # Act: Publish the updated device twice through the coordinator seam.
+    coordinator.async_update_listeners()
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    # Assert: One fallback binary sensor appears for the newly exposed feature.
+    registry = er.async_get(hass)
+    unique_id = f"{device.gateway_serial}-{device.id}-{feature.name}"
+    entries = [
+        item
+        for item in registry.entities.values()
+        if item.platform == DOMAIN and item.unique_id == unique_id
+    ]
+    assert len(entries) == 1
+    state = hass.states.get(entries[0].entity_id)
+    assert state is not None
+    assert state.state == "on"
+
+    # Cleanup: Unload the integration to stop the coordinator listener.
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

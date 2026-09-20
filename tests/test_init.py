@@ -19,7 +19,7 @@ from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     async_fire_time_changed,
 )
-from vi_api_client import Device, FixtureViClient
+from vi_api_client import Device, FixtureViClient, ViAuthError
 
 from custom_components.vi_climate_devices import (
     PLATFORMS,
@@ -362,6 +362,36 @@ async def test_haauth_async_get_access_token_returns_refreshed_token(
     assert token == "fresh-token"
     assert auth_bridge.websession is websession
     oauth_session.async_ensure_token_valid.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("token_data", "error_message"),
+    [
+        (object(), "OAuth token is malformed"),
+        ([], "OAuth token has no valid access token"),
+        ({"access_token": 1}, "OAuth token has no valid access token"),
+    ],
+)
+async def test_haauth_rejects_invalid_access_token_data(
+    hass: HomeAssistant, token_data: object, error_message: str
+) -> None:
+    """Test the auth bridge rejects persisted tokens without a usable access token."""
+    # Arrange: Home Assistant's untyped persisted token is malformed or incomplete.
+    oauth_session = MagicMock()
+    oauth_session.hass = hass
+    oauth_session.token = token_data
+    oauth_session.async_ensure_token_valid = AsyncMock(return_value=None)
+
+    with patch(
+        "custom_components.vi_climate_devices.async_get_clientsession",
+        return_value=object(),
+    ):
+        auth_bridge = HAAuth(oauth_session)
+
+    # Act and Assert: The client-facing bridge consistently reports an auth error.
+    with pytest.raises(ViAuthError, match=error_message):
+        await auth_bridge.async_get_access_token()
 
 
 @pytest.mark.asyncio

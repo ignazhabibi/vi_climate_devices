@@ -1,5 +1,6 @@
 """Tests for the Viessmann Heat number platform."""
 
+import dataclasses
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -15,7 +16,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client import CommandResponse, FixtureViClient
+from vi_api_client import CommandResponse, FeatureValue, FixtureViClient
 
 from custom_components.vi_climate_devices.const import DOMAIN
 from custom_components.vi_climate_devices.number import ViClimateNumber
@@ -503,3 +504,70 @@ async def test_number_floating_point_precision(hass: HomeAssistant, mock_client)
 
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("value", "expected_native_value"),
+    [
+        (12, 12),
+        (12.5, 12.5),
+        (True, None),
+        ("12", None),
+        (["entries"], None),
+        ({"value": 12}, None),
+    ],
+)
+@pytest.mark.asyncio
+async def test_number_reports_unknown_state_for_invalid_value_shapes(
+    mock_client, value: FeatureValue, expected_native_value: float | None
+) -> None:
+    """Expose unknown states for non-numeric values without losing availability.
+
+    The boolean, string, list, and dict cases pin that no state is fabricated
+    from a value that is not a real number.
+    """
+    # Arrange: Build a number entity whose feature carries the given value.
+    device = (await mock_client.get_full_installation_status("99999"))[0]
+    feature_name = "heating.circuits.0.heating.curve.slope"
+    feature = dataclasses.replace(
+        device.get_feature(feature_name), value=value, is_enabled=True
+    )
+    coordinator = MagicMock(
+        data={"device": dataclasses.replace(device, features=[feature])}
+    )
+    entity = ViClimateNumber(
+        coordinator,
+        "device",
+        feature_name,
+        NumberEntityDescription(key=feature_name),
+    )
+
+    # Act and assert: Only real numbers become states; availability is preserved.
+    assert entity.native_value == expected_native_value
+    assert entity.available
+
+
+@pytest.mark.asyncio
+async def test_number_write_without_feature_raises_translated_error() -> None:
+    """Reject a write when the feature is absent from coordinator data."""
+    # Arrange: Build a number entity, then simulate a refresh losing its feature.
+    device = (
+        await FixtureViClient("Vitocal250A").get_full_installation_status("99999")
+    )[0]
+    feature_name = "heating.circuits.0.heating.curve.slope"
+    coordinator = MagicMock(data={"device": device})
+    entity = ViClimateNumber(
+        coordinator,
+        "device",
+        feature_name,
+        NumberEntityDescription(key=feature_name),
+    )
+    coordinator.data = {}
+
+    # Act and assert: The write raises a translated error, not a raw failure.
+    with pytest.raises(HomeAssistantError) as error:
+        await entity.async_set_native_value(1.0)
+
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "feature_unavailable"
+    assert error.value.translation_placeholders is None

@@ -16,7 +16,7 @@ classifiers = [
 ]
 requires-python = ">=3.14"
 dependencies = [
-    "vi_api_client @ git+https://github.com/ignazhabibi/vi_api_client.git@v2.0.0",
+    "vi_api_client @ git+https://github.com/ignazhabibi/vi_api_client.git@v3.1.0",
 ]
 
 [project.optional-dependencies]
@@ -34,9 +34,14 @@ exclude = [".venv", "build", "dist"]
 pythonVersion = "3.14"
 extraPaths = []
 typeCheckingMode = "standard"
-strict = ["scripts"]
+strict = [
+    "scripts",
+    "custom_components/vi_climate_devices",
+]
 # Home Assistant declares cached properties in base classes, while integrations
-# may validly override them with properties.
+# may validly override them with properties. Strict mode cannot lower a rule's
+# severity, so the strict platform files carry targeted
+# `# pyright: ignore[reportIncompatibleVariableOverride]` comments instead.
 reportIncompatibleVariableOverride = "none"
 
 [tool.ruff]

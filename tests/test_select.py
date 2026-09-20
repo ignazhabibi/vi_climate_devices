@@ -1,5 +1,6 @@
 """Tests for the Viessmann Heat select platform."""
 
+import dataclasses
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -14,7 +15,12 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client import CommandResponse, FixtureViClient
+from vi_api_client import (
+    CommandResponse,
+    FeatureControl,
+    FeatureValue,
+    FixtureViClient,
+)
 
 from custom_components.vi_climate_devices.const import DOMAIN
 from custom_components.vi_climate_devices.exceptions import config_entry_auth_failed
@@ -335,3 +341,110 @@ async def test_select_preserves_reauthentication_failure() -> None:
 
     assert error.value.translation_domain == DOMAIN
     assert error.value.translation_key == "authentication_failed"
+
+
+@pytest.mark.asyncio
+async def test_select_options_reject_non_string_shapes() -> None:
+    """Build options only from string entries, never by stringifying JSON."""
+    # Arrange: Replace the mode feature with a control carrying mixed shapes.
+    device = (
+        await FixtureViClient("Vitocal250A").get_full_installation_status("99999")
+    )[0]
+    feature_name = "heating.dhw.operating.modes.active"
+    control = FeatureControl(
+        command_name="setMode",
+        param_name="mode",
+        required_params=(),
+        parent_feature_name="heating.dhw.operating.modes",
+        uri="https://mock.local/command",
+        options=(
+            5,
+            True,
+            ["efficient"],
+            {"value": 5},
+            {"label": "misplaced"},
+            {"value": "ok"},
+            "standby",
+        ),
+    )
+    feature = device.get_feature(feature_name)
+    assert feature is not None
+    feature = dataclasses.replace(feature, control=control, is_enabled=True)
+    coordinator = MagicMock(
+        data={"device": dataclasses.replace(device, features=[feature])}
+    )
+    entity = ViClimateSelect(
+        coordinator,
+        "device",
+        feature_name,
+        SelectEntityDescription(key=feature_name),
+    )
+
+    # Act and assert: Only strings and string-valued entries become options.
+    assert entity.options == ["ok", "standby"]
+
+
+@pytest.mark.parametrize(
+    ("value", "expected_current_option"),
+    [
+        ("efficient", "efficient"),
+        (5, None),
+        (["efficient"], None),
+        ({"active": "efficient"}, None),
+        ("bogus", None),
+    ],
+)
+@pytest.mark.asyncio
+async def test_select_reports_unknown_state_for_non_option_values(
+    mock_client, value: FeatureValue, expected_current_option: str | None
+) -> None:
+    """Expose unknown states for values outside the announced options.
+
+    The non-string cases pin that states are never fabricated by converting
+    arbitrary JSON lists or objects to strings.
+    """
+    # Arrange: Build a select whose feature carries the given value.
+    device = (await mock_client.get_full_installation_status("99999"))[0]
+    feature_name = "heating.dhw.operating.modes.active"
+    feature = dataclasses.replace(
+        device.get_feature(feature_name), value=value, is_enabled=True
+    )
+    coordinator = MagicMock(
+        data={"device": dataclasses.replace(device, features=[feature])}
+    )
+    entity = ViClimateSelect(
+        coordinator,
+        "device",
+        feature_name,
+        SelectEntityDescription(key=feature_name),
+    )
+
+    # Act and assert: Only announced string options become states.
+    assert entity.current_option == expected_current_option
+    assert entity.available
+
+
+@pytest.mark.asyncio
+async def test_select_translates_client_validation_error(mock_client) -> None:
+    """Translate client value validation without exposing its detail."""
+    # Arrange: Reject the next write at the client's control-contract boundary.
+    device = (await mock_client.get_full_installation_status("99999"))[0]
+    feature_name = "heating.dhw.operating.modes.active"
+    coordinator = MagicMock(data={"device": device})
+    coordinator.async_set_feature = AsyncMock(side_effect=ValueError("private detail"))
+    entity = ViClimateSelect(
+        coordinator,
+        "device",
+        feature_name,
+        SelectEntityDescription(key=feature_name, name="Mode"),
+    )
+
+    # Act and assert: The rejection surfaces as a translated error only.
+    with (
+        patch.object(entity, "async_write_ha_state"),
+        pytest.raises(ServiceValidationError) as error,
+    ):
+        await entity.async_select_option("off")
+
+    assert error.value.translation_key == "command_rejected"
+    assert isinstance(error.value.__cause__, ValueError)
