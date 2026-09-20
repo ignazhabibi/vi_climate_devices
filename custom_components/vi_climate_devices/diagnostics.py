@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from math import isfinite
-from typing import Any, TypeGuard
+from typing import TypeGuard
 from urllib.parse import urlparse
 
 from homeassistant.config_entries import ConfigEntry
@@ -50,7 +50,7 @@ def _is_sensitive_value_key(key: object) -> bool:
     )
 
 
-def _is_mapping(value: object) -> TypeGuard[Mapping[Any, object]]:
+def _is_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
     """Return whether a value is a mapping of walkable entries."""
     return isinstance(value, Mapping)
 
@@ -60,7 +60,7 @@ def _is_sequence(value: object) -> TypeGuard[Sequence[object]]:
     return isinstance(value, Sequence) and not isinstance(value, (str, bytes))
 
 
-def _serialize_mapping(value: Mapping[Any, object]) -> dict[str, JsonValue]:
+def _serialize_mapping(value: Mapping[object, object]) -> dict[str, JsonValue]:
     """Return a redacted, sorted serialization of a mapping value."""
     return {
         str(key): (
