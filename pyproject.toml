@@ -40,9 +40,13 @@ strict = [
     "custom_components/vi_climate_devices/application_credentials.py",
     "custom_components/vi_climate_devices/config_flow.py",
     "custom_components/vi_climate_devices/coordinator.py",
+    "custom_components/vi_climate_devices/binary_sensor.py",
+    "custom_components/vi_climate_devices/sensor.py",
 ]
 # Home Assistant declares cached properties in base classes, while integrations
-# may validly override them with properties.
+# may validly override them with properties. Strict mode cannot lower a rule's
+# severity, so the strict platform files carry targeted
+# `# pyright: ignore[reportIncompatibleVariableOverride]` comments instead.
 reportIncompatibleVariableOverride = "none"
 
 [tool.ruff]

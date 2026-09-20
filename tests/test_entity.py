@@ -90,6 +90,7 @@ def test_entity_is_unavailable_when_its_feature_disappears(
     ("value", "expected_state", "expected_raw_value"),
     [
         (True, None, None),
+        ("Not Connected", None, None),
         (["heating", "cooling"], None, ["heating", "cooling"]),
         ({"program": "heating"}, None, {"program": "heating"}),
     ],

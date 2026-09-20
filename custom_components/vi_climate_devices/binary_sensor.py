@@ -260,7 +260,7 @@ class ViClimateBinarySensor(ViClimateEntity, BinarySensorEntity):
                 self._attr_name = beautify_name(feature_name)
 
     @property
-    def device_info(self) -> DeviceInfo | None:
+    def device_info(self) -> DeviceInfo | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return device information."""
         device = self.coordinator.data.get(self._map_key)
         if not device:
@@ -282,7 +282,7 @@ class ViClimateBinarySensor(ViClimateEntity, BinarySensorEntity):
         return device.get_feature(self._feature_name)
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return true if the binary sensor is on."""
         feat = self.feature_data
         if feat and feat.value is not None:
@@ -290,12 +290,12 @@ class ViClimateBinarySensor(ViClimateEntity, BinarySensorEntity):
         return None
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self) -> dict[str, str]:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the state attributes."""
         return {"viessmann_feature_name": self._feature_name}
 
     @property
-    def available(self) -> bool:
+    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return True if entity is available."""
         feat = self.feature_data
         return super().available and feat is not None and feat.is_enabled

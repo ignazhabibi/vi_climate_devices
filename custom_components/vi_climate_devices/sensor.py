@@ -641,7 +641,7 @@ def _get_sensor_entity_description(
 
 def _get_auto_discovery_description(feature: Feature) -> SensorEntityDescription:
     """Create a sensor description based on feature unit/type."""
-    unit = getattr(feature, "unit", None)
+    unit = feature.unit
 
     device_class = None
     state_class = None
@@ -813,7 +813,7 @@ class ViClimateSensor(ViClimateEntity, SensorEntity):
                 self._attr_name = beautify_name(feature_name)
 
     @property
-    def device_info(self) -> DeviceInfo | None:
+    def device_info(self) -> DeviceInfo | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return device information."""
         device = self.coordinator.data.get(self._map_key)
         if not device:
@@ -836,7 +836,7 @@ class ViClimateSensor(ViClimateEntity, SensorEntity):
         return device.get_feature(self._feature_name)
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the state of the sensor."""
         feat = self.feature_data
         if feat:
@@ -844,7 +844,7 @@ class ViClimateSensor(ViClimateEntity, SensorEntity):
         return None
 
     @property
-    def extra_state_attributes(self) -> dict[str, JsonValue]:
+    def extra_state_attributes(self) -> dict[str, JsonValue]:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the state attributes."""
         attrs: dict[str, JsonValue] = {"viessmann_feature_name": self._feature_name}
         feat = self.feature_data
@@ -853,7 +853,7 @@ class ViClimateSensor(ViClimateEntity, SensorEntity):
         return attrs
 
     @property
-    def available(self) -> bool:
+    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return True if entity is available."""
         feat = self.feature_data
         return super().available and feat is not None and feat.is_enabled
