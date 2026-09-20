@@ -61,7 +61,7 @@ def async_setup_dynamic_entities(
         registry_unique_ids = {
             entity.unique_id
             for entity in er.async_get(hass).entities.values()
-            if entity.config_entry_id == entry.entry_id and entity.unique_id is not None
+            if entity.config_entry_id == entry.entry_id
         }
         added_unique_ids.intersection_update(registry_unique_ids)
         entities = [

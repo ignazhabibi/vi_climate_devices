@@ -211,6 +211,38 @@ async def test_oauth_entry_creation_requires_an_accessible_installation(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "data",
+    [
+        {"token": "fresh-token"},
+        {"token": {"access_token": 123}},
+        {"token": None},
+    ],
+)
+async def test_oauth_entry_creation_rejects_malformed_token_shapes(
+    hass: HomeAssistant,
+    mock_api_validation_client: tuple[FixtureViClient, MagicMock],
+    data: dict[str, JsonValue],
+) -> None:
+    """Reject OAuth data whose token does not carry a string access token."""
+    # Arrange: OAuth returns a token payload with an invalid shape.
+    flow_handler = OAuth2FlowHandler()
+    flow_handler.hass = hass
+    flow_handler.context = {"source": config_entries.SOURCE_USER}
+    flow_handler.flow_impl = FakeOAuthImplementation()
+
+    # Act: Complete OAuth with the malformed token payload.
+    result = await flow_handler.async_oauth_create_entry(data)
+
+    # Assert: Validation fails before any client is constructed.
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "validate"
+    assert result.get("errors") == {"base": "invalid_auth"}
+    assert flow_handler._validation_data == data
+    mock_api_validation_client[1].assert_not_called()
+
+
+@pytest.mark.asyncio
 async def test_validation_retry_reuses_the_oauth_token_after_a_transient_failure(
     hass: HomeAssistant,
     mock_api_validation_client: tuple[FixtureViClient, MagicMock],
@@ -319,6 +351,27 @@ async def test_reauth_keeps_existing_entry_data_when_validation_fails(
     # Assert: The existing entry update is skipped until validation succeeds.
     assert result.get("errors") == {"base": "invalid_auth"}
     update_entry.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_reauth_confirm_aborts_without_a_string_auth_implementation(
+    hass: HomeAssistant,
+) -> None:
+    """Abort the reauth confirm step when the entry lacks an implementation name."""
+    # Arrange: A reauth entry whose data has no usable auth implementation.
+    flow_handler = OAuth2FlowHandler()
+    flow_handler.hass = hass
+    flow_handler.context = {"source": config_entries.SOURCE_REAUTH}
+    entry = MagicMock()
+    entry.data = {}
+
+    with patch.object(flow_handler, "_get_reauth_entry", return_value=entry):
+        # Act: Confirm reauthentication for the malformed entry.
+        result = await flow_handler.async_step_reauth_confirm({})
+
+    # Assert: The flow aborts instead of picking an undefined implementation.
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "unknown"
 
 
 @pytest.mark.asyncio
