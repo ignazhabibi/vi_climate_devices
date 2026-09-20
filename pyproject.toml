@@ -16,7 +16,7 @@ classifiers = [
 ]
 requires-python = ">=3.14"
 dependencies = [
-    "vi_api_client @ git+https://github.com/ignazhabibi/vi_api_client.git@v2.0.0",
+    "vi_api_client @ git+https://github.com/ignazhabibi/vi_api_client.git@v3.1.0",
 ]
 
 [project.optional-dependencies]
@@ -34,7 +34,13 @@ exclude = [".venv", "build", "dist"]
 pythonVersion = "3.14"
 extraPaths = []
 typeCheckingMode = "standard"
-strict = ["scripts"]
+strict = [
+    "scripts",
+    "custom_components/vi_climate_devices/__init__.py",
+    "custom_components/vi_climate_devices/application_credentials.py",
+    "custom_components/vi_climate_devices/config_flow.py",
+    "custom_components/vi_climate_devices/coordinator.py",
+]
 # Home Assistant declares cached properties in base classes, while integrations
 # may validly override them with properties.
 reportIncompatibleVariableOverride = "none"

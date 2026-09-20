@@ -16,8 +16,15 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from vi_api_client import AbstractAuth, ViClient as ViessmannClient
+from vi_api_client import (
+    AbstractAuth,
+    ViAuthError,
+    ViClient as ViessmannClient,
+    ViResponseError,
+    validate_json_value,
+)
 
 from .const import DOMAIN
 from .coordinator import ViClimateDataUpdateCoordinator
@@ -38,7 +45,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Viessmann Climate Devices component."""
     return True
 
@@ -133,4 +140,17 @@ class HAAuth(AbstractAuth):
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
         await self._session.async_ensure_token_valid()
-        return self._session.token["access_token"]
+        try:
+            # Home Assistant exposes persisted OAuth token data as an untyped dict.
+            token = validate_json_value(
+                self._session.token,  # pyright: ignore[reportUnknownArgumentType, reportUnknownMemberType]
+                path="OAuth token",
+            )
+        except ViResponseError as err:
+            raise ViAuthError("OAuth token is malformed") from err
+        if not isinstance(token, dict):
+            raise ViAuthError("OAuth token has no valid access token")
+        access_token = token.get("access_token")
+        if not isinstance(access_token, str):
+            raise ViAuthError("OAuth token has no valid access token")
+        return access_token
