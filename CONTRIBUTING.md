@@ -5,6 +5,10 @@
 - Python 3.14+ is the project baseline. Follow the Ruff and Pyright
   configuration in `pyproject.toml`; do not duplicate their mechanically
   enforceable rules here.
+- The complete production integration directory and `scripts` are checked
+  with Pyright strict; tests remain in standard type-checking mode. The
+  Home Assistant cached-property override documented in `pyproject.toml` is
+  the only project-wide strict-rule exception.
 - Prefer precise types and built-in generics. Avoid expanding `Any` usage;
   tighten existing typing incrementally.
 - Use specific exceptions and EAFP where appropriate. Do not catch bare
@@ -33,8 +37,8 @@
 ## Tests
 
 - Use pytest functions and the Home Assistant test stack. Prefer
-  `MockViClient` with the `Vitocal250A` fixture; do not mock HTTP requests in
-  this integration. Use `MockConfigEntry` when setting up an integration.
+  `FixtureViClient` with the `Vitocal250A` fixture; do not mock HTTP requests
+  in this integration. Use `MockConfigEntry` when setting up an integration.
 - Structure every test according to Arrange-Act-Assert. Add explicit,
   test-specific `# Arrange:`, `# Act:`, and `# Assert:` comments when the test
   is long enough that its phases are not immediately apparent, or when it has

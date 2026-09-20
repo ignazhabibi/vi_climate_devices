@@ -340,6 +340,10 @@ pre-commit run --all-files
 The quality-check command includes line coverage for every integration module.
 Each module must exceed 95%, while `config_flow.py` must remain at 100%.
 
+The production integration is fully strictly typed: Pyright runs in strict
+mode for `custom_components/vi_climate_devices` and `scripts`, while tests
+remain in standard type-checking mode.
+
 For Python and test standards, read [CONTRIBUTING.md](CONTRIBUTING.md).
 Automated coding agents must also follow [AGENTS.md](AGENTS.md).
 
