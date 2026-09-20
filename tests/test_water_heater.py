@@ -22,12 +22,14 @@ from vi_api_client import (
     CommandResponse,
     Device,
     Feature,
+    FeatureValue,
     FixtureViClient,
     GatewayDeviceRefreshResult,
 )
 
 from custom_components.vi_climate_devices.const import DOMAIN
 from custom_components.vi_climate_devices.water_heater import (
+    FEATURE_CURRENT_TEMP,
     FEATURE_MODE,
     FEATURE_TARGET_TEMP,
     ViClimateWaterHeater,
@@ -589,3 +591,112 @@ async def test_water_heater_translates_mode_and_temperature_failures() -> None:
     ):
         await entity.async_set_operation_mode(STATE_ECO)
     assert rejection_error.value.translation_key == "command_rejected"
+
+
+async def _create_water_heater_with_values(
+    mock_client: FixtureViClient,
+    feature_values: dict[str, FeatureValue],
+) -> ViClimateWaterHeater:
+    """Create a water heater from an adjusted Vitocal250A fixture."""
+    fixture_device = (await mock_client.get_full_installation_status("99999"))[0]
+    device = replace(
+        fixture_device,
+        features=[
+            replace(feature, value=feature_values[feature.name])
+            if feature.name in feature_values
+            else feature
+            for feature in fixture_device.features
+        ],
+    )
+    target_feature = device.get_feature(FEATURE_TARGET_TEMP)
+    assert target_feature is not None
+    coordinator = MagicMock(data={"device": device})
+    return ViClimateWaterHeater(coordinator, "device", target_feature)
+
+
+@pytest.mark.parametrize(
+    "storage_temperature",
+    [True, "hot", ["46"], {"celsius": 46}],
+)
+@pytest.mark.asyncio
+async def test_water_heater_reports_unknown_temperature_for_malformed_values(
+    mock_client: FixtureViClient, storage_temperature: FeatureValue
+) -> None:
+    """Test a malformed storage temperature affects only its own property."""
+    # Arrange: Publish a non-numeric storage temperature next to valid controls.
+    entity = await _create_water_heater_with_values(
+        mock_client, {FEATURE_CURRENT_TEMP: storage_temperature}
+    )
+
+    # Act: Read the malformed temperature alongside the unaffected controls.
+    current_temperature = entity.current_temperature
+    target_temperature = entity.target_temperature
+    current_operation = entity.current_operation
+
+    # Assert: Only the malformed property is unknown; the controls stay intact.
+    assert current_temperature is None
+    assert target_temperature == 55.0
+    assert current_operation == STATE_ECO
+    assert entity.operation_list == [STATE_ECO, STATE_OFF, STATE_PERFORMANCE]
+    assert entity.available
+
+
+@pytest.mark.parametrize(
+    "mode_value",
+    [5, ["efficient"], {"mode": "efficient"}],
+)
+@pytest.mark.asyncio
+async def test_water_heater_reports_unknown_operation_for_malformed_mode_values(
+    mock_client: FixtureViClient, mode_value: FeatureValue
+) -> None:
+    """Test a malformed mode value affects only operation reads, not writes."""
+    # Arrange: Publish a non-string mode value next to a valid mode control.
+    entity = await _create_water_heater_with_values(
+        mock_client, {FEATURE_MODE: mode_value}
+    )
+    entity.coordinator.async_set_feature = AsyncMock(
+        return_value=CommandResponse(success=True)
+    )
+
+    # Act: Still execute the temperature control with a malformed operation read.
+    with patch.object(entity, "async_write_ha_state"):
+        await entity.async_set_temperature(temperature=45.0)
+
+    # Assert: The malformed read is unknown while the control wrote its value.
+    assert entity.current_operation is None
+    entity.coordinator.async_set_feature.assert_awaited_once()
+    await_args = entity.coordinator.async_set_feature.await_args
+    assert await_args is not None
+    args = await_args.args
+    assert args[1] == FEATURE_TARGET_TEMP
+    assert args[2] == 45.0
+    assert entity.current_temperature == 46.8
+    assert entity.operation_list == [STATE_ECO, STATE_OFF, STATE_PERFORMANCE]
+
+
+@pytest.mark.parametrize(
+    "target_value",
+    [True, "55", [55]],
+)
+@pytest.mark.asyncio
+async def test_water_heater_reports_unknown_target_for_malformed_values(
+    mock_client: FixtureViClient, target_value: FeatureValue
+) -> None:
+    """Test a malformed target temperature affects only its own property."""
+    # Arrange: Publish a non-numeric target temperature next to valid controls.
+    entity = await _create_water_heater_with_values(
+        mock_client, {FEATURE_TARGET_TEMP: target_value}
+    )
+    entity.coordinator.async_set_feature = AsyncMock(
+        return_value=CommandResponse(success=True)
+    )
+
+    # Act: Still execute the temperature control with a malformed target read.
+    with patch.object(entity, "async_write_ha_state"):
+        await entity.async_set_temperature(temperature=45.0)
+
+    # Assert: The malformed read is unknown while the control wrote its value.
+    assert entity.target_temperature is None
+    entity.coordinator.async_set_feature.assert_awaited_once()
+    assert entity.current_temperature == 46.8
+    assert entity.current_operation == STATE_ECO

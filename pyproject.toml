@@ -45,6 +45,8 @@ strict = [
     "custom_components/vi_climate_devices/number.py",
     "custom_components/vi_climate_devices/select.py",
     "custom_components/vi_climate_devices/switch.py",
+    "custom_components/vi_climate_devices/climate.py",
+    "custom_components/vi_climate_devices/water_heater.py",
 ]
 # Home Assistant declares cached properties in base classes, while integrations
 # may validly override them with properties. Strict mode cannot lower a rule's

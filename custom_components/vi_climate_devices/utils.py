@@ -4,7 +4,7 @@ import re
 from collections.abc import Sequence
 
 from homeassistant.helpers.typing import StateType
-from vi_api_client import FeatureValue
+from vi_api_client import FeatureValue, JsonValue
 
 
 def beautify_name(name: str | None) -> str | None:
@@ -99,6 +99,27 @@ def get_feature_number_value(value: FeatureValue) -> int | float | None:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
     return value
+
+
+def get_feature_string_value(value: FeatureValue) -> str | None:
+    """Return a feature value only when it is a plain string.
+
+    Arbitrary JSON shapes are never stringified into mode or program names.
+    """
+    if isinstance(value, str):
+        return value
+    return None
+
+
+def get_feature_string_options(options: Sequence[JsonValue] | None) -> list[str]:
+    """Return the string entries of a feature's control options.
+
+    Lists, objects, and other JSON shapes never become options by string
+    conversion.
+    """
+    if options is None:
+        return []
+    return [option for option in options if isinstance(option, str)]
 
 
 def normalize_sensor_value(value: FeatureValue) -> StateType:

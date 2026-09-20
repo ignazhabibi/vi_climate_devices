@@ -33,7 +33,12 @@ from .exceptions import (
     home_assistant_error,
     service_validation_error,
 )
-from .utils import get_suggested_precision
+from .utils import (
+    get_feature_number_value,
+    get_feature_string_options,
+    get_feature_string_value,
+    get_suggested_precision,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,7 +95,7 @@ def _discover_water_heaters(
     coordinator: ViClimateDataUpdateCoordinator,
 ) -> list[ViClimateWaterHeater]:
     """Discover water heater entities from the current coordinator data."""
-    entities = []
+    entities: list[ViClimateWaterHeater] = []
 
     if coordinator.data:
         for map_key, device in coordinator.data.items():
@@ -107,7 +112,9 @@ def _discover_water_heaters(
     return entities
 
 
-class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):
+# Home Assistant declares `available` as a cached_property while ViClimateEntity
+# overrides it with a plain property; the MRO conflict is a false positive.
+class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """Representation of a Viessmann Water Heater."""
 
     _attr_translation_key = "dhw_water_heater"
@@ -141,7 +148,7 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):
         self._update_constraints(target_feature)
 
     @property
-    def device_info(self) -> DeviceInfo | None:
+    def device_info(self) -> DeviceInfo | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return device information."""
         device = self.coordinator.data.get(self._map_key)
         if not device:
@@ -207,9 +214,9 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):
         return get_suggested_precision(step)
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return entity specific state attributes."""
-        attrs = {}
+        attrs: dict[str, Any] = {}
         # Use underlying attribute to avoid AttributeError if base class
         # doesn't provide the property in all HA versions.
         step = getattr(self, "_attr_target_temperature_step", None)
@@ -220,37 +227,42 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):
     # --- Properties ---
 
     @property
-    def current_temperature(self) -> float | None:
+    def current_temperature(self) -> float | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the current temperature."""
         feat = self._get_feature(FEATURE_CURRENT_TEMP)
-        if feat and isinstance(feat.value, (int, float)):
-            return float(feat.value)
-        return None
+        if feat is None:
+            return None
+        number = get_feature_number_value(feat.value)
+        return float(number) if number is not None else None
 
     @property
-    def target_temperature(self) -> float | None:
+    def target_temperature(self) -> float | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the temperature we try to reach."""
         # Return optimistic value if set
         if hasattr(self, "_optimistic_temp") and self._optimistic_temp is not None:
             return self._optimistic_temp
         feat = self._get_feature(self._target_feature_name)
-        if feat and isinstance(feat.value, (int, float)):
-            return float(feat.value)
-        return None
+        if feat is None:
+            return None
+        number = get_feature_number_value(feat.value)
+        return float(number) if number is not None else None
 
     @property
-    def current_operation(self) -> str | None:
+    def current_operation(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return current operation mode mapped to HA standard state."""
         # Return optimistic mode if set
         if hasattr(self, "_optimistic_mode") and self._optimistic_mode is not None:
             return self._optimistic_mode
         feat = self._get_feature(FEATURE_MODE)
-        if feat and feat.value:
-            return self._map_api_mode_to_ha_mode(str(feat.value))
-        return None
+        if feat is None:
+            return None
+        api_mode = get_feature_string_value(feat.value)
+        if api_mode is None:
+            return None
+        return self._map_api_mode_to_ha_mode(api_mode)
 
     @property
-    def operation_list(self) -> list[str]:
+    def operation_list(self) -> list[str]:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return available operation modes as HA standard states."""
         feat = self._get_feature(FEATURE_MODE)
         if not feat or not feat.control or not feat.control.options:
@@ -258,10 +270,10 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):
             return [STATE_OFF, STATE_ECO, STATE_PERFORMANCE]
 
         # Get API modes from constraints
-        api_modes = [str(option) for option in feat.control.options]
+        api_modes = get_feature_string_options(feat.control.options)
 
         # Convert to HA standard states (deduplicated)
-        ha_modes = set()
+        ha_modes: set[str] = set()
         for api_mode in api_modes:
             ha_mode = self._map_api_mode_to_ha_mode(api_mode)
             if ha_mode:
@@ -398,5 +410,5 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):
     def _get_available_api_modes(self, feat: Feature) -> list[str]:
         """Get list of available API modes from feature constraints."""
         if feat.control and feat.control.options:
-            return list(map(str, feat.control.options))
+            return get_feature_string_options(feat.control.options)
         return []

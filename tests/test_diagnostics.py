@@ -111,7 +111,9 @@ async def test_config_entry_diagnostics_omit_sensitive_cached_data(
             ),
             Feature(
                 name="heating.diagnostics.unsupportedValue",
-                value=object(),
+                # A deliberately non-JSON probe: diagnostics must handle values
+                # outside the FeatureValue contract without crashing or leaking.
+                value=object(),  # pyright: ignore[reportArgumentType]
                 unit=None,
                 is_enabled=True,
                 is_ready=True,

@@ -4,6 +4,8 @@ from custom_components.vi_climate_devices.utils import (
     beautify_name,
     get_feature_bool_value,
     get_feature_number_value,
+    get_feature_string_options,
+    get_feature_string_value,
     get_suggested_precision,
     is_feature_boolean_like,
     normalize_sensor_value,
@@ -134,6 +136,32 @@ def test_get_feature_number_value_rejects_boolean_and_non_numeric_values():
     assert get_feature_number_value("12") is None
     assert get_feature_number_value([12]) is None
     assert get_feature_number_value({"value": 12}) is None
+
+
+def test_get_feature_string_value_returns_only_plain_strings():
+    """Test string feature values without stringifying arbitrary JSON shapes."""
+    # Act and Assert: Plain strings pass through unchanged.
+    assert get_feature_string_value("heating") == "heating"
+    assert get_feature_string_value("") == ""
+
+    # Act and Assert: Non-string shapes never become mode or program names.
+    assert get_feature_string_value(None) is None
+    assert get_feature_string_value(5) is None
+    assert get_feature_string_value(True) is None
+    assert get_feature_string_value(["heating"]) is None
+    assert get_feature_string_value({"mode": "heating"}) is None
+
+
+def test_get_feature_string_options_keeps_only_string_entries():
+    """Test control options are built from strings without string conversion."""
+    # Act and Assert: Missing options yield an empty list.
+    assert get_feature_string_options(None) == []
+
+    # Act and Assert: Only plain strings become options, in their original order.
+    assert get_feature_string_options((5, "off", True, ["eco"], {"value": "eco"})) == [
+        "off"
+    ]
+    assert get_feature_string_options(("off", "eco")) == ["off", "eco"]
 
 
 def test_normalize_sensor_value_preserves_scalars_and_rejects_structured_values():

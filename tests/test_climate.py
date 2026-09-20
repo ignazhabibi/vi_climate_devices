@@ -26,6 +26,7 @@ from vi_api_client import (
     Device,
     Feature,
     FeatureControl,
+    FeatureValue,
     FixtureViClient,
     GatewayDeviceRefreshResult,
 )
@@ -41,15 +42,18 @@ COMPRESSOR_ACTIVE_FEATURE = "heating.compressors.0.active"
 COOLING_DEMAND_FEATURE = (
     "heating.circuits.0.operating.programs.normalCoolingEnergySaving.demand"
 )
+CURVE_SHIFT_FEATURE = "heating.circuits.0.heating.curve.shift"
+CURVE_SLOPE_FEATURE = "heating.circuits.0.heating.curve.slope"
 DEFROSTING_FEATURE = "heating.outdoor.defrosting.active"
 HEATING_DEMAND_FEATURE = "heating.circuits.0.operating.programs.normalHeating.demand"
 HEATING_ROD_ACTIVE_FEATURE = "heating.heatingRod.active"
+ROOM_TEMPERATURE_FEATURE = "heating.circuits.0.sensors.temperature.room"
 VALVE_POSITION_FEATURE = "heating.valves.fourThreeWay.position"
 
 
 async def _create_hvac_action_entity(
     mock_client: FixtureViClient,
-    feature_values: dict[str, object],
+    feature_values: dict[str, FeatureValue],
     removed_feature_names: frozenset[str],
 ) -> ViClimate:
     """Create a climate entity from an adjusted Vitocal250A fixture."""
@@ -230,11 +234,39 @@ async def _create_hvac_action_entity(
             None,
             id="opposite-running-circuit-demand-is-unknown",
         ),
+        pytest.param(
+            {
+                "heating.circuits.1.circulation.pump.status": "on",
+                "heating.circuits.1.operating.programs.active": ["normalCooling"],
+                "heating.circuits.1.operating.programs.normalCooling.demand": "cooling",
+                CIRCUIT_PUMP_FEATURE: "on",
+                COMPRESSOR_ACTIVE_FEATURE: True,
+                HEATING_DEMAND_FEATURE: "heating",
+            },
+            frozenset(),
+            HVACAction.HEATING,
+            id="malformed-conflicting-program-is-skipped",
+        ),
+        pytest.param(
+            {
+                "heating.circuits.1.circulation.pump.status": "on",
+                "heating.circuits.1.operating.programs.active": "normalCooling",
+                "heating.circuits.1.operating.programs.normalCooling.demand": [
+                    "cooling"
+                ],
+                CIRCUIT_PUMP_FEATURE: "on",
+                COMPRESSOR_ACTIVE_FEATURE: True,
+                HEATING_DEMAND_FEATURE: "heating",
+            },
+            frozenset(),
+            HVACAction.HEATING,
+            id="malformed-conflicting-demand-is-skipped",
+        ),
     ],
 )
 async def test_hvac_action(
     mock_client: FixtureViClient,
-    feature_values: dict[str, object],
+    feature_values: dict[str, FeatureValue],
     removed_feature_names: frozenset[str],
     expected_action: HVACAction | None,
 ) -> None:
@@ -997,3 +1029,126 @@ async def test_climate_program_matching_variations(
 
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
+
+
+@pytest.mark.asyncio
+async def test_climate_exposes_display_precision_from_step(
+    mock_client: FixtureViClient,
+) -> None:
+    """Test the display precision follows the active program's step size."""
+    # Arrange: Build an entity from the unmodified fixture.
+    entity = await _create_hvac_action_entity(mock_client, {}, frozenset())
+
+    # Act and assert: The one-degree step yields zero decimal places.
+    assert entity.target_temperature_step == 1.0
+    assert entity.suggested_display_precision == 0
+
+
+@pytest.mark.parametrize(
+    "room_temperature",
+    [True, "warm", ["21"], {"celsius": 21}],
+)
+@pytest.mark.asyncio
+async def test_climate_reports_unknown_temperature_for_malformed_values(
+    mock_client: FixtureViClient, room_temperature: FeatureValue
+) -> None:
+    """Test a malformed room temperature affects only its own property."""
+    # Arrange: Publish a non-numeric room temperature next to valid mode signals.
+    entity = await _create_hvac_action_entity(
+        mock_client,
+        {ROOM_TEMPERATURE_FEATURE: room_temperature},
+        frozenset(),
+    )
+
+    # Act: Read the malformed temperature alongside the unaffected controls.
+    current_temperature = entity.current_temperature
+    hvac_mode = entity.hvac_mode
+    hvac_modes = entity.hvac_modes
+
+    # Assert: Only the malformed property is unknown; the controls stay intact.
+    assert current_temperature is None
+    assert hvac_mode == HVACMode.HEAT
+    assert hvac_modes == [HVACMode.HEAT, HVACMode.OFF]
+    assert entity.available
+
+
+@pytest.mark.parametrize(
+    "mode_value",
+    [5, ["standby"], {"mode": "standby"}],
+)
+@pytest.mark.asyncio
+async def test_climate_reports_unknown_mode_for_malformed_values(
+    mock_client: FixtureViClient, mode_value: FeatureValue
+) -> None:
+    """Test a malformed circuit mode affects only mode reads, not mode writes."""
+    # Arrange: Publish a non-string mode value next to a valid mode control.
+    entity = await _create_hvac_action_entity(
+        mock_client,
+        {CIRCUIT_MODE_FEATURE: mode_value},
+        frozenset(),
+    )
+    entity.coordinator.async_set_feature = AsyncMock(
+        return_value=CommandResponse(success=True)
+    )
+
+    # Act: Still execute the mode control with a malformed mode read.
+    with patch.object(entity, "async_write_ha_state"):
+        await entity.async_set_hvac_mode(HVACMode.OFF)
+
+    # Assert: The malformed read is unknown while the control wrote its candidate.
+    assert entity.hvac_mode is None
+    entity.coordinator.async_set_feature.assert_awaited_once()
+    await_args = entity.coordinator.async_set_feature.await_args
+    assert await_args is not None
+    args = await_args.args
+    assert args[1] == CIRCUIT_MODE_FEATURE
+    assert args[2] == "standby"
+
+
+@pytest.mark.parametrize(
+    "program_value",
+    [5, ["normalHeating"], {"program": "normalHeating"}],
+)
+@pytest.mark.asyncio
+async def test_climate_reports_unknown_program_for_malformed_values(
+    mock_client: FixtureViClient, program_value: FeatureValue
+) -> None:
+    """Test a malformed active program affects only program-derived properties."""
+    # Arrange: Publish a non-string active program next to valid mode signals.
+    entity = await _create_hvac_action_entity(
+        mock_client,
+        {ACTIVE_PROGRAM_FEATURE: program_value},
+        frozenset(),
+    )
+
+    # Act: Read the program-derived properties and the mode control.
+    attributes = entity.extra_state_attributes
+
+    # Assert: The program never becomes a string; the mode control stays intact.
+    assert entity.preset_mode is None
+    assert "active_program" not in attributes
+    assert attributes["heating_curve_slope"] == 0.6
+    assert attributes["heating_curve_shift"] == 4.0
+    assert entity.hvac_mode == HVACMode.HEAT
+    assert entity.available
+
+
+@pytest.mark.asyncio
+async def test_climate_excludes_malformed_curve_attributes(
+    mock_client: FixtureViClient,
+) -> None:
+    """Test malformed curve values are excluded without failing attribute reads."""
+    # Arrange: Publish non-numeric curve slope and shift values.
+    entity = await _create_hvac_action_entity(
+        mock_client,
+        {CURVE_SLOPE_FEATURE: "steep", CURVE_SHIFT_FEATURE: True},
+        frozenset(),
+    )
+
+    # Act: Read the optional attributes.
+    attributes = entity.extra_state_attributes
+
+    # Assert: The malformed values are skipped; the valid program attribute remains.
+    assert "heating_curve_slope" not in attributes
+    assert "heating_curve_shift" not in attributes
+    assert attributes["active_program"] == "normalHeating"
