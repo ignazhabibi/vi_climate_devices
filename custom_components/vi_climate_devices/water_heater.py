@@ -301,13 +301,6 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):  # pyright: igno
             response = await self.coordinator.async_set_feature(
                 self._map_key, feat.name, value
             )
-            _LOGGER.debug(
-                "Command response: success=%s, message=%s, reason=%s",
-                response.success,
-                response.message,
-                response.reason,
-            )
-
             if not response.success:
                 raise service_validation_error(ExceptionTranslationKey.COMMAND_REJECTED)
 
@@ -372,13 +365,6 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):  # pyright: igno
             response = await self.coordinator.async_set_feature(
                 self._map_key, feat.name, viessmann_mode
             )
-            _LOGGER.debug(
-                "Command response: success=%s, message=%s, reason=%s",
-                response.success,
-                response.message,
-                response.reason,
-            )
-
             if not response.success:
                 raise service_validation_error(ExceptionTranslationKey.COMMAND_REJECTED)
 
