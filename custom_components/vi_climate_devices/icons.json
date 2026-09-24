@@ -1,0 +1,111 @@
+{
+    "entity": {
+        "number": {
+            "heating_curve_slope": {
+                "default": "mdi:slope-uphill"
+            },
+            "heating_curve_shift": {
+                "default": "mdi:arrow-up-down"
+            },
+            "dhw_hysteresis": {
+                "default": "mdi:thermometer-lines"
+            },
+            "dhw_hysteresis_on": {
+                "default": "mdi:thermometer-plus"
+            },
+            "dhw_hysteresis_off": {
+                "default": "mdi:thermometer-minus"
+            },
+            "dhw_target_temperature": {
+                "default": "mdi:thermometer"
+            },
+            "heating_circuit_program_temperature": {
+                "default": "mdi:thermometer"
+            },
+            "heating_circuit_temperature_limit_min": {
+                "default": "mdi:thermometer-low"
+            },
+            "heating_circuit_temperature_limit_max": {
+                "default": "mdi:thermometer-high"
+            }
+        },
+        "select": {
+            "dhw_mode": {
+                "default": "mdi:water-boiler-auto"
+            },
+            "heating_circuit_operation_mode": {
+                "default": "mdi:home-thermometer"
+            }
+        },
+        "sensor": {
+            "burner_modulation": {
+                "default": "mdi:fire"
+            },
+            "compressor_hours": {
+                "default": "mdi:counter"
+            },
+            "compressor_starts": {
+                "default": "mdi:counter"
+            },
+            "heating_rod_starts": {
+                "default": "mdi:counter"
+            },
+            "heating_rod_hours": {
+                "default": "mdi:counter"
+            },
+            "scop_dhw": {
+                "default": "mdi:chart-line"
+            },
+            "scop_heating": {
+                "default": "mdi:chart-line"
+            },
+            "scop_total": {
+                "default": "mdi:chart-line"
+            },
+            "supply_pressure": {
+                "default": "mdi:gauge"
+            },
+            "volumetric_flow": {
+                "default": "mdi:gauge"
+            },
+            "burner_starts": {
+                "default": "mdi:counter"
+            },
+            "burner_hours": {
+                "default": "mdi:counter"
+            },
+            "compressor_phase": {
+                "default": "mdi:state-machine"
+            },
+            "compressor_inlet_pressure": {
+                "default": "mdi:gauge"
+            },
+            "compressor_speed_current": {
+                "default": "mdi:fan"
+            },
+            "compressor_speed_setpoint": {
+                "default": "mdi:fan"
+            },
+            "condensor_liquid_temperature": {
+                "default": "mdi:thermometer"
+            },
+            "fan_speed": {
+                "default": "mdi:fan"
+            },
+            "evaporator_overheat_temperature": {
+                "default": "mdi:thermometer"
+            },
+            "valve_position": {
+                "default": "mdi:valve"
+            }
+        },
+        "switch": {
+            "dhw_one_time_charge": {
+                "default": "mdi:water-boiler"
+            },
+            "dhw_hygiene": {
+                "default": "mdi:shield-check"
+            }
+        }
+    }
+}
