@@ -125,6 +125,7 @@ def translations():
     component_dir = base_dir / "custom_components" / "vi_climate_devices"
 
     return {
+        "icons": load_json(component_dir / "icons.json"),
         "strings": load_json(component_dir / "strings.json"),
         "en": load_json(component_dir / "translations" / "en.json"),
         "de": load_json(component_dir / "translations" / "de.json"),
@@ -194,7 +195,7 @@ def test_translation_keys_exist(platform, translations):
 def test_migrated_entity_icons_are_translated_without_direct_descriptions(
     translations,
 ) -> None:
-    """Keep curated icons translated and out of Python entity metadata."""
+    """Keep curated icons in icons.json and out of entity metadata and locales."""
     # Arrange: The migration contract preserves the exact former icon values.
     for platform, expected_icons in MIGRATED_ENTITY_ICONS.items():
         descriptions = get_entity_definitions(platform)
@@ -202,21 +203,23 @@ def test_migrated_entity_icons_are_translated_without_direct_descriptions(
             description.translation_key: description for description in descriptions
         }
 
-        # Act and assert: Every locale defines the translated icon with an entity name.
-        for source_name, source in translations.items():
+        # Act and assert: icons.json provides each former icon by translation key.
+        for translation_key, expected_icon in expected_icons.items():
+            assert translations["icons"]["entity"][platform][translation_key] == {
+                "default": expected_icon
+            }
+            assert descriptions_by_key[translation_key].icon is None
+
+        # Assert: Names remain translated, and locale files contain no icon metadata.
+        for source_name in ("strings", "en", "de"):
+            source = translations[source_name]
             translated_entities = source["entity"][platform]
-            for translation_key, expected_icon in expected_icons.items():
+            for translation_key in expected_icons:
                 translation = translated_entities[translation_key]
-                assert translation["icon"] == expected_icon, (
-                    f"{source_name} {platform}.{translation_key} changed its icon"
-                )
                 assert "name" in translation, (
                     f"{source_name} {platform}.{translation_key} has an orphaned icon"
                 )
-
-        # Assert: Entity descriptions defer icon selection to translations.
-        for translation_key in expected_icons:
-            assert descriptions_by_key[translation_key].icon is None
+                assert "icon" not in translation
 
 
 def test_dhw_mode_translations_match_api_modes(translations):
@@ -238,7 +241,8 @@ def test_exception_translation_keys_exist_in_all_maintained_translations(
     exception_keys = {key.value for key in ExceptionTranslationKey}
 
     # Act and assert: Each maintained source must define every exception message.
-    for source_name, source in translations.items():
+    for source_name in ("strings", "en", "de"):
+        source = translations[source_name]
         translated_keys = set(source.get("exceptions", {}))
         assert exception_keys <= translated_keys, (
             f"Missing exception translations in {source_name}: "

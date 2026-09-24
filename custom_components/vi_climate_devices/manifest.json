@@ -1,7 +1,7 @@
 {
   "domain": "vi_climate_devices",
   "name": "Viessmann Climate Devices",
-  "codeowners": [],
+  "codeowners": ["@ignazhabibi"],
   "config_flow": true,
   "single_config_entry": true,
   "dependencies": [
