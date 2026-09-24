@@ -422,7 +422,7 @@ async def test_data_coordinator_logs_partial_device_outage_and_recovery_once(
         mock_client.update_gateway_devices = AsyncMock(
             side_effect=[
                 _refresh_result([refreshed_device]),
-                ViConnectionError("device offline"),
+                ViConnectionError("device offline for gw-backup_device-1"),
             ]
         )
         await coordinator._async_update_data()
@@ -431,7 +431,7 @@ async def test_data_coordinator_logs_partial_device_outage_and_recovery_once(
         mock_client.update_gateway_devices = AsyncMock(
             side_effect=[
                 _refresh_result([refreshed_device]),
-                ViConnectionError("device offline"),
+                ViConnectionError("device offline for gw-backup_device-1"),
             ]
         )
         await coordinator._async_update_data()
@@ -444,12 +444,61 @@ async def test_data_coordinator_logs_partial_device_outage_and_recovery_once(
             ]
         )
         await coordinator._async_update_data()
+        # Act: Poll once more after recovery without a duplicate transition.
+        mock_client.update_gateway_devices = AsyncMock(
+            side_effect=[
+                _refresh_result([refreshed_device]),
+                _refresh_result([failing_device]),
+            ]
+        )
+        await coordinator._async_update_data()
 
     # Assert: Device-specific transitions are unambiguous and never repeated.
     assert coordinator.is_device_available("gw-backup_device-1")
     assert [record.getMessage() for record in caplog.records] == [
-        "Device gw-backup_device-1 is unavailable: device offline",
-        "Device gw-backup_device-1 is back online",
+        "Device #2 is unavailable (ViConnectionError)",
+        "Device #2 is back online",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_device_log_number_survives_later_gateway_discovery(
+    hass: HomeAssistant, mock_client, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Keep a recovering device identifiable when another gateway gains a device."""
+    # Arrange: The second device fails while the first gateway is healthy.
+    first = _build_device(device_id="device-0", gateway_serial="gw-main")
+    failing = _build_device(device_id="device-1", gateway_serial="gw-backup")
+    discovered = _build_device(device_id="device-2", gateway_serial="gw-main")
+    coordinator = _build_coordinator(hass, mock_client)
+    coordinator._known_devices = [first, failing]
+
+    with caplog.at_level(
+        logging.INFO, logger="custom_components.vi_climate_devices.coordinator"
+    ):
+        # Act: Record the outage before the additional device is discovered.
+        mock_client.update_gateway_devices = AsyncMock(
+            side_effect=[
+                _refresh_result([first]),
+                ViConnectionError("private gateway detail"),
+            ]
+        )
+        await coordinator._async_update_data()
+
+        # Act: Add a device to the first gateway and recover the second.
+        coordinator._known_devices.append(discovered)
+        mock_client.update_gateway_devices = AsyncMock(
+            side_effect=[
+                _refresh_result([first, discovered]),
+                _refresh_result([failing]),
+            ]
+        )
+        await coordinator._async_update_data()
+
+    # Assert: The recovered device keeps its original anonymous number.
+    assert [record.getMessage() for record in caplog.records] == [
+        "Device #2 is unavailable (ViConnectionError)",
+        "Device #2 is back online",
     ]
 
 
@@ -478,13 +527,14 @@ async def test_data_coordinator_logs_full_device_outage_and_recovery_once(
             return_value=_refresh_result([known_device])
         )
         await coordinator.async_refresh()
+        await coordinator.async_refresh()
 
     # Assert: Each device and coordinator transition is emitted once.
     assert coordinator.is_device_available("gw-main_device-0")
     assert [record.getMessage() for record in caplog.records] == [
-        "Device gw-main_device-0 is unavailable: device offline",
+        "Device #1 is unavailable (ViConnectionError)",
         "Error fetching vi_climate_devices_data data: setup_not_ready",
-        "Device gw-main_device-0 is back online",
+        "Device #1 is back online",
         "Fetching vi_climate_devices_data data recovered",
     ]
 

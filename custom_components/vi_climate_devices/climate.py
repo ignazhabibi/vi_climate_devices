@@ -608,14 +608,6 @@ class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncomp
             response = await self.coordinator.async_set_feature(
                 self._map_key, temp_feature.name, value
             )
-            _LOGGER.debug(
-                "Command response for setting temperature: success=%s, "
-                "message=%s, reason=%s",
-                response.success,
-                response.message,
-                response.reason,
-            )
-
             if not response.success:
                 raise service_validation_error(ExceptionTranslationKey.COMMAND_REJECTED)
 
@@ -687,14 +679,6 @@ class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncomp
             response = await self.coordinator.async_set_feature(
                 self._map_key, mode_feature.name, target_api_mode
             )
-            _LOGGER.debug(
-                "Command response for setting HVAC mode: success=%s, "
-                "message=%s, reason=%s",
-                response.success,
-                response.message,
-                response.reason,
-            )
-
             if not response.success:
                 raise service_validation_error(ExceptionTranslationKey.COMMAND_REJECTED)
 

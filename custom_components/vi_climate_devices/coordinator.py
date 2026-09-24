@@ -51,6 +51,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self._known_devices: list[Device] = []
         self._last_inventory_at: datetime | None = None
         self._failed_device_keys: set[str] = set()
+        self._device_log_numbers: dict[str, int] = {}
         self._refresh_write_lock = asyncio.Lock()
 
     def is_device_available(self, device_key: str) -> bool:
@@ -60,15 +61,18 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     def _log_device_availability(
         self,
         device_key: str,
+        device_number: int,
         error: ViError | None,
         previous_failed_device_keys: set[str],
     ) -> None:
         """Log a device availability transition once."""
         if error is None:
             if device_key in previous_failed_device_keys:
-                _LOGGER.info("Device %s is back online", device_key)
+                _LOGGER.info("Device #%s is back online", device_number)
         elif device_key not in previous_failed_device_keys:
-            _LOGGER.info("Device %s is unavailable: %s", device_key, error)
+            _LOGGER.info(
+                "Device #%s is unavailable (%s)", device_number, type(error).__name__
+            )
 
     async def async_set_feature(
         self, device_key: str, feature_name: str, value: FeatureValue
@@ -96,6 +100,13 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                     "Viessmann authentication failed while writing a feature: %s", err
                 )
                 raise config_entry_auth_failed() from err
+            _LOGGER.debug(
+                "Feature command response %s: feature=%s, success=%s, reason=%s",
+                "accepted" if response.success else "rejected",
+                feature_name,
+                response.success,
+                response.reason,
+            )
             if response.success:
                 updated_data = dict(self.data)
                 updated_data[device_key] = updated_device
@@ -261,8 +272,14 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
             self._failed_device_keys = failed_device_keys
             for key in updated_data:
+                device_number = self._device_log_numbers.setdefault(
+                    key, len(self._device_log_numbers) + 1
+                )
                 self._log_device_availability(
-                    key, device_errors.get(key), previous_failed_device_keys
+                    key,
+                    device_number,
+                    device_errors.get(key),
+                    previous_failed_device_keys,
                 )
 
             if failed_device_keys and len(failed_device_keys) == len(updated_data):
