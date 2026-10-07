@@ -24,7 +24,8 @@
             "unknown": "Unable to verify access to Viessmann. Try again later."
         },
         "abort": {
-            "reauth_successful": "Re-authentication was successful"
+            "reauth_successful": "Re-authentication was successful",
+            "unknown": "An unexpected error occurred. Start the setup again."
         }
     },
     "exceptions": {
