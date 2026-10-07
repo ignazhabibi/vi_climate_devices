@@ -19,5 +19,5 @@
     "vi_api_client @ git+https://github.com/ignazhabibi/vi_api_client.git@v5.0.0"
   ],
   "single_config_entry": true,
-  "version": "1.9.3"
+  "version": "1.9.4"
 }
