@@ -249,6 +249,12 @@ def test_exception_translation_keys_exist_in_all_maintained_translations(
             f"Missing exception translations in {source_name}: "
             f"{sorted(exception_keys - translated_keys)}"
         )
+        for key in exception_keys:
+            translation = source["exceptions"][key]
+            assert isinstance(translation, dict), (
+                f"{source_name} exceptions.{key} must be a mapping with a message"
+            )
+            assert translation.get("message")
 
 
 def test_config_flow_abort_reasons_exist_in_all_maintained_translations(

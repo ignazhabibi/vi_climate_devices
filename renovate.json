@@ -5,6 +5,17 @@
   ],
   "dependencyDashboard": true,
   "separateMinorPatch": true,
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "labels": [
+    "dependencies"
+  ],
+  "osvVulnerabilityAlerts": true,
+  "vulnerabilityAlerts": {
+    "addLabels": [
+      "security"
+    ]
+  },
   "homeassistant-manifest": {
     "enabled": false
   },
@@ -17,10 +28,12 @@
     },
     {
       "matchPackageNames": [
-        "pytest-homeassistant-custom-component"
+        "pre-commit",
+        "pyright",
+        "pytest-cov",
+        "ruff"
       ],
-      "matchNewValue": "0.13.320",
-      "enabled": false
+      "groupName": "python dev tools"
     },
     {
       "matchPackageNames": [

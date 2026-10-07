@@ -56,7 +56,8 @@ section in `README.md`.
   its body so GitHub closes the issue when the pull request merges.
 - Stage only requested files. Before committing, show the files, summary, and
   proposed Conventional Commit message; no additional confirmation is needed.
-- Wait for the GitHub `quality-check` job before treating a PR as merge-ready.
+- Wait for the GitHub `quality-check`, `hassfest`, and `hacs` jobs before
+  treating a PR as merge-ready.
   Use GitHub squash merge only with explicit authorization.
 - For multi-line GitHub issue or PR bodies, use a heredoc or `--body-file` so
   GitHub receives real newlines, then verify the rendered body.

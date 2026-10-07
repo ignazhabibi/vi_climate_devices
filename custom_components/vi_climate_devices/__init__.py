@@ -16,7 +16,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from vi_api_client import (
     AbstractAuth,
@@ -43,11 +42,6 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
     Platform.WATER_HEATER,
 ]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Viessmann Climate Devices component."""
-    return True
 
 
 async def async_setup_entry(

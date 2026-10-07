@@ -10,6 +10,9 @@ on:
       - "v*-beta.*"
       - "v*-rc.*"
 
+permissions:
+  contents: read
+
 jobs:
   quality-check:
     runs-on: ubuntu-latest

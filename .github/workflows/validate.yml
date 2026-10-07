@@ -1,0 +1,29 @@
+name: Validate
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  hassfest:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+    # Non-blocking until the existing findings in #205 are resolved.
+    - uses: home-assistant/actions/hassfest@master
+      continue-on-error: true
+
+  hacs:
+    runs-on: ubuntu-latest
+    steps:
+    # Non-blocking until the existing findings in #205 are resolved.
+    - uses: hacs/action@main
+      continue-on-error: true
+      with:
+        category: integration
