@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.vi_climate_devices.const import DOMAIN
@@ -80,3 +81,35 @@ async def test_auto_discovery_ignore_list(hass: HomeAssistant, mock_client):
         # Assert: Verify OTHER sensors (not ignored) ARE created.
         state_return = hass.states.get("sensor.vitocal250a_return_temperature")
         assert state_return is not None
+
+
+@pytest.mark.asyncio
+async def test_schedule_active_features_are_not_created_as_entities(
+    hass: HomeAssistant, mock_client
+):
+    """Test that read-only schedule active flags do not become binary sensors."""
+    # Arrange: The fixture exposes separate active flags for its schedules.
+    device = (await mock_client.get_full_installation_status("99999"))[0]
+    schedule_active_features = sorted(
+        feature.name
+        for feature in device.features
+        if feature.name.endswith(".schedule.active")
+    )
+    assert schedule_active_features
+
+    # Act: Initialize the integration with the real ignore list.
+    await _setup_integration(hass, mock_client)
+
+    # Assert: No entity is registered for any schedule active flag.
+    registry = er.async_get(hass)
+    registered_unique_ids = {
+        entry.unique_id
+        for entry in registry.entities.values()
+        if entry.platform == DOMAIN
+    }
+    assert registered_unique_ids
+    for feature_name in schedule_active_features:
+        assert not any(
+            unique_id.endswith(f"-{feature_name}")
+            for unique_id in registered_unique_ids
+        )

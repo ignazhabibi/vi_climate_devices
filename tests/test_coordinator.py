@@ -73,7 +73,7 @@ async def test_data_coordinator_merges_new_devices_from_daily_inventory(
     mock_client.get_full_installation_status = AsyncMock(
         return_value=[discovered_device]
     )
-    mock_client.update_gateway_devices = AsyncMock(
+    mock_client.refresh_gateway_devices = AsyncMock(
         side_effect=[
             _refresh_result([retained_device]),
             _refresh_result([discovered_device]),
@@ -294,7 +294,7 @@ async def test_data_coordinator_discovers_devices_and_filters_ignored_ids(
     mock_client.get_full_installation_status = AsyncMock(
         return_value=[active_device, ignored_device]
     )
-    mock_client.update_gateway_devices = AsyncMock(
+    mock_client.refresh_gateway_devices = AsyncMock(
         return_value=_refresh_result([active_device])
     )
     coordinator = _build_coordinator(hass, mock_client)
@@ -314,7 +314,7 @@ async def test_data_coordinator_raises_when_all_device_updates_fail(
     """Test refresh fails when no known device can be updated."""
     # Arrange: Seed one known device and make its refresh raise a transient error.
     known_device = _build_device(device_id="device-0", gateway_serial="gw-main")
-    mock_client.update_gateway_devices = AsyncMock(
+    mock_client.refresh_gateway_devices = AsyncMock(
         side_effect=ViConnectionError("device offline")
     )
     coordinator = _build_coordinator(hass, mock_client)
@@ -341,7 +341,7 @@ async def test_data_coordinator_marks_only_failed_device_unavailable(
     # Arrange: Refresh one device and fail the second device with a transient error.
     refreshed_device = _build_device(device_id="device-0", gateway_serial="gw-main")
     failing_device = _build_device(device_id="device-1", gateway_serial="gw-backup")
-    mock_client.update_gateway_devices = AsyncMock(
+    mock_client.refresh_gateway_devices = AsyncMock(
         side_effect=[
             _refresh_result([refreshed_device]),
             ViConnectionError("device offline"),
@@ -373,13 +373,13 @@ async def test_data_coordinator_batches_devices_by_gateway_without_single_refres
     failed_device = _build_device(device_id="device-1", gateway_serial="gw-main")
     backup_device = _build_device(device_id="device-2", gateway_serial="gw-backup")
     device_error = ViConnectionError("device offline")
-    mock_client.update_gateway_devices = AsyncMock(
+    mock_client.refresh_gateway_devices = AsyncMock(
         side_effect=[
             _refresh_result([refreshed_device], {failed_device.id: device_error}),
             _refresh_result([backup_device]),
         ]
     )
-    mock_client.update_device = AsyncMock()
+    mock_client.refresh_device = AsyncMock()
     coordinator = _build_coordinator(hass, mock_client)
     coordinator._known_devices = [refreshed_device, failed_device, backup_device]
 
@@ -392,13 +392,13 @@ async def test_data_coordinator_batches_devices_by_gateway_without_single_refres
         "gw-main_device-1": failed_device,
         "gw-backup_device-2": backup_device,
     }
-    assert mock_client.update_gateway_devices.await_args_list[0].args == (
+    assert mock_client.refresh_gateway_devices.await_args_list[0].args == (
         [refreshed_device, failed_device],
     )
-    assert mock_client.update_gateway_devices.await_args_list[1].args == (
+    assert mock_client.refresh_gateway_devices.await_args_list[1].args == (
         [backup_device],
     )
-    mock_client.update_device.assert_not_awaited()
+    mock_client.refresh_device.assert_not_awaited()
     assert coordinator.is_device_available("gw-main_device-0")
     assert not coordinator.is_device_available("gw-main_device-1")
     assert coordinator.is_device_available("gw-backup_device-2")
@@ -419,7 +419,7 @@ async def test_data_coordinator_logs_partial_device_outage_and_recovery_once(
         logging.INFO, logger="custom_components.vi_climate_devices.coordinator"
     ):
         # Act: Poll through an outage, repeated failure, and recovery.
-        mock_client.update_gateway_devices = AsyncMock(
+        mock_client.refresh_gateway_devices = AsyncMock(
             side_effect=[
                 _refresh_result([refreshed_device]),
                 ViConnectionError("device offline for gw-backup_device-1"),
@@ -428,7 +428,7 @@ async def test_data_coordinator_logs_partial_device_outage_and_recovery_once(
         await coordinator._async_update_data()
         assert not coordinator.is_device_available("gw-backup_device-1")
 
-        mock_client.update_gateway_devices = AsyncMock(
+        mock_client.refresh_gateway_devices = AsyncMock(
             side_effect=[
                 _refresh_result([refreshed_device]),
                 ViConnectionError("device offline for gw-backup_device-1"),
@@ -437,7 +437,7 @@ async def test_data_coordinator_logs_partial_device_outage_and_recovery_once(
         await coordinator._async_update_data()
         assert not coordinator.is_device_available("gw-backup_device-1")
 
-        mock_client.update_gateway_devices = AsyncMock(
+        mock_client.refresh_gateway_devices = AsyncMock(
             side_effect=[
                 _refresh_result([refreshed_device]),
                 _refresh_result([failing_device]),
@@ -445,7 +445,7 @@ async def test_data_coordinator_logs_partial_device_outage_and_recovery_once(
         )
         await coordinator._async_update_data()
         # Act: Poll once more after recovery without a duplicate transition.
-        mock_client.update_gateway_devices = AsyncMock(
+        mock_client.refresh_gateway_devices = AsyncMock(
             side_effect=[
                 _refresh_result([refreshed_device]),
                 _refresh_result([failing_device]),
@@ -477,7 +477,7 @@ async def test_device_log_number_survives_later_gateway_discovery(
         logging.INFO, logger="custom_components.vi_climate_devices.coordinator"
     ):
         # Act: Record the outage before the additional device is discovered.
-        mock_client.update_gateway_devices = AsyncMock(
+        mock_client.refresh_gateway_devices = AsyncMock(
             side_effect=[
                 _refresh_result([first]),
                 ViConnectionError("private gateway detail"),
@@ -487,7 +487,7 @@ async def test_device_log_number_survives_later_gateway_discovery(
 
         # Act: Add a device to the first gateway and recover the second.
         coordinator._known_devices.append(discovered)
-        mock_client.update_gateway_devices = AsyncMock(
+        mock_client.refresh_gateway_devices = AsyncMock(
             side_effect=[
                 _refresh_result([first, discovered]),
                 _refresh_result([failing]),
@@ -516,14 +516,14 @@ async def test_data_coordinator_logs_full_device_outage_and_recovery_once(
         logging.INFO, logger="custom_components.vi_climate_devices.coordinator"
     ):
         # Act: Use coordinator refreshes to include its built-in full-outage logging.
-        mock_client.update_gateway_devices = AsyncMock(
+        mock_client.refresh_gateway_devices = AsyncMock(
             side_effect=ViConnectionError("device offline")
         )
         await coordinator.async_refresh()
         await coordinator.async_refresh()
         assert not coordinator.is_device_available("gw-main_device-0")
 
-        mock_client.update_gateway_devices = AsyncMock(
+        mock_client.refresh_gateway_devices = AsyncMock(
             return_value=_refresh_result([known_device])
         )
         await coordinator.async_refresh()
@@ -546,7 +546,7 @@ async def test_data_coordinator_raises_reauth_when_device_update_loses_auth(
     """Test refresh raises ConfigEntryAuthFailed when device polling loses auth."""
     # Arrange: Seed one known device and make the update raise ViAuthError.
     known_device = _build_device(device_id="device-0", gateway_serial="gw-main")
-    mock_client.update_gateway_devices = AsyncMock(
+    mock_client.refresh_gateway_devices = AsyncMock(
         side_effect=ViAuthError("token expired")
     )
     coordinator = _build_coordinator(hass, mock_client)
@@ -570,7 +570,7 @@ async def test_data_coordinator_propagates_oauth_reauth_error(
     # Arrange: Seed a device and reject its refresh token during polling.
     known_device = _build_device(device_id="device-0", gateway_serial="gw-main")
     reauth_error = _make_reauth_error()
-    mock_client.update_gateway_devices = AsyncMock(side_effect=reauth_error)
+    mock_client.refresh_gateway_devices = AsyncMock(side_effect=reauth_error)
     coordinator = _build_coordinator(hass, mock_client)
     coordinator._known_devices = [known_device]
 
@@ -588,7 +588,7 @@ async def test_data_coordinator_propagates_transient_oauth_error(
     # Arrange: Seed a device and simulate a temporary token endpoint failure.
     known_device = _build_device(device_id="device-0", gateway_serial="gw-main")
     token_error = _make_token_error()
-    mock_client.update_gateway_devices = AsyncMock(side_effect=token_error)
+    mock_client.refresh_gateway_devices = AsyncMock(side_effect=token_error)
     coordinator = _build_coordinator(hass, mock_client)
     coordinator._known_devices = [known_device]
 
@@ -607,7 +607,7 @@ async def test_data_coordinator_does_not_log_recovery_before_aborted_refresh_com
     recovered_device = _build_device(device_id="device-0", gateway_serial="gw-main")
     auth_failed_device = _build_device(device_id="device-1", gateway_serial="gw-backup")
     token_error = _make_token_error()
-    mock_client.update_gateway_devices = AsyncMock(
+    mock_client.refresh_gateway_devices = AsyncMock(
         side_effect=[_refresh_result([recovered_device]), token_error]
     )
     coordinator = _build_coordinator(hass, mock_client)
@@ -649,7 +649,7 @@ async def test_confirmed_write_survives_partial_failure_and_recovery(
     mock_client.get_full_installation_status = AsyncMock(
         return_value=[initial_device, other_device]
     )
-    mock_client.update_gateway_devices = AsyncMock(
+    mock_client.refresh_gateway_devices = AsyncMock(
         return_value=_refresh_result([initial_device, other_device])
     )
     coordinator = _build_coordinator(hass, mock_client)
@@ -669,7 +669,7 @@ async def test_confirmed_write_survives_partial_failure_and_recovery(
     await coordinator.async_set_feature(device_key, feature_name, 1.2)
 
     # Act: The written device fails to poll while the second device stays reachable.
-    mock_client.update_gateway_devices = AsyncMock(
+    mock_client.refresh_gateway_devices = AsyncMock(
         return_value=_refresh_result(
             [other_device], {"device-0": ViConnectionError("device offline")}
         )
@@ -695,13 +695,13 @@ async def test_confirmed_write_survives_partial_failure_and_recovery(
     assert not entity.available
 
     # Act: Recover the failed device and publish its current state.
-    mock_client.update_gateway_devices = AsyncMock(
+    mock_client.refresh_gateway_devices = AsyncMock(
         return_value=_refresh_result([recovered_device, other_written_device])
     )
     await coordinator.async_refresh()
 
     # Assert: Recovery polls the retained confirmed state and restores availability.
-    assert mock_client.update_gateway_devices.call_args.args[0][0] is written_device
+    assert mock_client.refresh_gateway_devices.call_args.args[0][0] is written_device
     assert entity.available
     assert entity.native_value == 1.3
     assert other_entity.available
@@ -735,7 +735,7 @@ async def test_refresh_waits_for_write_and_polls_confirmed_device(
     mock_client.get_full_installation_status = AsyncMock(
         return_value=[initial_device, other_device]
     )
-    mock_client.update_gateway_devices = AsyncMock(
+    mock_client.refresh_gateway_devices = AsyncMock(
         return_value=_refresh_result([initial_device, other_device])
     )
     coordinator = _build_coordinator(hass, mock_client)
@@ -751,7 +751,7 @@ async def test_refresh_waits_for_write_and_polls_confirmed_device(
         return CommandResponse(success=True, message=None, reason=None), written_device
 
     mock_client.set_feature = AsyncMock(side_effect=mock_set_feature)
-    mock_client.update_gateway_devices = AsyncMock(
+    mock_client.refresh_gateway_devices = AsyncMock(
         side_effect=_successful_gateway_refresh
     )
 
@@ -762,13 +762,13 @@ async def test_refresh_waits_for_write_and_polls_confirmed_device(
     await write_started.wait()
     refresh_task = asyncio.create_task(coordinator.async_refresh())
     await asyncio.sleep(0)
-    mock_client.update_gateway_devices.assert_not_called()
+    mock_client.refresh_gateway_devices.assert_not_called()
     allow_write_to_finish.set()
     await asyncio.gather(write_task, refresh_task)
 
     # Assert: The refresh retains the confirmed state for a subsequent command.
     assert coordinator.data[device_key] is written_device
-    assert mock_client.update_gateway_devices.call_args.args[0][0] is written_device
+    assert mock_client.refresh_gateway_devices.call_args.args[0][0] is written_device
     await coordinator.async_set_feature(device_key, feature_name, 1.2)
     assert mock_client.set_feature.call_args.args[0] is written_device
 
@@ -907,15 +907,15 @@ async def test_data_coordinator_does_not_overwrite_a_write_with_stale_refresh(
     refresh_started = asyncio.Event()
     allow_refresh_to_finish = asyncio.Event()
 
-    async def mock_update_gateway_devices(
+    async def mock_refresh_gateway_devices(
         devices: list[Device],
     ) -> GatewayDeviceRefreshResult:
         refresh_started.set()
         await allow_refresh_to_finish.wait()
         return _refresh_result([refreshed_device])
 
-    mock_client.update_gateway_devices = AsyncMock(
-        side_effect=mock_update_gateway_devices
+    mock_client.refresh_gateway_devices = AsyncMock(
+        side_effect=mock_refresh_gateway_devices
     )
     mock_client.set_feature = AsyncMock(
         return_value=(
@@ -998,8 +998,8 @@ async def test_frequent_writes_preserve_scheduled_poll(
     feature_name = "heating.circuits.0.heating.curve.slope"
     listener = MagicMock()
     remove_listener = coordinator.async_add_listener(listener)
-    mock_client.update_gateway_devices = AsyncMock(
-        wraps=mock_client.update_gateway_devices
+    mock_client.refresh_gateway_devices = AsyncMock(
+        wraps=mock_client.refresh_gateway_devices
     )
 
     try:
@@ -1014,7 +1014,7 @@ async def test_frequent_writes_preserve_scheduled_poll(
             scheduled_poll_count = tick // 3
             assert listener.call_count == tick + scheduled_poll_count
             assert (
-                mock_client.update_gateway_devices.await_count == scheduled_poll_count
+                mock_client.refresh_gateway_devices.await_count == scheduled_poll_count
             )
             feature = coordinator.data[device_key].get_feature(feature_name)
             assert feature is not None
@@ -1025,14 +1025,14 @@ async def test_frequent_writes_preserve_scheduled_poll(
 
     # Act: Advance time after listener removal and coordinator shutdown.
     listener.reset_mock()
-    mock_client.update_gateway_devices.reset_mock()
+    mock_client.refresh_gateway_devices.reset_mock()
     freezer.tick(timedelta(minutes=6))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Assert: No poll or notification survives removal and shutdown.
     listener.assert_not_called()
-    mock_client.update_gateway_devices.assert_not_awaited()
+    mock_client.refresh_gateway_devices.assert_not_awaited()
 
 
 @pytest.mark.parametrize("is_token_failure", [False, True])
@@ -1051,7 +1051,7 @@ async def test_write_after_full_outage_preserves_availability_until_poll(
     mock_client.get_full_installation_status = AsyncMock(
         return_value=[initial_device, other_device]
     )
-    mock_client.update_gateway_devices = AsyncMock(
+    mock_client.refresh_gateway_devices = AsyncMock(
         side_effect=_successful_gateway_refresh
     )
     coordinator = _build_coordinator(hass, mock_client)
@@ -1075,7 +1075,7 @@ async def test_write_after_full_outage_preserves_availability_until_poll(
             (entity.available, other_entity.available, entity.native_value)
         )
     )
-    mock_client.update_gateway_devices.side_effect = (
+    mock_client.refresh_gateway_devices.side_effect = (
         _make_token_error() if is_token_failure else ViConnectionError("offline")
     )
     try:
@@ -1105,8 +1105,8 @@ async def test_write_after_full_outage_preserves_availability_until_poll(
         assert coordinator.last_exception is last_exception
 
         # Act: The next poll confirms only the written device is reachable.
-        mock_client.update_gateway_devices.side_effect = None
-        mock_client.update_gateway_devices.return_value = _refresh_result(
+        mock_client.refresh_gateway_devices.side_effect = None
+        mock_client.refresh_gateway_devices.return_value = _refresh_result(
             [written_device], {"device-1": ViConnectionError("other device offline")}
         )
         freezer.tick(timedelta(minutes=3))
@@ -1116,12 +1116,12 @@ async def test_write_after_full_outage_preserves_availability_until_poll(
         # Assert: Only the written device becomes available.
         assert observed_states[-1] == (True, False, 1.2)
         assert (
-            mock_client.update_gateway_devices.call_args_list[-1].args[0][0]
+            mock_client.refresh_gateway_devices.call_args_list[-1].args[0][0]
             is written_device
         )
 
         # Act: The final poll confirms both devices are reachable.
-        mock_client.update_gateway_devices.side_effect = _successful_gateway_refresh
+        mock_client.refresh_gateway_devices.side_effect = _successful_gateway_refresh
         freezer.tick(timedelta(minutes=3))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()

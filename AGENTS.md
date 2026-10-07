@@ -20,7 +20,7 @@ affect the solution.
   expected version bump instead.
 - The client has a flat feature model: look up dot-named `Feature` objects with
   `device.get_feature(...)`; do not navigate nested API properties.
-- A refreshed device returned by `update_device` replaces the old object. Use
+- A refreshed device returned by `refresh_device` replaces the old object. Use
   `set_feature` for writes; do not construct raw API payloads.
 - Preserve explicitly defined entities. Automatic discovery is a fallback for
   unmapped features.

@@ -353,8 +353,8 @@ async def test_select_options_reject_non_string_shapes() -> None:
     feature_name = "heating.dhw.operating.modes.active"
     control = FeatureControl(
         command_name="setMode",
-        param_name="mode",
-        required_params=(),
+        parameter_name="mode",
+        required_parameters=(),
         parent_feature_name="heating.dhw.operating.modes",
         uri="https://mock.local/command",
         options=(

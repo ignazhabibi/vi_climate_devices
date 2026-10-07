@@ -467,156 +467,157 @@
             'name': 'heating.circuits.0.heating.schedule',
             'unit': None,
             'value': dict({
-              'active': dict({
-                'type': 'boolean',
-                'value': True,
-              }),
-              'entries': dict({
-                'type': 'Schedule',
-                'value': dict({
-                  'fri': list([
-                    dict({
-                      'end': '03:00',
-                      'mode': 'normal',
-                      'position': 0,
-                      'start': '00:00',
-                    }),
-                    dict({
-                      'end': '05:00',
-                      'mode': 'comfort',
-                      'position': 1,
-                      'start': '03:00',
-                    }),
-                    dict({
-                      'end': '24:00',
-                      'mode': 'normal',
-                      'position': 2,
-                      'start': '05:00',
-                    }),
-                  ]),
-                  'mon': list([
-                    dict({
-                      'end': '03:00',
-                      'mode': 'normal',
-                      'position': 0,
-                      'start': '00:00',
-                    }),
-                    dict({
-                      'end': '05:00',
-                      'mode': 'comfort',
-                      'position': 1,
-                      'start': '03:00',
-                    }),
-                    dict({
-                      'end': '24:00',
-                      'mode': 'normal',
-                      'position': 2,
-                      'start': '05:00',
-                    }),
-                  ]),
-                  'sat': list([
-                    dict({
-                      'end': '03:00',
-                      'mode': 'normal',
-                      'position': 0,
-                      'start': '00:00',
-                    }),
-                    dict({
-                      'end': '05:00',
-                      'mode': 'comfort',
-                      'position': 1,
-                      'start': '03:00',
-                    }),
-                    dict({
-                      'end': '24:00',
-                      'mode': 'normal',
-                      'position': 2,
-                      'start': '05:00',
-                    }),
-                  ]),
-                  'sun': list([
-                    dict({
-                      'end': '03:00',
-                      'mode': 'normal',
-                      'position': 0,
-                      'start': '00:00',
-                    }),
-                    dict({
-                      'end': '05:00',
-                      'mode': 'comfort',
-                      'position': 1,
-                      'start': '03:00',
-                    }),
-                    dict({
-                      'end': '24:00',
-                      'mode': 'normal',
-                      'position': 2,
-                      'start': '05:00',
-                    }),
-                  ]),
-                  'thu': list([
-                    dict({
-                      'end': '03:00',
-                      'mode': 'normal',
-                      'position': 0,
-                      'start': '00:00',
-                    }),
-                    dict({
-                      'end': '05:00',
-                      'mode': 'comfort',
-                      'position': 1,
-                      'start': '03:00',
-                    }),
-                    dict({
-                      'end': '24:00',
-                      'mode': 'normal',
-                      'position': 2,
-                      'start': '05:00',
-                    }),
-                  ]),
-                  'tue': list([
-                    dict({
-                      'end': '03:00',
-                      'mode': 'normal',
-                      'position': 0,
-                      'start': '00:00',
-                    }),
-                    dict({
-                      'end': '05:00',
-                      'mode': 'comfort',
-                      'position': 1,
-                      'start': '03:00',
-                    }),
-                    dict({
-                      'end': '24:00',
-                      'mode': 'normal',
-                      'position': 2,
-                      'start': '05:00',
-                    }),
-                  ]),
-                  'wed': list([
-                    dict({
-                      'end': '03:00',
-                      'mode': 'normal',
-                      'position': 0,
-                      'start': '00:00',
-                    }),
-                    dict({
-                      'end': '05:00',
-                      'mode': 'comfort',
-                      'position': 1,
-                      'start': '03:00',
-                    }),
-                    dict({
-                      'end': '24:00',
-                      'mode': 'normal',
-                      'position': 2,
-                      'start': '05:00',
-                    }),
-                  ]),
+              'fri': list([
+                dict({
+                  'end': '03:00',
+                  'mode': 'normal',
+                  'position': 0,
+                  'start': '00:00',
                 }),
-              }),
+                dict({
+                  'end': '05:00',
+                  'mode': 'comfort',
+                  'position': 1,
+                  'start': '03:00',
+                }),
+                dict({
+                  'end': '24:00',
+                  'mode': 'normal',
+                  'position': 2,
+                  'start': '05:00',
+                }),
+              ]),
+              'mon': list([
+                dict({
+                  'end': '03:00',
+                  'mode': 'normal',
+                  'position': 0,
+                  'start': '00:00',
+                }),
+                dict({
+                  'end': '05:00',
+                  'mode': 'comfort',
+                  'position': 1,
+                  'start': '03:00',
+                }),
+                dict({
+                  'end': '24:00',
+                  'mode': 'normal',
+                  'position': 2,
+                  'start': '05:00',
+                }),
+              ]),
+              'sat': list([
+                dict({
+                  'end': '03:00',
+                  'mode': 'normal',
+                  'position': 0,
+                  'start': '00:00',
+                }),
+                dict({
+                  'end': '05:00',
+                  'mode': 'comfort',
+                  'position': 1,
+                  'start': '03:00',
+                }),
+                dict({
+                  'end': '24:00',
+                  'mode': 'normal',
+                  'position': 2,
+                  'start': '05:00',
+                }),
+              ]),
+              'sun': list([
+                dict({
+                  'end': '03:00',
+                  'mode': 'normal',
+                  'position': 0,
+                  'start': '00:00',
+                }),
+                dict({
+                  'end': '05:00',
+                  'mode': 'comfort',
+                  'position': 1,
+                  'start': '03:00',
+                }),
+                dict({
+                  'end': '24:00',
+                  'mode': 'normal',
+                  'position': 2,
+                  'start': '05:00',
+                }),
+              ]),
+              'thu': list([
+                dict({
+                  'end': '03:00',
+                  'mode': 'normal',
+                  'position': 0,
+                  'start': '00:00',
+                }),
+                dict({
+                  'end': '05:00',
+                  'mode': 'comfort',
+                  'position': 1,
+                  'start': '03:00',
+                }),
+                dict({
+                  'end': '24:00',
+                  'mode': 'normal',
+                  'position': 2,
+                  'start': '05:00',
+                }),
+              ]),
+              'tue': list([
+                dict({
+                  'end': '03:00',
+                  'mode': 'normal',
+                  'position': 0,
+                  'start': '00:00',
+                }),
+                dict({
+                  'end': '05:00',
+                  'mode': 'comfort',
+                  'position': 1,
+                  'start': '03:00',
+                }),
+                dict({
+                  'end': '24:00',
+                  'mode': 'normal',
+                  'position': 2,
+                  'start': '05:00',
+                }),
+              ]),
+              'wed': list([
+                dict({
+                  'end': '03:00',
+                  'mode': 'normal',
+                  'position': 0,
+                  'start': '00:00',
+                }),
+                dict({
+                  'end': '05:00',
+                  'mode': 'comfort',
+                  'position': 1,
+                  'start': '03:00',
+                }),
+                dict({
+                  'end': '24:00',
+                  'mode': 'normal',
+                  'position': 2,
+                  'start': '05:00',
+                }),
+              ]),
             }),
+          }),
+          dict({
+            'constraints': dict({
+            }),
+            'is_enabled': True,
+            'is_ready': True,
+            'is_writable': False,
+            'name': 'heating.circuits.0.heating.schedule.active',
+            'unit': None,
+            'value': True,
           }),
           dict({
             'constraints': dict({
@@ -1616,156 +1617,157 @@
             'name': 'heating.dhw.pumps.circulation.schedule',
             'unit': None,
             'value': dict({
-              'active': dict({
-                'type': 'boolean',
-                'value': True,
-              }),
-              'entries': dict({
-                'type': 'Schedule',
-                'value': dict({
-                  'fri': list([
-                    dict({
-                      'end': '09:00',
-                      'mode': 'on',
-                      'position': 0,
-                      'start': '05:30',
-                    }),
-                    dict({
-                      'end': '13:00',
-                      'mode': 'on',
-                      'position': 1,
-                      'start': '12:00',
-                    }),
-                    dict({
-                      'end': '20:00',
-                      'mode': 'on',
-                      'position': 2,
-                      'start': '18:00',
-                    }),
-                  ]),
-                  'mon': list([
-                    dict({
-                      'end': '09:00',
-                      'mode': 'on',
-                      'position': 0,
-                      'start': '05:30',
-                    }),
-                    dict({
-                      'end': '13:00',
-                      'mode': 'on',
-                      'position': 1,
-                      'start': '12:00',
-                    }),
-                    dict({
-                      'end': '20:00',
-                      'mode': 'on',
-                      'position': 2,
-                      'start': '18:00',
-                    }),
-                  ]),
-                  'sat': list([
-                    dict({
-                      'end': '09:30',
-                      'mode': 'on',
-                      'position': 0,
-                      'start': '07:00',
-                    }),
-                    dict({
-                      'end': '13:00',
-                      'mode': 'on',
-                      'position': 1,
-                      'start': '12:00',
-                    }),
-                    dict({
-                      'end': '20:00',
-                      'mode': 'on',
-                      'position': 2,
-                      'start': '18:00',
-                    }),
-                  ]),
-                  'sun': list([
-                    dict({
-                      'end': '09:30',
-                      'mode': 'on',
-                      'position': 0,
-                      'start': '07:00',
-                    }),
-                    dict({
-                      'end': '13:00',
-                      'mode': 'on',
-                      'position': 1,
-                      'start': '12:00',
-                    }),
-                    dict({
-                      'end': '20:00',
-                      'mode': 'on',
-                      'position': 2,
-                      'start': '18:00',
-                    }),
-                  ]),
-                  'thu': list([
-                    dict({
-                      'end': '09:00',
-                      'mode': 'on',
-                      'position': 0,
-                      'start': '05:30',
-                    }),
-                    dict({
-                      'end': '13:00',
-                      'mode': 'on',
-                      'position': 1,
-                      'start': '12:00',
-                    }),
-                    dict({
-                      'end': '20:00',
-                      'mode': 'on',
-                      'position': 2,
-                      'start': '18:00',
-                    }),
-                  ]),
-                  'tue': list([
-                    dict({
-                      'end': '09:00',
-                      'mode': 'on',
-                      'position': 0,
-                      'start': '05:30',
-                    }),
-                    dict({
-                      'end': '13:00',
-                      'mode': 'on',
-                      'position': 1,
-                      'start': '12:00',
-                    }),
-                    dict({
-                      'end': '20:00',
-                      'mode': 'on',
-                      'position': 2,
-                      'start': '18:00',
-                    }),
-                  ]),
-                  'wed': list([
-                    dict({
-                      'end': '09:00',
-                      'mode': 'on',
-                      'position': 0,
-                      'start': '05:30',
-                    }),
-                    dict({
-                      'end': '13:00',
-                      'mode': 'on',
-                      'position': 1,
-                      'start': '12:00',
-                    }),
-                    dict({
-                      'end': '20:00',
-                      'mode': 'on',
-                      'position': 2,
-                      'start': '18:00',
-                    }),
-                  ]),
+              'fri': list([
+                dict({
+                  'end': '09:00',
+                  'mode': 'on',
+                  'position': 0,
+                  'start': '05:30',
                 }),
-              }),
+                dict({
+                  'end': '13:00',
+                  'mode': 'on',
+                  'position': 1,
+                  'start': '12:00',
+                }),
+                dict({
+                  'end': '20:00',
+                  'mode': 'on',
+                  'position': 2,
+                  'start': '18:00',
+                }),
+              ]),
+              'mon': list([
+                dict({
+                  'end': '09:00',
+                  'mode': 'on',
+                  'position': 0,
+                  'start': '05:30',
+                }),
+                dict({
+                  'end': '13:00',
+                  'mode': 'on',
+                  'position': 1,
+                  'start': '12:00',
+                }),
+                dict({
+                  'end': '20:00',
+                  'mode': 'on',
+                  'position': 2,
+                  'start': '18:00',
+                }),
+              ]),
+              'sat': list([
+                dict({
+                  'end': '09:30',
+                  'mode': 'on',
+                  'position': 0,
+                  'start': '07:00',
+                }),
+                dict({
+                  'end': '13:00',
+                  'mode': 'on',
+                  'position': 1,
+                  'start': '12:00',
+                }),
+                dict({
+                  'end': '20:00',
+                  'mode': 'on',
+                  'position': 2,
+                  'start': '18:00',
+                }),
+              ]),
+              'sun': list([
+                dict({
+                  'end': '09:30',
+                  'mode': 'on',
+                  'position': 0,
+                  'start': '07:00',
+                }),
+                dict({
+                  'end': '13:00',
+                  'mode': 'on',
+                  'position': 1,
+                  'start': '12:00',
+                }),
+                dict({
+                  'end': '20:00',
+                  'mode': 'on',
+                  'position': 2,
+                  'start': '18:00',
+                }),
+              ]),
+              'thu': list([
+                dict({
+                  'end': '09:00',
+                  'mode': 'on',
+                  'position': 0,
+                  'start': '05:30',
+                }),
+                dict({
+                  'end': '13:00',
+                  'mode': 'on',
+                  'position': 1,
+                  'start': '12:00',
+                }),
+                dict({
+                  'end': '20:00',
+                  'mode': 'on',
+                  'position': 2,
+                  'start': '18:00',
+                }),
+              ]),
+              'tue': list([
+                dict({
+                  'end': '09:00',
+                  'mode': 'on',
+                  'position': 0,
+                  'start': '05:30',
+                }),
+                dict({
+                  'end': '13:00',
+                  'mode': 'on',
+                  'position': 1,
+                  'start': '12:00',
+                }),
+                dict({
+                  'end': '20:00',
+                  'mode': 'on',
+                  'position': 2,
+                  'start': '18:00',
+                }),
+              ]),
+              'wed': list([
+                dict({
+                  'end': '09:00',
+                  'mode': 'on',
+                  'position': 0,
+                  'start': '05:30',
+                }),
+                dict({
+                  'end': '13:00',
+                  'mode': 'on',
+                  'position': 1,
+                  'start': '12:00',
+                }),
+                dict({
+                  'end': '20:00',
+                  'mode': 'on',
+                  'position': 2,
+                  'start': '18:00',
+                }),
+              ]),
             }),
+          }),
+          dict({
+            'constraints': dict({
+            }),
+            'is_enabled': True,
+            'is_ready': True,
+            'is_writable': False,
+            'name': 'heating.dhw.pumps.circulation.schedule.active',
+            'unit': None,
+            'value': True,
           }),
           dict({
             'constraints': dict({
@@ -1787,114 +1789,115 @@
             'name': 'heating.dhw.schedule',
             'unit': None,
             'value': dict({
-              'active': dict({
-                'type': 'boolean',
-                'value': True,
-              }),
-              'entries': dict({
-                'type': 'Schedule',
-                'value': dict({
-                  'fri': list([
-                    dict({
-                      'end': '03:00',
-                      'mode': 'on',
-                      'position': 0,
-                      'start': '01:00',
-                    }),
-                    dict({
-                      'end': '15:00',
-                      'mode': 'on',
-                      'position': 1,
-                      'start': '13:00',
-                    }),
-                  ]),
-                  'mon': list([
-                    dict({
-                      'end': '03:00',
-                      'mode': 'on',
-                      'position': 0,
-                      'start': '01:00',
-                    }),
-                    dict({
-                      'end': '15:00',
-                      'mode': 'on',
-                      'position': 1,
-                      'start': '13:00',
-                    }),
-                  ]),
-                  'sat': list([
-                    dict({
-                      'end': '03:00',
-                      'mode': 'on',
-                      'position': 0,
-                      'start': '01:00',
-                    }),
-                    dict({
-                      'end': '15:00',
-                      'mode': 'on',
-                      'position': 1,
-                      'start': '13:00',
-                    }),
-                  ]),
-                  'sun': list([
-                    dict({
-                      'end': '03:00',
-                      'mode': 'on',
-                      'position': 0,
-                      'start': '01:00',
-                    }),
-                    dict({
-                      'end': '15:00',
-                      'mode': 'on',
-                      'position': 1,
-                      'start': '13:00',
-                    }),
-                  ]),
-                  'thu': list([
-                    dict({
-                      'end': '03:00',
-                      'mode': 'on',
-                      'position': 0,
-                      'start': '01:00',
-                    }),
-                    dict({
-                      'end': '15:00',
-                      'mode': 'on',
-                      'position': 1,
-                      'start': '13:00',
-                    }),
-                  ]),
-                  'tue': list([
-                    dict({
-                      'end': '03:00',
-                      'mode': 'on',
-                      'position': 0,
-                      'start': '01:00',
-                    }),
-                    dict({
-                      'end': '15:00',
-                      'mode': 'on',
-                      'position': 1,
-                      'start': '13:00',
-                    }),
-                  ]),
-                  'wed': list([
-                    dict({
-                      'end': '03:00',
-                      'mode': 'on',
-                      'position': 0,
-                      'start': '01:00',
-                    }),
-                    dict({
-                      'end': '15:00',
-                      'mode': 'on',
-                      'position': 1,
-                      'start': '13:00',
-                    }),
-                  ]),
+              'fri': list([
+                dict({
+                  'end': '03:00',
+                  'mode': 'on',
+                  'position': 0,
+                  'start': '01:00',
                 }),
-              }),
+                dict({
+                  'end': '15:00',
+                  'mode': 'on',
+                  'position': 1,
+                  'start': '13:00',
+                }),
+              ]),
+              'mon': list([
+                dict({
+                  'end': '03:00',
+                  'mode': 'on',
+                  'position': 0,
+                  'start': '01:00',
+                }),
+                dict({
+                  'end': '15:00',
+                  'mode': 'on',
+                  'position': 1,
+                  'start': '13:00',
+                }),
+              ]),
+              'sat': list([
+                dict({
+                  'end': '03:00',
+                  'mode': 'on',
+                  'position': 0,
+                  'start': '01:00',
+                }),
+                dict({
+                  'end': '15:00',
+                  'mode': 'on',
+                  'position': 1,
+                  'start': '13:00',
+                }),
+              ]),
+              'sun': list([
+                dict({
+                  'end': '03:00',
+                  'mode': 'on',
+                  'position': 0,
+                  'start': '01:00',
+                }),
+                dict({
+                  'end': '15:00',
+                  'mode': 'on',
+                  'position': 1,
+                  'start': '13:00',
+                }),
+              ]),
+              'thu': list([
+                dict({
+                  'end': '03:00',
+                  'mode': 'on',
+                  'position': 0,
+                  'start': '01:00',
+                }),
+                dict({
+                  'end': '15:00',
+                  'mode': 'on',
+                  'position': 1,
+                  'start': '13:00',
+                }),
+              ]),
+              'tue': list([
+                dict({
+                  'end': '03:00',
+                  'mode': 'on',
+                  'position': 0,
+                  'start': '01:00',
+                }),
+                dict({
+                  'end': '15:00',
+                  'mode': 'on',
+                  'position': 1,
+                  'start': '13:00',
+                }),
+              ]),
+              'wed': list([
+                dict({
+                  'end': '03:00',
+                  'mode': 'on',
+                  'position': 0,
+                  'start': '01:00',
+                }),
+                dict({
+                  'end': '15:00',
+                  'mode': 'on',
+                  'position': 1,
+                  'start': '13:00',
+                }),
+              ]),
             }),
+          }),
+          dict({
+            'constraints': dict({
+            }),
+            'is_enabled': True,
+            'is_ready': True,
+            'is_writable': False,
+            'name': 'heating.dhw.schedule.active',
+            'unit': None,
+            'value': True,
           }),
           dict({
             'constraints': dict({

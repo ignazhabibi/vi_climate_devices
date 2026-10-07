@@ -233,7 +233,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
             for gateway_devices in devices_by_gateway.values():
                 try:
-                    refresh_result = await self.client.update_gateway_devices(
+                    refresh_result = await self.client.refresh_gateway_devices(
                         gateway_devices
                     )
 

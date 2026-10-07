@@ -311,7 +311,7 @@ async def test_auto_discovery_unit_mapping(hass: HomeAssistant, mock_client):
         ),
         patch.object(
             mock_client,
-            "update_gateway_devices",
+            "refresh_gateway_devices",
             return_value=GatewayDeviceRefreshResult([mock_device], {}),
         ),
     ):
@@ -401,9 +401,9 @@ async def test_decreasing_unknown_energy_is_not_a_counter(
         ),
         patch.object(
             mock_client,
-            "update_gateway_devices",
+            "refresh_gateway_devices",
             return_value=GatewayDeviceRefreshResult([device], {}),
-        ) as update_gateway_devices,
+        ) as refresh_gateway_devices,
     ):
         await _setup_integration(hass, mock_client)
         registry = er.async_get(hass)
@@ -411,7 +411,7 @@ async def test_decreasing_unknown_energy_is_not_a_counter(
         assert registry_entry is not None
 
         # Act: Refresh after the absolute energy value decreases.
-        update_gateway_devices.return_value = GatewayDeviceRefreshResult(
+        refresh_gateway_devices.return_value = GatewayDeviceRefreshResult(
             [decreased_device], {}
         )
         entry = hass.config_entries.async_entries(DOMAIN)[0]

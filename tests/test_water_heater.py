@@ -403,7 +403,7 @@ async def test_water_heater_requires_writable_target_and_mode(
     mock_client.get_full_installation_status = AsyncMock(
         return_value=[device_without_controls]
     )
-    mock_client.update_gateway_devices = AsyncMock(
+    mock_client.refresh_gateway_devices = AsyncMock(
         return_value=GatewayDeviceRefreshResult([device_without_controls], {})
     )
 
