@@ -54,7 +54,7 @@ async def test_water_heater_handles_missing_controls_after_refresh() -> None:
     coordinator.data = {}
 
     # Assert: Read state falls back safely and writes explain the unavailable control.
-    assert entity.device_info is None
+    assert not entity.available
     assert entity.current_temperature is None
     assert entity.target_temperature is None
     assert entity.current_operation is None

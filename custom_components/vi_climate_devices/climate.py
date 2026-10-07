@@ -20,11 +20,9 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
     HomeAssistantError,
     ServiceValidationError,
 )
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from vi_api_client import Feature, ViError
 
@@ -159,20 +157,14 @@ class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncomp
         circuit_index: str,
     ) -> None:
         """Initialize the climate entity."""
-        super().__init__(coordinator)
-        self._map_key = map_key
+        super().__init__(coordinator, map_key)
         self._circuit_index = circuit_index
         self._feature_name = f"heating.circuits.{circuit_index}.operating.modes.active"
         self._availability_feature_names = (self._feature_name,)
 
-        device = coordinator.data.get(map_key)
-        if not device:
-            raise ValueError(f"Device {map_key} not found in coordinator data")
-
         self._attr_unique_id = (
-            f"{device.gateway_serial}-{device.id}-heating_circuit_{circuit_index}"
+            f"{self._unique_id_prefix}-heating_circuit_{circuit_index}"
         )
-        self._attr_has_entity_name = True
         self._attr_translation_placeholders = {"index": circuit_index}
 
         mode_feature = self._get_feature(self._feature_name)
@@ -187,28 +179,7 @@ class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncomp
                 ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
             )
 
-    @property
-    def device_info(self) -> DeviceInfo | None:  # pyright: ignore[reportIncompatibleVariableOverride]
-        """Return device information."""
-        device = self.coordinator.data.get(self._map_key)
-        if not device:
-            return None
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"{device.gateway_serial}-{device.id}")},
-            name=device.model_id,
-            manufacturer="Viessmann",
-            model=device.model_id,
-            serial_number=device.gateway_serial,
-        )
-
     # --- Helpers to get latest features ---
-
-    def _get_feature(self, name: str) -> Feature | None:
-        """Get the latest feature object by name from the coordinator."""
-        device = self.coordinator.data.get(self._map_key)
-        if not device:
-            return None
-        return device.get_feature(name)
 
     def _get_action_for_demand(self, demand_feature: Feature) -> HVACAction | None:
         """Map a demand feature's string value to an HVAC action."""
@@ -305,7 +276,7 @@ class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncomp
 
     def _determine_current_action(self) -> HVACAction | None:
         """Determine the current heating or cooling direction."""
-        action: HVACAction | None = None
+        hvac_mode = self.hvac_mode
         active_program_feature = self._get_feature(
             f"heating.circuits.{self._circuit_index}.operating.programs.active"
         )
@@ -314,25 +285,29 @@ class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncomp
             if active_program_feature
             else None
         )
-        if active_program:
-            demand_feature = self._get_feature(
+        demand_feature = (
+            self._get_feature(
                 f"heating.circuits.{self._circuit_index}.operating.programs."
                 f"{active_program}.demand"
             )
-            if demand_feature:
-                action = self._get_action_for_demand(demand_feature)
-                if (
-                    action == HVACAction.COOLING and self.hvac_mode == HVACMode.HEAT
-                ) or (action == HVACAction.HEATING and self.hvac_mode == HVACMode.COOL):
-                    action = None
-            elif self.hvac_mode == HVACMode.COOL:
-                action = HVACAction.COOLING
-            elif self.hvac_mode == HVACMode.HEAT:
-                action = HVACAction.HEATING
-        elif self.hvac_mode == HVACMode.COOL:
+            if active_program
+            else None
+        )
+
+        action: HVACAction | None
+        if demand_feature:
+            action = self._get_action_for_demand(demand_feature)
+            # A demand opposite to the selected mode is not a current action.
+            if (action == HVACAction.COOLING and hvac_mode == HVACMode.HEAT) or (
+                action == HVACAction.HEATING and hvac_mode == HVACMode.COOL
+            ):
+                action = None
+        elif hvac_mode == HVACMode.COOL:
             action = HVACAction.COOLING
-        elif self.hvac_mode == HVACMode.HEAT:
+        elif hvac_mode == HVACMode.HEAT:
             action = HVACAction.HEATING
+        else:
+            action = None
 
         if action is not None and self._has_conflicting_circuit_demand(action):
             action = None
@@ -671,41 +646,18 @@ class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncomp
             else:
                 raise service_validation_error(ExceptionTranslationKey.UNSUPPORTED_MODE)
 
-        # 1. OPTIMISTIC UPDATE
         self._optimistic_mode = hvac_mode
         self.async_write_ha_state()
+        await self._async_write_feature(
+            mode_feature.name,
+            target_api_mode,
+            ExceptionTranslationKey.MODE_CHANGE_FAILED,
+            self._clear_optimistic_mode,
+        )
 
-        try:
-            response = await self.coordinator.async_set_feature(
-                self._map_key, mode_feature.name, target_api_mode
-            )
-            if not response.success:
-                raise service_validation_error(ExceptionTranslationKey.COMMAND_REJECTED)
-
-            # Clear optimistic mode.
-            self._optimistic_mode = None
-            self.async_write_ha_state()
-        except ServiceValidationError:
-            self._optimistic_mode = None
-            self.async_write_ha_state()
-            raise
-        except ValueError as err:
-            self._optimistic_mode = None
-            self.async_write_ha_state()
-            _LOGGER.debug("Viessmann rejected requested HVAC mode: %s", err)
-            raise service_validation_error(
-                ExceptionTranslationKey.COMMAND_REJECTED
-            ) from err
-        except ConfigEntryAuthFailed:
-            raise
-        except (HomeAssistantError, ViError) as err:
-            # ROLLBACK on error.
-            self._optimistic_mode = None
-            self.async_write_ha_state()
-            _LOGGER.debug("Unable to change Viessmann HVAC mode: %s", err)
-            raise home_assistant_error(
-                ExceptionTranslationKey.MODE_CHANGE_FAILED
-            ) from err
+    def _clear_optimistic_mode(self) -> None:
+        """Forget the unconfirmed HVAC mode."""
+        self._optimistic_mode = None
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""

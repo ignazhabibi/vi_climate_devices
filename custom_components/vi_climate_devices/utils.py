@@ -83,13 +83,9 @@ def get_feature_bool_value(value: FeatureValue, strict: bool = False) -> bool | 
     if result is not None:
         return result
 
-    if not strict:
-        # Fallback for truthiness for other types (e.g. numeric 1/0)
-        try:
-            if isinstance(value, (int, float)):
-                return bool(value)
-        except ValueError, TypeError:
-            pass
+    if not strict and isinstance(value, (int, float)):
+        # Fallback for numeric 1/0 values.
+        return bool(value)
 
     return None
 

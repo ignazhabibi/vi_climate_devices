@@ -46,10 +46,10 @@ async def test_select_handles_device_removed_by_refresh() -> None:
     # Act: Simulate a refresh which removes the device.
     coordinator.data = {}
 
-    # Assert: State, metadata, and attempted writes fail safely.
+    # Assert: State, availability, and attempted writes fail safely.
     assert entity.feature_data is None
     assert entity.current_option is None
-    assert entity.device_info is None
+    assert not entity.available
 
     # Act and assert: A write and a new entity both require an available device.
     with pytest.raises(HomeAssistantError) as error:
@@ -341,6 +341,8 @@ async def test_select_preserves_reauthentication_failure() -> None:
 
     assert error.value.translation_domain == DOMAIN
     assert error.value.translation_key == "authentication_failed"
+    # Assert: The unconfirmed option is not left visible after the failure.
+    assert entity.current_option == "efficient"
 
 
 @pytest.mark.asyncio

@@ -371,7 +371,7 @@
         'viessmann_feature_name': 'heating.dhw.temperature.hysteresis.switchOffValue',
       }),
       'entity_id': 'number.vitocal250a_dhw_hysteresis_switch_off',
-      'state': '0',
+      'state': '0.0',
     }),
     dict({
       'attributes': dict({
@@ -385,7 +385,7 @@
         'viessmann_feature_name': 'heating.dhw.temperature.hysteresis.switchOnValue',
       }),
       'entity_id': 'number.vitocal250a_dhw_hysteresis_switch_on',
-      'state': '5',
+      'state': '5.0',
     }),
     dict({
       'attributes': dict({
@@ -1353,7 +1353,7 @@
         'device_class': 'volume_flow_rate',
         'friendly_name': 'Vitocal250A Volumetric Flow',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': 'L/h',
+        'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
         'viessmann_feature_name': 'heating.sensors.volumetricFlow.allengra',
       }),
       'entity_id': 'sensor.vitocal250a_volumetric_flow',

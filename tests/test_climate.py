@@ -766,8 +766,8 @@ async def test_climate_handles_device_removed_by_refresh() -> None:
     # Act: A later refresh no longer contains the device.
     coordinator.data = {}
 
-    # Assert: Public entity values fall back without retaining stale device data.
-    assert entity.device_info is None
+    # Assert: Public entity values fall back and the entity becomes unavailable.
+    assert not entity.available
     assert entity.current_temperature is None
     assert entity.hvac_mode is None
     assert entity.hvac_modes == [HVACMode.HEAT, HVACMode.OFF]

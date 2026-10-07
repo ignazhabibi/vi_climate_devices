@@ -571,3 +571,48 @@ async def test_number_write_without_feature_raises_translated_error() -> None:
     assert error.value.translation_domain == DOMAIN
     assert error.value.translation_key == "feature_unavailable"
     assert error.value.translation_placeholders is None
+
+
+@pytest.mark.parametrize(
+    ("feature_name", "written_value", "refreshed_value", "expected_state"),
+    [
+        ("heating.circuits.0.heating.curve.shift", 6.0, 6, "6"),
+        ("heating.dhw.temperature.hysteresis.switchOnValue", 5.0, 5, "5.0"),
+    ],
+    ids=["whole-number-step", "fractional-step"],
+)
+@pytest.mark.asyncio
+async def test_number_state_is_stable_between_write_and_refresh(
+    mock_client,
+    feature_name: str,
+    written_value: float,
+    refreshed_value: int,
+    expected_state: str,
+) -> None:
+    """Report one state for a value whether it was written or refreshed.
+
+    Home Assistant writes floats such as 6.0, while the API returns whole
+    numbers as int. Whole-number steps keep integer states, fractional steps
+    keep float states, so a confirmed write and the following refresh never
+    record a spurious state change.
+    """
+    # Arrange: Build entities whose feature carries the written and refreshed shape.
+    device = (await mock_client.get_full_installation_status("99999"))[0]
+    states: list[str] = []
+    for value in (written_value, refreshed_value):
+        feature = dataclasses.replace(device.get_feature(feature_name), value=value)
+        coordinator = MagicMock(
+            data={"device": dataclasses.replace(device, features=[feature])}
+        )
+        entity = ViClimateNumber(
+            coordinator,
+            "device",
+            feature_name,
+            NumberEntityDescription(key=feature_name),
+        )
+
+        # Act: Read the state Home Assistant would store.
+        states.append(str(entity.state))
+
+    # Assert: Both shapes produce the step-appropriate state.
+    assert states == [expected_state, expected_state]
