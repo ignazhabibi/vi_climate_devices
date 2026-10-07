@@ -3,33 +3,27 @@
 from __future__ import annotations
 
 import dataclasses
-import logging
 import re
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    HomeAssistantError,
-    ServiceValidationError,
-)
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from vi_api_client import Feature, ViError
+from vi_api_client import Feature
 
 from . import ViClimateDevicesConfigEntry
-from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
+from .const import IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
-from .entity import EntityTemplate, ViClimateEntity, async_setup_dynamic_entities
+from .entity import (
+    EntityTemplate,
+    ViClimateFeatureEntity,
+    async_setup_dynamic_entities,
+)
 from .exceptions import (
     ExceptionTranslationKey,
     home_assistant_error,
-    service_validation_error,
 )
 from .utils import beautify_name, is_feature_ignored
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -158,7 +152,7 @@ def _discover_selects(
 
 # Home Assistant declares `available` as a cached_property while ViClimateEntity
 # overrides it with a plain property; the MRO conflict is a false positive.
-class ViClimateSelect(ViClimateEntity, SelectEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
+class ViClimateSelect(ViClimateFeatureEntity, SelectEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """Representation of a Viessmann Climate Devices Select Entity."""
 
     def __init__(  # noqa: PLR0913, PLR0917
@@ -171,36 +165,17 @@ class ViClimateSelect(ViClimateEntity, SelectEntity):  # pyright: ignore[reportI
         enabled_default: bool = True,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator)
+        super().__init__(
+            coordinator,
+            map_key,
+            feature_name,
+            description,
+            translation_placeholders,
+            enabled_default,
+        )
         self.entity_description = description
-        self._map_key = map_key
-        self._feature_name = feature_name
-        self._availability_feature_names = (feature_name,)
-        self._attr_translation_placeholders = translation_placeholders or {}
-        self._attr_entity_registry_enabled_default = enabled_default
         self._optimistic_option: str | None = None
-
-        device = coordinator.data.get(map_key)
-        if not device:
-            raise ValueError(f"Device {map_key} not found in coordinator data")
-
-        # Unique ID: gateway-device-key
-        self._attr_unique_id = f"{device.gateway_serial}-{device.id}-{description.key}"
-        self._attr_has_entity_name = True
-
-        # Improve name for auto-discovered entities
-        if (
-            not hasattr(description, "translation_key")
-            or not description.translation_key
-        ):
-            if isinstance(description.name, str):
-                self._attr_name = description.name
-            else:
-                self._attr_name = beautify_name(feature_name)
-
-        # Initial Setup of Options
-        feature = device.get_feature(feature_name)
-        self._update_options(feature)
+        self._update_options(self.feature_data)
 
     def _update_options(self, feature: Feature | None) -> None:
         """Extract available options from feature control."""
@@ -219,28 +194,6 @@ class ViClimateSelect(ViClimateEntity, SelectEntity):  # pyright: ignore[reportI
                     # Case A: String value
                     normalized_opts.append(opt)
             self._attr_options = normalized_opts
-
-    @property
-    def feature_data(self) -> Feature | None:
-        """Get latest feature data from coordinator."""
-        device = self.coordinator.data.get(self._map_key)
-        if not device:
-            return None
-        return device.get_feature(self._feature_name)
-
-    @property
-    def device_info(self) -> DeviceInfo | None:  # pyright: ignore[reportIncompatibleVariableOverride]
-        """Return device information."""
-        device = self.coordinator.data.get(self._map_key)
-        if not device:
-            return None
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"{device.gateway_serial}-{device.id}")},
-            name=device.model_id,
-            manufacturer="Viessmann",
-            model=device.model_id,
-            serial_number=device.gateway_serial,
-        )
 
     @property
     def current_option(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
@@ -265,39 +218,15 @@ class ViClimateSelect(ViClimateEntity, SelectEntity):  # pyright: ignore[reportI
         if not feat:
             raise home_assistant_error(ExceptionTranslationKey.FEATURE_UNAVAILABLE)
 
-        # 1. OPTIMISTIC UPDATE
         self._optimistic_option = option
         self.async_write_ha_state()
+        await self._async_write_feature(
+            feat.name,
+            option,
+            ExceptionTranslationKey.SELECTION_FAILED,
+            self._clear_optimistic_option,
+        )
 
-        # 2. EXECUTE COMMAND
-        try:
-            response = await self.coordinator.async_set_feature(
-                self._map_key, feat.name, option
-            )
-            if not response.success:
-                raise service_validation_error(ExceptionTranslationKey.COMMAND_REJECTED)
-
-            # 3. Clear optimistic value
-            self._optimistic_option = None
-            self.async_write_ha_state()
-        except ServiceValidationError:
-            self._optimistic_option = None
-            self.async_write_ha_state()
-            raise
-        except ValueError as err:
-            self._optimistic_option = None
-            self.async_write_ha_state()
-            _LOGGER.debug("Viessmann rejected selected option: %s", err)
-            raise service_validation_error(
-                ExceptionTranslationKey.COMMAND_REJECTED
-            ) from err
-        except ConfigEntryAuthFailed:
-            raise
-        except (HomeAssistantError, ViError) as err:
-            # 5. ROLLBACK on error
-            self._optimistic_option = None
-            self.async_write_ha_state()
-            _LOGGER.debug("Unable to change Viessmann selected option: %s", err)
-            raise home_assistant_error(
-                ExceptionTranslationKey.SELECTION_FAILED
-            ) from err
+    def _clear_optimistic_option(self) -> None:
+        """Forget the unconfirmed option."""
+        self._optimistic_option = None

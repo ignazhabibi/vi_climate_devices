@@ -33,10 +33,10 @@ async def test_binary_sensor_handles_device_removed_by_refresh() -> None:
     # Act: Simulate a refresh which no longer includes the device.
     coordinator.data = {}
 
-    # Assert: Entity state and device metadata safely become unavailable.
+    # Assert: Entity state clears and the entity becomes unavailable.
     assert entity.feature_data is None
     assert entity.is_on is None
-    assert entity.device_info is None
+    assert not entity.available
     assert entity.available is False
 
     # Act and assert: An entity cannot be created for an absent device.

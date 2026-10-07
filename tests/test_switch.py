@@ -35,10 +35,10 @@ async def test_switch_handles_device_removed_by_refresh() -> None:
     # Act: Simulate a refresh which removes the device.
     coordinator.data = {}
 
-    # Assert: State and metadata clear, and the requested command is rejected.
+    # Assert: State clears, the entity is unavailable, and writes are rejected.
     assert entity.feature_data is None
     assert entity.is_on is None
-    assert entity.device_info is None
+    assert not entity.available
 
     # Act and assert: A write and a new entity both require an available device.
     with pytest.raises(HomeAssistantError) as error:

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 # TODO(HA 2026.10): Import SwitchDeviceClass from
@@ -14,32 +13,19 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    HomeAssistantError,
-    ServiceValidationError,
-)
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from vi_api_client import Feature, ViError
 
 from . import ViClimateDevicesConfigEntry
-from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
+from .const import IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
-from .entity import ViClimateEntity, async_setup_dynamic_entities
-from .exceptions import (
-    ExceptionTranslationKey,
-    home_assistant_error,
-    service_validation_error,
-)
+from .entity import ViClimateFeatureEntity, async_setup_dynamic_entities
+from .exceptions import ExceptionTranslationKey, home_assistant_error
 from .utils import (
     beautify_name,
     get_feature_bool_value,
     is_feature_boolean_like,
     is_feature_ignored,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -125,7 +111,7 @@ def _discover_switches(
 
 # Home Assistant declares `available` as a cached_property while ViClimateEntity
 # overrides it with a plain property; the MRO conflict is a false positive.
-class ViClimateSwitch(ViClimateEntity, SwitchEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
+class ViClimateSwitch(ViClimateFeatureEntity, SwitchEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """Representation of a Viessmann Climate Devices Switch Entity."""
 
     def __init__(
@@ -137,53 +123,15 @@ class ViClimateSwitch(ViClimateEntity, SwitchEntity):  # pyright: ignore[reportI
         enabled_default: bool = True,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._map_key = map_key
-        self._feature_name = feature_name
-        self._availability_feature_names = (feature_name,)
-        self._attr_entity_registry_enabled_default = enabled_default
-        self._optimistic_state: bool | None = None
-
-        device = coordinator.data.get(map_key)
-        if not device:
-            raise ValueError(f"Device {map_key} not found in coordinator data")
-
-        # Unique ID: gateway-device-key
-        self._attr_unique_id = f"{device.gateway_serial}-{device.id}-{description.key}"
-        self._attr_has_entity_name = True
-
-        # Improve name for auto-discovered entities
-        if (
-            not hasattr(description, "translation_key")
-            or not description.translation_key
-        ):
-            if isinstance(description.name, str):
-                self._attr_name = description.name
-            else:
-                self._attr_name = beautify_name(feature_name)
-
-    @property
-    def feature_data(self) -> Feature | None:
-        """Get latest feature data from coordinator."""
-        device = self.coordinator.data.get(self._map_key)
-        if not device:
-            return None
-        return device.get_feature(self._feature_name)
-
-    @property
-    def device_info(self) -> DeviceInfo | None:  # pyright: ignore[reportIncompatibleVariableOverride]
-        """Return device information."""
-        device = self.coordinator.data.get(self._map_key)
-        if not device:
-            return None
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"{device.gateway_serial}-{device.id}")},
-            name=device.model_id,
-            manufacturer="Viessmann",
-            model=device.model_id,
-            serial_number=device.gateway_serial,
+        super().__init__(
+            coordinator,
+            map_key,
+            feature_name,
+            description,
+            enabled_default=enabled_default,
         )
+        self.entity_description = description
+        self._optimistic_state: bool | None = None
 
     @property
     def is_on(self) -> bool | None:  # pyright: ignore[reportIncompatibleVariableOverride]
@@ -212,39 +160,15 @@ class ViClimateSwitch(ViClimateEntity, SwitchEntity):  # pyright: ignore[reportI
         if not feat:
             raise home_assistant_error(ExceptionTranslationKey.FEATURE_UNAVAILABLE)
 
-        # 1. OPTIMISTIC UPDATE
         self._optimistic_state = target_state
         self.async_write_ha_state()
+        await self._async_write_feature(
+            feat.name,
+            target_state,
+            ExceptionTranslationKey.SWITCH_OPERATION_FAILED,
+            self._clear_optimistic_state,
+        )
 
-        # 2. EXECUTE COMMAND
-        try:
-            response = await self.coordinator.async_set_feature(
-                self._map_key, feat.name, target_state
-            )
-            if not response.success:
-                raise service_validation_error(ExceptionTranslationKey.COMMAND_REJECTED)
-
-            # 3. Clear optimistic state
-            self._optimistic_state = None
-            self.async_write_ha_state()
-        except ServiceValidationError:
-            self._optimistic_state = None
-            self.async_write_ha_state()
-            raise
-        except ValueError as err:
-            self._optimistic_state = None
-            self.async_write_ha_state()
-            _LOGGER.debug("Viessmann rejected switch state: %s", err)
-            raise service_validation_error(
-                ExceptionTranslationKey.COMMAND_REJECTED
-            ) from err
-        except ConfigEntryAuthFailed:
-            raise
-        except (HomeAssistantError, ViError) as err:
-            # 5. ROLLBACK on error
-            self._optimistic_state = None
-            self.async_write_ha_state()
-            _LOGGER.debug("Unable to change Viessmann switch state: %s", err)
-            raise home_assistant_error(
-                ExceptionTranslationKey.SWITCH_OPERATION_FAILED
-            ) from err
+    def _clear_optimistic_state(self) -> None:
+        """Forget the unconfirmed switch state."""
+        self._optimistic_state = None

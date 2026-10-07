@@ -22,15 +22,18 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from vi_api_client import Feature, JsonValue
 
 from . import ViClimateDevicesConfigEntry
-from .const import DOMAIN, IGNORED_FEATURES, TESTED_DEVICES
+from .const import IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
-from .entity import EntityTemplate, ViClimateEntity, async_setup_dynamic_entities
+from .entity import (
+    EntityTemplate,
+    ViClimateFeatureEntity,
+    async_setup_dynamic_entities,
+)
 from .utils import (
     beautify_name,
     is_feature_boolean_like,
@@ -773,7 +776,7 @@ def _discover_realtime_sensors(
     return entities
 
 
-class ViClimateSensor(ViClimateEntity, SensorEntity):
+class ViClimateSensor(ViClimateFeatureEntity, SensorEntity):
     """Representation of a generic Viessmann Climate Devices Sensor."""
 
     def __init__(  # noqa: PLR0913, PLR0917
@@ -786,54 +789,15 @@ class ViClimateSensor(ViClimateEntity, SensorEntity):
         enabled_default: bool = True,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._map_key = map_key
-        self._feature_name = feature_name
-        self._availability_feature_names = (feature_name,)
-        self._attr_translation_placeholders = translation_placeholders or {}
-        self._attr_entity_registry_enabled_default = enabled_default
-
-        device = coordinator.data.get(map_key)
-        if not device:
-            raise ValueError(f"Device {map_key} not found in coordinator data")
-
-        # Unique ID: gateway-device-key
-        self._attr_unique_id = f"{device.gateway_serial}-{device.id}-{description.key}"
-        self._attr_has_entity_name = True
-
-        # Improve name for auto-discovered entities
-        if (
-            not hasattr(description, "translation_key")
-            or not description.translation_key
-        ):
-            if isinstance(description.name, str):
-                self._attr_name = description.name
-            else:
-                self._attr_name = beautify_name(feature_name)
-
-    @property
-    def device_info(self) -> DeviceInfo | None:  # pyright: ignore[reportIncompatibleVariableOverride]
-        """Return device information."""
-        device = self.coordinator.data.get(self._map_key)
-        if not device:
-            return None
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"{device.gateway_serial}-{device.id}")},
-            name=device.model_id,
-            manufacturer="Viessmann",
-            model=device.model_id,
-            serial_number=device.gateway_serial,
+        super().__init__(
+            coordinator,
+            map_key,
+            feature_name,
+            description,
+            translation_placeholders,
+            enabled_default,
         )
-
-    @property
-    def feature_data(self) -> Feature | None:
-        """Retrieve the specific feature from coordinator data."""
-        device = self.coordinator.data.get(self._map_key)
-        if not device:
-            return None
-        # Use efficient lookup
-        return device.get_feature(self._feature_name)
+        self.entity_description = description
 
     @property
     def native_value(self) -> StateType:  # pyright: ignore[reportIncompatibleVariableOverride]
