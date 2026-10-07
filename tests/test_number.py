@@ -573,19 +573,33 @@ async def test_number_write_without_feature_raises_translated_error() -> None:
     assert error.value.translation_placeholders is None
 
 
+@pytest.mark.parametrize(
+    ("feature_name", "written_value", "refreshed_value", "expected_state"),
+    [
+        ("heating.circuits.0.heating.curve.shift", 6.0, 6, "6"),
+        ("heating.dhw.temperature.hysteresis.switchOnValue", 5.0, 5, "5.0"),
+    ],
+    ids=["whole-number-step", "fractional-step"],
+)
 @pytest.mark.asyncio
-async def test_number_state_is_stable_for_whole_numbers(mock_client) -> None:
-    """Report the same state for a whole number whether written or refreshed.
+async def test_number_state_is_stable_between_write_and_refresh(
+    mock_client,
+    feature_name: str,
+    written_value: float,
+    refreshed_value: int,
+    expected_state: str,
+) -> None:
+    """Report one state for a value whether it was written or refreshed.
 
     Home Assistant writes floats such as 6.0, while the API returns whole
-    numbers as int. Both must produce the state "6.0" so a confirmed write and
-    the following refresh do not record a spurious state change.
+    numbers as int. Whole-number steps keep integer states, fractional steps
+    keep float states, so a confirmed write and the following refresh never
+    record a spurious state change.
     """
     # Arrange: Build entities whose feature carries the written and refreshed shape.
     device = (await mock_client.get_full_installation_status("99999"))[0]
-    feature_name = "heating.circuits.0.heating.curve.shift"
     states: list[str] = []
-    for value in (6.0, 6):
+    for value in (written_value, refreshed_value):
         feature = dataclasses.replace(device.get_feature(feature_name), value=value)
         coordinator = MagicMock(
             data={"device": dataclasses.replace(device, features=[feature])}
@@ -600,5 +614,5 @@ async def test_number_state_is_stable_for_whole_numbers(mock_client) -> None:
         # Act: Read the state Home Assistant would store.
         states.append(str(entity.state))
 
-    # Assert: Both shapes produce one identical float state.
-    assert states == ["6.0", "6.0"]
+    # Assert: Both shapes produce the step-appropriate state.
+    assert states == [expected_state, expected_state]

@@ -305,18 +305,21 @@ class ViClimateNumber(ViClimateFeatureEntity, NumberEntity):  # pyright: ignore[
 
     @property
     def native_value(self) -> float | None:  # pyright: ignore[reportIncompatibleVariableOverride]
-        """Return the current value."""
+        """Return the current value in the representation its step implies."""
         # Return optimistic value if set, otherwise from coordinator
         if self._optimistic_value is not None:
-            return self._optimistic_value
-        feat = self.feature_data
-        if not feat:
+            value: float | None = self._optimistic_value
+        else:
+            feat = self.feature_data
+            value = get_feature_number_value(feat.value) if feat else None
+        if value is None:
             return None
-        value = get_feature_number_value(feat.value)
         # The API returns whole numbers as int, while Home Assistant writes
-        # floats. Always report a float so a confirmed write and the next
-        # refresh produce the same state ("6.0") instead of "6.0" then "6".
-        return float(value) if value is not None else None
+        # floats. Normalizing by step keeps a confirmed write and the next
+        # refresh on one state: "6" for whole-number steps, "0.5" otherwise.
+        if get_suggested_precision(self.native_step) == 0:
+            return round(value)
+        return float(value)
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
