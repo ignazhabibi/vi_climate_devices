@@ -5,13 +5,15 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+# TODO(HA 2026.10): Import WaterHeaterEntityFeature from
+# homeassistant.components.water_heater.const and drop the pyright ignore.
 from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_GAS,
     STATE_HEAT_PUMP,
     STATE_PERFORMANCE,
     WaterHeaterEntity,
-    WaterHeaterEntityFeature,
+    WaterHeaterEntityFeature,  # pyright: ignore[reportPrivateImportUsage]
 )
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant

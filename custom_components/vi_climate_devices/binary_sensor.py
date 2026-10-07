@@ -6,8 +6,10 @@ import dataclasses
 import logging
 import re
 
+# TODO(HA 2026.10): Import BinarySensorDeviceClass from
+# homeassistant.components.binary_sensor.const and drop the pyright ignore.
 from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
+    BinarySensorDeviceClass,  # pyright: ignore[reportPrivateImportUsage]
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )

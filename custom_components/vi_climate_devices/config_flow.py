@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from collections.abc import Mapping
 
-import voluptuous as vol
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import OAuth2TokenRequestError
@@ -78,7 +77,6 @@ class OAuth2FlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
             )
 
         auth_implementation = self._get_reauth_entry().data.get("auth_implementation")
@@ -99,7 +97,6 @@ class OAuth2FlowHandler(
             self._validation_data = data
             return self.async_show_form(
                 step_id="validate",
-                data_schema=vol.Schema({}),
                 errors={"base": error},
             )
 
@@ -117,7 +114,6 @@ class OAuth2FlowHandler(
         if error is not None:
             return self.async_show_form(
                 step_id="validate",
-                data_schema=vol.Schema({}),
                 errors={"base": error},
             )
 
@@ -125,6 +121,8 @@ class OAuth2FlowHandler(
 
     async def _async_finish_oauth(self, data: dict[str, JsonValue]) -> ConfigFlowResult:
         """Persist OAuth data only after API validation succeeds."""
+        # TODO(HA 2026.10): Home Assistant translates reauth_successful centrally,
+        # so remove the local abort string from strings.json and translations.
         if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(),

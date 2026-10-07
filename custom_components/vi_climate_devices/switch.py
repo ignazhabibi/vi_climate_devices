@@ -5,8 +5,10 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+# TODO(HA 2026.10): Import SwitchDeviceClass from
+# homeassistant.components.switch.const and drop the pyright ignore.
 from homeassistant.components.switch import (
-    SwitchDeviceClass,
+    SwitchDeviceClass,  # pyright: ignore[reportPrivateImportUsage]
     SwitchEntity,
     SwitchEntityDescription,
 )
