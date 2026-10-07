@@ -312,7 +312,11 @@ class ViClimateNumber(ViClimateFeatureEntity, NumberEntity):  # pyright: ignore[
         feat = self.feature_data
         if not feat:
             return None
-        return get_feature_number_value(feat.value)
+        value = get_feature_number_value(feat.value)
+        # The API returns whole numbers as int, while Home Assistant writes
+        # floats. Always report a float so a confirmed write and the next
+        # refresh produce the same state ("6.0") instead of "6.0" then "6".
+        return float(value) if value is not None else None
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""

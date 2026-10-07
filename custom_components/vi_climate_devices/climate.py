@@ -276,7 +276,7 @@ class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncomp
 
     def _determine_current_action(self) -> HVACAction | None:
         """Determine the current heating or cooling direction."""
-        action: HVACAction | None = None
+        hvac_mode = self.hvac_mode
         active_program_feature = self._get_feature(
             f"heating.circuits.{self._circuit_index}.operating.programs.active"
         )
@@ -285,25 +285,29 @@ class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncomp
             if active_program_feature
             else None
         )
-        if active_program:
-            demand_feature = self._get_feature(
+        demand_feature = (
+            self._get_feature(
                 f"heating.circuits.{self._circuit_index}.operating.programs."
                 f"{active_program}.demand"
             )
-            if demand_feature:
-                action = self._get_action_for_demand(demand_feature)
-                if (
-                    action == HVACAction.COOLING and self.hvac_mode == HVACMode.HEAT
-                ) or (action == HVACAction.HEATING and self.hvac_mode == HVACMode.COOL):
-                    action = None
-            elif self.hvac_mode == HVACMode.COOL:
-                action = HVACAction.COOLING
-            elif self.hvac_mode == HVACMode.HEAT:
-                action = HVACAction.HEATING
-        elif self.hvac_mode == HVACMode.COOL:
+            if active_program
+            else None
+        )
+
+        action: HVACAction | None
+        if demand_feature:
+            action = self._get_action_for_demand(demand_feature)
+            # A demand opposite to the selected mode is not a current action.
+            if (action == HVACAction.COOLING and hvac_mode == HVACMode.HEAT) or (
+                action == HVACAction.HEATING and hvac_mode == HVACMode.COOL
+            ):
+                action = None
+        elif hvac_mode == HVACMode.COOL:
             action = HVACAction.COOLING
-        elif self.hvac_mode == HVACMode.HEAT:
+        elif hvac_mode == HVACMode.HEAT:
             action = HVACAction.HEATING
+        else:
+            action = None
 
         if action is not None and self._has_conflicting_circuit_demand(action):
             action = None

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import dataclasses
-import logging
 import re
 
 from homeassistant.components.sensor import (
@@ -20,6 +19,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfRatio,
     UnitOfTemperature,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -40,8 +40,6 @@ from .utils import (
     is_feature_ignored,
     normalize_sensor_value,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -581,7 +579,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "heating.sensors.volumetricFlow.allengra": SensorEntityDescription(
         key="heating.sensors.volumetricFlow.allengra",
         translation_key="volumetric_flow",
-        native_unit_of_measurement="L/h",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_HOUR,
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -677,9 +675,8 @@ def _get_auto_discovery_description(feature: Feature) -> SensorEntityDescription
             native_unit = UnitOfElectricCurrent.AMPERE
             state_class = SensorStateClass.MEASUREMENT
         case "volumetricFlow" | "liter/hour":
-            # API gives 'liter/hour' -> L/h
             device_class = SensorDeviceClass.VOLUME_FLOW_RATE
-            native_unit = "L/h"
+            native_unit = UnitOfVolumeFlowRate.LITERS_PER_HOUR
             state_class = SensorStateClass.MEASUREMENT
         case _:
             pass

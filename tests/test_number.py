@@ -571,3 +571,34 @@ async def test_number_write_without_feature_raises_translated_error() -> None:
     assert error.value.translation_domain == DOMAIN
     assert error.value.translation_key == "feature_unavailable"
     assert error.value.translation_placeholders is None
+
+
+@pytest.mark.asyncio
+async def test_number_state_is_stable_for_whole_numbers(mock_client) -> None:
+    """Report the same state for a whole number whether written or refreshed.
+
+    Home Assistant writes floats such as 6.0, while the API returns whole
+    numbers as int. Both must produce the state "6.0" so a confirmed write and
+    the following refresh do not record a spurious state change.
+    """
+    # Arrange: Build entities whose feature carries the written and refreshed shape.
+    device = (await mock_client.get_full_installation_status("99999"))[0]
+    feature_name = "heating.circuits.0.heating.curve.shift"
+    states: list[str] = []
+    for value in (6.0, 6):
+        feature = dataclasses.replace(device.get_feature(feature_name), value=value)
+        coordinator = MagicMock(
+            data={"device": dataclasses.replace(device, features=[feature])}
+        )
+        entity = ViClimateNumber(
+            coordinator,
+            "device",
+            feature_name,
+            NumberEntityDescription(key=feature_name),
+        )
+
+        # Act: Read the state Home Assistant would store.
+        states.append(str(entity.state))
+
+    # Assert: Both shapes produce one identical float state.
+    assert states == ["6.0", "6.0"]

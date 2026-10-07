@@ -29,6 +29,11 @@ _LOGGER = logging.getLogger(__name__)
 INVENTORY_INTERVAL = timedelta(hours=24)
 
 
+def device_key(device: Device) -> str:
+    """Return the coordinator data key for a device."""
+    return f"{device.gateway_serial}_{device.id}"
+
+
 class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     """Class to manage fetching Viessmann data."""
 
@@ -117,6 +122,8 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 self.async_update_listeners()
             return response
 
+    # Overrides a private DataUpdateCoordinator method because no public hook
+    # wraps a whole refresh. Keep the signature in sync with Home Assistant.
     async def _async_refresh(
         self,
         log_failures: bool = True,
@@ -184,12 +191,9 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     async def _async_refresh_inventory(self) -> None:
         """Merge a complete inventory into the retained polling device set."""
         inventory = await self.async_get_full_inventory()
-        known_devices = {
-            f"{device.gateway_serial}_{device.id}": device
-            for device in self._known_devices
-        }
+        known_devices = {device_key(device): device for device in self._known_devices}
         for device in inventory:
-            known_devices.setdefault(f"{device.gateway_serial}_{device.id}", device)
+            known_devices.setdefault(device_key(device), device)
         self._known_devices = list(known_devices.values())
         self._last_inventory_at = dt_util.utcnow()
 
@@ -247,7 +251,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
                 except ViError as err:
                     for device in gateway_devices:
-                        key = f"{device.gateway_serial}_{device.id}"
+                        key = device_key(device)
                         failed_device_keys.add(key)
                         device_errors[key] = err
                         # Keep old data for recovery, but mark its entities unavailable.
@@ -258,7 +262,7 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                         device.id: device for device in refresh_result.updated_devices
                     }
                     for device in gateway_devices:
-                        key = f"{device.gateway_serial}_{device.id}"
+                        key = device_key(device)
                         refreshed_device = updated_devices_by_id.get(device.id)
                         if refreshed_device is not None:
                             updated_data[key] = refreshed_device

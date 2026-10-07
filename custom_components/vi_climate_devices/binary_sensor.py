@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import dataclasses
-import logging
 import re
 
 # TODO(HA 2026.10): Import BinarySensorDeviceClass from
@@ -31,8 +30,6 @@ from .utils import (
     is_feature_boolean_like,
     is_feature_ignored,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
