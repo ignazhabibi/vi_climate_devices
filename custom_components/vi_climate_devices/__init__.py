@@ -59,6 +59,9 @@ async def async_setup_entry(
         ConfigEntryAuthFailed: If the OAuth refresh token is rejected.
         ConfigEntryNotReady: If OAuth setup cannot complete temporarily.
     """
+    # TODO(HA 2026.10): The OAuth2 helper raises ConfigEntryNotReady and
+    # ConfigEntryAuthFailed subclasses itself, so the OAuth2 handlers below can
+    # likely be dropped; keep handling ClientError and TimeoutError.
     try:
         implementation = (
             await config_entry_oauth2_flow.async_get_config_entry_implementation(

@@ -121,6 +121,8 @@ class OAuth2FlowHandler(
 
     async def _async_finish_oauth(self, data: dict[str, JsonValue]) -> ConfigFlowResult:
         """Persist OAuth data only after API validation succeeds."""
+        # TODO(HA 2026.10): Home Assistant translates reauth_successful centrally,
+        # so remove the local abort string from strings.json and translations.
         if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(),

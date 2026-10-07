@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from homeassistant.components.water_heater import (
+    # TODO(HA 2026.10): Import the marked names from
+    # homeassistant.components.water_heater.const and drop the pyright ignores.
     SERVICE_SET_OPERATION_MODE,  # pyright: ignore[reportPrivateImportUsage]
     SERVICE_SET_TEMPERATURE,  # pyright: ignore[reportPrivateImportUsage]
     STATE_ECO,

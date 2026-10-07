@@ -5,6 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+# TODO(HA 2026.10): Import WaterHeaterEntityFeature from
+# homeassistant.components.water_heater.const and drop the pyright ignore.
 from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_GAS,
