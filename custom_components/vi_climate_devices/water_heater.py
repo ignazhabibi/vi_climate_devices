@@ -11,7 +11,7 @@ from homeassistant.components.water_heater import (
     STATE_HEAT_PUMP,
     STATE_PERFORMANCE,
     WaterHeaterEntity,
-    WaterHeaterEntityFeature,
+    WaterHeaterEntityFeature,  # pyright: ignore[reportPrivateImportUsage]
 )
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant

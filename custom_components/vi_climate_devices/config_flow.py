@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from collections.abc import Mapping
 
-import voluptuous as vol
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import OAuth2TokenRequestError
@@ -78,7 +77,6 @@ class OAuth2FlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
             )
 
         auth_implementation = self._get_reauth_entry().data.get("auth_implementation")
@@ -99,7 +97,6 @@ class OAuth2FlowHandler(
             self._validation_data = data
             return self.async_show_form(
                 step_id="validate",
-                data_schema=vol.Schema({}),
                 errors={"base": error},
             )
 
@@ -117,7 +114,6 @@ class OAuth2FlowHandler(
         if error is not None:
             return self.async_show_form(
                 step_id="validate",
-                data_schema=vol.Schema({}),
                 errors={"base": error},
             )
 
