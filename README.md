@@ -344,6 +344,9 @@ The production integration is fully strictly typed: Pyright runs in strict
 mode for `custom_components/vi_climate_devices` and `scripts`, while tests
 remain in standard type-checking mode.
 
+CI additionally validates the integration with Home Assistant's `hassfest`
+and the HACS action. Both run only on GitHub.
+
 For Python and test standards, read [CONTRIBUTING.md](CONTRIBUTING.md).
 Automated coding agents must also follow [AGENTS.md](AGENTS.md).
 
