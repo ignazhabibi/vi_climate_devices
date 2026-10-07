@@ -24,7 +24,8 @@
             "unknown": "Der Zugriff auf Viessmann konnte nicht geprüft werden. Versuche es später erneut."
         },
         "abort": {
-            "reauth_successful": "Erneute Authentifizierung war erfolgreich"
+            "reauth_successful": "Erneute Authentifizierung war erfolgreich",
+            "unknown": "Ein unerwarteter Fehler ist aufgetreten. Starte die Einrichtung erneut."
         }
     },
     "exceptions": {

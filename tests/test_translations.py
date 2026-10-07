@@ -1,6 +1,7 @@
 """Tests for translation keys in the Viessmann Climate Devices integration."""
 
 import json
+import re
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
@@ -247,4 +248,31 @@ def test_exception_translation_keys_exist_in_all_maintained_translations(
         assert exception_keys <= translated_keys, (
             f"Missing exception translations in {source_name}: "
             f"{sorted(exception_keys - translated_keys)}"
+        )
+
+
+def test_config_flow_abort_reasons_exist_in_all_maintained_translations(
+    translations,
+) -> None:
+    """Keep every config flow abort reason translatable."""
+    # Arrange: Collect the explicit abort reasons from the config flow source.
+    config_flow_source = (
+        Path(__file__).resolve().parent.parent
+        / "custom_components"
+        / "vi_climate_devices"
+        / "config_flow.py"
+    ).read_text(encoding="utf-8")
+    abort_reasons = set(
+        re.findall(r'async_abort\(\s*reason="([^"]+)"', config_flow_source)
+    )
+    assert abort_reasons
+
+    # Act and assert: Each maintained source must define every abort reason.
+    for source_name in ("strings", "en", "de"):
+        translated_reasons = set(
+            translations[source_name].get("config", {}).get("abort", {})
+        )
+        assert abort_reasons <= translated_reasons, (
+            f"Missing abort translations in {source_name}: "
+            f"{sorted(abort_reasons - translated_reasons)}"
         )
