@@ -900,8 +900,8 @@ async def test_climate_program_matching_variations(
                 is_ready=True,
                 control=FeatureControl(
                     command_name="setMode",
-                    param_name="mode",
-                    required_params=["mode"],
+                    parameter_name="mode",
+                    required_parameters=["mode"],
                     parent_feature_name="heating.circuits.0.operating.modes.active",
                     uri="...",
                     options=("heating", "standby"),
@@ -923,8 +923,8 @@ async def test_climate_program_matching_variations(
                 is_ready=True,
                 control=FeatureControl(
                     command_name="setNormalTemperature",
-                    param_name="targetTemperature",
-                    required_params=["targetTemperature"],
+                    parameter_name="targetTemperature",
+                    required_parameters=["targetTemperature"],
                     parent_feature_name="heating.circuits.0.operating.programs.normalHeating.temperature",
                     uri="...",
                 ),
@@ -938,8 +938,8 @@ async def test_climate_program_matching_variations(
                 is_ready=True,
                 control=FeatureControl(
                     command_name="setComfortTemperature",
-                    param_name="targetTemperature",
-                    required_params=["targetTemperature"],
+                    parameter_name="targetTemperature",
+                    required_parameters=["targetTemperature"],
                     parent_feature_name="heating.circuits.0.operating.programs.comfortCoolingEnergySaving.temperature",
                     uri="...",
                 ),
@@ -953,8 +953,8 @@ async def test_climate_program_matching_variations(
                 is_ready=True,
                 control=FeatureControl(
                     command_name="setEcoTemperature",
-                    param_name="targetTemperature",
-                    required_params=["targetTemperature"],
+                    parameter_name="targetTemperature",
+                    required_parameters=["targetTemperature"],
                     parent_feature_name="heating.circuits.0.operating.programs.eco.temperature",
                     uri="...",
                 ),
@@ -978,7 +978,7 @@ async def test_climate_program_matching_variations(
 
     # Initialize mock methods on the client.
     mock_client.get_full_installation_status = AsyncMock(return_value=[custom_device])
-    mock_client.update_gateway_devices = AsyncMock(
+    mock_client.refresh_gateway_devices = AsyncMock(
         return_value=GatewayDeviceRefreshResult([custom_device], {})
     )
 

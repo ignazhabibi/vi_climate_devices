@@ -113,6 +113,7 @@ IGNORED_FEATURES = [
     "heating.primaryCircuit.valves.fourThreeWay.active",
     "heating.secondaryCircuit.sensors.temperature.supply.status",
     "heating.secondaryHeatGenerator.connectionType",
+    re.compile(r"^.*\.schedule\.active$"),
     re.compile(r"^device\.zigbee\.status\.status$"),
     re.compile(r"^heating\..*\.schedule$"),
     re.compile(r"^heating\.boiler\.sensors\.temperature\..*\.status$"),

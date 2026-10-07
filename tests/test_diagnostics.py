@@ -126,8 +126,8 @@ async def test_config_entry_diagnostics_omit_sensitive_cached_data(
                 is_ready=True,
                 control=FeatureControl(
                     command_name="setTargetTemperature",
-                    param_name="temperature",
-                    required_params=(),
+                    parameter_name="temperature",
+                    required_parameters=(),
                     parent_feature_name="heating.configuration.targetTemperature",
                     uri="https://api.example.invalid/command-uri-canary",
                     min=3.0,
