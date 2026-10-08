@@ -16,7 +16,7 @@
     "vi_api_client"
   ],
   "requirements": [
-    "vi_api_client @ git+https://github.com/ignazhabibi/vi_api_client.git@v5.0.0"
+    "vi_api_client @ git+https://github.com/ignazhabibi/vi_api_client.git@v5.1.0"
   ],
   "single_config_entry": true,
   "version": "1.9.4"
