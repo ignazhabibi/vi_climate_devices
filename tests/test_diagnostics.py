@@ -1,6 +1,9 @@
 """Tests for privacy-safe integration diagnostics."""
 
+import dataclasses
 import json
+import re
+from itertools import count
 from typing import cast
 from unittest.mock import MagicMock
 
@@ -8,7 +11,13 @@ import pytest
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
-from vi_api_client import Device, Feature, FeatureControl, FixtureViClient
+from vi_api_client import (
+    Device,
+    Feature,
+    FeatureControl,
+    FeatureValue,
+    FixtureViClient,
+)
 
 from custom_components.vi_climate_devices.const import DOMAIN
 from custom_components.vi_climate_devices.diagnostics import (
@@ -23,6 +32,67 @@ def _contains_value(value: object, canary: str) -> bool:
     if isinstance(value, list):
         return any(_contains_value(item, canary) for item in value)
     return canary in str(value)
+
+
+def _unmask_identifiers(
+    value: FeatureValue, digit_source: count[int], identifiers: set[str]
+) -> FeatureValue:
+    """Return a value whose masked identifiers are replaced by synthetic digits.
+
+    Each `#` run is replaced by distinct digits of the same length, which are
+    collected in `identifiers`.
+    """
+    if isinstance(value, str):
+
+        def _replace(match: re.Match[str]) -> str:
+            identifier = str(next(digit_source)).zfill(len(match.group()))
+            identifiers.add(identifier)
+            return identifier
+
+        return re.sub("#+", _replace, value)
+    if isinstance(value, list):
+        return [_unmask_identifiers(item, digit_source, identifiers) for item in value]
+    if isinstance(value, dict):
+        return {
+            key: _unmask_identifiers(item, digit_source, identifiers)
+            for key, item in value.items()
+        }
+    return value
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "fixture_name", FixtureViClient.get_available_fixture_devices()
+)
+async def test_config_entry_diagnostics_mask_numeric_identifiers(
+    hass: HomeAssistant, fixture_name: str
+) -> None:
+    """Test diagnostics mask numeric identifiers independently of feature names."""
+    # Arrange: Replace the identifiers the fixtures mask with synthetic digits.
+    fixture_device = (
+        await FixtureViClient(fixture_name).get_full_installation_status("99999")
+    )[0]
+    digit_source = count(314159)
+    identifiers: set[str] = set()
+    device = dataclasses.replace(
+        fixture_device,
+        features=[
+            dataclasses.replace(
+                feature,
+                value=_unmask_identifiers(feature.value, digit_source, identifiers),
+            )
+            for feature in fixture_device.features
+        ],
+    )
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.runtime_data = MagicMock(data={"gateway-device": device})
+
+    # Act: Request the config-entry diagnostics through Home Assistant's hook.
+    diagnostics = await async_get_config_entry_diagnostics(hass, entry)
+
+    # Assert: None of the synthetic identifiers reaches the diagnostics.
+    serialized = json.dumps(diagnostics, sort_keys=True)
+    assert [identifier for identifier in identifiers if identifier in serialized] == []
 
 
 @pytest.mark.asyncio

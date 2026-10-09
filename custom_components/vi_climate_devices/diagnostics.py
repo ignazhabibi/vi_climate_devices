@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from math import isfinite
-from typing import TypeGuard
+from typing import TypeGuard, cast
 from urllib.parse import urlparse
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from vi_api_client import Feature, FeatureControl
+from vi_api_client import Feature, FeatureControl, mask_identifiers
 
 from .coordinator import ViClimateDataUpdateCoordinator
 
@@ -127,7 +127,12 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant,
     entry: ConfigEntry[ViClimateDataUpdateCoordinator],
 ) -> dict[str, list[JsonObject]]:
-    """Return privacy-safe diagnostics from the current coordinator snapshot."""
+    """Return privacy-safe diagnostics from the current coordinator snapshot.
+
+    After the key- and feature-name-based redaction, the document is masked
+    with the library's `mask_identifiers`, so numeric identifiers are hidden
+    even when no name marks them as sensitive.
+    """
     del hass
     devices = sorted(
         entry.runtime_data.data.values(),
@@ -149,7 +154,7 @@ async def async_get_config_entry_diagnostics(
         )
     }
 
-    return {
+    diagnostics: JsonObject = {
         "devices": [
             {
                 "installation": installation_labels[device.installation_id],
@@ -170,3 +175,4 @@ async def async_get_config_entry_diagnostics(
             for index, device in enumerate(devices, start=1)
         ]
     }
+    return cast("dict[str, list[JsonObject]]", mask_identifiers(diagnostics))
