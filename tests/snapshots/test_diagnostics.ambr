@@ -43,7 +43,7 @@
             'is_writable': False,
             'name': 'device.configuration.houseLocation.altitude',
             'unit': 'meter',
-            'value': '<redacted>',
+            'value': 0,
           }),
           dict({
             'constraints': dict({
@@ -73,7 +73,29 @@
             'is_writable': False,
             'name': 'device.messages.info.raw',
             'unit': None,
-            'value': '<redacted>',
+            'value': dict({
+              'entries': dict({
+                'type': 'array',
+                'value': list([
+                  dict({
+                    'accessLevel': 'customer',
+                    'audiences': list([
+                      'IS-SUPPLIER',
+                      'IS-DEVELOPMENT',
+                      'IS-MANUFACTURING',
+                      'IS-AFTERSALES',
+                      'IS-AFTERMARKET',
+                      'IS-DEVELOPER-VEG',
+                      'IS-BIG-DATA',
+                      'IS-MANUFACTURING-VEG',
+                    ]),
+                    'errorCode': 'I.114',
+                    'priority': 'info',
+                    'timestamp': '2025-09-04T10:42:08.000Z',
+                  }),
+                ]),
+              }),
+            }),
           }),
           dict({
             'constraints': dict({
@@ -83,7 +105,13 @@
             'is_writable': False,
             'name': 'device.messages.service.raw',
             'unit': None,
-            'value': '<redacted>',
+            'value': dict({
+              'entries': dict({
+                'type': 'array',
+                'value': list([
+                ]),
+              }),
+            }),
           }),
           dict({
             'constraints': dict({
@@ -93,7 +121,141 @@
             'is_writable': False,
             'name': 'device.messages.status.raw',
             'unit': None,
-            'value': '<redacted>',
+            'value': dict({
+              'entries': dict({
+                'type': 'array',
+                'value': list([
+                  dict({
+                    'accessLevel': 'customer',
+                    'audiences': list([
+                      'IS-SUPPLIER',
+                      'IS-DEVELOPMENT',
+                      'IS-MANUFACTURING',
+                      'IS-AFTERSALES',
+                      'IS-AFTERMARKET',
+                      'IS-DEVELOPER-VEG',
+                      'IS-BIG-DATA',
+                      'IS-MANUFACTURING-VEG',
+                    ]),
+                    'errorCode': 'S.134',
+                    'priority': 'status',
+                    'timestamp': '2025-10-05T11:52:33.000Z',
+                  }),
+                  dict({
+                    'accessLevel': 'customer',
+                    'audiences': list([
+                      'IS-SUPPLIER',
+                      'IS-DEVELOPMENT',
+                      'IS-MANUFACTURING',
+                      'IS-AFTERSALES',
+                      'IS-AFTERMARKET',
+                      'IS-DEVELOPER-VEG',
+                      'IS-BIG-DATA',
+                      'IS-MANUFACTURING-VEG',
+                    ]),
+                    'errorCode': 'S.123',
+                    'priority': 'status',
+                    'timestamp': '2025-10-05T11:52:30.000Z',
+                  }),
+                  dict({
+                    'accessLevel': 'customer',
+                    'audiences': list([
+                      'IS-SUPPLIER',
+                      'IS-DEVELOPMENT',
+                      'IS-MANUFACTURING',
+                      'IS-AFTERSALES',
+                      'IS-AFTERMARKET',
+                      'IS-DEVELOPER-VEG',
+                      'IS-BIG-DATA',
+                      'IS-MANUFACTURING-VEG',
+                    ]),
+                    'errorCode': 'S.165',
+                    'priority': 'status',
+                    'timestamp': '2025-10-05T04:49:42.000Z',
+                  }),
+                  dict({
+                    'accessLevel': 'customer',
+                    'audiences': list([
+                      'IS-SUPPLIER',
+                      'IS-DEVELOPMENT',
+                      'IS-MANUFACTURING',
+                      'IS-AFTERSALES',
+                      'IS-AFTERMARKET',
+                      'IS-DEVELOPER-VEG',
+                      'IS-BIG-DATA',
+                      'IS-MANUFACTURING-VEG',
+                    ]),
+                    'errorCode': 'S.120',
+                    'priority': 'status',
+                    'timestamp': '2025-09-04T10:42:08.000Z',
+                  }),
+                  dict({
+                    'accessLevel': 'customer',
+                    'audiences': list([
+                      'IS-SUPPLIER',
+                      'IS-DEVELOPMENT',
+                      'IS-MANUFACTURING',
+                      'IS-AFTERSALES',
+                      'IS-AFTERMARKET',
+                      'IS-DEVELOPER-VEG',
+                      'IS-BIG-DATA',
+                      'IS-MANUFACTURING-VEG',
+                    ]),
+                    'errorCode': 'S.219',
+                    'priority': 'status',
+                    'timestamp': '2025-09-04T10:42:05.000Z',
+                  }),
+                  dict({
+                    'accessLevel': 'customer',
+                    'audiences': list([
+                      'IS-SUPPLIER',
+                      'IS-DEVELOPMENT',
+                      'IS-MANUFACTURING',
+                      'IS-AFTERSALES',
+                      'IS-AFTERMARKET',
+                      'IS-DEVELOPER-VEG',
+                      'IS-BIG-DATA',
+                      'IS-MANUFACTURING-VEG',
+                    ]),
+                    'errorCode': 'S.218',
+                    'priority': 'status',
+                    'timestamp': '2025-09-04T10:42:05.000Z',
+                  }),
+                  dict({
+                    'accessLevel': 'customer',
+                    'audiences': list([
+                      'IS-SUPPLIER',
+                      'IS-DEVELOPMENT',
+                      'IS-MANUFACTURING',
+                      'IS-AFTERSALES',
+                      'IS-AFTERMARKET',
+                      'IS-DEVELOPER-VEG',
+                      'IS-BIG-DATA',
+                      'IS-MANUFACTURING-VEG',
+                    ]),
+                    'errorCode': 'S.217',
+                    'priority': 'status',
+                    'timestamp': '2025-09-04T10:42:05.000Z',
+                  }),
+                  dict({
+                    'accessLevel': 'customer',
+                    'audiences': list([
+                      'IS-SUPPLIER',
+                      'IS-DEVELOPMENT',
+                      'IS-MANUFACTURING',
+                      'IS-AFTERSALES',
+                      'IS-AFTERMARKET',
+                      'IS-DEVELOPER-VEG',
+                      'IS-BIG-DATA',
+                      'IS-MANUFACTURING-VEG',
+                    ]),
+                    'errorCode': 'S.165',
+                    'priority': 'status',
+                    'timestamp': '2025-09-04T10:42:05.000Z',
+                  }),
+                ]),
+              }),
+            }),
           }),
           dict({
             'constraints': dict({
@@ -164,10 +326,10 @@
             'name': 'device.productIdentification.product',
             'unit': None,
             'value': dict({
-              'busAddress': '<redacted>',
+              'busAddress': 1,
               'busType': 'CanExternal',
               'productFamily': 'B_00027_VC250',
-              'viessmannIdentificationNumber': '<redacted>',
+              'viessmannIdentificationNumber': '################',
             }),
           }),
           dict({
@@ -180,10 +342,10 @@
             'unit': None,
             'value': list([
               dict({
-                'busAddress': '<redacted>',
+                'busAddress': 1,
                 'busType': 'CanExternal',
                 'productFamily': 'B_00027_VC250',
-                'viessmannIdentificationNumber': '<redacted>',
+                'viessmannIdentificationNumber': '################',
               }),
             ]),
           }),
@@ -195,7 +357,7 @@
             'is_writable': False,
             'name': 'device.serial',
             'unit': None,
-            'value': '<redacted>',
+            'value': '################',
           }),
           dict({
             'constraints': dict({
@@ -327,7 +489,7 @@
             'is_writable': False,
             'name': 'heating.boiler.serial',
             'unit': None,
-            'value': '<redacted>',
+            'value': '################',
           }),
           dict({
             'constraints': dict({
@@ -1358,7 +1520,7 @@
             'is_writable': False,
             'name': 'heating.configuration.houseLocation.altitude',
             'unit': 'meter',
-            'value': '<redacted>',
+            'value': 0,
           }),
           dict({
             'constraints': dict({
@@ -1368,7 +1530,7 @@
             'is_writable': False,
             'name': 'heating.configuration.houseLocation.latitude',
             'unit': 'degree',
-            'value': '<redacted>',
+            'value': 0,
           }),
           dict({
             'constraints': dict({
@@ -1378,7 +1540,7 @@
             'is_writable': False,
             'name': 'heating.configuration.houseLocation.longitude',
             'unit': 'degree',
-            'value': '<redacted>',
+            'value': 0,
           }),
           dict({
             'constraints': dict({
