@@ -3,13 +3,16 @@
 import dataclasses
 import json
 import re
+from datetime import UTC, datetime
+from importlib.resources import files
 from itertools import count
 from typing import cast
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from vi_api_client import (
@@ -18,11 +21,13 @@ from vi_api_client import (
     FeatureControl,
     FeatureValue,
     FixtureViClient,
+    ViConnectionError,
 )
 
 from custom_components.vi_climate_devices.const import DOMAIN
 from custom_components.vi_climate_devices.diagnostics import (
     async_get_config_entry_diagnostics,
+    async_get_device_diagnostics,
 )
 
 
@@ -280,3 +285,86 @@ async def test_config_entry_diagnostics_omit_sensitive_cached_data(
     }
     assert diagnostic_features["heating.diagnostics.unsupportedValue"]["value"] is None
     assert coordinator.mock_calls == []
+
+
+async def _setup_device_diagnostics(
+    hass: HomeAssistant, client: FixtureViClient, identifier: str
+) -> tuple[MockConfigEntry, dr.DeviceEntry]:
+    """Return an entry caching the fixture device and a registered device entry."""
+    device = (await client.get_full_installation_status("99999"))[0]
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    entry.runtime_data = MagicMock(data={"gateway-device": device}, client=client)
+    device_entry = dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={(DOMAIN, identifier)}
+    )
+    return entry, device_entry
+
+
+@pytest.mark.asyncio
+async def test_device_diagnostics_return_anonymized_fixture_export(
+    hass: HomeAssistant, mock_client: FixtureViClient
+) -> None:
+    """Test device diagnostics return the library's fixture export for the device."""
+    # Arrange: Register the cached fixture device under its integration identifier.
+    device = (await mock_client.get_full_installation_status("99999"))[0]
+    entry, device_entry = await _setup_device_diagnostics(
+        hass, mock_client, f"{device.gateway_serial}-{device.id}"
+    )
+    bundled_fixture = json.loads(
+        (files("vi_api_client") / "fixtures" / "Vitocal250A.json").read_text()
+    )
+
+    capture_dates = {datetime.now(UTC).date().isoformat()}
+
+    # Act: Request the device diagnostics through Home Assistant's hook.
+    diagnostics = await async_get_device_diagnostics(hass, entry, device_entry)
+
+    # Assert: The export carries the bundled raw features and the device block.
+    capture_dates.add(datetime.now(UTC).date().isoformat())
+    device_block = cast(dict[str, object], diagnostics["device"])
+    assert device_block.pop("capturedAt") in capture_dates
+    assert device_block == {
+        "modelId": device.model_id,
+        "deviceType": device.device_type,
+    }
+    assert diagnostics["data"] == bundled_fixture["data"]
+
+
+@pytest.mark.asyncio
+async def test_device_diagnostics_report_unknown_device(
+    hass: HomeAssistant, mock_client: FixtureViClient
+) -> None:
+    """Test device diagnostics return an error document for an uncached device."""
+    entry, device_entry = await _setup_device_diagnostics(
+        hass, mock_client, "unknown-gateway-unknown-device"
+    )
+    mock_client.export_device_fixture = AsyncMock()
+
+    diagnostics = await async_get_device_diagnostics(hass, entry, device_entry)
+
+    assert diagnostics == {"error": "The device is not in the coordinator cache"}
+    mock_client.export_device_fixture.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_device_diagnostics_report_api_error(
+    hass: HomeAssistant, mock_client: FixtureViClient
+) -> None:
+    """Test device diagnostics return an error document when the export fails."""
+    # Arrange: Let the export fail with a message that carries an identifier.
+    device = (await mock_client.get_full_installation_status("99999"))[0]
+    entry, device_entry = await _setup_device_diagnostics(
+        hass, mock_client, f"{device.gateway_serial}-{device.id}"
+    )
+    mock_client.export_device_fixture = AsyncMock(
+        side_effect=ViConnectionError("installations/1234567 unreachable")
+    )
+
+    # Act: Request the device diagnostics through Home Assistant's hook.
+    diagnostics = await async_get_device_diagnostics(hass, entry, device_entry)
+
+    # Assert: Only the error type is reported, not the exception message.
+    assert diagnostics == {
+        "error": "Reading the device features failed: ViConnectionError"
+    }

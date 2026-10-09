@@ -298,8 +298,20 @@ From **Settings** > **Devices & services**, open the Viessmann Climate Devices
 integration, select the three-dot menu, then choose **Download diagnostics**.
 The file contains the cached device model, status, feature states, and available
 control constraints. Installation, gateway, and device identifiers are replaced
-with document-local labels, and location, serial, and raw-message feature values
-are redacted. Review the downloaded file before sharing it.
+with document-local labels. Secrets, address data, numeric identifiers such as
+serials, and coordinates are redacted with the rules of `vi_api_client`; free
+text such as circuit names and device messages is kept. Review the downloaded
+file before sharing it.
+
+### Contribute a device fixture
+
+Support for a new device model starts with a fixture of its API features. To
+contribute one, open the device from **Settings** > **Devices & services** >
+**Devices**, select the three-dot menu, then choose **Download diagnostics**.
+The file contains the device's raw API features, read fresh from the API and
+anonymized by `vi_api_client`. Look through the file before sharing it, because
+free text such as circuit names is not masked, then attach it to an issue in the
+[vi_api_client repository](https://github.com/ignazhabibi/vi_api_client/issues).
 
 ## Removing the integration
 
