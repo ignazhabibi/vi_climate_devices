@@ -74,12 +74,14 @@ section in `README.md`.
   Omit empty sections instead of adding `None` entries. Each included section
   must be non-empty, and each entry is
   ``- `short-sha` Summary. ([#PR](https://github.com/owner/repo/pull/PR))``.
-  The maintainer usually creates the tag on GitHub by publishing a release for
-  the merged `main` commit with the changelog as its description; the tag
-  workflow keeps that description and only adds the build artifacts. An
+  Put the changelog unfenced in the release-preparation pull request body,
+  starting at a `# Changelog` line and ending before the next `## ` heading or
+  `---` line. The maintainer creates the tag on GitHub by publishing a release
+  for the merged `main` commit without a description; the tag workflow copies
+  the changelog from the pull request that merged the tagged commit. An
   annotated tag pushed with `git tag --cleanup=verbatim` and a concise subject
-  is the alternative: its message body becomes the release body. Verify the
-  published GitHub release body before declaring the release live.
+  is the alternative: its message body takes precedence. Verify the published
+  GitHub release body before declaring the release live.
 
 ## Documentation Drift
 
