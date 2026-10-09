@@ -1,14 +1,24 @@
 """Tests for privacy-safe integration diagnostics."""
 
+import dataclasses
 import json
+import re
+from itertools import count
 from typing import cast
 from unittest.mock import MagicMock
 
 import pytest
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
-from vi_api_client import Device, Feature, FeatureControl, FixtureViClient
+from vi_api_client import (
+    Device,
+    Feature,
+    FeatureControl,
+    FeatureValue,
+    FixtureViClient,
+)
 
 from custom_components.vi_climate_devices.const import DOMAIN
 from custom_components.vi_climate_devices.diagnostics import (
@@ -23,6 +33,67 @@ def _contains_value(value: object, canary: str) -> bool:
     if isinstance(value, list):
         return any(_contains_value(item, canary) for item in value)
     return canary in str(value)
+
+
+def _unmask_identifiers(
+    value: FeatureValue, digit_source: count[int], identifiers: set[str]
+) -> FeatureValue:
+    """Return a value whose masked identifiers are replaced by synthetic digits.
+
+    Each `#` run is replaced by distinct digits of the same length, which are
+    collected in `identifiers`.
+    """
+    if isinstance(value, str):
+
+        def _replace(match: re.Match[str]) -> str:
+            identifier = str(next(digit_source)).zfill(len(match.group()))
+            identifiers.add(identifier)
+            return identifier
+
+        return re.sub("#+", _replace, value)
+    if isinstance(value, list):
+        return [_unmask_identifiers(item, digit_source, identifiers) for item in value]
+    if isinstance(value, dict):
+        return {
+            key: _unmask_identifiers(item, digit_source, identifiers)
+            for key, item in value.items()
+        }
+    return value
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "fixture_name", FixtureViClient.get_available_fixture_devices()
+)
+async def test_config_entry_diagnostics_mask_numeric_identifiers(
+    hass: HomeAssistant, fixture_name: str
+) -> None:
+    """Test diagnostics mask numeric identifiers independently of feature names."""
+    # Arrange: Replace the identifiers the fixtures mask with synthetic digits.
+    fixture_device = (
+        await FixtureViClient(fixture_name).get_full_installation_status("99999")
+    )[0]
+    digit_source = count(314159)
+    identifiers: set[str] = set()
+    device = dataclasses.replace(
+        fixture_device,
+        features=[
+            dataclasses.replace(
+                feature,
+                value=_unmask_identifiers(feature.value, digit_source, identifiers),
+            )
+            for feature in fixture_device.features
+        ],
+    )
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.runtime_data = MagicMock(data={"gateway-device": device})
+
+    # Act: Request the config-entry diagnostics through Home Assistant's hook.
+    diagnostics = await async_get_config_entry_diagnostics(hass, entry)
+
+    # Assert: None of the synthetic identifiers reaches the diagnostics.
+    serialized = json.dumps(diagnostics, sort_keys=True)
+    assert [identifier for identifier in identifiers if identifier in serialized] == []
 
 
 @pytest.mark.asyncio
@@ -52,13 +123,6 @@ async def test_config_entry_diagnostics_omit_sensitive_cached_data(
     installation_canary = "installation-canary"
     gateway_serial_canary = "gateway-serial-canary"
     device_id_canary = "device-id-canary"
-    user_alias_canary = "user-alias-canary"
-    description_canary = "description-canary"
-    location_canary = "location-canary"
-    serial_number_canary = "serial-number-canary"
-    raw_message_canary = "raw-message-canary"
-    address_canary = "address-canary"
-    coordinate_canary = "coordinate-canary"
     device = Device(
         id=device_id_canary,
         gateway_serial=gateway_serial_canary,
@@ -70,26 +134,24 @@ async def test_config_entry_diagnostics_omit_sensitive_cached_data(
             Feature(
                 name="device.configuration.houseLocation",
                 value={
-                    "alias": user_alias_canary,
-                    "value": location_canary,
+                    "alias": "user-alias-canary",
+                    "latitude": 48.137154,
+                    "longitude": 11.576124,
                 },
                 unit=None,
                 is_enabled=True,
                 is_ready=True,
             ),
             Feature(
-                name="device.serialNumber",
-                value=serial_number_canary,
+                name="device.serial",
+                value="7571381234567890",
                 unit=None,
                 is_enabled=True,
                 is_ready=True,
             ),
             Feature(
                 name="device.messages.info.raw",
-                value={
-                    "description": description_canary,
-                    "message": raw_message_canary,
-                },
+                value={"description": "description-canary"},
                 unit=None,
                 is_enabled=True,
                 is_ready=True,
@@ -97,13 +159,11 @@ async def test_config_entry_diagnostics_omit_sensitive_cached_data(
             Feature(
                 name="heating.configuration.summary",
                 value={
-                    "address": address_canary,
-                    "coordinates": coordinate_canary,
-                    "resourceId": "resource-identifier-canary",
-                    "deviceID": "uppercase-id-canary",
-                    "RESOURCE_ID": "uppercase-underscore-id-canary",
+                    "address": "address-canary",
                     "accessToken": "cached-token-canary",
                     "credential": "cached-credential-canary",
+                    "clientSecret": "cached-secret-canary",
+                    "resourceUri": "https://api.example.invalid/installations/2345678",
                 },
                 unit=None,
                 is_enabled=True,
@@ -136,12 +196,8 @@ async def test_config_entry_diagnostics_omit_sensitive_cached_data(
                     value_type="number",
                     options=(
                         "option-a",
-                        "https://example.invalid/scalar-uri-canary",
-                        {
-                            "id": "option-id-canary",
-                            "uri": "option-uri-canary",
-                            "token": "option-token-canary",
-                        },
+                        "https://example.invalid/gateways/3456789012345678",
+                        {"token": "option-token-canary"},
                     ),
                 ),
             ),
@@ -171,13 +227,18 @@ async def test_config_entry_diagnostics_omit_sensitive_cached_data(
         installation_canary,
         gateway_serial_canary,
         device_id_canary,
-        user_alias_canary,
-        description_canary,
-        location_canary,
-        serial_number_canary,
-        raw_message_canary,
-        address_canary,
-        coordinate_canary,
+        "user-alias-canary",
+        "48.137154",
+        "11.576124",
+        "7571381234567890",
+        "description-canary",
+        "address-canary",
+        "cached-token-canary",
+        "cached-credential-canary",
+        "cached-secret-canary",
+        "2345678",
+        "3456789012345678",
+        "option-token-canary",
         "command-uri-canary",
         "cache-key-canary",
         "entry-title-canary",
@@ -187,43 +248,35 @@ async def test_config_entry_diagnostics_omit_sensitive_cached_data(
         "credential-canary",
         "option-canary",
         "option-value-canary",
-        "resource-identifier-canary",
-        "cached-token-canary",
-        "cached-credential-canary",
-        "option-id-canary",
-        "option-uri-canary",
-        "option-token-canary",
-        "uppercase-id-canary",
-        "uppercase-underscore-id-canary",
-        "scalar-uri-canary",
     ]:
         assert not _contains_value(diagnostics, canary)
     assert diagnostics["devices"][0]["installation"] == "installation_1"
     assert diagnostics["devices"][0]["gateway"] == "gateway_1"
     assert diagnostics["devices"][0]["device"] == "device_1"
-    diagnostic_features = cast(
-        list[dict[str, object]], diagnostics["devices"][0]["features"]
-    )
-    target_feature = next(
-        feature
-        for feature in diagnostic_features
-        if feature["name"] == "heating.configuration.targetTemperature"
-    )
-    assert cast(dict[str, object], target_feature["constraints"]) == {
+    diagnostic_features = {
+        cast(str, feature["name"]): feature
+        for feature in cast(
+            list[dict[str, object]], diagnostics["devices"][0]["features"]
+        )
+    }
+    assert diagnostic_features["device.configuration.houseLocation"]["value"] == {
+        "alias": REDACTED,
+        "latitude": 0,
+        "longitude": 0,
+    }
+    assert diagnostic_features["device.serial"]["value"] == "################"
+    assert diagnostic_features["heating.configuration.targetTemperature"][
+        "constraints"
+    ] == {
         "max": 37.0,
         "min": 3.0,
         "options": [
             "option-a",
-            "<redacted>",
-            {"id": "<redacted>", "token": "<redacted>", "uri": "<redacted>"},
+            "https://example.invalid/gateways/################",
+            {"token": REDACTED},
         ],
         "step": 0.1,
         "value_type": "number",
     }
-    unsupported_feature = next(
-        feature
-        for feature in diagnostic_features
-        if feature["name"] == "heating.diagnostics.unsupportedValue"
-    )
-    assert unsupported_feature["value"] is None
+    assert diagnostic_features["heating.diagnostics.unsupportedValue"]["value"] is None
     assert coordinator.mock_calls == []
