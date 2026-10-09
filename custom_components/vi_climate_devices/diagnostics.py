@@ -6,11 +6,15 @@ from collections.abc import Mapping, Sequence
 from math import isfinite
 from typing import TypeGuard
 
+from aiohttp import ClientError
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from vi_api_client import Device, Feature, FeatureControl, redact_device
+from homeassistant.exceptions import OAuth2TokenRequestError
+from homeassistant.helpers.device_registry import DeviceEntry
+from vi_api_client import Device, Feature, FeatureControl, ViError, redact_device
 
+from .const import DOMAIN
 from .coordinator import ViClimateDataUpdateCoordinator
 
 type JsonValue = (
@@ -154,3 +158,37 @@ async def async_get_config_entry_diagnostics(
             for index, device in enumerate(devices, start=1)
         ]
     }
+
+
+async def async_get_device_diagnostics(
+    hass: HomeAssistant,
+    entry: ConfigEntry[ViClimateDataUpdateCoordinator],
+    device_entry: DeviceEntry,
+) -> dict[str, JsonValue]:
+    """Return a device's anonymized raw API features as a fixture export.
+
+    Unlike the config-entry diagnostics, this reads the device's features
+    fresh from the API through the library's `export_device_fixture`, which
+    redacts the document. Users can share the file to contribute a fixture.
+    When the device is not cached or the API call fails, a document with a
+    short error reason is returned instead, so the download still works.
+    """
+    del hass
+    coordinator = entry.runtime_data
+    device = next(
+        (
+            device
+            for device in coordinator.data.values()
+            if (DOMAIN, f"{device.gateway_serial}-{device.id}")
+            in device_entry.identifiers
+        ),
+        None,
+    )
+    if device is None:
+        return {"error": "The device is not in the coordinator cache"}
+
+    try:
+        return await coordinator.client.export_device_fixture(device)
+    except (ClientError, OAuth2TokenRequestError, TimeoutError, ViError) as err:
+        # The exception message can carry request URLs, so only its type is kept.
+        return {"error": f"Reading the device features failed: {type(err).__name__}"}
