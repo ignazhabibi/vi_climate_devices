@@ -64,24 +64,20 @@ section in `README.md`.
 - After a merge, fast-forward local `main` and delete the confirmed merged
   local branch.
 - Releases must keep `pyproject.toml` and `manifest.json` versions aligned.
-  Propose the version change and changelog before committing. Tag only the
-  merged `main` commit: stable releases use `vX.Y.Z`, prereleases use
-  `vX.Y.Z-alpha.N`, `-beta.N`, or `-rc.N`. A release is live only after both
-  its `main` and tag workflows pass.
-- The release changelog is a `# Changelog` body containing only the
-  applicable sections, in this order: `### Breaking Changes 🚨`,
-  `### New Features 💫`, `### Other Changes ☀️`, and `### Bug Fixes 🐞`.
-  Omit empty sections instead of adding `None` entries. Each included section
-  must be non-empty, and each entry is
+  For a release, analyze commits since the previous tag, propose the semantic
+  version bump and changelog, and wait for confirmation. Land the version bump
+  and the confirmed changelog as `release-notes/vX.Y.Z.md` through a PR, then
+  create the tag on the merged `main` commit, for example on the GitHub
+  release page: stable releases use `vX.Y.Z`, prereleases use
+  `vX.Y.Z-alpha.N`, `-beta.N`, or `-rc.N`. The tag workflow publishes that
+  file as the GitHub Release body; without it, it falls back to an annotated
+  tag's message. A release is live only after both its `main` and tag
+  workflows pass; then verify the published GitHub release body.
+- Write release notes as `# Changelog`, followed by only the applicable
+  sections in this order: `### Breaking Changes 🚨`, `### New Features 💫`,
+  `### Other Changes ☀️`, and `### Bug Fixes 🐞`. Omit empty sections instead
+  of adding `None` entries. Each entry is
   ``- `short-sha` Summary. ([#PR](https://github.com/owner/repo/pull/PR))``.
-  Put the changelog unfenced in the release-preparation pull request body,
-  starting at a `# Changelog` line and ending before the next `## ` heading or
-  `---` line. The maintainer creates the tag on GitHub by publishing a release
-  for the merged `main` commit without a description; the tag workflow copies
-  the changelog from the pull request that merged the tagged commit. An
-  annotated tag pushed with `git tag --cleanup=verbatim` and a concise subject
-  is the alternative: its message body takes precedence. Verify the published
-  GitHub release body before declaring the release live.
 
 ## Documentation Drift
 
