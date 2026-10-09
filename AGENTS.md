@@ -68,15 +68,18 @@ section in `README.md`.
   merged `main` commit: stable releases use `vX.Y.Z`, prereleases use
   `vX.Y.Z-alpha.N`, `-beta.N`, or `-rc.N`. A release is live only after both
   its `main` and tag workflows pass.
-- Release tags use a concise subject and a `# Changelog` body containing only
-  the applicable sections, in this order: `### Breaking Changes 🚨`,
+- The release changelog is a `# Changelog` body containing only the
+  applicable sections, in this order: `### Breaking Changes 🚨`,
   `### New Features 💫`, `### Other Changes ☀️`, and `### Bug Fixes 🐞`.
   Omit empty sections instead of adding `None` entries. Each included section
   must be non-empty, and each entry is
   ``- `short-sha` Summary. ([#PR](https://github.com/owner/repo/pull/PR))``.
-  Create Markdown tag messages with `git tag --cleanup=verbatim` so headings
-  are preserved, then verify the published GitHub release body before declaring
-  the release live.
+  The maintainer usually creates the tag on GitHub by publishing a release for
+  the merged `main` commit with the changelog as its description; the tag
+  workflow keeps that description and only adds the build artifacts. An
+  annotated tag pushed with `git tag --cleanup=verbatim` and a concise subject
+  is the alternative: its message body becomes the release body. Verify the
+  published GitHub release body before declaring the release live.
 
 ## Documentation Drift
 

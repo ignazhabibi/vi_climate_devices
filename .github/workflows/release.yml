@@ -50,7 +50,12 @@ jobs:
       id: tag_message
       run: |
         git fetch --depth=1 origin +refs/tags/${{ github.ref_name }}:refs/tags/${{ github.ref_name }}
-        TAG_MSG=$(git tag -l --format='%(contents:body)' ${{ github.ref_name }})
+        # A tag created on GitHub is lightweight; its "message" would be the
+        # commit body, so keep the release text written on GitHub instead.
+        TAG_MSG=""
+        if [ "$(git cat-file -t refs/tags/${{ github.ref_name }})" = "tag" ]; then
+          TAG_MSG=$(git tag -l --format='%(contents:body)' ${{ github.ref_name }})
+        fi
         echo "body<<EOF" >> $GITHUB_OUTPUT
         echo "$TAG_MSG" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
