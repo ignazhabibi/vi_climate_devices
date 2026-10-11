@@ -672,6 +672,10 @@ def _get_auto_discovery_description(feature: Feature) -> SensorEntityDescription
             device_class = SensorDeviceClass.POWER
             native_unit = UnitOfPower.WATT
             state_class = SensorStateClass.MEASUREMENT
+        case "kilowatt":
+            device_class = SensorDeviceClass.POWER
+            native_unit = UnitOfPower.KILO_WATT
+            state_class = SensorStateClass.MEASUREMENT
         case "wattHour":
             device_class = SensorDeviceClass.ENERGY
             native_unit = UnitOfEnergy.WATT_HOUR

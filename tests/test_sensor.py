@@ -517,6 +517,49 @@ async def test_fixture_auto_discovered_energy_state_classes(
     await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize(
+    ("device_name", "feature_name"),
+    [
+        ("Vitocal200S", "heating.compressors.0.power"),
+        (
+            "Vitocal333G-with-Vitovent300F",
+            "heating.compressors.0.power.consumption.current",
+        ),
+        ("Vitocharge03", "photovoltaic.production.current"),
+    ],
+)
+@pytest.mark.asyncio
+async def test_fixture_auto_discovered_kilowatt_sensors(
+    hass: HomeAssistant, device_name: str, feature_name: str
+):
+    """Map auto-discovered kilowatt features to kW power measurements."""
+    # Arrange: Locate the undefined kilowatt feature in the real device fixture.
+    mock_client = FixtureViClient(device_name)
+    installations = await mock_client.get_installations()
+    devices = await mock_client.get_full_installation_status(installations[0].id)
+    device = next(
+        device for device in devices if device.get_feature(feature_name) is not None
+    )
+    assert feature_name not in SENSOR_TYPES
+
+    # Act: Discover the fixture through the Home Assistant integration.
+    await _setup_integration(hass, mock_client)
+
+    # Assert: The feature becomes a kW power sensor with a measurement state class.
+    unique_id = f"{device.gateway_serial}-{device.id}-{feature_name}"
+    entity_id = er.async_get(hass).async_get_entity_id("sensor", DOMAIN, unique_id)
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["device_class"] == "power"
+    assert state.attributes["unit_of_measurement"] == "kW"
+    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 @pytest.mark.asyncio
 async def test_sensor_ignores_generic_on_off_string(hass: HomeAssistant, mock_client):
     """Test that a feature with 'on'/'off' string value is NOT created as a sensor.
