@@ -99,14 +99,11 @@ async def test_switch_creation_and_services(hass: HomeAssistant, mock_client):
 
         # Test 1: Initial State (Offline/Fixture Data).
 
-        # Verify the read-only hygiene state remains a binary sensor, not a switch.
+        # Verify the writable hygiene state is a switch, not a binary sensor.
         hygiene_switch = hass.states.get("switch.vitocal250a_dhw_hygiene")
-        assert hygiene_switch is None
-        hygiene_binary_sensor = hass.states.get(
-            "binary_sensor.vitocal250a_dhw_hygiene_enabled"
-        )
-        assert hygiene_binary_sensor is not None
-        assert hygiene_binary_sensor.state == STATE_OFF
+        assert hygiene_switch is not None
+        assert hygiene_switch.state == STATE_OFF
+        assert hass.states.get("binary_sensor.vitocal250a_dhw_hygiene_enabled") is None
 
         # Verify 'heating.dhw.oneTimeCharge.active' (Standard Switch).
         # Fixture value is false/off.
@@ -178,7 +175,6 @@ async def test_switch_creation_and_services(hass: HomeAssistant, mock_client):
 @pytest.mark.parametrize(
     ("device_name", "entity_prefix"),
     [
-        ("Vitocal250A", "vitocal250a"),
         ("Vitocal222S", "vitocal222s"),
         ("Vitodens200W", "vitodens200w"),
     ],

@@ -255,6 +255,9 @@
             "volumetric_flow": {
                 "name": "Volumetric Flow"
             },
+            "power_consumption_current": {
+                "name": "Current Power Consumption"
+            },
             "consumption_dhw_current_year": {
                 "name": "DHW Consumption Year"
             },
@@ -273,6 +276,9 @@
             "production_cooling_current_year": {
                 "name": "Cooling Production Year"
             },
+            "heat_production_current": {
+                "name": "Current Heat Production"
+            },
             "production_dhw_current_year": {
                 "name": "DHW Production Year"
             },
@@ -284,9 +290,6 @@
             },
             "heating_rod_consumption_heating_current_year": {
                 "name": "Heating Rod Heating Consumption Year"
-            },
-            "inverter_power_output": {
-                "name": "Inverter {index} Power Output"
             },
             "outside_humidity": {
                 "name": "Outside Humidity"

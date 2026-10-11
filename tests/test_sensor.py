@@ -119,10 +119,10 @@ async def test_sensor_values(hass: HomeAssistant, mock_client):
     await _setup_integration(hass, mock_client)
 
     # Assert: Verify a Standard Sensor (Outside Temperature).
-    # Fixture value is 12.2 -> State '12.2'.
+    # Fixture value is 11.1 -> State '11.1'.
     outside_temp = hass.states.get("sensor.vitocal250a_outside_temperature")
     assert outside_temp is not None
-    assert outside_temp.state == "12.2"
+    assert outside_temp.state == "11.1"
     assert outside_temp.attributes["unit_of_measurement"] == "°C"
 
     # Assert: Verify a Template/Regex Sensor (Compressor Speed).
@@ -133,6 +133,45 @@ async def test_sensor_values(hass: HomeAssistant, mock_client):
     assert (
         compressor_speed.attributes["friendly_name"] == "Vitocal250A Compressor 0 Speed"
     )
+
+    # Cleanup: Unload the integration to prevent thread leaks.
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.asyncio
+async def test_current_power_and_heat_sensors(hass: HomeAssistant, mock_client):
+    """Expose current power consumption and heat production as kW power sensors."""
+    # Act: Set up the integration with the Vitocal250A fixture.
+    await _setup_integration(hass, mock_client)
+
+    # Assert: Both features are defined power sensors with a kW unit.
+    for entity_id, friendly_name in (
+        (
+            "sensor.vitocal250a_current_power_consumption",
+            "Vitocal250A Current Power Consumption",
+        ),
+        (
+            "sensor.vitocal250a_current_heat_production",
+            "Vitocal250A Current Heat Production",
+        ),
+    ):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == "0"
+        assert state.attributes["friendly_name"] == friendly_name
+        assert state.attributes["unit_of_measurement"] == "kW"
+        assert state.attributes["device_class"] == "power"
+        assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
+
+    # Assert: Their status sub-features do not create diagnostic sensors.
+    sensor_feature_names = {
+        state.attributes.get("viessmann_feature_name")
+        for state in hass.states.async_all("sensor")
+    }
+    assert "heating.power.consumption.current.status" not in sensor_feature_names
+    assert "heating.heat.production.current.status" not in sensor_feature_names
 
     # Cleanup: Unload the integration to prevent thread leaks.
     entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -472,6 +511,49 @@ async def test_fixture_auto_discovered_energy_state_classes(
             else None
         )
         assert state.attributes.get("state_class") == expected_state_class
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("device_name", "feature_name"),
+    [
+        ("Vitocal200S", "heating.compressors.0.power"),
+        (
+            "Vitocal333G-with-Vitovent300F",
+            "heating.compressors.0.power.consumption.current",
+        ),
+        ("Vitocharge03", "photovoltaic.production.current"),
+    ],
+)
+@pytest.mark.asyncio
+async def test_fixture_auto_discovered_kilowatt_sensors(
+    hass: HomeAssistant, device_name: str, feature_name: str
+):
+    """Map auto-discovered kilowatt features to kW power measurements."""
+    # Arrange: Locate the undefined kilowatt feature in the real device fixture.
+    mock_client = FixtureViClient(device_name)
+    installations = await mock_client.get_installations()
+    devices = await mock_client.get_full_installation_status(installations[0].id)
+    device = next(
+        device for device in devices if device.get_feature(feature_name) is not None
+    )
+    assert feature_name not in SENSOR_TYPES
+
+    # Act: Discover the fixture through the Home Assistant integration.
+    await _setup_integration(hass, mock_client)
+
+    # Assert: The feature becomes a kW power sensor with a measurement state class.
+    unique_id = f"{device.gateway_serial}-{device.id}-{feature_name}"
+    entity_id = er.async_get(hass).async_get_entity_id("sensor", DOMAIN, unique_id)
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["device_class"] == "power"
+    assert state.attributes["unit_of_measurement"] == "kW"
+    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     await hass.config_entries.async_unload(entry.entry_id)

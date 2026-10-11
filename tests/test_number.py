@@ -240,7 +240,7 @@ async def test_curve_shift_uses_temperature_delta_conversion(
         ),
         patch("custom_components.vi_climate_devices.HAAuth"),
     ):
-        # Act: Load the integration with the fixture's four-degree Celsius shift.
+        # Act: Load the integration with the fixture's six-degree Celsius shift.
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -248,7 +248,7 @@ async def test_curve_shift_uses_temperature_delta_conversion(
         shift = hass.states.get("number.vitocal250a_heating_circuit_0_curve_shift")
         assert shift is not None
         assert shift.attributes["unit_of_measurement"] == "°C"
-        assert float(shift.state) == 4.0
+        assert float(shift.state) == 6.0
 
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()

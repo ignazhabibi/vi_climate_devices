@@ -228,17 +228,6 @@ SENSOR_TEMPLATES: tuple[EntityTemplate[SensorEntityDescription], ...] = (
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
-    # Inverters Power
-    EntityTemplate(
-        pattern=re.compile(r"^heating\.inverters\.(\d+)\.sensors\.power\.output$"),
-        description=SensorEntityDescription(
-            key="placeholder",
-            translation_key="inverter_power_output",
-            native_unit_of_measurement=UnitOfPower.WATT,
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-    ),
     # Fans (primary circuit)
     EntityTemplate(
         pattern=re.compile(r"^heating\.primaryCircuit\.fans\.(\d+)\.current$"),
@@ -405,6 +394,14 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Current Heat Production
+    "heating.heat.production.current": SensorEntityDescription(
+        key="heating.heat.production.current",
+        translation_key="heat_production_current",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     # Production Summary DHW (Current Year).
     "heating.heat.production.summary.dhw.currentYear": SensorEntityDescription(
         key="heating.heat.production.summary.dhw.currentYear",
@@ -428,6 +425,14 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    # Current Power Consumption
+    "heating.power.consumption.current": SensorEntityDescription(
+        key="heating.power.consumption.current",
+        translation_key="power_consumption_current",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     # Realtime Consumption DHW (Current Year).
     "heating.power.consumption.dhw.currentYear": SensorEntityDescription(
@@ -666,6 +671,10 @@ def _get_auto_discovery_description(feature: Feature) -> SensorEntityDescription
         case "watt":
             device_class = SensorDeviceClass.POWER
             native_unit = UnitOfPower.WATT
+            state_class = SensorStateClass.MEASUREMENT
+        case "kilowatt":
+            device_class = SensorDeviceClass.POWER
+            native_unit = UnitOfPower.KILO_WATT
             state_class = SensorStateClass.MEASUREMENT
         case "wattHour":
             device_class = SensorDeviceClass.ENERGY

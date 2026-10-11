@@ -38,6 +38,9 @@
             }
         },
         "sensor": {
+            "heat_production_current": {
+                "default": "mdi:heat-wave"
+            },
             "burner_modulation": {
                 "default": "mdi:fire"
             },
