@@ -358,7 +358,7 @@ async def test_climate_creation_and_services(  # noqa: PLR0915
         )
         assert state.attributes["active_program"] == "normalHeating"
         assert state.attributes["heating_curve_slope"] == 0.6
-        assert state.attributes["heating_curve_shift"] == 4.0
+        assert state.attributes["heating_curve_shift"] == 6.0
 
         # Act: Set temperature to 22.0 and turn the circuit off in one service call.
         await hass.services.async_call(
@@ -1128,7 +1128,7 @@ async def test_climate_reports_unknown_program_for_malformed_values(
     assert entity.preset_mode is None
     assert "active_program" not in attributes
     assert attributes["heating_curve_slope"] == 0.6
-    assert attributes["heating_curve_shift"] == 4.0
+    assert attributes["heating_curve_shift"] == 6.0
     assert entity.hvac_mode == HVACMode.HEAT
     assert entity.available
 

@@ -230,6 +230,9 @@
             "volumetric_flow": {
                 "name": "Volumenstrom"
             },
+            "power_consumption_current": {
+                "name": "Aktuelle Leistungsaufnahme"
+            },
             "consumption_dhw_current_year": {
                 "name": "Verbrauch Warmwasser Jahr"
             },
@@ -248,6 +251,9 @@
             "production_cooling_current_year": {
                 "name": "Erzeugung Kuehlung Jahr"
             },
+            "heat_production_current": {
+                "name": "Aktuelle Wärmeleistung"
+            },
             "production_dhw_current_year": {
                 "name": "Erzeugung Warmwasser Jahr"
             },
@@ -259,9 +265,6 @@
             },
             "heating_rod_consumption_heating_current_year": {
                 "name": "Verbrauch Heizstab Heizung Jahr"
-            },
-            "inverter_power_output": {
-                "name": "Aktueller Stromverbrauch {index}"
             },
             "outside_humidity": {
                 "name": "Luftfeuchtigkeit Außen"

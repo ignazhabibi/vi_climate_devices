@@ -290,9 +290,9 @@ async def test_water_heater_creation_and_services(hass: HomeAssistant, mock_clie
         assert state is not None
 
         # Verify Initial Attributes from Fixture.
-        # Temp: 55.0, Current: 46.8, Mode: efficient -> STATE_ECO.
+        # Temp: 55.0, Current: 48.8, Mode: efficient -> STATE_ECO.
         assert state.state == STATE_ECO
-        assert float(state.attributes["current_temperature"]) == 46.8
+        assert float(state.attributes["current_temperature"]) == 48.8
         assert float(state.attributes["temperature"]) == 55.0
         assert state.attributes["min_temp"] == 10.0
         assert state.attributes["max_temp"] == 60.0
@@ -672,7 +672,7 @@ async def test_water_heater_reports_unknown_operation_for_malformed_mode_values(
     args = await_args.args
     assert args[1] == FEATURE_TARGET_TEMP
     assert args[2] == 45.0
-    assert entity.current_temperature == 46.8
+    assert entity.current_temperature == 48.8
     assert entity.operation_list == [STATE_ECO, STATE_OFF, STATE_PERFORMANCE]
 
 
@@ -700,5 +700,5 @@ async def test_water_heater_reports_unknown_target_for_malformed_values(
     # Assert: The malformed read is unknown while the control wrote its value.
     assert entity.target_temperature is None
     entity.coordinator.async_set_feature.assert_awaited_once()
-    assert entity.current_temperature == 46.8
+    assert entity.current_temperature == 48.8
     assert entity.current_operation == STATE_ECO
