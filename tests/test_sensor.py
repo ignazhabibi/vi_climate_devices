@@ -11,7 +11,11 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from vi_api_client import Device, Feature, FixtureViClient, GatewayDeviceRefreshResult
 
 from custom_components.vi_climate_devices.const import DOMAIN, IGNORED_FEATURES
-from custom_components.vi_climate_devices.sensor import SENSOR_TYPES
+from custom_components.vi_climate_devices.sensor import (
+    SENSOR_TEMPLATES,
+    SENSOR_TYPES,
+    ViClimateSensor,
+)
 from custom_components.vi_climate_devices.utils import is_feature_ignored
 
 FIXTURE_NAMES = FixtureViClient.get_available_fixture_devices()
@@ -666,3 +670,135 @@ async def test_sensor_ignores_generic_on_off_string(hass: HomeAssistant, mock_cl
         # Cleanup: Unload the integration to prevent thread leaks.
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("device_name", "expected_states"),
+    [
+        pytest.param(
+            "Vitocal250A",
+            {
+                "heating.circuits.0.operating.programs.active": "normal_heating",
+                "heating.valves.fourThreeWay.position": "climat_circuit_two_defrost",
+            },
+            id="e3-heat-pump",
+        ),
+        pytest.param(
+            "Vitodens200W",
+            {"heating.circuits.0.operating.programs.active": "normal"},
+            id="legacy-gas-boiler",
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_enum_sensors_report_translated_option_keys(
+    hass: HomeAssistant, device_name: str, expected_states: dict[str, str]
+):
+    """Report program and valve values as lowercase enum option keys."""
+    # Arrange: Load the real device fixture.
+    mock_client = FixtureViClient(device_name)
+    installations = await mock_client.get_installations()
+    device = (await mock_client.get_full_installation_status(installations[0].id))[0]
+
+    # Act: Discover the fixture through the Home Assistant integration.
+    await _setup_integration(hass, mock_client)
+    registry = er.async_get(hass)
+
+    # Assert: The feature-based unique ID is kept and the state is an option key.
+    for feature_name, expected_state in expected_states.items():
+        unique_id = f"{device.gateway_serial}-{device.id}-{feature_name}"
+        entity_id = registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == expected_state
+        assert state.attributes["device_class"] == "enum"
+        assert expected_state in state.attributes["options"]
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.asyncio
+async def test_unknown_enum_value_is_unknown_and_logged_once(
+    hass: HomeAssistant, mock_client, caplog: pytest.LogCaptureFixture
+):
+    """Keep the entity working when the API reports an unlisted value."""
+    # Arrange: Set up the integration, then report an unlisted program twice.
+    await _setup_integration(hass, mock_client)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    coordinator = entry.runtime_data
+    device_key, device = next(iter(coordinator.data.items()))
+    feature_name = "heating.circuits.0.operating.programs.active"
+    coordinator.data = {
+        device_key: dataclasses.replace(
+            device,
+            features=[
+                dataclasses.replace(feature, value="futureProgram")
+                if feature.name == feature_name
+                else feature
+                for feature in device.features
+            ],
+        )
+    }
+
+    # Act: Publish the unknown value in two updates.
+    coordinator.async_update_listeners()
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    # Assert: The state is unknown and the raw value is logged once.
+    registry = er.async_get(hass)
+    unique_id = f"{device.gateway_serial}-{device.id}-{feature_name}"
+    entity_id = registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unknown"
+    warnings = [
+        record
+        for record in caplog.records
+        if "Unknown value futureProgram" in record.getMessage()
+    ]
+    assert len(warnings) == 1
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.asyncio
+async def test_enum_sensor_without_string_value_is_unknown(
+    caplog: pytest.LogCaptureFixture,
+):
+    """Report unknown for a malformed or missing enum feature without logging."""
+    # Arrange: Build the program sensor from the fixture, with a malformed value.
+    device = (
+        await FixtureViClient("Vitocal250A").get_full_installation_status("99999")
+    )[0]
+    feature_name = "heating.circuits.0.operating.programs.active"
+    device = dataclasses.replace(
+        device,
+        features=[
+            dataclasses.replace(feature, value=5)
+            if feature.name == feature_name
+            else feature
+            for feature in device.features
+        ],
+    )
+    map_key = f"{device.gateway_serial}_{device.id}"
+    coordinator = MagicMock(data={map_key: device})
+    description = next(
+        template.description
+        for template in SENSOR_TEMPLATES
+        if template.pattern.match(feature_name)
+    )
+    sensor = ViClimateSensor(coordinator, map_key, feature_name, description)
+
+    # Act and assert: A non-string value is unknown and not logged.
+    assert sensor.native_value is None
+    assert "Unknown value" not in caplog.text
+
+    # Act and assert: A device missing after refresh is unknown as well.
+    coordinator.data = {}
+    assert sensor.native_value is None

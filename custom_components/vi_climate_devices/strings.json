@@ -148,6 +148,9 @@
             "frost_protection": {
                 "name": "Frost Protection Heating Circuit {index}"
             },
+            "summer_eco": {
+                "name": "Summer Eco Heating Circuit {index}"
+            },
             "solar_pump": {
                 "name": "Solar Circuit Pump"
             },
@@ -171,6 +174,12 @@
             },
             "outdoor_defrosting": {
                 "name": "Outdoor Defrosting"
+            },
+            "holiday": {
+                "name": "Holiday"
+            },
+            "holiday_at_home": {
+                "name": "Holiday at Home"
             }
         },
         "climate": {
@@ -221,6 +230,34 @@
             },
             "heating_circuit_supply_temperature": {
                 "name": "Heating Circuit {index} Supply Temperature"
+            },
+            "heating_circuit_active_program": {
+                "name": "Heating Circuit {index} Active Program",
+                "state": {
+                    "comfort": "Comfort",
+                    "comfort_cooling": "Comfort (cooling)",
+                    "comfort_cooling_energy_saving": "Comfort (cooling, energy saving)",
+                    "comfort_energy_saving": "Comfort (energy saving)",
+                    "comfort_heating": "Comfort",
+                    "eco": "Eco",
+                    "fixed": "Fixed",
+                    "forced_last_from_schedule": "Last schedule phase forced",
+                    "frostprotection": "Frost protection",
+                    "holiday": "Holiday",
+                    "holiday_at_home": "Holiday at home",
+                    "normal": "Normal",
+                    "normal_cooling": "Normal (cooling)",
+                    "normal_cooling_energy_saving": "Normal (cooling, energy saving)",
+                    "normal_energy_saving": "Normal (energy saving)",
+                    "normal_heating": "Normal",
+                    "reduced": "Reduced",
+                    "reduced_cooling": "Reduced (cooling)",
+                    "reduced_cooling_energy_saving": "Reduced (cooling, energy saving)",
+                    "reduced_energy_saving": "Reduced (energy saving)",
+                    "reduced_heating": "Reduced",
+                    "standby": "Standby",
+                    "summer_eco": "Summer eco"
+                }
             },
             "dhw_temperature": {
                 "name": "Hot Water Temperature"
@@ -391,7 +428,13 @@
                 "name": "Evaporator {index} Overheat Temperature"
             },
             "valve_position": {
-                "name": "4/3-Way Valve Position"
+                "name": "4/3-Way Valve Position",
+                "state": {
+                    "climat_circuit_one_and_two": "Position heating circuits 1 and 2",
+                    "climat_circuit_two_defrost": "Position heating circuit 2 / defrost",
+                    "climate_circuit_one": "Position heating circuit 1",
+                    "domestic_hot_water": "Position domestic hot water"
+                }
             }
         },
         "switch": {

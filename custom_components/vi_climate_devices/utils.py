@@ -118,6 +118,16 @@ def get_feature_string_options(options: Sequence[JsonValue] | None) -> list[str]
     return [option for option in options if isinstance(option, str)]
 
 
+def api_value_to_option_key(value: str) -> str:
+    """Return the lowercase translation key for a camelCase API value.
+
+    Home Assistant state translation keys must match `[a-z0-9-_]+`, so enum
+    states use snake_case keys such as `domestic_hot_water` instead of the raw
+    API value `domesticHotWater`.
+    """
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", value).lower()
+
+
 def normalize_sensor_value(value: FeatureValue) -> StateType:
     """Return a Home Assistant-compatible state for a generic feature value."""
     if value is None or isinstance(value, bool):

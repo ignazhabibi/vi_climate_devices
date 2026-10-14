@@ -263,3 +263,74 @@ async def test_binary_sensor_feature_discovered_after_setup_is_added_once(
     # Cleanup: Unload the integration to stop the coordinator listener.
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("feature_name", "expected_name"),
+    [
+        (
+            "heating.circuits.0.operating.programs.summerEco.active",
+            "Vitocal250A Summer Eco Heating Circuit 0",
+        ),
+        ("heating.operating.programs.holiday.active", "Vitocal250A Holiday"),
+        (
+            "heating.operating.programs.holidayAtHome.active",
+            "Vitocal250A Holiday at Home",
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_special_state_binary_sensors(
+    hass: HomeAssistant, mock_client, feature_name: str, expected_name: str
+):
+    """Expose summer eco and holiday programs as named binary sensors."""
+    # Arrange: Set up the integration with the Vitocal250A fixture.
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "client_id": "123",
+            "token": {
+                "access_token": "mock_access_token",
+                "refresh_token": "mock_refresh_token",
+                "expires_at": 3800000000,
+                "token_type": "Bearer",
+            },
+        },
+    )
+    entry.add_to_hass(hass)
+    device = (await mock_client.get_full_installation_status("99999"))[0]
+
+    with (
+        patch(
+            "custom_components.vi_climate_devices.ViessmannClient",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+            return_value=None,
+        ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
+    ):
+        # Act: Initialize the integration.
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Assert: The feature keeps its unique ID and gets a translated name.
+        registry = er.async_get(hass)
+        unique_id = f"{device.gateway_serial}-{device.id}-{feature_name}"
+        entity_id = registry.async_get_entity_id("binary_sensor", DOMAIN, unique_id)
+        assert entity_id is not None
+        registry_entry = registry.async_get(entity_id)
+        assert registry_entry is not None
+        assert registry_entry.translation_key is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == "off"
+        assert state.attributes["friendly_name"] == expected_name
+
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
