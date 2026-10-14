@@ -8,11 +8,6 @@ from typing import Any
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
-    PRESET_AWAY,
-    PRESET_COMFORT,
-    PRESET_ECO,
-    PRESET_HOME,
-    PRESET_SLEEP,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -61,6 +56,7 @@ API_TO_HA_HVAC_MODE = {
     "dhwAndHeating": HVACMode.HEAT,
     "dhwAndHeatingCooling": HVACMode.HEAT_COOL,
     "heating": HVACMode.HEAT,
+    "heatingCooling": HVACMode.HEAT_COOL,
     "off": HVACMode.OFF,
     "standby": HVACMode.OFF,
 }
@@ -72,35 +68,13 @@ API_TO_HA_HVAC_MODE = {
 HA_TO_API_HVAC_MODE: dict[HVACMode, list[str]] = {
     HVACMode.COOL: ["cooling", "dhwAndHeatingCooling"],
     HVACMode.HEAT: ["heating", "dhwAndHeating"],
-    HVACMode.HEAT_COOL: ["dhwAndHeatingCooling"],
+    HVACMode.HEAT_COOL: ["heatingCooling", "dhwAndHeatingCooling"],
     HVACMode.OFF: ["standby", "off"],
 }
 
-# Mapping from Viessmann active programs (operating programs) to Home Assistant
-# preset modes.
-# Sort the keys alphabetically.
-API_TO_HA_PRESET = {
-    "comfort": PRESET_COMFORT,
-    "comfortCooling": PRESET_COMFORT,
-    "comfortCoolingEnergySaving": PRESET_COMFORT,
-    "comfortEnergySaving": PRESET_COMFORT,
-    "comfortHeating": PRESET_COMFORT,
-    "eco": PRESET_ECO,
-    "frostprotection": PRESET_ECO,
-    "holiday": PRESET_AWAY,
-    "holidayAtHome": PRESET_AWAY,
-    "normal": PRESET_HOME,
-    "normalCooling": PRESET_HOME,
-    "normalCoolingEnergySaving": PRESET_HOME,
-    "normalEnergySaving": PRESET_HOME,
-    "normalHeating": PRESET_HOME,
-    "reduced": PRESET_SLEEP,
-    "reducedCooling": PRESET_SLEEP,
-    "reducedCoolingEnergySaving": PRESET_SLEEP,
-    "reducedEnergySaving": PRESET_SLEEP,
-    "reducedHeating": PRESET_SLEEP,
-    "summerEco": PRESET_ECO,
-}
+# Temperature levels whose setpoints live in program temperature features.
+# Sort the values alphabetically.
+PROGRAM_TEMPERATURE_LEVELS = ("comfort", "eco", "normal", "reduced")
 
 
 async def async_setup_entry(
@@ -313,48 +287,37 @@ class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncomp
             action = None
         return action
 
-    def _get_program_base_name(self, program_name: str) -> str:
-        """Get the base prefix of a program name (e.g., 'normalHeating' -> 'normal')."""
-        program_lower = program_name.lower()
-        known_bases = [
-            "comfort",
-            "normal",
-            "reduced",
-            "eco",
-            "holiday",
-            "frostprotection",
-        ]
-        for base in known_bases:
-            if program_lower.startswith(base):
-                return base
-        return program_lower
+    @staticmethod
+    def _get_temperature_program_candidates(program_name: str) -> list[str]:
+        """Return the programs whose temperature applies to an active program.
+
+        Energy-saving programs have no temperature of their own. They keep the
+        level and direction of their base program, so `normalEnergySaving`
+        uses `normalHeating` and `normalCoolingEnergySaving` uses
+        `normalCooling`. Heating programs fall back to the legacy level name
+        (`normal`); cooling programs never fall back to a heating setpoint.
+        """
+        candidates = [program_name]
+        base_program = program_name.removesuffix("EnergySaving")
+        for level in PROGRAM_TEMPERATURE_LEVELS:
+            if base_program == f"{level}Cooling":
+                candidates.append(base_program)
+            elif base_program in (level, f"{level}Heating"):
+                candidates.extend((f"{level}Heating", level))
+            else:
+                continue
+            break
+        return list(dict.fromkeys(candidates))
 
     def _get_program_temperature_feature(self, program_name: str) -> Feature | None:
-        """Get the temperature feature for a program with prefix fallback matching."""
-        # 1. Try exact name match.
-        feature_name = (
-            f"heating.circuits.{self._circuit_index}."
-            f"operating.programs.{program_name}.temperature"
-        )
-        feature = self._get_feature(feature_name)
-        if feature:
-            return feature
-
-        # 2. Match based on normalized base names.
-        target_base = self._get_program_base_name(program_name)
-        device = self.coordinator.data.get(self._map_key)
-        if not device:
-            return None
-
-        prefix = f"heating.circuits.{self._circuit_index}.operating.programs."
-        for feat in device.features:
-            if feat.name.startswith(prefix) and feat.name.endswith(".temperature"):
-                # Extract program name part:
-                # e.g., '...normalHeating.temperature' -> 'normalHeating'
-                prog_part = feat.name[len(prefix) : -len(".temperature")]
-                if self._get_program_base_name(prog_part) == target_base:
-                    return feat
-
+        """Return the temperature feature that applies to a program."""
+        for candidate in self._get_temperature_program_candidates(program_name):
+            feature = self._get_feature(
+                f"heating.circuits.{self._circuit_index}."
+                f"operating.programs.{candidate}.temperature"
+            )
+            if feature:
+                return feature
         return None
 
     def _get_active_temp_feature(self) -> Feature | None:
@@ -519,38 +482,6 @@ class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncomp
 
         return sorted(list(modes))
 
-    @property
-    def preset_mode(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
-        """Return the current preset mode."""
-        active_program_feature = self._get_feature(
-            f"heating.circuits.{self._circuit_index}.operating.programs.active"
-        )
-        if active_program_feature is None:
-            return None
-        program_name = get_feature_string_value(active_program_feature.value)
-        if program_name is None:
-            return None
-        return API_TO_HA_PRESET.get(program_name)
-
-    @property
-    def preset_modes(self) -> list[str]:  # pyright: ignore[reportIncompatibleVariableOverride]
-        """Return a list of available preset modes."""
-        presets: set[str] = set()
-        device = self.coordinator.data.get(self._map_key)
-        if not device:
-            return []
-
-        prefix = f"heating.circuits.{self._circuit_index}.operating.programs."
-        for feature in device.features:
-            if feature.name.startswith(prefix):
-                parts = feature.name[len(prefix) :].split(".")
-                if parts:
-                    program_name = parts[0]
-                    if program_name in API_TO_HA_PRESET:
-                        presets.add(API_TO_HA_PRESET[program_name])
-
-        return sorted(list(presets))
-
     # --- Actions ---
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -658,10 +589,6 @@ class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncomp
     def _clear_optimistic_mode(self) -> None:
         """Forget the unconfirmed HVAC mode."""
         self._optimistic_mode = None
-
-    async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set new preset mode."""
-        raise service_validation_error(ExceptionTranslationKey.UNSUPPORTED_MODE)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:  # pyright: ignore[reportIncompatibleVariableOverride]

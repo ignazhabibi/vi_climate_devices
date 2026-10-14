@@ -7,9 +7,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from homeassistant.components.climate.const import (
     PRESET_COMFORT,
-    PRESET_ECO,
-    PRESET_HOME,
-    PRESET_SLEEP,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
@@ -25,10 +22,8 @@ from vi_api_client import (
     CommandResponse,
     Device,
     Feature,
-    FeatureControl,
     FeatureValue,
     FixtureViClient,
-    GatewayDeviceRefreshResult,
 )
 
 from custom_components.vi_climate_devices.climate import ViClimate
@@ -332,7 +327,6 @@ async def test_climate_creation_and_services(  # noqa: PLR0915
 
         # Assert: Verify initial attributes mapped from Vitocal250A fixture.
         # Mode: 'heating' maps to HVACMode.HEAT.
-        # Active program: 'normalHeating' maps to preset_mode='home'.
         # Target Temp: 20.0 (from normalHeating program temperature).
         # Min Temp: 3.0, Max Temp: 37.0, Step: 1.0 (from normalHeating program control).
         assert state.state == HVACMode.HEAT
@@ -344,15 +338,9 @@ async def test_climate_creation_and_services(  # noqa: PLR0915
         assert state.attributes["min_temp"] == 3.0
         assert state.attributes["max_temp"] == 37.0
         assert state.attributes["target_temp_step"] == 1.0
-        # Verify preset properties directly on Python entity since PRESET_MODE feature is not declared.
-        component = hass.data.get("climate")
-        assert component is not None
-        entity = component.get_entity(entity_id)
-        assert entity is not None
-        assert entity.preset_mode == PRESET_HOME
-        assert sorted(entity.preset_modes) == sorted(
-            [PRESET_COMFORT, PRESET_ECO, PRESET_HOME, PRESET_SLEEP]
-        )
+        # Programs are reported as an attribute, not as presets.
+        assert "preset_mode" not in state.attributes
+        assert "preset_modes" not in state.attributes
         assert sorted(state.attributes["hvac_modes"]) == sorted(
             [HVACMode.HEAT, HVACMode.OFF]
         )
@@ -771,8 +759,6 @@ async def test_climate_handles_device_removed_by_refresh() -> None:
     assert entity.current_temperature is None
     assert entity.hvac_mode is None
     assert entity.hvac_modes == [HVACMode.HEAT, HVACMode.OFF]
-    assert entity.preset_mode is None
-    assert entity.preset_modes == []
     assert entity.extra_state_attributes == {}
 
     # Act and assert: A missing temperature is ignored, while unavailable controls fail.
@@ -782,12 +768,6 @@ async def test_climate_handles_device_removed_by_refresh() -> None:
     assert feature_error.value.translation_domain == DOMAIN
     assert feature_error.value.translation_key == "feature_unavailable"
     assert feature_error.value.translation_placeholders is None
-
-    with pytest.raises(ServiceValidationError) as mode_error:
-        await entity.async_set_preset_mode(PRESET_HOME)
-    assert mode_error.value.translation_domain == DOMAIN
-    assert mode_error.value.translation_key == "unsupported_mode"
-    assert mode_error.value.translation_placeholders is None
 
     # Act and assert: A climate entity requires its device at construction time.
     with pytest.raises(ValueError, match="Device missing"):
@@ -878,157 +858,108 @@ async def test_climate_ignores_an_unknown_circuit_pump_status() -> None:
     assert entity.hvac_action is None
 
 
+PROGRAM_PREFIX = "heating.circuits.0.operating.programs."
+COOLING_SETPOINTS = {
+    "comfortCooling": 24.0,
+    "normalCooling": 25.0,
+    "reducedCooling": 26.0,
+}
+
+
+async def _create_program_entity(
+    device_name: str, active_program: str, *, cooling_first: bool = False
+) -> ViClimate:
+    """Create a climate entity whose device also reports cooling setpoints."""
+    device = (await FixtureViClient(device_name).get_full_installation_status("99999"))[
+        0
+    ]
+    features = [
+        replace(feature, value=active_program)
+        if feature.name == ACTIVE_PROGRAM_FEATURE
+        else feature
+        for feature in device.features
+    ]
+    heating_setpoint = next(
+        feature
+        for feature in features
+        if feature.name.endswith(".temperature")
+        and feature.name.startswith(PROGRAM_PREFIX)
+    )
+    cooling_features = [
+        replace(
+            heating_setpoint,
+            name=f"{PROGRAM_PREFIX}{program}.temperature",
+            value=setpoint,
+        )
+        for program, setpoint in COOLING_SETPOINTS.items()
+    ]
+    # The API lists programs alphabetically, so "...Cooling" precedes
+    # "...Heating"; both orders must resolve to the same setpoint.
+    features = (
+        [*cooling_features, *features]
+        if cooling_first
+        else [*features, *cooling_features]
+    )
+    device = replace(device, features=features)
+    map_key = f"{device.gateway_serial}_{device.id}"
+    return ViClimate(MagicMock(data={map_key: device}), map_key, "0")
+
+
+@pytest.mark.parametrize(
+    "cooling_first", [True, False], ids=["cooling-first", "heating-first"]
+)
+@pytest.mark.parametrize(
+    ("device_name", "active_program", "expected_program", "expected_setpoint"),
+    [
+        ("Vitocal250A", "normalHeating", "normalHeating", 20.0),
+        ("Vitocal250A", "comfortEnergySaving", "comfortHeating", 22.0),
+        ("Vitocal250A", "normalEnergySaving", "normalHeating", 20.0),
+        ("Vitocal250A", "reducedEnergySaving", "reducedHeating", 18.0),
+        ("Vitocal250A", "normalCooling", "normalCooling", 25.0),
+        ("Vitocal250A", "comfortCoolingEnergySaving", "comfortCooling", 24.0),
+        ("Vitocal250A", "normalCoolingEnergySaving", "normalCooling", 25.0),
+        ("Vitocal250A", "reducedCoolingEnergySaving", "reducedCooling", 26.0),
+        ("Vitodens200W", "normal", "normal", None),
+        ("Vitodens200W", "reducedEnergySaving", "reduced", None),
+    ],
+)
 @pytest.mark.asyncio
-async def test_climate_program_matching_variations(
-    hass: HomeAssistant, mock_client
+async def test_climate_program_setpoint_matches_direction(
+    device_name: str,
+    active_program: str,
+    expected_program: str,
+    expected_setpoint: float | None,
+    cooling_first: bool,
 ) -> None:
-    """Test that program matching correctly resolves prefix-based name variations."""
-    # Arrange: Setup custom device with different program feature naming patterns.
-    custom_device = Device(
-        id="0",
-        gateway_serial="1234567890123456",
-        installation_id="99999",
-        model_id="Vitocal250A",
-        device_type="heating",
-        status="connected",
-        features=[
-            Feature(
-                name="heating.circuits.0.operating.modes.active",
-                value="heating",
-                unit=None,
-                is_enabled=True,
-                is_ready=True,
-                control=FeatureControl(
-                    command_name="setMode",
-                    parameter_name="mode",
-                    required_parameters=["mode"],
-                    parent_feature_name="heating.circuits.0.operating.modes.active",
-                    uri="...",
-                    options=("heating", "standby"),
-                ),
-            ),
-            Feature(
-                name="heating.circuits.0.operating.programs.active",
-                value="normal",
-                unit=None,
-                is_enabled=True,
-                is_ready=True,
-            ),
-            # Suffix variations: normalHeating.temperature
-            Feature(
-                name="heating.circuits.0.operating.programs.normalHeating.temperature",
-                value=21.5,
-                unit="celsius",
-                is_enabled=True,
-                is_ready=True,
-                control=FeatureControl(
-                    command_name="setNormalTemperature",
-                    parameter_name="targetTemperature",
-                    required_parameters=["targetTemperature"],
-                    parent_feature_name="heating.circuits.0.operating.programs.normalHeating.temperature",
-                    uri="...",
-                ),
-            ),
-            # Complex suffix: comfortCoolingEnergySaving.temperature
-            Feature(
-                name="heating.circuits.0.operating.programs.comfortCoolingEnergySaving.temperature",
-                value=23.0,
-                unit="celsius",
-                is_enabled=True,
-                is_ready=True,
-                control=FeatureControl(
-                    command_name="setComfortTemperature",
-                    parameter_name="targetTemperature",
-                    required_parameters=["targetTemperature"],
-                    parent_feature_name="heating.circuits.0.operating.programs.comfortCoolingEnergySaving.temperature",
-                    uri="...",
-                ),
-            ),
-            # No suffix: eco.temperature
-            Feature(
-                name="heating.circuits.0.operating.programs.eco.temperature",
-                value=18.0,
-                unit="celsius",
-                is_enabled=True,
-                is_ready=True,
-                control=FeatureControl(
-                    command_name="setEcoTemperature",
-                    parameter_name="targetTemperature",
-                    required_parameters=["targetTemperature"],
-                    parent_feature_name="heating.circuits.0.operating.programs.eco.temperature",
-                    uri="...",
-                ),
-            ),
-        ],
+    """Resolve each program to the setpoint of its level and direction."""
+    # Arrange: Report heating and cooling setpoints in the given order.
+    entity = await _create_program_entity(
+        device_name, active_program, cooling_first=cooling_first
     )
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "client_id": "123",
-            "token": {
-                "access_token": "mock",
-                "refresh_token": "mock",
-                "expires_at": 9999999999,
-                "token_type": "Bearer",
-            },
-        },
-    )
-    entry.add_to_hass(hass)
+    # Act: Resolve the setpoint for the active program.
+    feature = entity._get_program_temperature_feature(active_program)
 
-    # Initialize mock methods on the client.
-    mock_client.get_full_installation_status = AsyncMock(return_value=[custom_device])
-    mock_client.refresh_gateway_devices = AsyncMock(
-        return_value=GatewayDeviceRefreshResult([custom_device], {})
-    )
+    # Assert: Energy saving keeps its base program; cooling never uses heating.
+    assert feature is not None
+    assert feature.name == f"{PROGRAM_PREFIX}{expected_program}.temperature"
+    if expected_setpoint is not None:
+        assert entity.target_temperature == expected_setpoint
 
-    with (
-        patch(
-            "custom_components.vi_climate_devices.ViessmannClient",
-            return_value=mock_client,
-        ),
-        patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-            return_value=MagicMock(),
-        ),
-        patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
-            return_value=None,
-        ),
-        patch("custom_components.vi_climate_devices.HAAuth"),
-    ):
-        # Act: Set up the integration.
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
 
-        # Retrieve the Python entity to call helper methods directly.
-        entity_id = "climate.vitocal250a_heating_circuit_0"
-        component = hass.data.get("climate")
-        assert component is not None
-        entity = component.get_entity(entity_id)
-        assert entity is not None
+@pytest.mark.parametrize(
+    "active_program", ["frostprotection", "standby", "summerEco", "holiday"]
+)
+@pytest.mark.asyncio
+async def test_climate_special_programs_have_no_setpoint(active_program: str) -> None:
+    """Special states never borrow a temperature level's setpoint."""
+    # Arrange: Report a special state on a device with heating and cooling.
+    entity = await _create_program_entity("Vitocal250A", active_program)
 
-        # Assert: Verify that the helper maps the variations to the correct features.
-        feat_normal = entity._get_program_temperature_feature("normal")
-        assert feat_normal is not None
-        assert (
-            feat_normal.name
-            == "heating.circuits.0.operating.programs.normalHeating.temperature"
-        )
-
-        feat_comfort = entity._get_program_temperature_feature("comfort")
-        assert feat_comfort is not None
-        assert (
-            feat_comfort.name
-            == "heating.circuits.0.operating.programs.comfortCoolingEnergySaving.temperature"
-        )
-
-        feat_eco = entity._get_program_temperature_feature("eco")
-        assert feat_eco is not None
-        assert feat_eco.name == "heating.circuits.0.operating.programs.eco.temperature"
-
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
+    # Act and assert: No setpoint and no target-temperature capability.
+    assert entity._get_program_temperature_feature(active_program) is None
+    assert entity.target_temperature is None
+    assert not entity.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE
 
 
 @pytest.mark.asyncio
@@ -1125,7 +1056,7 @@ async def test_climate_reports_unknown_program_for_malformed_values(
     attributes = entity.extra_state_attributes
 
     # Assert: The program never becomes a string; the mode control stays intact.
-    assert entity.preset_mode is None
+    assert entity.target_temperature is None
     assert "active_program" not in attributes
     assert attributes["heating_curve_slope"] == 0.6
     assert attributes["heating_curve_shift"] == 6.0
@@ -1152,3 +1083,84 @@ async def test_climate_excludes_malformed_curve_attributes(
     assert "heating_curve_slope" not in attributes
     assert "heating_curve_shift" not in attributes
     assert attributes["active_program"] == "normalHeating"
+
+
+@pytest.mark.parametrize(
+    ("mode_options", "expected_api_mode"),
+    [
+        pytest.param(
+            ("cooling", "heating", "heatingCooling", "standby"),
+            "heatingCooling",
+            id="e3",
+        ),
+        pytest.param(
+            ("dhw", "dhwAndHeating", "dhwAndHeatingCooling", "standby"),
+            "dhwAndHeatingCooling",
+            id="legacy",
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_climate_heating_and_cooling_mode(
+    mock_client: FixtureViClient,
+    mode_options: tuple[str, ...],
+    expected_api_mode: str,
+) -> None:
+    """Map the combined heating and cooling mode in both directions."""
+    # Arrange: Offer the combined mode while it is active.
+    device = (await mock_client.get_full_installation_status("99999"))[0]
+    device = replace(
+        device,
+        features=[
+            replace(
+                feature,
+                value=expected_api_mode,
+                control=replace(feature.control, options=mode_options),
+            )
+            if feature.name == CIRCUIT_MODE_FEATURE and feature.control
+            else feature
+            for feature in device.features
+        ],
+    )
+    map_key = f"{device.gateway_serial}_{device.id}"
+    coordinator = MagicMock(data={map_key: device})
+    coordinator.async_set_feature = AsyncMock(
+        return_value=CommandResponse(success=True)
+    )
+    entity = ViClimate(coordinator, map_key, "0")
+
+    # Act: Read the mode, then select the combined mode.
+    hvac_mode = entity.hvac_mode
+    hvac_modes = entity.hvac_modes
+    with patch.object(entity, "async_write_ha_state"):
+        await entity.async_set_hvac_mode(HVACMode.HEAT_COOL)
+
+    # Assert: The combined mode is readable, offered and written as API value.
+    assert hvac_mode == HVACMode.HEAT_COOL
+    assert HVACMode.HEAT_COOL in hvac_modes
+    await_args = coordinator.async_set_feature.await_args
+    assert await_args is not None
+    assert await_args.args[1:] == (CIRCUIT_MODE_FEATURE, expected_api_mode)
+
+
+@pytest.mark.asyncio
+async def test_climate_reports_cooling_in_heating_and_cooling_mode(
+    mock_client: FixtureViClient,
+) -> None:
+    """Report cooling for a cooling demand while heating and cooling is selected."""
+    # Arrange: Run the compressor for a cooling program in the combined mode.
+    entity = await _create_hvac_action_entity(
+        mock_client,
+        {
+            ACTIVE_PROGRAM_FEATURE: "normalCoolingEnergySaving",
+            CIRCUIT_MODE_FEATURE: "heatingCooling",
+            CIRCUIT_PUMP_FEATURE: "on",
+            COMPRESSOR_ACTIVE_FEATURE: True,
+            COOLING_DEMAND_FEATURE: "cooling",
+        },
+        frozenset(),
+    )
+
+    # Act and assert: The demand direction drives the action.
+    assert entity.hvac_mode == HVACMode.HEAT_COOL
+    assert entity.hvac_action == HVACAction.COOLING
