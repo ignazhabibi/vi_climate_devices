@@ -233,8 +233,14 @@
             "power_consumption_current": {
                 "name": "Current Power Consumption"
             },
+            "consumption_dhw_current_day": {
+                "name": "DHW Consumption Day"
+            },
             "consumption_dhw_current_year": {
                 "name": "DHW Consumption Year"
+            },
+            "consumption_heating_current_day": {
+                "name": "Heating Consumption Day"
             },
             "consumption_heating_current_year": {
                 "name": "Heating Consumption Year"
@@ -248,14 +254,23 @@
             "burner_hours": {
                 "name": "Burner {index} Hours"
             },
+            "production_cooling_current_day": {
+                "name": "Cooling Production Day"
+            },
             "production_cooling_current_year": {
                 "name": "Cooling Production Year"
             },
             "heat_production_current": {
                 "name": "Current Heat Production"
             },
+            "production_dhw_current_day": {
+                "name": "DHW Production Day"
+            },
             "production_dhw_current_year": {
                 "name": "DHW Production Year"
+            },
+            "production_heating_current_day": {
+                "name": "Heating Production Day"
             },
             "production_heating_current_year": {
                 "name": "Heating Production Year"
