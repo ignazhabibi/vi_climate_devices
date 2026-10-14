@@ -54,6 +54,16 @@ BINARY_SENSOR_TEMPLATES: tuple[EntityTemplate[BinarySensorEntityDescription], ..
             device_class=BinarySensorDeviceClass.RUNNING,
         ),
     ),
+    # Summer Eco (heating.circuits.N.operating.programs.summerEco.active)
+    EntityTemplate(
+        pattern=re.compile(
+            r"^heating\.circuits\.(\d+)\.operating\.programs\.summerEco\.active$"
+        ),
+        description=BinarySensorEntityDescription(
+            key="placeholder",
+            translation_key="summer_eco",
+        ),
+    ),
     # Compressors Active (heating.compressors.N.active)
     EntityTemplate(
         pattern=re.compile(r"^heating\.compressors\.(\d+)\.active$"),
@@ -109,6 +119,16 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
         key="heating.dhw.pumps.primary.status",
         translation_key="dhw_primary_pump",
         device_class=BinarySensorDeviceClass.RUNNING,
+    ),
+    # Holiday (heating.operating.programs.holiday.active)
+    "heating.operating.programs.holiday.active": BinarySensorEntityDescription(
+        key="heating.operating.programs.holiday.active",
+        translation_key="holiday",
+    ),
+    # Holiday at Home (heating.operating.programs.holidayAtHome.active)
+    "heating.operating.programs.holidayAtHome.active": BinarySensorEntityDescription(
+        key="heating.operating.programs.holidayAtHome.active",
+        translation_key="holiday_at_home",
     ),
     # Outdoor Defrosting (heating.outdoor.defrosting.active)
     "heating.outdoor.defrosting.active": BinarySensorEntityDescription(

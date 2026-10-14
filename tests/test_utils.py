@@ -1,6 +1,9 @@
 """Tests for Viessmann Climate Devices utilities."""
 
+import pytest
+
 from custom_components.vi_climate_devices.utils import (
+    api_value_to_option_key,
     beautify_name,
     get_feature_bool_value,
     get_feature_number_value,
@@ -204,3 +207,19 @@ def test_get_suggested_precision():
     assert get_suggested_precision(None) is None
     assert get_suggested_precision(0.0) == 0
     assert get_suggested_precision(float("nan")) == 0
+
+
+@pytest.mark.parametrize(
+    ("api_value", "expected_key"),
+    [
+        ("domesticHotWater", "domestic_hot_water"),
+        ("climatCircuitTwoDefrost", "climat_circuit_two_defrost"),
+        ("normalCoolingEnergySaving", "normal_cooling_energy_saving"),
+        ("holidayAtHome", "holiday_at_home"),
+        ("frostprotection", "frostprotection"),
+        ("standby", "standby"),
+    ],
+)
+def test_api_value_to_option_key(api_value: str, expected_key: str):
+    """Convert camelCase API values to lowercase translation keys."""
+    assert api_value_to_option_key(api_value) == expected_key

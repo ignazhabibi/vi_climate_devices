@@ -16,8 +16,10 @@ from custom_components.vi_climate_devices.exceptions import ExceptionTranslation
 from custom_components.vi_climate_devices.number import NUMBER_TEMPLATES, NUMBER_TYPES
 from custom_components.vi_climate_devices.select import SELECT_TEMPLATES, SELECT_TYPES
 from custom_components.vi_climate_devices.sensor import (
+    ACTIVE_PROGRAM_OPTIONS,
     SENSOR_TEMPLATES,
     SENSOR_TYPES,
+    VALVE_POSITION_OPTIONS,
 )
 from custom_components.vi_climate_devices.switch import SWITCH_TYPES
 from custom_components.vi_climate_devices.water_heater import ViClimateWaterHeater
@@ -282,3 +284,19 @@ def test_config_flow_abort_reasons_exist_in_all_maintained_translations(
             f"Missing abort translations in {source_name}: "
             f"{sorted(abort_reasons - translated_reasons)}"
         )
+
+
+@pytest.mark.parametrize(
+    ("translation_key", "options"),
+    [
+        ("heating_circuit_active_program", ACTIVE_PROGRAM_OPTIONS),
+        ("valve_position", VALVE_POSITION_OPTIONS),
+    ],
+)
+def test_enum_sensor_states_are_translated(translations, translation_key, options):
+    """Every enum option is a valid state key with a translation in all locales."""
+    for option in options:
+        assert re.fullmatch(r"[a-z0-9_]+", option), option
+    for source_name in ("strings", "en", "de"):
+        states = translations[source_name]["entity"]["sensor"][translation_key]["state"]
+        assert sorted(states) == sorted(options), source_name

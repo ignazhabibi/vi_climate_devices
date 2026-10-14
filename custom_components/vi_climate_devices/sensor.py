@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+import logging
 import re
 
 from homeassistant.components.sensor import (
@@ -35,13 +36,54 @@ from .entity import (
     async_setup_dynamic_entities,
 )
 from .utils import (
+    api_value_to_option_key,
     beautify_name,
+    get_feature_string_value,
     is_feature_boolean_like,
     is_feature_ignored,
     normalize_sensor_value,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 PARALLEL_UPDATES = 0
+
+# Enum states are lowercase keys of the API values (see api_value_to_option_key).
+# Sort the values alphabetically.
+ACTIVE_PROGRAM_OPTIONS = [
+    "comfort",
+    "comfort_cooling",
+    "comfort_cooling_energy_saving",
+    "comfort_energy_saving",
+    "comfort_heating",
+    "eco",
+    "fixed",
+    "forced_last_from_schedule",
+    "frostprotection",
+    "holiday",
+    "holiday_at_home",
+    "normal",
+    "normal_cooling",
+    "normal_cooling_energy_saving",
+    "normal_energy_saving",
+    "normal_heating",
+    "reduced",
+    "reduced_cooling",
+    "reduced_cooling_energy_saving",
+    "reduced_energy_saving",
+    "reduced_heating",
+    "standby",
+    "summer_eco",
+]
+
+# The API spells some positions "climat..." without the trailing "e".
+# Sort the values alphabetically.
+VALVE_POSITION_OPTIONS = [
+    "climat_circuit_one_and_two",
+    "climat_circuit_two_defrost",
+    "climate_circuit_one",
+    "domestic_hot_water",
+]
 
 AUTO_DISCOVERED_TOTAL_INCREASING_ENERGY_FEATURES = frozenset(
     {
@@ -68,6 +110,16 @@ AUTO_DISCOVERED_TOTAL_INCREASING_ENERGY_FEATURES = frozenset(
 
 # Templates with regex patterns for dynamic feature names
 SENSOR_TEMPLATES: tuple[EntityTemplate[SensorEntityDescription], ...] = (
+    # Heating Circuits Active Program
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.circuits\.(\d+)\.operating\.programs\.active$"),
+        description=SensorEntityDescription(
+            key="placeholder",
+            translation_key="heating_circuit_active_program",
+            device_class=SensorDeviceClass.ENUM,
+            options=ACTIVE_PROGRAM_OPTIONS,
+        ),
+    ),
     # Heating Circuits Supply Temperature
     EntityTemplate(
         pattern=re.compile(r"^heating\.circuits\.(\d+)\.sensors\.temperature\.supply$"),
@@ -657,6 +709,8 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "heating.valves.fourThreeWay.position": SensorEntityDescription(
         key="heating.valves.fourThreeWay.position",
         translation_key="valve_position",
+        device_class=SensorDeviceClass.ENUM,
+        options=VALVE_POSITION_OPTIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
@@ -844,13 +898,39 @@ class ViClimateSensor(ViClimateFeatureEntity, SensorEntity):
             enabled_default,
         )
         self.entity_description = description
+        self._unknown_enum_values: set[str] = set()
 
     @property
     def native_value(self) -> StateType:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the state of the sensor."""
         feat = self.feature_data
-        if feat:
-            return normalize_sensor_value(feat.value)
+        if not feat:
+            return None
+        if self.entity_description.device_class is SensorDeviceClass.ENUM:
+            return self._get_enum_state(feat)
+        return normalize_sensor_value(feat.value)
+
+    def _get_enum_state(self, feature: Feature) -> str | None:
+        """Return the option key for an enum feature, or None if it is unknown.
+
+        Home Assistant rejects enum states outside the declared options, and
+        the reported values differ between device generations and firmware.
+        An unknown value therefore becomes an unknown state and is logged once
+        so the options can be extended.
+        """
+        api_value = get_feature_string_value(feature.value)
+        if api_value is None:
+            return None
+        option = api_value_to_option_key(api_value)
+        if option in (self.entity_description.options or ()):
+            return option
+        if api_value not in self._unknown_enum_values:
+            self._unknown_enum_values.add(api_value)
+            _LOGGER.warning(
+                "Unknown value %s for %s; reporting the state as unknown",
+                api_value,
+                feature.name,
+            )
         return None
 
     @property

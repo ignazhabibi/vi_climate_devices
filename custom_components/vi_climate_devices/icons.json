@@ -100,6 +100,9 @@
             },
             "valve_position": {
                 "default": "mdi:valve"
+            },
+            "heating_circuit_active_program": {
+                "default": "mdi:calendar-clock"
             }
         },
         "switch": {

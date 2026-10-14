@@ -148,6 +148,9 @@
             "frost_protection": {
                 "name": "Frostschutz Heizkreis {index}"
             },
+            "summer_eco": {
+                "name": "Sommer-Eco Heizkreis {index}"
+            },
             "solar_pump": {
                 "name": "Solar-Kreis Pumpe"
             },
@@ -168,6 +171,12 @@
             },
             "outdoor_defrosting": {
                 "name": "Abtauvorgang"
+            },
+            "holiday": {
+                "name": "Urlaub"
+            },
+            "holiday_at_home": {
+                "name": "Urlaub zu Hause"
             }
         },
         "climate": {
@@ -196,6 +205,34 @@
             },
             "heating_circuit_supply_temperature": {
                 "name": "Vorlauf Heizkreis {index}"
+            },
+            "heating_circuit_active_program": {
+                "name": "Aktives Programm Heizkreis {index}",
+                "state": {
+                    "comfort": "Komfort",
+                    "comfort_cooling": "Komfort (Kühlen)",
+                    "comfort_cooling_energy_saving": "Komfort (Kühlen, Sparbetrieb)",
+                    "comfort_energy_saving": "Komfort (Sparbetrieb)",
+                    "comfort_heating": "Komfort",
+                    "eco": "Eco",
+                    "fixed": "Fest",
+                    "forced_last_from_schedule": "Letzte Zeitprogrammphase erzwungen",
+                    "frostprotection": "Frostschutz",
+                    "holiday": "Urlaub",
+                    "holiday_at_home": "Urlaub zu Hause",
+                    "normal": "Normal",
+                    "normal_cooling": "Normal (Kühlen)",
+                    "normal_cooling_energy_saving": "Normal (Kühlen, Sparbetrieb)",
+                    "normal_energy_saving": "Normal (Sparbetrieb)",
+                    "normal_heating": "Normal",
+                    "reduced": "Reduziert",
+                    "reduced_cooling": "Reduziert (Kühlen)",
+                    "reduced_cooling_energy_saving": "Reduziert (Kühlen, Sparbetrieb)",
+                    "reduced_energy_saving": "Reduziert (Sparbetrieb)",
+                    "reduced_heating": "Reduziert",
+                    "standby": "Standby",
+                    "summer_eco": "Sommer-Eco"
+                }
             },
             "dhw_temperature": {
                 "name": "Warmwassertemperatur"
@@ -366,7 +403,13 @@
                 "name": "Verdampfer {index} Überhitzung"
             },
             "valve_position": {
-                "name": "4/3-Wege-Ventil Position"
+                "name": "4/3-Wege-Ventil Position",
+                "state": {
+                    "climat_circuit_one_and_two": "Stellung Heizkreis 1 und 2",
+                    "climat_circuit_two_defrost": "Stellung Heizkreis 2 / Abtauen",
+                    "climate_circuit_one": "Stellung Heizkreis 1",
+                    "domestic_hot_water": "Stellung Warmwasser"
+                }
             }
         },
         "switch": {
