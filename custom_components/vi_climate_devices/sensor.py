@@ -402,6 +402,14 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Production Summary DHW (Current Day).
+    "heating.heat.production.summary.dhw.currentDay": SensorEntityDescription(
+        key="heating.heat.production.summary.dhw.currentDay",
+        translation_key="production_dhw_current_day",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
     # Production Summary DHW (Current Year).
     "heating.heat.production.summary.dhw.currentYear": SensorEntityDescription(
         key="heating.heat.production.summary.dhw.currentYear",
@@ -410,10 +418,26 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
+    # Production Summary Heating (Current Day).
+    "heating.heat.production.summary.heating.currentDay": SensorEntityDescription(
+        key="heating.heat.production.summary.heating.currentDay",
+        translation_key="production_heating_current_day",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
     # Production Summary Heating (Current Year).
     "heating.heat.production.summary.heating.currentYear": SensorEntityDescription(
         key="heating.heat.production.summary.heating.currentYear",
         translation_key="production_heating_current_year",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    # Production Summary Cooling (Current Day).
+    "heating.heat.production.summary.cooling.currentDay": SensorEntityDescription(
+        key="heating.heat.production.summary.cooling.currentDay",
+        translation_key="production_cooling_current_day",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -434,10 +458,26 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Realtime Consumption DHW (Current Day).
+    "heating.power.consumption.dhw.currentDay": SensorEntityDescription(
+        key="heating.power.consumption.dhw.currentDay",
+        translation_key="consumption_dhw_current_day",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
     # Realtime Consumption DHW (Current Year).
     "heating.power.consumption.dhw.currentYear": SensorEntityDescription(
         key="heating.power.consumption.dhw.currentYear",
         translation_key="consumption_dhw_current_year",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    # Realtime Consumption Heating (Current Day).
+    "heating.power.consumption.heating.currentDay": SensorEntityDescription(
+        key="heating.power.consumption.heating.currentDay",
+        translation_key="consumption_heating_current_day",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,

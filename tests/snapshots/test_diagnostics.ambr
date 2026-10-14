@@ -2920,6 +2920,16 @@
             'is_enabled': True,
             'is_ready': True,
             'is_writable': False,
+            'name': 'heating.power.consumption.dhw.currentDay',
+            'unit': 'kilowattHour',
+            'value': 1.8,
+          }),
+          dict({
+            'constraints': dict({
+            }),
+            'is_enabled': True,
+            'is_ready': True,
+            'is_writable': False,
             'name': 'heating.power.consumption.dhw.currentYear',
             'unit': 'kilowattHour',
             'value': 994.1999999999999,
@@ -3002,6 +3012,16 @@
                 'value': '2026-10-08T21:34:34.782Z',
               }),
             }),
+          }),
+          dict({
+            'constraints': dict({
+            }),
+            'is_enabled': True,
+            'is_ready': True,
+            'is_writable': False,
+            'name': 'heating.power.consumption.heating.currentDay',
+            'unit': 'kilowattHour',
+            'value': 4.5,
           }),
           dict({
             'constraints': dict({
@@ -3271,6 +3291,16 @@
                 'value': '2026-10-08T21:34:34.772Z',
               }),
             }),
+          }),
+          dict({
+            'constraints': dict({
+            }),
+            'is_enabled': True,
+            'is_ready': True,
+            'is_writable': False,
+            'name': 'heating.power.consumption.total.currentDay',
+            'unit': 'kilowattHour',
+            'value': 2.1,
           }),
           dict({
             'constraints': dict({

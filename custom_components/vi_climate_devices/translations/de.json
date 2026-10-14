@@ -233,8 +233,14 @@
             "power_consumption_current": {
                 "name": "Aktuelle Leistungsaufnahme"
             },
+            "consumption_dhw_current_day": {
+                "name": "Verbrauch Warmwasser Tag"
+            },
             "consumption_dhw_current_year": {
                 "name": "Verbrauch Warmwasser Jahr"
+            },
+            "consumption_heating_current_day": {
+                "name": "Verbrauch Heizung Tag"
             },
             "consumption_heating_current_year": {
                 "name": "Verbrauch Heizung Jahr"
@@ -248,14 +254,23 @@
             "burner_hours": {
                 "name": "Brennerbetriebsstunden {index}"
             },
+            "production_cooling_current_day": {
+                "name": "Erzeugung Kuehlung Tag"
+            },
             "production_cooling_current_year": {
                 "name": "Erzeugung Kuehlung Jahr"
             },
             "heat_production_current": {
                 "name": "Aktuelle Wärmeleistung"
             },
+            "production_dhw_current_day": {
+                "name": "Erzeugung Warmwasser Tag"
+            },
             "production_dhw_current_year": {
                 "name": "Erzeugung Warmwasser Jahr"
+            },
+            "production_heating_current_day": {
+                "name": "Erzeugung Heizung Tag"
             },
             "production_heating_current_year": {
                 "name": "Erzeugung Heizung Jahr"

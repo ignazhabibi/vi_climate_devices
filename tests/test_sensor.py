@@ -247,24 +247,93 @@ async def test_sensor_feature_discovered_after_setup_is_added_once(
     await hass.async_block_till_done()
 
 
+DAILY_ENERGY_FEATURES = (
+    "heating.heat.production.summary.cooling.currentDay",
+    "heating.heat.production.summary.dhw.currentDay",
+    "heating.heat.production.summary.heating.currentDay",
+    "heating.power.consumption.dhw.currentDay",
+    "heating.power.consumption.heating.currentDay",
+)
+
+
+@pytest.mark.parametrize(
+    ("device_name", "expected_values"),
+    [
+        pytest.param(
+            "Vitocal250A",
+            {
+                "heating.heat.production.summary.cooling.currentDay": 0.0,
+                "heating.heat.production.summary.dhw.currentDay": 6.3,
+                "heating.heat.production.summary.heating.currentDay": 25.7,
+                "heating.power.consumption.dhw.currentDay": 1.8,
+                "heating.power.consumption.heating.currentDay": 4.5,
+            },
+            id="e3-heat-pump",
+        ),
+        pytest.param(
+            "Vitocal222S",
+            {
+                "heating.heat.production.summary.cooling.currentDay": 0.0,
+                "heating.heat.production.summary.dhw.currentDay": 6.8,
+                "heating.heat.production.summary.heating.currentDay": 13.1,
+                "heating.power.consumption.dhw.currentDay": 0.0,
+                "heating.power.consumption.heating.currentDay": 0.0,
+            },
+            id="e3-split-heat-pump",
+        ),
+        pytest.param(
+            "Vitodens200W",
+            {
+                "heating.heat.production.summary.dhw.currentDay": 1.0,
+                "heating.heat.production.summary.heating.currentDay": 26.0,
+                "heating.power.consumption.dhw.currentDay": 0.0,
+                "heating.power.consumption.heating.currentDay": 0.4,
+            },
+            id="gas-boiler",
+        ),
+    ],
+)
 @pytest.mark.asyncio
-async def test_removed_today_energy_sensors_are_not_created(
-    hass: HomeAssistant, mock_client
+async def test_daily_energy_sensors(
+    hass: HomeAssistant, device_name: str, expected_values: dict[str, float]
 ):
-    """Test removed today energy sensors are no longer created."""
-    # Arrange: Set up the integration with the Vitocal250A fixture.
+    """Expose daily energy counters next to the yearly counters."""
+    # Arrange: Load the real device fixture.
+    mock_client = FixtureViClient(device_name)
+    installations = await mock_client.get_installations()
+    device = (await mock_client.get_full_installation_status(installations[0].id))[0]
+
+    # Act: Discover the fixture through the Home Assistant integration.
     await _setup_integration(hass, mock_client)
+    registry = er.async_get(hass)
 
-    # Assert: The removed today sensors are absent after setup.
-    assert hass.states.get("sensor.vitocal250a_dhw_consumption_today") is None
-    assert hass.states.get("sensor.vitocal250a_heating_consumption_today") is None
-    assert hass.states.get("sensor.vitocal250a_total_consumption_today") is None
-    assert hass.states.get("sensor.vitocal250a_dhw_production_today") is None
-    assert hass.states.get("sensor.vitocal250a_heating_production_today") is None
-    assert hass.states.get("sensor.vitocal250a_production_dhw_current_day") is None
-    assert hass.states.get("sensor.vitocal250a_production_heating_current_day") is None
+    # Assert: Every daily feature the device reports is a resetting kWh counter.
+    for feature_name in DAILY_ENERGY_FEATURES:
+        unique_id = f"{device.gateway_serial}-{device.id}-{feature_name}"
+        entity_id = registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+        if feature_name not in expected_values:
+            assert entity_id is None
+            continue
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert float(state.state) == expected_values[feature_name]
+        assert state.attributes["unit_of_measurement"] == "kWh"
+        assert state.attributes["device_class"] == "energy"
+        assert state.attributes["state_class"] == SensorStateClass.TOTAL_INCREASING
 
-    # Cleanup: Unload the integration to prevent thread leaks.
+    # Assert: Lagging daily values stay hidden.
+    sensor_feature_names = {
+        state.attributes.get("viessmann_feature_name")
+        for state in hass.states.async_all("sensor")
+    }
+    assert "heating.power.consumption.total.currentDay" not in sensor_feature_names
+    assert not {
+        name
+        for name in sensor_feature_names
+        if name and name.startswith("heating.power.consumption.summary.")
+    }
+
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
