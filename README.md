@@ -114,7 +114,7 @@ account, not that setup failed.
 | Platform | Functionality |
 | --- | --- |
 | `binary_sensor` | Operating states such as compressor, pump, defrosting, and frost-protection status |
-| `climate` | Heating and cooling circuit target temperature, HVAC mode, and supported presets |
+| `climate` | Heating and cooling circuit target temperature and HVAC mode; the active program is available as the `active_program` attribute |
 | `number` | Heating-curve values, temperature limits, hot-water target temperature, and selected configuration values |
 | `select` | Hot-water and heating-circuit operation modes where exposed by the API |
 | `sensor` | Temperatures, pressure, humidity, flow, energy, power, SCOP, and diagnostic statistics |
@@ -135,8 +135,7 @@ The integration does not register custom `vi_climate_devices.*` actions,
 triggers, or conditions. Its controls use the standard actions provided by
 their entity platforms:
 
-- `climate.set_temperature`, `climate.set_hvac_mode`, and
-  `climate.set_preset_mode`
+- `climate.set_temperature` and `climate.set_hvac_mode`
 - `water_heater.set_temperature` and `water_heater.set_operation_mode`
 - `number.set_value`, `select.select_option`, `switch.turn_on`, and
   `switch.turn_off`
