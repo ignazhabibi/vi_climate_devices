@@ -494,16 +494,16 @@
                 "name": "Verdichter {number} Phase"
             },
             "compressor_inlet_pressure": {
-                "name": "Verdichter Einlassdruck"
+                "name": "Verdichter Sauggasdruck"
             },
             "compressor_inlet_pressure_numbered": {
-                "name": "Verdichter {number} Einlassdruck"
+                "name": "Verdichter {number} Sauggasdruck"
             },
             "compressor_inlet_temperature": {
-                "name": "Verdichter Einlasstemperatur"
+                "name": "Verdichter Sauggastemperatur"
             },
             "compressor_inlet_temperature_numbered": {
-                "name": "Verdichter {number} Einlasstemperatur"
+                "name": "Verdichter {number} Sauggastemperatur"
             },
             "compressor_motor_temperature": {
                 "name": "Verdichter Motortemperatur"
@@ -518,10 +518,10 @@
                 "name": "Verdichter {number} Öltemperatur"
             },
             "compressor_outlet_temperature": {
-                "name": "Verdichter Auslasstemperatur"
+                "name": "Verdichter Heißgastemperatur"
             },
             "compressor_outlet_temperature_numbered": {
-                "name": "Verdichter {number} Auslasstemperatur"
+                "name": "Verdichter {number} Heißgastemperatur"
             },
             "compressor_speed_current": {
                 "name": "Verdichter Drehzahl Ist"
@@ -536,10 +536,10 @@
                 "name": "Verdichter {number} Drehzahl Soll"
             },
             "condensor_liquid_temperature": {
-                "name": "Verflüssiger Flüssigkeitstemperatur"
+                "name": "Verflüssiger Flüssiggastemperatur"
             },
             "condensor_liquid_temperature_numbered": {
-                "name": "Verflüssiger {number} Flüssigkeitstemperatur"
+                "name": "Verflüssiger {number} Flüssiggastemperatur"
             },
             "fan_speed": {
                 "name": "Ventilator Drehzahl"
@@ -548,16 +548,16 @@
                 "name": "Ventilator {number} Drehzahl"
             },
             "economizer_liquid_temperature": {
-                "name": "Economizer Flüssigkeitstemperatur"
+                "name": "Economizer Flüssiggastemperatur"
             },
             "economizer_liquid_temperature_numbered": {
-                "name": "Economizer {number} Flüssigkeitstemperatur"
+                "name": "Economizer {number} Flüssiggastemperatur"
             },
             "evaporator_liquid_temperature": {
-                "name": "Verdampfer Flüssigkeitstemperatur"
+                "name": "Verdampfer Flüssiggastemperatur"
             },
             "evaporator_liquid_temperature_numbered": {
-                "name": "Verdampfer {number} Flüssigkeitstemperatur"
+                "name": "Verdampfer {number} Flüssiggastemperatur"
             },
             "evaporator_overheat_temperature": {
                 "name": "Verdampfer Überhitzung"
