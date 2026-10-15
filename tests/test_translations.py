@@ -329,3 +329,8 @@ def test_numbered_names_have_a_plain_variant(translations):
                     assert key.removesuffix("_numbered") in platform_entities
                 else:
                     assert "{number}" not in name, (source_name, platform, key)
+
+
+def test_english_translation_matches_strings(translations):
+    """Keep translations/en.json identical to the strings.json source."""
+    assert translations["en"] == translations["strings"]

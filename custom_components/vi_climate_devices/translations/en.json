@@ -485,7 +485,7 @@
                 "name": "Solar Hot Water Temperature"
             },
             "solar_production_today": {
-                "name": "Solar Production Today"
+                "name": "Solar Production Day"
             },
             "compressor_phase": {
                 "name": "Compressor Phase"
@@ -576,10 +576,10 @@
             "valve_position": {
                 "name": "4/3-Way Valve Position",
                 "state": {
-                    "climat_circuit_one_and_two": "Position heating circuits 1 and 2",
-                    "climat_circuit_two_defrost": "Position heating circuit 2 / defrost",
-                    "climate_circuit_one": "Position heating circuit 1",
-                    "domestic_hot_water": "Position domestic hot water"
+                    "climate_circuit_one": "Heating/cooling",
+                    "climat_circuit_two_defrost": "Bypass/defrost buffer",
+                    "climat_circuit_one_and_two": "Heating/cooling and bypass",
+                    "domestic_hot_water": "Domestic hot water"
                 }
             },
             "internal_pump": {

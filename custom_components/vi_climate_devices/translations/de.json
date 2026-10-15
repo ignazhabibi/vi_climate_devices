@@ -224,10 +224,10 @@
                 "name": "Sommer Eco Modus Heizkreis {number}"
             },
             "solar_pump": {
-                "name": "Solar-Kreis Pumpe"
+                "name": "Solarkreispumpe"
             },
             "dhw_charging": {
-                "name": "Warmwasserbereitung"
+                "name": "Warmwasser Ladung"
             },
             "dhw_primary_pump": {
                 "name": "Speicherladepumpe"
@@ -443,7 +443,7 @@
                 "name": "Verbrauch Heizstab Heizung Jahr"
             },
             "outside_humidity": {
-                "name": "Luftfeuchtigkeit Außen"
+                "name": "Außenluftfeuchtigkeit"
             },
             "boiler_temperature": {
                 "name": "Kesseltemperatur"
@@ -464,19 +464,19 @@
                 "name": "Warmwassertemperatur (Unten)"
             },
             "buffer_top_temperature": {
-                "name": "Pufferspeichertemperatur (Oben)"
+                "name": "Pufferspeicher (Oben)"
             },
             "buffer_mid_top_temperature": {
-                "name": "Pufferspeichertemperatur (Mitte-Oben)"
+                "name": "Pufferspeicher (Mitte-Oben)"
             },
             "buffer_middle_temperature": {
-                "name": "Pufferspeichertemperatur (Mitte)"
+                "name": "Pufferspeicher (Mitte)"
             },
             "buffer_mid_bottom_temperature": {
-                "name": "Pufferspeichertemperatur (Mitte-Unten)"
+                "name": "Pufferspeicher (Mitte-Unten)"
             },
             "buffer_bottom_temperature": {
-                "name": "Pufferspeichertemperatur (Unten)"
+                "name": "Pufferspeicher (Unten)"
             },
             "solar_collector_temperature": {
                 "name": "Solarkollektortemperatur"
@@ -485,7 +485,7 @@
                 "name": "Solar Warmwassertemperatur"
             },
             "solar_production_today": {
-                "name": "Solarertrag Heute"
+                "name": "Solarertrag Tag"
             },
             "compressor_phase": {
                 "name": "Verdichter Phase"
@@ -574,12 +574,12 @@
                 }
             },
             "valve_position": {
-                "name": "4/3-Wege-Ventil Position",
+                "name": "4/3-Wege-Ventil Stellung",
                 "state": {
-                    "climat_circuit_one_and_two": "Stellung Heizkreis 1 und 2",
-                    "climat_circuit_two_defrost": "Stellung Heizkreis 2 / Abtauen",
-                    "climate_circuit_one": "Stellung Heizkreis 1",
-                    "domestic_hot_water": "Stellung Warmwasser"
+                    "climate_circuit_one": "Heizen/Kühlen",
+                    "climat_circuit_two_defrost": "Bypass/Abtaupuffer",
+                    "climat_circuit_one_and_two": "Heizen/Kühlen und Bypass",
+                    "domestic_hot_water": "Warmwasser"
                 }
             },
             "internal_pump": {

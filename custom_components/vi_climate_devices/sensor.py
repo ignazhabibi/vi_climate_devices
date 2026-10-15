@@ -85,7 +85,10 @@ NOISE_REDUCTION_OPTIONS = [
     "slightly_reduced",
 ]
 
-# The API spells some positions "climat..." without the trailing "e".
+# The valve switches between heating/cooling, the integrated bypass/defrost
+# buffer, and domestic hot water; "climatCircuitTwoDefrost" is the buffer port,
+# not a second heating circuit. The API spells some positions "climat..."
+# without the trailing "e".
 # Sort the values alphabetically.
 VALVE_POSITION_OPTIONS = [
     "climat_circuit_one_and_two",

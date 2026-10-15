@@ -163,6 +163,12 @@
             },
             "noise_reduction_program": {
                 "default": "mdi:volume-minus"
+            },
+            "internal_pump": {
+                "default": "mdi:pump"
+            },
+            "outside_temperature_damping_factor": {
+                "default": "mdi:timer-sand"
             }
         },
         "switch": {
