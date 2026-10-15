@@ -299,7 +299,7 @@
                 "name": "Return Temperature"
             },
             "common_supply_temperature": {
-                "name": "Heat Pump Supply Temperature"
+                "name": "Generator Supply Temperature"
             },
             "primary_supply_temperature": {
                 "name": "Primary Circuit Supply Temperature"

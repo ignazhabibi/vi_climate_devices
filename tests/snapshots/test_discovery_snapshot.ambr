@@ -1003,12 +1003,12 @@
     dict({
       'attributes': dict({
         'device_class': 'temperature',
-        'friendly_name': 'Vitocal250A Heat Pump Supply Temperature',
+        'friendly_name': 'Vitocal250A Generator Supply Temperature',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
         'viessmann_feature_name': 'heating.boiler.sensors.temperature.commonSupply',
       }),
-      'entity_id': 'sensor.vitocal250a_heat_pump_supply_temperature',
+      'entity_id': 'sensor.vitocal250a_generator_supply_temperature',
       'state': '35.2',
     }),
     dict({

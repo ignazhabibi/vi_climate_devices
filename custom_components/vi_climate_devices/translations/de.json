@@ -270,7 +270,7 @@
                 "name": "Rücklauf"
             },
             "common_supply_temperature": {
-                "name": "Vorlauf Wärmepumpe"
+                "name": "Vorlauf Erzeuger"
             },
             "primary_supply_temperature": {
                 "name": "Vorlauf Primärkreis"
