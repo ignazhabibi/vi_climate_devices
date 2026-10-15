@@ -17,6 +17,7 @@ from custom_components.vi_climate_devices.number import NUMBER_TEMPLATES, NUMBER
 from custom_components.vi_climate_devices.select import SELECT_TEMPLATES, SELECT_TYPES
 from custom_components.vi_climate_devices.sensor import (
     ACTIVE_PROGRAM_OPTIONS,
+    NOISE_REDUCTION_OPTIONS,
     SENSOR_TEMPLATES,
     SENSOR_TYPES,
     VALVE_POSITION_OPTIONS,
@@ -290,6 +291,7 @@ def test_config_flow_abort_reasons_exist_in_all_maintained_translations(
     ("translation_key", "options"),
     [
         ("heating_circuit_active_program", ACTIVE_PROGRAM_OPTIONS),
+        ("noise_reduction_program", NOISE_REDUCTION_OPTIONS),
         ("valve_position", VALVE_POSITION_OPTIONS),
     ],
 )

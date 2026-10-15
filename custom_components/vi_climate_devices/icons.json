@@ -103,6 +103,9 @@
             },
             "heating_circuit_active_program": {
                 "default": "mdi:calendar-clock"
+            },
+            "noise_reduction_program": {
+                "default": "mdi:volume-minus"
             }
         },
         "switch": {

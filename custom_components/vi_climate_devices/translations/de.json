@@ -402,6 +402,14 @@
             "evaporator_overheat_temperature": {
                 "name": "Verdampfer {index} Überhitzung"
             },
+            "noise_reduction_program": {
+                "name": "Geräuschreduzierung",
+                "state": {
+                    "max_reduced": "Maximal reduziert",
+                    "not_reduced": "Nicht reduziert",
+                    "slightly_reduced": "Leicht reduziert"
+                }
+            },
             "valve_position": {
                 "name": "4/3-Wege-Ventil Position",
                 "state": {

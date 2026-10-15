@@ -679,6 +679,9 @@ async def test_sensor_ignores_generic_on_off_string(hass: HomeAssistant, mock_cl
             "Vitocal250A",
             {
                 "heating.circuits.0.operating.programs.active": "normal_heating",
+                "heating.noise.reduction.operating.programs.active": (
+                    "slightly_reduced"
+                ),
                 "heating.valves.fourThreeWay.position": "climat_circuit_two_defrost",
             },
             id="e3-heat-pump",

@@ -76,6 +76,13 @@ ACTIVE_PROGRAM_OPTIONS = [
     "summer_eco",
 ]
 
+# Sort the values alphabetically.
+NOISE_REDUCTION_OPTIONS = [
+    "max_reduced",
+    "not_reduced",
+    "slightly_reduced",
+]
+
 # The API spells some positions "climat..." without the trailing "e".
 # Sort the values alphabetically.
 VALVE_POSITION_OPTIONS = [
@@ -704,6 +711,13 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    # Noise Reduction (active program)
+    "heating.noise.reduction.operating.programs.active": SensorEntityDescription(
+        key="heating.noise.reduction.operating.programs.active",
+        translation_key="noise_reduction_program",
+        device_class=SensorDeviceClass.ENUM,
+        options=NOISE_REDUCTION_OPTIONS,
     ),
     # Valves
     "heating.valves.fourThreeWay.position": SensorEntityDescription(

@@ -1306,11 +1306,17 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Noise Reduction Operating Programs Active',
+        'device_class': 'enum',
+        'friendly_name': 'Vitocal250A Noise Reduction',
+        'options': list([
+          'max_reduced',
+          'not_reduced',
+          'slightly_reduced',
+        ]),
         'viessmann_feature_name': 'heating.noise.reduction.operating.programs.active',
       }),
-      'entity_id': 'sensor.vitocal250a_noise_reduction_operating_programs_active',
-      'state': 'slightlyReduced',
+      'entity_id': 'sensor.vitocal250a_noise_reduction',
+      'state': 'slightly_reduced',
     }),
     dict({
       'attributes': dict({

@@ -402,6 +402,14 @@
             "evaporator_overheat_temperature": {
                 "name": "Evaporator {index} Overheat Temperature"
             },
+            "noise_reduction_program": {
+                "name": "Noise Reduction",
+                "state": {
+                    "max_reduced": "Maximally reduced",
+                    "not_reduced": "Not reduced",
+                    "slightly_reduced": "Slightly reduced"
+                }
+            },
             "valve_position": {
                 "name": "4/3-Way Valve Position",
                 "state": {
