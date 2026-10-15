@@ -86,24 +86,25 @@ async def test_binary_sensor_values(hass: HomeAssistant, mock_client):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        # Assert: Verify a Standard Binary Sensor (One Time Charge).
-        # Fixture value is 'off' -> State 'off'.
-        dhw_active = hass.states.get("binary_sensor.vitocal250a_one_time_charge")
-        assert dhw_active is not None
-        assert dhw_active.state == "off"
+        # Assert: Verify a Standard Binary Sensor (Outdoor Defrosting).
+        # Fixture value is False -> State 'off'.
+        defrosting = hass.states.get("binary_sensor.vitocal250a_outdoor_defrosting")
+        assert defrosting is not None
+        assert defrosting.state == "off"
+
+        # Assert: The one-time charge is exposed only by its switch.
+        assert hass.states.get("binary_sensor.vitocal250a_one_time_charge") is None
 
         # Assert: Verify a Template/Regex Binary Sensor (Circulation Pump).
         # Fixture value is 'on' -> State 'on'.
-        pump = hass.states.get(
-            "binary_sensor.vitocal250a_circulation_pump_heating_circuit_0"
-        )
+        pump = hass.states.get("binary_sensor.vitocal250a_heating_circuit_pump")
         assert pump is not None
         assert pump.state == "on"
         assert pump.attributes["device_class"] == "running"
 
         # Assert: Verify a Generic 'Off' Sensor (Compressor Active).
         # This confirms that 'off' values in the fixture are correctly mapped.
-        compressor = hass.states.get("binary_sensor.vitocal250a_compressor_0_active")
+        compressor = hass.states.get("binary_sensor.vitocal250a_compressor")
         assert compressor is not None
         assert compressor.state == "off"
 
@@ -270,12 +271,12 @@ async def test_binary_sensor_feature_discovered_after_setup_is_added_once(
     [
         (
             "heating.circuits.0.operating.programs.summerEco.active",
-            "Vitocal250A Summer Eco Heating Circuit 0",
+            "Vitocal250A Summer Eco Mode",
         ),
-        ("heating.operating.programs.holiday.active", "Vitocal250A Holiday"),
+        ("heating.operating.programs.holiday.active", "Vitocal250A Holiday Mode"),
         (
             "heating.operating.programs.holidayAtHome.active",
-            "Vitocal250A Holiday at Home",
+            "Vitocal250A Holiday at Home Mode",
         ),
     ],
 )

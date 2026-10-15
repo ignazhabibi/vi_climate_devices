@@ -74,7 +74,7 @@ async def test_auto_discovery_ignore_list(hass: HomeAssistant, mock_client):
 
         # Assert: Verify the circuit supply sensor is NOT created.
         state_circuit = hass.states.get(
-            "sensor.vitocal250a_heating_circuit_0_supply_temperature"
+            "sensor.vitocal250a_heating_circuit_supply_temperature"
         )
         assert state_circuit is None
 

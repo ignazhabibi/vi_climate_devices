@@ -132,28 +132,19 @@
     dict({
       'attributes': dict({
         'device_class': 'running',
-        'friendly_name': 'Vitocal250A Circulation Pump Heating Circuit 0',
-        'viessmann_feature_name': 'heating.circuits.0.circulation.pump.status',
-      }),
-      'entity_id': 'binary_sensor.vitocal250a_circulation_pump_heating_circuit_0',
-      'state': 'on',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'running',
-        'friendly_name': 'Vitocal250A Compressor 0 Active',
+        'friendly_name': 'Vitocal250A Compressor',
         'viessmann_feature_name': 'heating.compressors.0.active',
       }),
-      'entity_id': 'binary_sensor.vitocal250a_compressor_0_active',
+      'entity_id': 'binary_sensor.vitocal250a_compressor',
       'state': 'off',
     }),
     dict({
       'attributes': dict({
         'device_class': 'running',
-        'friendly_name': 'Vitocal250A Compressor 0 Crankcase Heater',
+        'friendly_name': 'Vitocal250A Compressor Crankcase Heater',
         'viessmann_feature_name': 'heating.compressors.0.heater.crankcase.active',
       }),
-      'entity_id': 'binary_sensor.vitocal250a_compressor_0_crankcase_heater',
+      'entity_id': 'binary_sensor.vitocal250a_compressor_crankcase_heater',
       'state': 'off',
     }),
     dict({
@@ -192,19 +183,19 @@
     dict({
       'attributes': dict({
         'device_class': 'running',
-        'friendly_name': 'Vitocal250A Evaporator 0 Base Heater',
+        'friendly_name': 'Vitocal250A Evaporator Base Heater',
         'viessmann_feature_name': 'heating.evaporators.0.heater.base.active',
       }),
-      'entity_id': 'binary_sensor.vitocal250a_evaporator_0_base_heater',
+      'entity_id': 'binary_sensor.vitocal250a_evaporator_base_heater',
       'state': 'off',
     }),
     dict({
       'attributes': dict({
         'device_class': 'running',
-        'friendly_name': 'Vitocal250A Frost Protection Heating Circuit 0',
+        'friendly_name': 'Vitocal250A Frost Protection',
         'viessmann_feature_name': 'heating.circuits.0.frostprotection.status',
       }),
-      'entity_id': 'binary_sensor.vitocal250a_frost_protection_heating_circuit_0',
+      'entity_id': 'binary_sensor.vitocal250a_frost_protection',
       'state': 'off',
     }),
     dict({
@@ -225,6 +216,15 @@
     }),
     dict({
       'attributes': dict({
+        'device_class': 'running',
+        'friendly_name': 'Vitocal250A Heating Circuit Pump',
+        'viessmann_feature_name': 'heating.circuits.0.circulation.pump.status',
+      }),
+      'entity_id': 'binary_sensor.vitocal250a_heating_circuit_pump',
+      'state': 'on',
+    }),
+    dict({
+      'attributes': dict({
         'friendly_name': 'Vitocal250A Heating Rod Active',
         'viessmann_feature_name': 'heating.heatingRod.active',
       }),
@@ -233,18 +233,18 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Holiday',
-        'viessmann_feature_name': 'heating.operating.programs.holiday.active',
+        'friendly_name': 'Vitocal250A Holiday at Home Mode',
+        'viessmann_feature_name': 'heating.operating.programs.holidayAtHome.active',
       }),
-      'entity_id': 'binary_sensor.vitocal250a_holiday',
+      'entity_id': 'binary_sensor.vitocal250a_holiday_at_home_mode',
       'state': 'off',
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Holiday at Home',
-        'viessmann_feature_name': 'heating.operating.programs.holidayAtHome.active',
+        'friendly_name': 'Vitocal250A Holiday Mode',
+        'viessmann_feature_name': 'heating.operating.programs.holiday.active',
       }),
-      'entity_id': 'binary_sensor.vitocal250a_holiday_at_home',
+      'entity_id': 'binary_sensor.vitocal250a_holiday_mode',
       'state': 'off',
     }),
     dict({
@@ -298,15 +298,6 @@
     dict({
       'attributes': dict({
         'device_class': 'running',
-        'friendly_name': 'Vitocal250A One Time Charge',
-        'viessmann_feature_name': 'heating.dhw.oneTimeCharge.active',
-      }),
-      'entity_id': 'binary_sensor.vitocal250a_one_time_charge',
-      'state': 'off',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'running',
         'friendly_name': 'Vitocal250A Outdoor Defrosting',
         'viessmann_feature_name': 'heating.outdoor.defrosting.active',
       }),
@@ -323,17 +314,17 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Summer Eco Heating Circuit 0',
+        'friendly_name': 'Vitocal250A Summer Eco Mode',
         'viessmann_feature_name': 'heating.circuits.0.operating.programs.summerEco.active',
       }),
-      'entity_id': 'binary_sensor.vitocal250a_summer_eco_heating_circuit_0',
+      'entity_id': 'binary_sensor.vitocal250a_summer_eco_mode',
       'state': 'off',
     }),
     dict({
       'attributes': dict({
         'active_program': 'normalHeating',
         'current_temperature': None,
-        'friendly_name': 'Vitocal250A Heating Circuit 0',
+        'friendly_name': 'Vitocal250A Heating Circuit',
         'heating_curve_shift': 6.0,
         'heating_curve_slope': 0.6,
         'hvac_modes': list([
@@ -346,50 +337,8 @@
         'target_temp_step': 1.0,
         'temperature': 20.0,
       }),
-      'entity_id': 'climate.vitocal250a_heating_circuit_0',
+      'entity_id': 'climate.vitocal250a_heating_circuit',
       'state': 'heat',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'temperature',
-        'friendly_name': 'Vitocal250A Circuit 0 Comfort Heating Temperature',
-        'max': 37.0,
-        'min': 3.0,
-        'mode': <NumberMode.BOX: 'box'>,
-        'step': 1.0,
-        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-        'viessmann_feature_name': 'heating.circuits.0.operating.programs.comfortHeating.temperature',
-      }),
-      'entity_id': 'number.vitocal250a_circuit_0_comfort_heating_temperature',
-      'state': '22',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'temperature',
-        'friendly_name': 'Vitocal250A Circuit 0 Normal Heating Temperature',
-        'max': 37.0,
-        'min': 3.0,
-        'mode': <NumberMode.BOX: 'box'>,
-        'step': 1.0,
-        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-        'viessmann_feature_name': 'heating.circuits.0.operating.programs.normalHeating.temperature',
-      }),
-      'entity_id': 'number.vitocal250a_circuit_0_normal_heating_temperature',
-      'state': '20',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'temperature',
-        'friendly_name': 'Vitocal250A Circuit 0 Reduced Heating Temperature',
-        'max': 37.0,
-        'min': 3.0,
-        'mode': <NumberMode.BOX: 'box'>,
-        'step': 1.0,
-        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-        'viessmann_feature_name': 'heating.circuits.0.operating.programs.reducedHeating.temperature',
-      }),
-      'entity_id': 'number.vitocal250a_circuit_0_reduced_heating_temperature',
-      'state': '18',
     }),
     dict({
       'attributes': dict({
@@ -435,34 +384,8 @@
     }),
     dict({
       'attributes': dict({
-        'device_class': 'temperature_delta',
-        'friendly_name': 'Vitocal250A Heating Circuit 0 Curve Shift',
-        'max': 40.0,
-        'min': -13.0,
-        'mode': <NumberMode.BOX: 'box'>,
-        'step': 1.0,
-        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-        'viessmann_feature_name': 'heating.circuits.0.heating.curve.shift',
-      }),
-      'entity_id': 'number.vitocal250a_heating_circuit_0_curve_shift',
-      'state': '6',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Heating Circuit 0 Curve Slope',
-        'max': 3.5,
-        'min': 0.2,
-        'mode': <NumberMode.BOX: 'box'>,
-        'step': 0.1,
-        'viessmann_feature_name': 'heating.circuits.0.heating.curve.slope',
-      }),
-      'entity_id': 'number.vitocal250a_heating_circuit_0_curve_slope',
-      'state': '0.6',
-    }),
-    dict({
-      'attributes': dict({
         'device_class': 'temperature',
-        'friendly_name': 'Vitocal250A Heating Circuit 0 Temperature Limit Max',
+        'friendly_name': 'Vitocal250A Heating Circuit Temperature Limit Max',
         'max': 100.0,
         'min': 21.0,
         'mode': <NumberMode.BOX: 'box'>,
@@ -470,13 +393,13 @@
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
         'viessmann_feature_name': 'heating.circuits.0.temperature.levels.max',
       }),
-      'entity_id': 'number.vitocal250a_heating_circuit_0_temperature_limit_max',
+      'entity_id': 'number.vitocal250a_heating_circuit_temperature_limit_max',
       'state': '60',
     }),
     dict({
       'attributes': dict({
         'device_class': 'temperature',
-        'friendly_name': 'Vitocal250A Heating Circuit 0 Temperature Limit Min',
+        'friendly_name': 'Vitocal250A Heating Circuit Temperature Limit Min',
         'max': 59.0,
         'min': 10.0,
         'mode': <NumberMode.BOX: 'box'>,
@@ -484,8 +407,76 @@
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
         'viessmann_feature_name': 'heating.circuits.0.temperature.levels.min',
       }),
-      'entity_id': 'number.vitocal250a_heating_circuit_0_temperature_limit_min',
+      'entity_id': 'number.vitocal250a_heating_circuit_temperature_limit_min',
       'state': '20',
+    }),
+    dict({
+      'attributes': dict({
+        'device_class': 'temperature_delta',
+        'friendly_name': 'Vitocal250A Heating Curve Shift',
+        'max': 40.0,
+        'min': -13.0,
+        'mode': <NumberMode.BOX: 'box'>,
+        'step': 1.0,
+        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+        'viessmann_feature_name': 'heating.circuits.0.heating.curve.shift',
+      }),
+      'entity_id': 'number.vitocal250a_heating_curve_shift',
+      'state': '6',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Heating Curve Slope',
+        'max': 3.5,
+        'min': 0.2,
+        'mode': <NumberMode.BOX: 'box'>,
+        'step': 0.1,
+        'viessmann_feature_name': 'heating.circuits.0.heating.curve.slope',
+      }),
+      'entity_id': 'number.vitocal250a_heating_curve_slope',
+      'state': '0.6',
+    }),
+    dict({
+      'attributes': dict({
+        'device_class': 'temperature',
+        'friendly_name': 'Vitocal250A Room Temperature Comfort',
+        'max': 37.0,
+        'min': 3.0,
+        'mode': <NumberMode.BOX: 'box'>,
+        'step': 1.0,
+        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.comfortHeating.temperature',
+      }),
+      'entity_id': 'number.vitocal250a_room_temperature_comfort',
+      'state': '22',
+    }),
+    dict({
+      'attributes': dict({
+        'device_class': 'temperature',
+        'friendly_name': 'Vitocal250A Room Temperature Normal',
+        'max': 37.0,
+        'min': 3.0,
+        'mode': <NumberMode.BOX: 'box'>,
+        'step': 1.0,
+        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.normalHeating.temperature',
+      }),
+      'entity_id': 'number.vitocal250a_room_temperature_normal',
+      'state': '20',
+    }),
+    dict({
+      'attributes': dict({
+        'device_class': 'temperature',
+        'friendly_name': 'Vitocal250A Room Temperature Reduced',
+        'max': 37.0,
+        'min': 3.0,
+        'mode': <NumberMode.BOX: 'box'>,
+        'step': 1.0,
+        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+        'viessmann_feature_name': 'heating.circuits.0.operating.programs.reducedHeating.temperature',
+      }),
+      'entity_id': 'number.vitocal250a_room_temperature_reduced',
+      'state': '18',
     }),
     dict({
       'attributes': dict({
@@ -501,13 +492,13 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Heating Circuit 0 Operation Mode',
+        'friendly_name': 'Vitocal250A Heating Circuit Operation Mode',
         'options': list([
           'heating',
           'standby',
         ]),
       }),
-      'entity_id': 'select.vitocal250a_heating_circuit_0_operation_mode',
+      'entity_id': 'select.vitocal250a_heating_circuit_operation_mode',
       'state': 'heating',
     }),
     dict({
@@ -524,16 +515,6 @@
       }),
       'entity_id': 'sensor.vitocal250a_4_3_way_valve_position',
       'state': 'climat_circuit_two_defrost',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Boiler Pumps Internal Current',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
-        'viessmann_feature_name': 'heating.boiler.pumps.internal.current',
-      }),
-      'entity_id': 'sensor.vitocal250a_boiler_pumps_internal_current',
-      'state': '0',
     }),
     dict({
       'attributes': dict({
@@ -722,127 +703,116 @@
     }),
     dict({
       'attributes': dict({
-        'device_class': 'temperature',
-        'friendly_name': 'Vitocal250A Common Supply Temperature',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-        'viessmann_feature_name': 'heating.boiler.sensors.temperature.commonSupply',
-      }),
-      'entity_id': 'sensor.vitocal250a_common_supply_temperature',
-      'state': '35.2',
-    }),
-    dict({
-      'attributes': dict({
         'device_class': 'duration',
-        'friendly_name': 'Vitocal250A Compressor 0 Hours',
+        'friendly_name': 'Vitocal250A Compressor Hours',
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
         'unit_of_measurement': 'h',
         'viessmann_feature_name': 'heating.compressors.0.statistics.hours',
       }),
-      'entity_id': 'sensor.vitocal250a_compressor_0_hours',
+      'entity_id': 'sensor.vitocal250a_compressor_hours',
       'state': '11755',
     }),
     dict({
       'attributes': dict({
         'device_class': 'pressure',
-        'friendly_name': 'Vitocal250A Compressor 0 Inlet Pressure',
+        'friendly_name': 'Vitocal250A Compressor Inlet Pressure',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
         'viessmann_feature_name': 'heating.compressors.0.sensors.pressure.inlet',
       }),
-      'entity_id': 'sensor.vitocal250a_compressor_0_inlet_pressure',
+      'entity_id': 'sensor.vitocal250a_compressor_inlet_pressure',
       'state': '6.59',
     }),
     dict({
       'attributes': dict({
         'device_class': 'temperature',
-        'friendly_name': 'Vitocal250A Compressor 0 Inlet Temperature',
+        'friendly_name': 'Vitocal250A Compressor Inlet Temperature',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
         'viessmann_feature_name': 'heating.compressors.0.sensors.temperature.inlet',
       }),
-      'entity_id': 'sensor.vitocal250a_compressor_0_inlet_temperature',
+      'entity_id': 'sensor.vitocal250a_compressor_inlet_temperature',
       'state': '22.2',
     }),
     dict({
       'attributes': dict({
         'device_class': 'temperature',
-        'friendly_name': 'Vitocal250A Compressor 0 Motor Temperature',
+        'friendly_name': 'Vitocal250A Compressor Motor Temperature',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
         'viessmann_feature_name': 'heating.compressors.0.sensors.temperature.motorChamber',
       }),
-      'entity_id': 'sensor.vitocal250a_compressor_0_motor_temperature',
+      'entity_id': 'sensor.vitocal250a_compressor_motor_temperature',
       'state': '25.2',
     }),
     dict({
       'attributes': dict({
         'device_class': 'temperature',
-        'friendly_name': 'Vitocal250A Compressor 0 Oil Temperature',
+        'friendly_name': 'Vitocal250A Compressor Oil Temperature',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
         'viessmann_feature_name': 'heating.compressors.0.sensors.temperature.oil',
       }),
-      'entity_id': 'sensor.vitocal250a_compressor_0_oil_temperature',
+      'entity_id': 'sensor.vitocal250a_compressor_oil_temperature',
       'state': '50.7',
     }),
     dict({
       'attributes': dict({
         'device_class': 'temperature',
-        'friendly_name': 'Vitocal250A Compressor 0 Outlet Temperature',
+        'friendly_name': 'Vitocal250A Compressor Outlet Temperature',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
         'viessmann_feature_name': 'heating.compressors.0.sensors.temperature.outlet',
       }),
-      'entity_id': 'sensor.vitocal250a_compressor_0_outlet_temperature',
+      'entity_id': 'sensor.vitocal250a_compressor_outlet_temperature',
       'state': '33.1',
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Compressor 0 Phase',
+        'friendly_name': 'Vitocal250A Compressor Phase',
         'viessmann_feature_name': 'heating.compressors.0.phase',
       }),
-      'entity_id': 'sensor.vitocal250a_compressor_0_phase',
+      'entity_id': 'sensor.vitocal250a_compressor_phase',
       'state': 'ready',
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Compressor 0 Speed',
+        'friendly_name': 'Vitocal250A Compressor Speed',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'rps',
         'viessmann_feature_name': 'heating.compressors.0.speed.current',
       }),
-      'entity_id': 'sensor.vitocal250a_compressor_0_speed',
+      'entity_id': 'sensor.vitocal250a_compressor_speed',
       'state': '0',
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Compressor 0 Speed Setpoint',
+        'friendly_name': 'Vitocal250A Compressor Speed Setpoint',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'rps',
         'viessmann_feature_name': 'heating.compressors.0.speed.setpoint',
       }),
-      'entity_id': 'sensor.vitocal250a_compressor_0_speed_setpoint',
+      'entity_id': 'sensor.vitocal250a_compressor_speed_setpoint',
       'state': '0',
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Compressor 0 Starts',
+        'friendly_name': 'Vitocal250A Compressor Starts',
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
         'viessmann_feature_name': 'heating.compressors.0.statistics.starts',
       }),
-      'entity_id': 'sensor.vitocal250a_compressor_0_starts',
+      'entity_id': 'sensor.vitocal250a_compressor_starts',
       'state': '3142',
     }),
     dict({
       'attributes': dict({
         'device_class': 'temperature',
-        'friendly_name': 'Vitocal250A Condensor 0 Liquid Temperature',
+        'friendly_name': 'Vitocal250A Condensor Liquid Temperature',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
         'viessmann_feature_name': 'heating.condensors.0.sensors.temperature.liquid',
       }),
-      'entity_id': 'sensor.vitocal250a_condensor_0_liquid_temperature',
+      'entity_id': 'sensor.vitocal250a_condensor_liquid_temperature',
       'state': '27.6',
     }),
     dict({
@@ -980,60 +950,71 @@
     dict({
       'attributes': dict({
         'device_class': 'temperature',
-        'friendly_name': 'Vitocal250A Economizer 0 Liquid Temperature',
+        'friendly_name': 'Vitocal250A Economizer Liquid Temperature',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
         'viessmann_feature_name': 'heating.economizers.0.sensors.temperature.liquid',
       }),
-      'entity_id': 'sensor.vitocal250a_economizer_0_liquid_temperature',
+      'entity_id': 'sensor.vitocal250a_economizer_liquid_temperature',
       'state': '24.5',
     }),
     dict({
       'attributes': dict({
         'device_class': 'temperature',
-        'friendly_name': 'Vitocal250A Evaporator 0 Liquid Temperature',
+        'friendly_name': 'Vitocal250A Evaporator Liquid Temperature',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
         'viessmann_feature_name': 'heating.evaporators.0.sensors.temperature.liquid',
       }),
-      'entity_id': 'sensor.vitocal250a_evaporator_0_liquid_temperature',
+      'entity_id': 'sensor.vitocal250a_evaporator_liquid_temperature',
       'state': '16.9',
     }),
     dict({
       'attributes': dict({
         'device_class': 'temperature',
-        'friendly_name': 'Vitocal250A Evaporator 0 Overheat Temperature',
+        'friendly_name': 'Vitocal250A Evaporator Overheat Temperature',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
         'viessmann_feature_name': 'heating.evaporators.0.sensors.temperature.overheat',
       }),
-      'entity_id': 'sensor.vitocal250a_evaporator_0_overheat_temperature',
+      'entity_id': 'sensor.vitocal250a_evaporator_overheat_temperature',
       'state': '16',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Fan 0 Speed',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
-        'viessmann_feature_name': 'heating.primaryCircuit.fans.0.current',
-      }),
-      'entity_id': 'sensor.vitocal250a_fan_0_speed',
-      'state': '0',
     }),
     dict({
       'attributes': dict({
         'friendly_name': 'Vitocal250A Fan 1 Speed',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
-        'viessmann_feature_name': 'heating.primaryCircuit.fans.1.current',
+        'viessmann_feature_name': 'heating.primaryCircuit.fans.0.current',
       }),
       'entity_id': 'sensor.vitocal250a_fan_1_speed',
       'state': '0',
     }),
     dict({
       'attributes': dict({
+        'friendly_name': 'Vitocal250A Fan 2 Speed',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+        'viessmann_feature_name': 'heating.primaryCircuit.fans.1.current',
+      }),
+      'entity_id': 'sensor.vitocal250a_fan_2_speed',
+      'state': '0',
+    }),
+    dict({
+      'attributes': dict({
+        'device_class': 'temperature',
+        'friendly_name': 'Vitocal250A Heat Pump Supply Temperature',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+        'viessmann_feature_name': 'heating.boiler.sensors.temperature.commonSupply',
+      }),
+      'entity_id': 'sensor.vitocal250a_heat_pump_supply_temperature',
+      'state': '35.2',
+    }),
+    dict({
+      'attributes': dict({
         'device_class': 'enum',
-        'friendly_name': 'Vitocal250A Heating Circuit 0 Active Program',
+        'friendly_name': 'Vitocal250A Heating Active Program',
         'options': list([
           'comfort',
           'comfort_cooling',
@@ -1061,18 +1042,18 @@
         ]),
         'viessmann_feature_name': 'heating.circuits.0.operating.programs.active',
       }),
-      'entity_id': 'sensor.vitocal250a_heating_circuit_0_active_program',
+      'entity_id': 'sensor.vitocal250a_heating_active_program',
       'state': 'normal_heating',
     }),
     dict({
       'attributes': dict({
         'device_class': 'temperature',
-        'friendly_name': 'Vitocal250A Heating Circuit 0 Supply Temperature',
+        'friendly_name': 'Vitocal250A Heating Circuit Supply Temperature',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
         'viessmann_feature_name': 'heating.circuits.0.sensors.temperature.supply',
       }),
-      'entity_id': 'sensor.vitocal250a_heating_circuit_0_supply_temperature',
+      'entity_id': 'sensor.vitocal250a_heating_circuit_supply_temperature',
       'state': '35.5',
     }),
     dict({
@@ -1180,6 +1161,16 @@
       }),
       'entity_id': 'sensor.vitocal250a_house_location_altitude',
       'state': '200',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Internal Pump',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+        'viessmann_feature_name': 'heating.boiler.pumps.internal.current',
+      }),
+      'entity_id': 'sensor.vitocal250a_internal_pump',
+      'state': '0',
     }),
     dict({
       'attributes': dict({
@@ -1306,11 +1297,17 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Noise Reduction Operating Programs Active',
+        'device_class': 'enum',
+        'friendly_name': 'Vitocal250A Noise Reduction',
+        'options': list([
+          'max_reduced',
+          'not_reduced',
+          'slightly_reduced',
+        ]),
         'viessmann_feature_name': 'heating.noise.reduction.operating.programs.active',
       }),
-      'entity_id': 'sensor.vitocal250a_noise_reduction_operating_programs_active',
-      'state': 'slightlyReduced',
+      'entity_id': 'sensor.vitocal250a_noise_reduction',
+      'state': 'slightly_reduced',
     }),
     dict({
       'attributes': dict({
@@ -1322,6 +1319,16 @@
       }),
       'entity_id': 'sensor.vitocal250a_outside_temperature',
       'state': '11.1',
+    }),
+    dict({
+      'attributes': dict({
+        'device_class': 'duration',
+        'friendly_name': 'Vitocal250A Outside Temperature Damping Factor',
+        'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+        'viessmann_feature_name': 'heating.configuration.temperature.outside.DampingFactor',
+      }),
+      'entity_id': 'sensor.vitocal250a_outside_temperature_damping_factor',
+      'state': '10',
     }),
     dict({
       'attributes': dict({
@@ -1507,15 +1514,6 @@
       }),
       'entity_id': 'sensor.vitocal250a_tcu_wifi_strength',
       'state': '-34',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Temperature Outside Damping Factor',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'viessmann_feature_name': 'heating.configuration.temperature.outside.DampingFactor',
-      }),
-      'entity_id': 'sensor.vitocal250a_temperature_outside_damping_factor',
-      'state': '10',
     }),
     dict({
       'attributes': dict({

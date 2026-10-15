@@ -14,7 +14,7 @@ from homeassistant.components.number import (
 from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from vi_api_client import Feature
+from vi_api_client import Device, Feature
 
 from . import ViClimateDevicesConfigEntry
 from .const import IGNORED_FEATURES, TESTED_DEVICES
@@ -23,6 +23,7 @@ from .entity import (
     EntityTemplate,
     ViClimateFeatureEntity,
     async_setup_dynamic_entities,
+    get_template_translation,
 )
 from .exceptions import (
     ExceptionTranslationKey,
@@ -142,32 +143,31 @@ NUMBER_TYPES: dict[str, NumberEntityDescription] = {
 
 
 def _get_number_entity_description(
-    feature_name: str,
-) -> tuple[NumberEntityDescription, dict[str, str] | None] | None:
+    feature_name: str, device: Device
+) -> tuple[NumberEntityDescription, dict[str, str]] | None:
     """Find a matching entity description for a dynamic feature name."""
     for template in NUMBER_TEMPLATES:
         match = template.pattern.match(feature_name)
         if not match:
             continue
         groups = match.groups()
-        index = groups[0]
         # If pattern has 2 groups, second is program
         program = groups[1] if len(groups) > 1 else None
 
         base_desc = template.description
-
-        placeholders = {"index": index}
-        new_key = feature_name  # We use the actual feature name
-        new_trans_key = base_desc.translation_key
+        base_trans_key = str(base_desc.translation_key)
 
         # Program specific logic
         if program:
             program_snake = re.sub(r"(?<!^)(?=[A-Z])", "_", program).lower()
-            new_trans_key = f"heating_circuit_program_{program_snake}_temperature"
+            base_trans_key = f"heating_circuit_program_{program_snake}_temperature"
 
+        new_trans_key, placeholders = get_template_translation(
+            match, base_trans_key, device
+        )
         new_desc = replace(
             base_desc,
-            key=new_key,
+            key=feature_name,
             translation_key=new_trans_key,
         )
         return new_desc, placeholders
@@ -220,7 +220,7 @@ def _discover_numbers(
                     continue
 
                 # 2. Configured Templates
-                if match_result := _get_number_entity_description(feature.name):
+                if match_result := _get_number_entity_description(feature.name, device):
                     desc, placeholders = match_result
                     entities.append(
                         ViClimateNumber(

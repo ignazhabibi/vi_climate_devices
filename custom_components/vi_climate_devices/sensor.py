@@ -20,12 +20,13 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfRatio,
     UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from vi_api_client import Feature, JsonValue
+from vi_api_client import Device, Feature, JsonValue
 
 from . import ViClimateDevicesConfigEntry
 from .const import IGNORED_FEATURES, TESTED_DEVICES
@@ -34,6 +35,7 @@ from .entity import (
     EntityTemplate,
     ViClimateFeatureEntity,
     async_setup_dynamic_entities,
+    get_template_translation,
 )
 from .utils import (
     api_value_to_option_key,
@@ -76,7 +78,17 @@ ACTIVE_PROGRAM_OPTIONS = [
     "summer_eco",
 ]
 
-# The API spells some positions "climat..." without the trailing "e".
+# Sort the values alphabetically.
+NOISE_REDUCTION_OPTIONS = [
+    "max_reduced",
+    "not_reduced",
+    "slightly_reduced",
+]
+
+# The valve switches between heating/cooling, the integrated bypass/defrost
+# buffer, and domestic hot water; "climatCircuitTwoDefrost" is the buffer port,
+# not a second heating circuit. The API spells some positions "climat..."
+# without the trailing "e".
 # Sort the values alphabetically.
 VALVE_POSITION_OPTIONS = [
     "climat_circuit_one_and_two",
@@ -705,6 +717,30 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
+    # Internal Pump (current speed)
+    "heating.boiler.pumps.internal.current": SensorEntityDescription(
+        key="heating.boiler.pumps.internal.current",
+        translation_key="internal_pump",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Outside Temperature Damping Factor (time constant)
+    "heating.configuration.temperature.outside.DampingFactor": (
+        SensorEntityDescription(
+            key="heating.configuration.temperature.outside.DampingFactor",
+            translation_key="outside_temperature_damping_factor",
+            native_unit_of_measurement=UnitOfTime.MINUTES,
+            device_class=SensorDeviceClass.DURATION,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        )
+    ),
+    # Noise Reduction (active program)
+    "heating.noise.reduction.operating.programs.active": SensorEntityDescription(
+        key="heating.noise.reduction.operating.programs.active",
+        translation_key="noise_reduction_program",
+        device_class=SensorDeviceClass.ENUM,
+        options=NOISE_REDUCTION_OPTIONS,
+    ),
     # Valves
     "heating.valves.fourThreeWay.position": SensorEntityDescription(
         key="heating.valves.fourThreeWay.position",
@@ -717,8 +753,8 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
 
 
 def _get_sensor_entity_description(
-    feature_name: str,
-) -> tuple[SensorEntityDescription, dict[str, str] | None] | None:
+    feature_name: str, device: Device
+) -> tuple[SensorEntityDescription, dict[str, str]] | None:
     """Find a matching entity description for a dynamic feature name.
 
     Returns:
@@ -727,15 +763,16 @@ def _get_sensor_entity_description(
     for template in SENSOR_TEMPLATES:
         match = template.pattern.match(feature_name)
         if match:
-            index = match.group(1)
             base_desc = template.description
-
+            translation_key, placeholders = get_template_translation(
+                match, str(base_desc.translation_key), device
+            )
             new_desc = dataclasses.replace(
                 base_desc,
                 key=feature_name,
-                translation_key=base_desc.translation_key,
+                translation_key=translation_key,
             )
-            return new_desc, {"index": index}
+            return new_desc, placeholders
     return None
 
 
@@ -844,7 +881,7 @@ def _discover_realtime_sensors(
                 )
                 continue
 
-            if match_result := _get_sensor_entity_description(feature.name):
+            if match_result := _get_sensor_entity_description(feature.name, device):
                 description, placeholders = match_result
                 entities.append(
                     ViClimateSensor(

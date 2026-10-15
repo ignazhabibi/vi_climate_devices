@@ -24,7 +24,7 @@ _COORDINATOR_LOGGER = "custom_components.vi_climate_devices.coordinator"
             "number",
             "set_value",
             {
-                "entity_id": "number.vitocal250a_heating_circuit_0_curve_slope",
+                "entity_id": "number.vitocal250a_heating_curve_slope",
                 "value": 1.6,
             },
             "heating.circuits.0.heating.curve.slope",
@@ -44,7 +44,7 @@ _COORDINATOR_LOGGER = "custom_components.vi_climate_devices.coordinator"
         (
             "climate",
             "set_temperature",
-            {"entity_id": "climate.vitocal250a_heating_circuit_0", "temperature": 21.0},
+            {"entity_id": "climate.vitocal250a_heating_circuit", "temperature": 21.0},
             "heating.circuits.0.operating.programs.normalHeating.temperature",
         ),
         (

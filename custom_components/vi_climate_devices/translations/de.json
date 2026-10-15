@@ -63,10 +63,16 @@
     "entity": {
         "number": {
             "heating_curve_slope": {
-                "name": "Heizkurve Steigung Heizkreis {index}"
+                "name": "Heizkurve Steigung"
+            },
+            "heating_curve_slope_numbered": {
+                "name": "Heizkurve Steigung Heizkreis {number}"
             },
             "heating_curve_shift": {
-                "name": "Heizkurve Verschiebung Heizkreis {index}"
+                "name": "Heizkurve Verschiebung"
+            },
+            "heating_curve_shift_numbered": {
+                "name": "Heizkurve Verschiebung Heizkreis {number}"
             },
             "dhw_hysteresis": {
                 "name": "Warmwasser Hysterese"
@@ -81,107 +87,179 @@
                 "name": "Warmwasser Solltemperatur"
             },
             "heating_circuit_program_temperature": {
-                "name": "Heizkreis {index} {program} Temperatur"
+                "name": "Raumtemperatur {program}"
+            },
+            "heating_circuit_program_temperature_numbered": {
+                "name": "Raumtemperatur {program} Heizkreis {number}"
             },
             "heating_circuit_program_comfort_temperature": {
-                "name": "Heizkreis {index} Comfort Temperatur"
+                "name": "Raumtemperatur Komfort"
+            },
+            "heating_circuit_program_comfort_temperature_numbered": {
+                "name": "Raumtemperatur Komfort Heizkreis {number}"
             },
             "heating_circuit_program_eco_temperature": {
-                "name": "Heizkreis {index} Eco Temperatur"
+                "name": "Raumtemperatur Eco"
+            },
+            "heating_circuit_program_eco_temperature_numbered": {
+                "name": "Raumtemperatur Eco Heizkreis {number}"
             },
             "heating_circuit_program_external_temperature": {
-                "name": "Heizkreis {index} Extern Temperatur"
+                "name": "Raumtemperatur Extern"
+            },
+            "heating_circuit_program_external_temperature_numbered": {
+                "name": "Raumtemperatur Extern Heizkreis {number}"
             },
             "heating_circuit_program_holiday_temperature": {
-                "name": "Heizkreis {index} Ferien Temperatur"
+                "name": "Raumtemperatur Urlaub"
+            },
+            "heating_circuit_program_holiday_temperature_numbered": {
+                "name": "Raumtemperatur Urlaub Heizkreis {number}"
             },
             "heating_circuit_program_normal_temperature": {
-                "name": "Heizkreis {index} Normal Temperatur"
+                "name": "Raumtemperatur Normal"
+            },
+            "heating_circuit_program_normal_temperature_numbered": {
+                "name": "Raumtemperatur Normal Heizkreis {number}"
             },
             "heating_circuit_program_reduced_temperature": {
-                "name": "Heizkreis {index} Reduziert Temperatur"
+                "name": "Raumtemperatur Reduziert"
+            },
+            "heating_circuit_program_reduced_temperature_numbered": {
+                "name": "Raumtemperatur Reduziert Heizkreis {number}"
             },
             "heating_circuit_program_standby_temperature": {
-                "name": "Heizkreis {index} Standby Temperatur"
+                "name": "Raumtemperatur Standby"
+            },
+            "heating_circuit_program_standby_temperature_numbered": {
+                "name": "Raumtemperatur Standby Heizkreis {number}"
             },
             "heating_circuit_program_comfort_cooling_temperature": {
-                "name": "Heizkreis {index} Comfort Kühlung Temperatur"
+                "name": "Raumtemperatur Komfort Kühlen"
+            },
+            "heating_circuit_program_comfort_cooling_temperature_numbered": {
+                "name": "Raumtemperatur Komfort Kühlen Heizkreis {number}"
             },
             "heating_circuit_program_comfort_heating_temperature": {
-                "name": "Heizkreis {index} Comfort Heizung Temperatur"
+                "name": "Raumtemperatur Komfort"
+            },
+            "heating_circuit_program_comfort_heating_temperature_numbered": {
+                "name": "Raumtemperatur Komfort Heizkreis {number}"
             },
             "heating_circuit_program_normal_cooling_temperature": {
-                "name": "Heizkreis {index} Normal Kühlung Temperatur"
+                "name": "Raumtemperatur Normal Kühlen"
+            },
+            "heating_circuit_program_normal_cooling_temperature_numbered": {
+                "name": "Raumtemperatur Normal Kühlen Heizkreis {number}"
             },
             "heating_circuit_program_normal_heating_temperature": {
-                "name": "Heizkreis {index} Normal Heizung Temperatur"
+                "name": "Raumtemperatur Normal"
+            },
+            "heating_circuit_program_normal_heating_temperature_numbered": {
+                "name": "Raumtemperatur Normal Heizkreis {number}"
             },
             "heating_circuit_program_reduced_cooling_temperature": {
-                "name": "Heizkreis {index} Reduziert Kühlung Temperatur"
+                "name": "Raumtemperatur Reduziert Kühlen"
+            },
+            "heating_circuit_program_reduced_cooling_temperature_numbered": {
+                "name": "Raumtemperatur Reduziert Kühlen Heizkreis {number}"
             },
             "heating_circuit_program_reduced_heating_temperature": {
-                "name": "Heizkreis {index} Reduziert Heizung Temperatur"
+                "name": "Raumtemperatur Reduziert"
+            },
+            "heating_circuit_program_reduced_heating_temperature_numbered": {
+                "name": "Raumtemperatur Reduziert Heizkreis {number}"
             },
             "heating_circuit_program_eco_cooling_temperature": {
-                "name": "Heizkreis {index} Eco Kühlung Temperatur"
+                "name": "Raumtemperatur Eco Kühlen"
+            },
+            "heating_circuit_program_eco_cooling_temperature_numbered": {
+                "name": "Raumtemperatur Eco Kühlen Heizkreis {number}"
             },
             "heating_circuit_program_eco_heating_temperature": {
-                "name": "Heizkreis {index} Eco Heizung Temperatur"
+                "name": "Raumtemperatur Eco"
+            },
+            "heating_circuit_program_eco_heating_temperature_numbered": {
+                "name": "Raumtemperatur Eco Heizkreis {number}"
             },
             "heating_circuit_temperature_limit_min": {
-                "name": "Heizkreis {index} Begrenzung Min"
+                "name": "Heizkreis Begrenzung Min"
+            },
+            "heating_circuit_temperature_limit_min_numbered": {
+                "name": "Heizkreis {number} Begrenzung Min"
             },
             "heating_circuit_temperature_limit_max": {
-                "name": "Heizkreis {index} Begrenzung Max"
+                "name": "Heizkreis Begrenzung Max"
+            },
+            "heating_circuit_temperature_limit_max_numbered": {
+                "name": "Heizkreis {number} Begrenzung Max"
             }
         },
         "binary_sensor": {
             "circulation_pump": {
-                "name": "Heizkreispumpe Heizkreis {index}"
+                "name": "Heizkreispumpe"
+            },
+            "circulation_pump_numbered": {
+                "name": "Heizkreispumpe Heizkreis {number}"
             },
             "compressor_active": {
-                "name": "Verdichter {index}"
+                "name": "Verdichter"
+            },
+            "compressor_active_numbered": {
+                "name": "Verdichter {number}"
             },
             "dhw_circulation_pump": {
                 "name": "Zirkulationspumpe Warmwasser"
             },
             "frost_protection": {
-                "name": "Frostschutz Heizkreis {index}"
+                "name": "Frostschutz"
+            },
+            "frost_protection_numbered": {
+                "name": "Frostschutz Heizkreis {number}"
             },
             "summer_eco": {
-                "name": "Sommer-Eco Heizkreis {index}"
+                "name": "Sommer Eco Modus"
+            },
+            "summer_eco_numbered": {
+                "name": "Sommer Eco Modus Heizkreis {number}"
             },
             "solar_pump": {
-                "name": "Solar-Kreis Pumpe"
-            },
-            "one_time_charge": {
-                "name": "Einmal-Speicherladung"
+                "name": "Solarkreispumpe"
             },
             "dhw_charging": {
-                "name": "Warmwasserbereitung"
+                "name": "Warmwasser Ladung"
             },
             "dhw_primary_pump": {
                 "name": "Speicherladepumpe"
             },
             "compressor_crankcase_heater": {
-                "name": "Verdichter {index} Kurbelgehäuseheizung"
+                "name": "Verdichter Kurbelgehäuseheizung"
+            },
+            "compressor_crankcase_heater_numbered": {
+                "name": "Verdichter {number} Kurbelgehäuseheizung"
             },
             "evaporator_base_heater": {
-                "name": "Verdampfer {index} Basisheizung"
+                "name": "Verdampfer Basisheizung"
+            },
+            "evaporator_base_heater_numbered": {
+                "name": "Verdampfer {number} Basisheizung"
             },
             "outdoor_defrosting": {
                 "name": "Abtauvorgang"
             },
             "holiday": {
-                "name": "Urlaub"
+                "name": "Urlaub Modus"
             },
             "holiday_at_home": {
-                "name": "Urlaub zu Hause"
+                "name": "Urlaub zu Hause Modus"
             }
         },
         "climate": {
             "heating_circuit": {
-                "name": "Heizkreis {index}"
+                "name": "Heizkreis"
+            },
+            "heating_circuit_numbered": {
+                "name": "Heizkreis {number}"
             }
         },
         "sensor": {
@@ -189,10 +267,10 @@
                 "name": "Außentemperatur"
             },
             "return_temperature": {
-                "name": "Rücklauftemperatur"
+                "name": "Rücklauf"
             },
             "common_supply_temperature": {
-                "name": "Gemeinsamer Vorlauf"
+                "name": "Vorlauf Wärmepumpe"
             },
             "primary_supply_temperature": {
                 "name": "Vorlauf Primärkreis"
@@ -201,13 +279,44 @@
                 "name": "Vorlauf Sekundärkreis"
             },
             "buffer_cylinder_temperature": {
-                "name": "Pufferspeichertemperatur"
+                "name": "Pufferspeicher"
             },
             "heating_circuit_supply_temperature": {
-                "name": "Vorlauf Heizkreis {index}"
+                "name": "Vorlauf Heizkreis"
+            },
+            "heating_circuit_supply_temperature_numbered": {
+                "name": "Vorlauf Heizkreis {number}"
             },
             "heating_circuit_active_program": {
-                "name": "Aktives Programm Heizkreis {index}",
+                "name": "Heizung Aktives Programm",
+                "state": {
+                    "comfort": "Komfort",
+                    "comfort_cooling": "Komfort (Kühlen)",
+                    "comfort_cooling_energy_saving": "Komfort (Kühlen, Sparbetrieb)",
+                    "comfort_energy_saving": "Komfort (Sparbetrieb)",
+                    "comfort_heating": "Komfort",
+                    "eco": "Eco",
+                    "fixed": "Fest",
+                    "forced_last_from_schedule": "Letzte Zeitprogrammphase erzwungen",
+                    "frostprotection": "Frostschutz",
+                    "holiday": "Urlaub",
+                    "holiday_at_home": "Urlaub zu Hause",
+                    "normal": "Normal",
+                    "normal_cooling": "Normal (Kühlen)",
+                    "normal_cooling_energy_saving": "Normal (Kühlen, Sparbetrieb)",
+                    "normal_energy_saving": "Normal (Sparbetrieb)",
+                    "normal_heating": "Normal",
+                    "reduced": "Reduziert",
+                    "reduced_cooling": "Reduziert (Kühlen)",
+                    "reduced_cooling_energy_saving": "Reduziert (Kühlen, Sparbetrieb)",
+                    "reduced_energy_saving": "Reduziert (Sparbetrieb)",
+                    "reduced_heating": "Reduziert",
+                    "standby": "Standby",
+                    "summer_eco": "Sommer-Eco"
+                }
+            },
+            "heating_circuit_active_program_numbered": {
+                "name": "Aktives Programm Heizkreis {number}",
                 "state": {
                     "comfort": "Komfort",
                     "comfort_cooling": "Komfort (Kühlen)",
@@ -238,13 +347,22 @@
                 "name": "Warmwassertemperatur"
             },
             "burner_modulation": {
-                "name": "Brennermodulation {index}"
+                "name": "Brennermodulation"
+            },
+            "burner_modulation_numbered": {
+                "name": "Brennermodulation {number}"
             },
             "compressor_hours": {
-                "name": "Verdichter {index} Betriebsstunden"
+                "name": "Verdichter Betriebsstunden"
+            },
+            "compressor_hours_numbered": {
+                "name": "Verdichter {number} Betriebsstunden"
             },
             "compressor_starts": {
-                "name": "Verdichter {index} Starts"
+                "name": "Verdichter Starts"
+            },
+            "compressor_starts_numbered": {
+                "name": "Verdichter {number} Starts"
             },
             "heating_rod_starts": {
                 "name": "Heizstab Starts"
@@ -286,16 +404,22 @@
                 "name": "Verbrauch Gesamt Jahr"
             },
             "burner_starts": {
-                "name": "Brennerstarts {index}"
+                "name": "Brennerstarts"
+            },
+            "burner_starts_numbered": {
+                "name": "Brennerstarts {number}"
             },
             "burner_hours": {
-                "name": "Brennerbetriebsstunden {index}"
+                "name": "Brennerbetriebsstunden"
+            },
+            "burner_hours_numbered": {
+                "name": "Brennerbetriebsstunden {number}"
             },
             "production_cooling_current_day": {
-                "name": "Erzeugung Kuehlung Tag"
+                "name": "Erzeugung Kühlung Tag"
             },
             "production_cooling_current_year": {
-                "name": "Erzeugung Kuehlung Jahr"
+                "name": "Erzeugung Kühlung Jahr"
             },
             "heat_production_current": {
                 "name": "Aktuelle Wärmeleistung"
@@ -319,7 +443,7 @@
                 "name": "Verbrauch Heizstab Heizung Jahr"
             },
             "outside_humidity": {
-                "name": "Luftfeuchtigkeit Außen"
+                "name": "Außenluftfeuchtigkeit"
             },
             "boiler_temperature": {
                 "name": "Kesseltemperatur"
@@ -340,19 +464,19 @@
                 "name": "Warmwassertemperatur (Unten)"
             },
             "buffer_top_temperature": {
-                "name": "Pufferspeichertemperatur (Oben)"
+                "name": "Pufferspeicher (Oben)"
             },
             "buffer_mid_top_temperature": {
-                "name": "Pufferspeichertemperatur (Mitte-Oben)"
+                "name": "Pufferspeicher (Mitte-Oben)"
             },
             "buffer_middle_temperature": {
-                "name": "Pufferspeichertemperatur (Mitte)"
+                "name": "Pufferspeicher (Mitte)"
             },
             "buffer_mid_bottom_temperature": {
-                "name": "Pufferspeichertemperatur (Mitte-Unten)"
+                "name": "Pufferspeicher (Mitte-Unten)"
             },
             "buffer_bottom_temperature": {
-                "name": "Pufferspeichertemperatur (Unten)"
+                "name": "Pufferspeicher (Unten)"
             },
             "solar_collector_temperature": {
                 "name": "Solarkollektortemperatur"
@@ -361,55 +485,108 @@
                 "name": "Solar Warmwassertemperatur"
             },
             "solar_production_today": {
-                "name": "Solarertrag Heute"
+                "name": "Solarertrag Tag"
             },
             "compressor_phase": {
-                "name": "Verdichter {index} Phase"
+                "name": "Verdichter Phase"
+            },
+            "compressor_phase_numbered": {
+                "name": "Verdichter {number} Phase"
             },
             "compressor_inlet_pressure": {
-                "name": "Verdichter {index} Einlassdruck"
+                "name": "Verdichter Einlassdruck"
+            },
+            "compressor_inlet_pressure_numbered": {
+                "name": "Verdichter {number} Einlassdruck"
             },
             "compressor_inlet_temperature": {
-                "name": "Verdichter {index} Einlasstemperatur"
+                "name": "Verdichter Einlasstemperatur"
+            },
+            "compressor_inlet_temperature_numbered": {
+                "name": "Verdichter {number} Einlasstemperatur"
             },
             "compressor_motor_temperature": {
-                "name": "Verdichter {index} Motortemperatur"
+                "name": "Verdichter Motortemperatur"
+            },
+            "compressor_motor_temperature_numbered": {
+                "name": "Verdichter {number} Motortemperatur"
             },
             "compressor_oil_temperature": {
-                "name": "Verdichter {index} Öltemperatur"
+                "name": "Verdichter Öltemperatur"
+            },
+            "compressor_oil_temperature_numbered": {
+                "name": "Verdichter {number} Öltemperatur"
             },
             "compressor_outlet_temperature": {
-                "name": "Verdichter {index} Auslasstemperatur"
+                "name": "Verdichter Auslasstemperatur"
+            },
+            "compressor_outlet_temperature_numbered": {
+                "name": "Verdichter {number} Auslasstemperatur"
             },
             "compressor_speed_current": {
-                "name": "Verdichter {index} Drehzahl"
+                "name": "Verdichter Drehzahl Ist"
+            },
+            "compressor_speed_current_numbered": {
+                "name": "Verdichter {number} Drehzahl Ist"
             },
             "compressor_speed_setpoint": {
-                "name": "Verdichter {index} Drehzahl Sollwert"
+                "name": "Verdichter Drehzahl Soll"
+            },
+            "compressor_speed_setpoint_numbered": {
+                "name": "Verdichter {number} Drehzahl Soll"
             },
             "condensor_liquid_temperature": {
-                "name": "Verflüssiger {index} Flüssigkeitstemperatur"
+                "name": "Verflüssiger Flüssigkeitstemperatur"
+            },
+            "condensor_liquid_temperature_numbered": {
+                "name": "Verflüssiger {number} Flüssigkeitstemperatur"
             },
             "fan_speed": {
-                "name": "Lüfter {index} Drehzahl"
+                "name": "Ventilator Drehzahl"
+            },
+            "fan_speed_numbered": {
+                "name": "Ventilator {number} Drehzahl"
             },
             "economizer_liquid_temperature": {
-                "name": "Economizer {index} Flüssigkeitstemperatur"
+                "name": "Economizer Flüssigkeitstemperatur"
+            },
+            "economizer_liquid_temperature_numbered": {
+                "name": "Economizer {number} Flüssigkeitstemperatur"
             },
             "evaporator_liquid_temperature": {
-                "name": "Verdampfer {index} Flüssigkeitstemperatur"
+                "name": "Verdampfer Flüssigkeitstemperatur"
+            },
+            "evaporator_liquid_temperature_numbered": {
+                "name": "Verdampfer {number} Flüssigkeitstemperatur"
             },
             "evaporator_overheat_temperature": {
-                "name": "Verdampfer {index} Überhitzung"
+                "name": "Verdampfer Überhitzung"
+            },
+            "evaporator_overheat_temperature_numbered": {
+                "name": "Verdampfer {number} Überhitzung"
+            },
+            "noise_reduction_program": {
+                "name": "Geräuschreduzierung",
+                "state": {
+                    "max_reduced": "Maximal reduziert",
+                    "not_reduced": "Nicht reduziert",
+                    "slightly_reduced": "Leicht reduziert"
+                }
             },
             "valve_position": {
-                "name": "4/3-Wege-Ventil Position",
+                "name": "4/3-Wege-Ventil Stellung",
                 "state": {
-                    "climat_circuit_one_and_two": "Stellung Heizkreis 1 und 2",
-                    "climat_circuit_two_defrost": "Stellung Heizkreis 2 / Abtauen",
-                    "climate_circuit_one": "Stellung Heizkreis 1",
-                    "domestic_hot_water": "Stellung Warmwasser"
+                    "climate_circuit_one": "Heizen/Kühlen",
+                    "climat_circuit_two_defrost": "Bypass/Abtaupuffer",
+                    "climat_circuit_one_and_two": "Heizen/Kühlen und Bypass",
+                    "domestic_hot_water": "Warmwasser"
                 }
+            },
+            "internal_pump": {
+                "name": "Interne Pumpe"
+            },
+            "outside_temperature_damping_factor": {
+                "name": "Dämpfungsfaktor Außentemperatur"
             }
         },
         "switch": {
@@ -435,7 +612,14 @@
                 }
             },
             "heating_circuit_operation_mode": {
-                "name": "Betriebsart Heizkreis {index}",
+                "name": "Betriebsart Heizkreis",
+                "state": {
+                    "heating": "Heizen",
+                    "standby": "Standby"
+                }
+            },
+            "heating_circuit_operation_mode_numbered": {
+                "name": "Betriebsart Heizkreis {number}",
                 "state": {
                     "heating": "Heizen",
                     "standby": "Standby"

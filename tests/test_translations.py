@@ -17,6 +17,7 @@ from custom_components.vi_climate_devices.number import NUMBER_TEMPLATES, NUMBER
 from custom_components.vi_climate_devices.select import SELECT_TEMPLATES, SELECT_TYPES
 from custom_components.vi_climate_devices.sensor import (
     ACTIVE_PROGRAM_OPTIONS,
+    NOISE_REDUCTION_OPTIONS,
     SENSOR_TEMPLATES,
     SENSOR_TYPES,
     VALVE_POSITION_OPTIONS,
@@ -290,6 +291,7 @@ def test_config_flow_abort_reasons_exist_in_all_maintained_translations(
     ("translation_key", "options"),
     [
         ("heating_circuit_active_program", ACTIVE_PROGRAM_OPTIONS),
+        ("noise_reduction_program", NOISE_REDUCTION_OPTIONS),
         ("valve_position", VALVE_POSITION_OPTIONS),
     ],
 )
@@ -300,3 +302,35 @@ def test_enum_sensor_states_are_translated(translations, translation_key, option
     for source_name in ("strings", "en", "de"):
         states = translations[source_name]["entity"]["sensor"][translation_key]["state"]
         assert sorted(states) == sorted(options), source_name
+
+
+def test_numbered_names_have_a_plain_variant(translations):
+    """Every numbered entity has a plain and a numbered name in all locales."""
+    numbered_keys = {("climate", "heating_circuit")} | {
+        (platform, template.description.translation_key)
+        for platform, templates in (
+            ("sensor", SENSOR_TEMPLATES),
+            ("binary_sensor", BINARY_SENSOR_TEMPLATES),
+            ("number", NUMBER_TEMPLATES),
+            ("select", SELECT_TEMPLATES),
+        )
+        for template in templates
+    }
+    for source_name in ("strings", "en", "de"):
+        entities = translations[source_name]["entity"]
+        for platform, key in numbered_keys:
+            assert f"{key}_numbered" in entities[platform], (source_name, key)
+        for platform, platform_entities in entities.items():
+            for key, translation in platform_entities.items():
+                name = translation.get("name", "")
+                assert "{index}" not in name, (source_name, platform, key)
+                if key.endswith("_numbered"):
+                    assert "{number}" in name, (source_name, platform, key)
+                    assert key.removesuffix("_numbered") in platform_entities
+                else:
+                    assert "{number}" not in name, (source_name, platform, key)
+
+
+def test_english_translation_matches_strings(translations):
+    """Keep translations/en.json identical to the strings.json source."""
+    assert translations["en"] == translations["strings"]
