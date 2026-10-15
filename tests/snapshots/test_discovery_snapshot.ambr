@@ -703,6 +703,17 @@
     }),
     dict({
       'attributes': dict({
+        'device_class': 'temperature',
+        'friendly_name': 'Vitocal250A Compressor Discharge Temperature',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+        'viessmann_feature_name': 'heating.compressors.0.sensors.temperature.outlet',
+      }),
+      'entity_id': 'sensor.vitocal250a_compressor_discharge_temperature',
+      'state': '33.1',
+    }),
+    dict({
+      'attributes': dict({
         'device_class': 'duration',
         'friendly_name': 'Vitocal250A Compressor Hours',
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -711,28 +722,6 @@
       }),
       'entity_id': 'sensor.vitocal250a_compressor_hours',
       'state': '11755',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'pressure',
-        'friendly_name': 'Vitocal250A Compressor Inlet Pressure',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-        'viessmann_feature_name': 'heating.compressors.0.sensors.pressure.inlet',
-      }),
-      'entity_id': 'sensor.vitocal250a_compressor_inlet_pressure',
-      'state': '6.59',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'temperature',
-        'friendly_name': 'Vitocal250A Compressor Inlet Temperature',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-        'viessmann_feature_name': 'heating.compressors.0.sensors.temperature.inlet',
-      }),
-      'entity_id': 'sensor.vitocal250a_compressor_inlet_temperature',
-      'state': '22.2',
     }),
     dict({
       'attributes': dict({
@@ -755,17 +744,6 @@
       }),
       'entity_id': 'sensor.vitocal250a_compressor_oil_temperature',
       'state': '50.7',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'temperature',
-        'friendly_name': 'Vitocal250A Compressor Outlet Temperature',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-        'viessmann_feature_name': 'heating.compressors.0.sensors.temperature.outlet',
-      }),
-      'entity_id': 'sensor.vitocal250a_compressor_outlet_temperature',
-      'state': '33.1',
     }),
     dict({
       'attributes': dict({
@@ -803,6 +781,28 @@
       }),
       'entity_id': 'sensor.vitocal250a_compressor_starts',
       'state': '3142',
+    }),
+    dict({
+      'attributes': dict({
+        'device_class': 'temperature',
+        'friendly_name': 'Vitocal250A Compressor Suction Gas Temperature',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+        'viessmann_feature_name': 'heating.compressors.0.sensors.temperature.inlet',
+      }),
+      'entity_id': 'sensor.vitocal250a_compressor_suction_gas_temperature',
+      'state': '22.2',
+    }),
+    dict({
+      'attributes': dict({
+        'device_class': 'pressure',
+        'friendly_name': 'Vitocal250A Compressor Suction Pressure',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+        'viessmann_feature_name': 'heating.compressors.0.sensors.pressure.inlet',
+      }),
+      'entity_id': 'sensor.vitocal250a_compressor_suction_pressure',
+      'state': '6.59',
     }),
     dict({
       'attributes': dict({
@@ -1003,12 +1003,12 @@
     dict({
       'attributes': dict({
         'device_class': 'temperature',
-        'friendly_name': 'Vitocal250A Heat Pump Supply Temperature',
+        'friendly_name': 'Vitocal250A Generator Supply Temperature',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
         'viessmann_feature_name': 'heating.boiler.sensors.temperature.commonSupply',
       }),
-      'entity_id': 'sensor.vitocal250a_heat_pump_supply_temperature',
+      'entity_id': 'sensor.vitocal250a_generator_supply_temperature',
       'state': '35.2',
     }),
     dict({

@@ -270,7 +270,7 @@
                 "name": "Return Temperature"
             },
             "common_supply_temperature": {
-                "name": "Heat Pump Supply Temperature"
+                "name": "Generator Supply Temperature"
             },
             "primary_supply_temperature": {
                 "name": "Primary Circuit Supply Temperature"
@@ -494,16 +494,16 @@
                 "name": "Compressor {number} Phase"
             },
             "compressor_inlet_pressure": {
-                "name": "Compressor Inlet Pressure"
+                "name": "Compressor Suction Pressure"
             },
             "compressor_inlet_pressure_numbered": {
-                "name": "Compressor {number} Inlet Pressure"
+                "name": "Compressor {number} Suction Pressure"
             },
             "compressor_inlet_temperature": {
-                "name": "Compressor Inlet Temperature"
+                "name": "Compressor Suction Gas Temperature"
             },
             "compressor_inlet_temperature_numbered": {
-                "name": "Compressor {number} Inlet Temperature"
+                "name": "Compressor {number} Suction Gas Temperature"
             },
             "compressor_motor_temperature": {
                 "name": "Compressor Motor Temperature"
@@ -518,10 +518,10 @@
                 "name": "Compressor {number} Oil Temperature"
             },
             "compressor_outlet_temperature": {
-                "name": "Compressor Outlet Temperature"
+                "name": "Compressor Discharge Temperature"
             },
             "compressor_outlet_temperature_numbered": {
-                "name": "Compressor {number} Outlet Temperature"
+                "name": "Compressor {number} Discharge Temperature"
             },
             "compressor_speed_current": {
                 "name": "Compressor Speed"
