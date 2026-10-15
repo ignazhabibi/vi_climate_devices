@@ -233,10 +233,10 @@
                 "name": "Speicherladepumpe"
             },
             "compressor_crankcase_heater": {
-                "name": "Verdichter Kurbelgehäuseheizung"
+                "name": "Verdichter Ölsumpfheizung"
             },
             "compressor_crankcase_heater_numbered": {
-                "name": "Verdichter {number} Kurbelgehäuseheizung"
+                "name": "Verdichter {number} Ölsumpfheizung"
             },
             "evaporator_base_heater": {
                 "name": "Verdampfer Basisheizung"
