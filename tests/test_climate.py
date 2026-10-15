@@ -321,7 +321,7 @@ async def test_climate_creation_and_services(  # noqa: PLR0915
         await hass.async_block_till_done()
 
         # Retrieve the climate entity.
-        entity_id = "climate.vitocal250a_heating_circuit_0"
+        entity_id = "climate.vitocal250a_heating_circuit"
         state = hass.states.get(entity_id)
         assert state is not None
 
@@ -459,7 +459,7 @@ async def test_climate_rejects_target_temperature_in_standby(
         state = next(
             state
             for state in hass.states.async_all("climate")
-            if state.entity_id.endswith("heating_circuit_0")
+            if state.entity_id.endswith("heating_circuit_1")
         )
 
         # Assert: Keep reporting HVAC state but reject temperature control in HA.
@@ -684,7 +684,7 @@ async def test_climate_error_handling_and_rollback(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        entity_id = "climate.vitocal250a_heating_circuit_0"
+        entity_id = "climate.vitocal250a_heating_circuit"
         state = hass.states.get(entity_id)
         assert state is not None
         original_temp = float(state.attributes["temperature"])

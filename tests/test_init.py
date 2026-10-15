@@ -476,7 +476,7 @@ async def test_unload_stops_polling_after_commands(
         first_coordinator = entry.runtime_data
         assert first_coordinator.config_entry is entry
         assert DOMAIN not in hass.data
-        entity_id = "number.vitocal250a_heating_circuit_0_curve_slope"
+        entity_id = "number.vitocal250a_heating_curve_slope"
         await hass.services.async_call(
             "number",
             "set_value",

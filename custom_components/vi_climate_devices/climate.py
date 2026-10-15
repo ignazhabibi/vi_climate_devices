@@ -24,7 +24,11 @@ from vi_api_client import Feature, ViError
 from . import ViClimateDevicesConfigEntry
 from .const import DOMAIN
 from .coordinator import ViClimateDataUpdateCoordinator
-from .entity import ViClimateEntity, async_setup_dynamic_entities
+from .entity import (
+    ViClimateEntity,
+    async_setup_dynamic_entities,
+    get_numbered_translation,
+)
 from .exceptions import (
     ExceptionTranslationKey,
     home_assistant_error,
@@ -139,7 +143,15 @@ class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncomp
         self._attr_unique_id = (
             f"{self._unique_id_prefix}-heating_circuit_{circuit_index}"
         )
-        self._attr_translation_placeholders = {"index": circuit_index}
+        (
+            self._attr_translation_key,
+            self._attr_translation_placeholders,
+        ) = get_numbered_translation(
+            "heating_circuit",
+            coordinator.data[map_key],
+            "heating.circuits.",
+            circuit_index,
+        )
 
         mode_feature = self._get_feature(self._feature_name)
         available_hvac_modes = self.hvac_modes

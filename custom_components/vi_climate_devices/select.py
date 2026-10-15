@@ -9,7 +9,7 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from vi_api_client import Feature
+from vi_api_client import Device, Feature
 
 from . import ViClimateDevicesConfigEntry
 from .const import IGNORED_FEATURES, TESTED_DEVICES
@@ -18,6 +18,7 @@ from .entity import (
     EntityTemplate,
     ViClimateFeatureEntity,
     async_setup_dynamic_entities,
+    get_template_translation,
 )
 from .exceptions import (
     ExceptionTranslationKey,
@@ -52,8 +53,8 @@ SELECT_TEMPLATES: tuple[EntityTemplate[SelectEntityDescription], ...] = (
 
 
 def _get_select_entity_description(
-    feature_name: str,
-) -> tuple[SelectEntityDescription, dict[str, str] | None] | None:
+    feature_name: str, device: Device
+) -> tuple[SelectEntityDescription, dict[str, str]] | None:
     """Find a matching entity description for a dynamic feature name.
 
     Returns:
@@ -62,15 +63,16 @@ def _get_select_entity_description(
     for template in SELECT_TEMPLATES:
         match = template.pattern.match(feature_name)
         if match:
-            index = match.group(1)
             base_desc = template.description
-
+            translation_key, placeholders = get_template_translation(
+                match, str(base_desc.translation_key), device
+            )
             new_desc = dataclasses.replace(
                 base_desc,
                 key=feature_name,
-                translation_key=base_desc.translation_key,
+                translation_key=translation_key,
             )
-            return new_desc, {"index": index}
+            return new_desc, placeholders
     return None
 
 
@@ -115,7 +117,7 @@ def _discover_selects(
                     continue
 
                 # 2. Dynamic Templates
-                if match_result := _get_select_entity_description(feature.name):
+                if match_result := _get_select_entity_description(feature.name, device):
                     description, placeholders = match_result
                     entities.append(
                         ViClimateSelect(

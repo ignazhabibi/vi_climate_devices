@@ -302,3 +302,30 @@ def test_enum_sensor_states_are_translated(translations, translation_key, option
     for source_name in ("strings", "en", "de"):
         states = translations[source_name]["entity"]["sensor"][translation_key]["state"]
         assert sorted(states) == sorted(options), source_name
+
+
+def test_numbered_names_have_a_plain_variant(translations):
+    """Every numbered entity has a plain and a numbered name in all locales."""
+    numbered_keys = {("climate", "heating_circuit")} | {
+        (platform, template.description.translation_key)
+        for platform, templates in (
+            ("sensor", SENSOR_TEMPLATES),
+            ("binary_sensor", BINARY_SENSOR_TEMPLATES),
+            ("number", NUMBER_TEMPLATES),
+            ("select", SELECT_TEMPLATES),
+        )
+        for template in templates
+    }
+    for source_name in ("strings", "en", "de"):
+        entities = translations[source_name]["entity"]
+        for platform, key in numbered_keys:
+            assert f"{key}_numbered" in entities[platform], (source_name, key)
+        for platform, platform_entities in entities.items():
+            for key, translation in platform_entities.items():
+                name = translation.get("name", "")
+                assert "{index}" not in name, (source_name, platform, key)
+                if key.endswith("_numbered"):
+                    assert "{number}" in name, (source_name, platform, key)
+                    assert key.removesuffix("_numbered") in platform_entities
+                else:
+                    assert "{number}" not in name, (source_name, platform, key)

@@ -122,7 +122,9 @@ account, not that setup failed.
 | `water_heater` | Domestic hot-water target temperature and operation mode |
 
 Entities use appropriate device classes and are grouped under their Viessmann
-device. Less commonly useful auto-discovered features may be disabled by
+device. Heating-circuit and component numbers (for example "Heating Circuit 2"
+or "Fan 2 Speed") appear only when a device has more than one of them, and
+count from 1 like the Viessmann app. Less commonly useful auto-discovered features may be disabled by
 default on tested device models; they can be enabled from the entity settings.
 Unknown auto-discovered features use concise English names derived from their
 Viessmann API feature paths. This intentional fallback means the integration

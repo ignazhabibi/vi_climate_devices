@@ -1,13 +1,16 @@
 """Tests for shared Viessmann entity behavior."""
 
 from dataclasses import replace
+from unittest.mock import MagicMock, patch
 
 import pytest
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client import Device, Feature, FeatureValue
+from vi_api_client import Device, Feature, FeatureValue, FixtureViClient
 
+from custom_components.vi_climate_devices.const import DOMAIN
 from custom_components.vi_climate_devices.coordinator import (
     ViClimateDataUpdateCoordinator,
 )
@@ -159,3 +162,93 @@ def test_water_heater_is_unavailable_when_its_mode_feature_disappears(
 
     # Assert: The existing water-heater entity becomes unavailable.
     assert not entity.available
+
+
+@pytest.mark.parametrize(
+    ("device_name", "expected_names"),
+    [
+        pytest.param(
+            "Vitocal250A",
+            {
+                ("climate", "heating_circuit_0"): "Vitocal250A Heating Circuit",
+                (
+                    "number",
+                    "heating.circuits.0.heating.curve.slope",
+                ): "Vitocal250A Heating Curve Slope",
+                (
+                    "sensor",
+                    "heating.compressors.0.statistics.starts",
+                ): "Vitocal250A Compressor Starts",
+                (
+                    "sensor",
+                    "heating.primaryCircuit.fans.0.current",
+                ): "Vitocal250A Fan 1 Speed",
+                (
+                    "sensor",
+                    "heating.primaryCircuit.fans.1.current",
+                ): "Vitocal250A Fan 2 Speed",
+            },
+            id="single-circuit-two-fans",
+        ),
+        pytest.param(
+            "Vitocal200S",
+            {
+                ("climate", "heating_circuit_0"): "Vitocal200S Heating Circuit 1",
+                ("climate", "heating_circuit_1"): "Vitocal200S Heating Circuit 2",
+                (
+                    "number",
+                    "heating.circuits.1.heating.curve.slope",
+                ): "Vitocal200S Heating Circuit 2 Curve Slope",
+                (
+                    "sensor",
+                    "heating.compressors.0.statistics.starts",
+                ): "Vitocal200S Compressor Starts",
+            },
+            id="two-circuits",
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_entity_names_number_only_repeated_components(
+    hass: HomeAssistant,
+    device_name: str,
+    expected_names: dict[tuple[str, str], str],
+) -> None:
+    """Number circuits and components 1-based, and only when there are several."""
+    # Arrange: Load the real device fixture.
+    client = FixtureViClient(device_name)
+    device = (await client.get_full_installation_status("99999"))[0]
+    entry = MockConfigEntry(domain=DOMAIN, data={"client_id": "123", "token": "abc"})
+    entry.add_to_hass(hass)
+
+    # Act: Discover the fixture through the Home Assistant integration.
+    with (
+        patch(
+            "custom_components.vi_climate_devices.ViessmannClient",
+            return_value=client,
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+            return_value=None,
+        ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Assert: Each entity has the expected default name.
+        registry = er.async_get(hass)
+        for (domain, unique_suffix), expected_name in expected_names.items():
+            unique_id = f"{device.gateway_serial}-{device.id}-{unique_suffix}"
+            entity_id = registry.async_get_entity_id(domain, DOMAIN, unique_id)
+            assert entity_id is not None, unique_suffix
+            state = hass.states.get(entity_id)
+            assert state is not None
+            assert state.attributes["friendly_name"] == expected_name
+
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()

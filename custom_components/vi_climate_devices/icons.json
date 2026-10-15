@@ -4,7 +4,13 @@
             "heating_curve_slope": {
                 "default": "mdi:slope-uphill"
             },
+            "heating_curve_slope_numbered": {
+                "default": "mdi:slope-uphill"
+            },
             "heating_curve_shift": {
+                "default": "mdi:arrow-up-down"
+            },
+            "heating_curve_shift_numbered": {
                 "default": "mdi:arrow-up-down"
             },
             "dhw_hysteresis": {
@@ -22,10 +28,19 @@
             "heating_circuit_program_temperature": {
                 "default": "mdi:thermometer"
             },
+            "heating_circuit_program_temperature_numbered": {
+                "default": "mdi:thermometer"
+            },
             "heating_circuit_temperature_limit_min": {
                 "default": "mdi:thermometer-low"
             },
+            "heating_circuit_temperature_limit_min_numbered": {
+                "default": "mdi:thermometer-low"
+            },
             "heating_circuit_temperature_limit_max": {
+                "default": "mdi:thermometer-high"
+            },
+            "heating_circuit_temperature_limit_max_numbered": {
                 "default": "mdi:thermometer-high"
             }
         },
@@ -34,6 +49,9 @@
                 "default": "mdi:water-boiler-auto"
             },
             "heating_circuit_operation_mode": {
+                "default": "mdi:home-thermometer"
+            },
+            "heating_circuit_operation_mode_numbered": {
                 "default": "mdi:home-thermometer"
             }
         },
@@ -44,10 +62,19 @@
             "burner_modulation": {
                 "default": "mdi:fire"
             },
+            "burner_modulation_numbered": {
+                "default": "mdi:fire"
+            },
             "compressor_hours": {
                 "default": "mdi:counter"
             },
+            "compressor_hours_numbered": {
+                "default": "mdi:counter"
+            },
             "compressor_starts": {
+                "default": "mdi:counter"
+            },
+            "compressor_starts_numbered": {
                 "default": "mdi:counter"
             },
             "heating_rod_starts": {
@@ -74,34 +101,64 @@
             "burner_starts": {
                 "default": "mdi:counter"
             },
+            "burner_starts_numbered": {
+                "default": "mdi:counter"
+            },
             "burner_hours": {
+                "default": "mdi:counter"
+            },
+            "burner_hours_numbered": {
                 "default": "mdi:counter"
             },
             "compressor_phase": {
                 "default": "mdi:state-machine"
             },
+            "compressor_phase_numbered": {
+                "default": "mdi:state-machine"
+            },
             "compressor_inlet_pressure": {
+                "default": "mdi:gauge"
+            },
+            "compressor_inlet_pressure_numbered": {
                 "default": "mdi:gauge"
             },
             "compressor_speed_current": {
                 "default": "mdi:fan"
             },
+            "compressor_speed_current_numbered": {
+                "default": "mdi:fan"
+            },
             "compressor_speed_setpoint": {
+                "default": "mdi:fan"
+            },
+            "compressor_speed_setpoint_numbered": {
                 "default": "mdi:fan"
             },
             "condensor_liquid_temperature": {
                 "default": "mdi:thermometer"
             },
+            "condensor_liquid_temperature_numbered": {
+                "default": "mdi:thermometer"
+            },
             "fan_speed": {
                 "default": "mdi:fan"
             },
+            "fan_speed_numbered": {
+                "default": "mdi:fan"
+            },
             "evaporator_overheat_temperature": {
+                "default": "mdi:thermometer"
+            },
+            "evaporator_overheat_temperature_numbered": {
                 "default": "mdi:thermometer"
             },
             "valve_position": {
                 "default": "mdi:valve"
             },
             "heating_circuit_active_program": {
+                "default": "mdi:calendar-clock"
+            },
+            "heating_circuit_active_program_numbered": {
                 "default": "mdi:calendar-clock"
             },
             "noise_reduction_program": {

@@ -131,11 +131,11 @@ async def test_sensor_values(hass: HomeAssistant, mock_client):
 
     # Assert: Verify a Template/Regex Sensor (Compressor Speed).
     # Checks if regex matches 'heating.compressors.0.speed.current' correctly.
-    compressor_speed = hass.states.get("sensor.vitocal250a_compressor_0_speed")
+    compressor_speed = hass.states.get("sensor.vitocal250a_compressor_speed")
     assert compressor_speed is not None
     assert compressor_speed.state == "0"
     assert (
-        compressor_speed.attributes["friendly_name"] == "Vitocal250A Compressor 0 Speed"
+        compressor_speed.attributes["friendly_name"] == "Vitocal250A Compressor Speed"
     )
 
     # Cleanup: Unload the integration to prevent thread leaks.
@@ -194,8 +194,8 @@ async def test_no_duplicate_entity_creation(hass: HomeAssistant, mock_client):
     assert hass.states.get("sensor.vitocal250a_sensors_temperature_outside") is None
 
     # Assert: Verify duplicate prevention for Template Features.
-    # The template entity 'compressor_0_speed' should exist, but the generic fallback 'heating_compressors_...' should not.
-    assert hass.states.get("sensor.vitocal250a_compressor_0_speed") is not None
+    # The template entity 'compressor_speed' should exist, but the generic fallback 'heating_compressors_...' should not.
+    assert hass.states.get("sensor.vitocal250a_compressor_speed") is not None
     assert (
         hass.states.get("sensor.vitocal250a_heating_compressors_0_speed_current")
         is None

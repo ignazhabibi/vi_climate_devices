@@ -15,6 +15,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from vi_api_client import Device
 
 from . import ViClimateDevicesConfigEntry
 from .const import IGNORED_FEATURES, TESTED_DEVICES
@@ -23,6 +24,7 @@ from .entity import (
     EntityTemplate,
     ViClimateFeatureEntity,
     async_setup_dynamic_entities,
+    get_template_translation,
 )
 from .utils import (
     beautify_name,
@@ -102,12 +104,6 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
         translation_key="dhw_charging",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
-    # One Time Charge (heating.dhw.oneTimeCharge.active)
-    "heating.dhw.oneTimeCharge.active": BinarySensorEntityDescription(
-        key="heating.dhw.oneTimeCharge.active",
-        translation_key="one_time_charge",
-        device_class=BinarySensorDeviceClass.RUNNING,
-    ),
     # DHW Circulation Pump (heating.dhw.pumps.circulation.status)
     "heating.dhw.pumps.circulation.status": BinarySensorEntityDescription(
         key="heating.dhw.pumps.circulation.status",
@@ -146,8 +142,8 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
 
 
 def _get_binary_sensor_entity_description(
-    feature_name: str,
-) -> tuple[BinarySensorEntityDescription, dict[str, str] | None] | None:
+    feature_name: str, device: Device
+) -> tuple[BinarySensorEntityDescription, dict[str, str]] | None:
     """Find a matching entity description for a dynamic feature name.
 
     Returns:
@@ -156,15 +152,16 @@ def _get_binary_sensor_entity_description(
     for template in BINARY_SENSOR_TEMPLATES:
         match = template.pattern.match(feature_name)
         if match:
-            index = match.group(1)
             base_desc = template.description
-
+            translation_key, placeholders = get_template_translation(
+                match, str(base_desc.translation_key), device
+            )
             new_desc = dataclasses.replace(
                 base_desc,
                 key=feature_name,
-                translation_key=base_desc.translation_key,
+                translation_key=translation_key,
             )
-            return new_desc, {"index": index}
+            return new_desc, placeholders
     return None
 
 
@@ -206,7 +203,9 @@ def _discover_binary_sensors(
                     )
                     continue
 
-                if match_result := _get_binary_sensor_entity_description(feature.name):
+                if match_result := _get_binary_sensor_entity_description(
+                    feature.name, device
+                ):
                     description, placeholders = match_result
                     entities.append(
                         ViClimateBinarySensor(

@@ -19,7 +19,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from vi_api_client import Feature, FeatureValue, ViError
+from vi_api_client import Device, Feature, FeatureValue, ViError
 
 from .const import DOMAIN
 from .coordinator import ViClimateDataUpdateCoordinator
@@ -28,7 +28,7 @@ from .exceptions import (
     home_assistant_error,
     service_validation_error,
 )
-from .utils import beautify_name
+from .utils import beautify_name, get_feature_string_options
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +39,52 @@ class EntityTemplate[EntityDescriptionT: EntityDescription]:
 
     pattern: re.Pattern[str]
     description: EntityDescriptionT
+
+
+def count_device_instances(device: Device, prefix: str) -> int:
+    """Return how many instances of a numbered component a device reports.
+
+    The API lists enabled circuits, compressors, and burners in a
+    `<prefix>enabled` feature. Other components (fans, evaporators, ...) are
+    counted by the distinct indices of their features.
+    """
+    for feature in device.features:
+        if feature.name == f"{prefix}enabled" and isinstance(feature.value, list):
+            return len(get_feature_string_options(feature.value))
+    return len(
+        {
+            index
+            for feature in device.features
+            if feature.name.startswith(prefix)
+            and (index := feature.name[len(prefix) :].split(".", 1)[0]).isdigit()
+        }
+    )
+
+
+def get_numbered_translation(
+    translation_key: str, device: Device, prefix: str, index: str
+) -> tuple[str, dict[str, str]]:
+    """Return the translation key and placeholders for a numbered entity.
+
+    Single-instance components keep the plain name. Devices with several
+    heating circuits or components use the `<key>_numbered` variant with a
+    1-based `{number}`, matching Viessmann's own circuit numbering.
+    """
+    if count_device_instances(device, prefix) > 1:
+        return f"{translation_key}_numbered", {"number": str(int(index) + 1)}
+    return translation_key, {}
+
+
+def get_template_translation(
+    match: re.Match[str], translation_key: str, device: Device
+) -> tuple[str, dict[str, str]]:
+    """Return the numbered translation for a feature matched by an entity template.
+
+    The first capture group of every template is the component index; the
+    feature name before it identifies the component type.
+    """
+    prefix = match.string[: match.start(1)]
+    return get_numbered_translation(translation_key, device, prefix, match.group(1))
 
 
 class ViClimateEntity(CoordinatorEntity[ViClimateDataUpdateCoordinator]):

@@ -63,10 +63,16 @@
     "entity": {
         "number": {
             "heating_curve_slope": {
-                "name": "Heating Circuit {index} Curve Slope"
+                "name": "Heating Curve Slope"
+            },
+            "heating_curve_slope_numbered": {
+                "name": "Heating Circuit {number} Curve Slope"
             },
             "heating_curve_shift": {
-                "name": "Heating Circuit {index} Curve Shift"
+                "name": "Heating Curve Shift"
+            },
+            "heating_curve_shift_numbered": {
+                "name": "Heating Circuit {number} Curve Shift"
             },
             "dhw_hysteresis": {
                 "name": "DHW Hysteresis"
@@ -81,81 +87,144 @@
                 "name": "DHW Target Temperature"
             },
             "heating_circuit_program_temperature": {
-                "name": "Circuit {index} {program} Temperature"
+                "name": "Room Temperature {program}"
+            },
+            "heating_circuit_program_temperature_numbered": {
+                "name": "Heating Circuit {number} Room Temperature {program}"
             },
             "heating_circuit_program_comfort_temperature": {
-                "name": "Circuit {index} Comfort Temperature"
+                "name": "Room Temperature Comfort"
+            },
+            "heating_circuit_program_comfort_temperature_numbered": {
+                "name": "Heating Circuit {number} Room Temperature Comfort"
             },
             "heating_circuit_program_eco_temperature": {
-                "name": "Circuit {index} Eco Temperature"
+                "name": "Room Temperature Eco"
+            },
+            "heating_circuit_program_eco_temperature_numbered": {
+                "name": "Heating Circuit {number} Room Temperature Eco"
             },
             "heating_circuit_program_external_temperature": {
-                "name": "Circuit {index} External Temperature"
+                "name": "Room Temperature External"
+            },
+            "heating_circuit_program_external_temperature_numbered": {
+                "name": "Heating Circuit {number} Room Temperature External"
             },
             "heating_circuit_program_holiday_temperature": {
-                "name": "Circuit {index} Holiday Temperature"
+                "name": "Room Temperature Holiday"
+            },
+            "heating_circuit_program_holiday_temperature_numbered": {
+                "name": "Heating Circuit {number} Room Temperature Holiday"
             },
             "heating_circuit_program_normal_temperature": {
-                "name": "Circuit {index} Normal Temperature"
+                "name": "Room Temperature Normal"
+            },
+            "heating_circuit_program_normal_temperature_numbered": {
+                "name": "Heating Circuit {number} Room Temperature Normal"
             },
             "heating_circuit_program_reduced_temperature": {
-                "name": "Circuit {index} Reduced Temperature"
+                "name": "Room Temperature Reduced"
+            },
+            "heating_circuit_program_reduced_temperature_numbered": {
+                "name": "Heating Circuit {number} Room Temperature Reduced"
             },
             "heating_circuit_program_standby_temperature": {
-                "name": "Circuit {index} Standby Temperature"
+                "name": "Room Temperature Standby"
+            },
+            "heating_circuit_program_standby_temperature_numbered": {
+                "name": "Heating Circuit {number} Room Temperature Standby"
             },
             "heating_circuit_program_comfort_cooling_temperature": {
-                "name": "Circuit {index} Comfort Cooling Temperature"
+                "name": "Room Temperature Comfort Cooling"
+            },
+            "heating_circuit_program_comfort_cooling_temperature_numbered": {
+                "name": "Heating Circuit {number} Room Temperature Comfort Cooling"
             },
             "heating_circuit_program_comfort_heating_temperature": {
-                "name": "Circuit {index} Comfort Heating Temperature"
+                "name": "Room Temperature Comfort"
+            },
+            "heating_circuit_program_comfort_heating_temperature_numbered": {
+                "name": "Heating Circuit {number} Room Temperature Comfort"
             },
             "heating_circuit_program_normal_cooling_temperature": {
-                "name": "Circuit {index} Normal Cooling Temperature"
+                "name": "Room Temperature Normal Cooling"
+            },
+            "heating_circuit_program_normal_cooling_temperature_numbered": {
+                "name": "Heating Circuit {number} Room Temperature Normal Cooling"
             },
             "heating_circuit_program_normal_heating_temperature": {
-                "name": "Circuit {index} Normal Heating Temperature"
+                "name": "Room Temperature Normal"
+            },
+            "heating_circuit_program_normal_heating_temperature_numbered": {
+                "name": "Heating Circuit {number} Room Temperature Normal"
             },
             "heating_circuit_program_reduced_cooling_temperature": {
-                "name": "Circuit {index} Reduced Cooling Temperature"
+                "name": "Room Temperature Reduced Cooling"
+            },
+            "heating_circuit_program_reduced_cooling_temperature_numbered": {
+                "name": "Heating Circuit {number} Room Temperature Reduced Cooling"
             },
             "heating_circuit_program_reduced_heating_temperature": {
-                "name": "Circuit {index} Reduced Heating Temperature"
+                "name": "Room Temperature Reduced"
+            },
+            "heating_circuit_program_reduced_heating_temperature_numbered": {
+                "name": "Heating Circuit {number} Room Temperature Reduced"
             },
             "heating_circuit_program_eco_cooling_temperature": {
-                "name": "Circuit {index} Eco Cooling Temperature"
+                "name": "Room Temperature Eco Cooling"
+            },
+            "heating_circuit_program_eco_cooling_temperature_numbered": {
+                "name": "Heating Circuit {number} Room Temperature Eco Cooling"
             },
             "heating_circuit_program_eco_heating_temperature": {
-                "name": "Circuit {index} Eco Heating Temperature"
+                "name": "Room Temperature Eco"
+            },
+            "heating_circuit_program_eco_heating_temperature_numbered": {
+                "name": "Heating Circuit {number} Room Temperature Eco"
             },
             "heating_circuit_temperature_limit_min": {
-                "name": "Heating Circuit {index} Temperature Limit Min"
+                "name": "Heating Circuit Temperature Limit Min"
+            },
+            "heating_circuit_temperature_limit_min_numbered": {
+                "name": "Heating Circuit {number} Temperature Limit Min"
             },
             "heating_circuit_temperature_limit_max": {
-                "name": "Heating Circuit {index} Temperature Limit Max"
+                "name": "Heating Circuit Temperature Limit Max"
+            },
+            "heating_circuit_temperature_limit_max_numbered": {
+                "name": "Heating Circuit {number} Temperature Limit Max"
             }
         },
         "binary_sensor": {
             "circulation_pump": {
-                "name": "Circulation Pump Heating Circuit {index}"
+                "name": "Heating Circuit Pump"
+            },
+            "circulation_pump_numbered": {
+                "name": "Heating Circuit {number} Pump"
             },
             "compressor_active": {
-                "name": "Compressor {index} Active"
+                "name": "Compressor"
+            },
+            "compressor_active_numbered": {
+                "name": "Compressor {number}"
             },
             "dhw_circulation_pump": {
                 "name": "DHW Circulation Pump"
             },
             "frost_protection": {
-                "name": "Frost Protection Heating Circuit {index}"
+                "name": "Frost Protection"
+            },
+            "frost_protection_numbered": {
+                "name": "Frost Protection Heating Circuit {number}"
             },
             "summer_eco": {
-                "name": "Summer Eco Heating Circuit {index}"
+                "name": "Summer Eco Mode"
+            },
+            "summer_eco_numbered": {
+                "name": "Summer Eco Mode Heating Circuit {number}"
             },
             "solar_pump": {
                 "name": "Solar Circuit Pump"
-            },
-            "one_time_charge": {
-                "name": "One Time Charge"
             },
             "dhw_charging": {
                 "name": "DHW Charging"
@@ -167,24 +236,33 @@
                 "name": "DHW Hygiene"
             },
             "compressor_crankcase_heater": {
-                "name": "Compressor {index} Crankcase Heater"
+                "name": "Compressor Crankcase Heater"
+            },
+            "compressor_crankcase_heater_numbered": {
+                "name": "Compressor {number} Crankcase Heater"
             },
             "evaporator_base_heater": {
-                "name": "Evaporator {index} Base Heater"
+                "name": "Evaporator Base Heater"
+            },
+            "evaporator_base_heater_numbered": {
+                "name": "Evaporator {number} Base Heater"
             },
             "outdoor_defrosting": {
                 "name": "Outdoor Defrosting"
             },
             "holiday": {
-                "name": "Holiday"
+                "name": "Holiday Mode"
             },
             "holiday_at_home": {
-                "name": "Holiday at Home"
+                "name": "Holiday at Home Mode"
             }
         },
         "climate": {
             "heating_circuit": {
-                "name": "Heating Circuit {index}"
+                "name": "Heating Circuit"
+            },
+            "heating_circuit_numbered": {
+                "name": "Heating Circuit {number}"
             }
         },
         "select": {
@@ -202,7 +280,14 @@
                 }
             },
             "heating_circuit_operation_mode": {
-                "name": "Heating Circuit {index} Operation Mode",
+                "name": "Heating Circuit Operation Mode",
+                "state": {
+                    "heating": "Heating",
+                    "standby": "Standby"
+                }
+            },
+            "heating_circuit_operation_mode_numbered": {
+                "name": "Heating Circuit {number} Operation Mode",
                 "state": {
                     "heating": "Heating",
                     "standby": "Standby"
@@ -217,7 +302,7 @@
                 "name": "Return Temperature"
             },
             "common_supply_temperature": {
-                "name": "Common Supply Temperature"
+                "name": "Heat Pump Supply Temperature"
             },
             "primary_supply_temperature": {
                 "name": "Primary Circuit Supply Temperature"
@@ -229,10 +314,41 @@
                 "name": "Buffer Cylinder Temperature"
             },
             "heating_circuit_supply_temperature": {
-                "name": "Heating Circuit {index} Supply Temperature"
+                "name": "Heating Circuit Supply Temperature"
+            },
+            "heating_circuit_supply_temperature_numbered": {
+                "name": "Heating Circuit {number} Supply Temperature"
             },
             "heating_circuit_active_program": {
-                "name": "Heating Circuit {index} Active Program",
+                "name": "Heating Active Program",
+                "state": {
+                    "comfort": "Comfort",
+                    "comfort_cooling": "Comfort (cooling)",
+                    "comfort_cooling_energy_saving": "Comfort (cooling, energy saving)",
+                    "comfort_energy_saving": "Comfort (energy saving)",
+                    "comfort_heating": "Comfort",
+                    "eco": "Eco",
+                    "fixed": "Fixed",
+                    "forced_last_from_schedule": "Last schedule phase forced",
+                    "frostprotection": "Frost protection",
+                    "holiday": "Holiday",
+                    "holiday_at_home": "Holiday at home",
+                    "normal": "Normal",
+                    "normal_cooling": "Normal (cooling)",
+                    "normal_cooling_energy_saving": "Normal (cooling, energy saving)",
+                    "normal_energy_saving": "Normal (energy saving)",
+                    "normal_heating": "Normal",
+                    "reduced": "Reduced",
+                    "reduced_cooling": "Reduced (cooling)",
+                    "reduced_cooling_energy_saving": "Reduced (cooling, energy saving)",
+                    "reduced_energy_saving": "Reduced (energy saving)",
+                    "reduced_heating": "Reduced",
+                    "standby": "Standby",
+                    "summer_eco": "Summer eco"
+                }
+            },
+            "heating_circuit_active_program_numbered": {
+                "name": "Heating Circuit {number} Active Program",
                 "state": {
                     "comfort": "Comfort",
                     "comfort_cooling": "Comfort (cooling)",
@@ -263,13 +379,22 @@
                 "name": "Hot Water Temperature"
             },
             "burner_modulation": {
-                "name": "Burner {index} Modulation"
+                "name": "Burner Modulation"
+            },
+            "burner_modulation_numbered": {
+                "name": "Burner {number} Modulation"
             },
             "compressor_hours": {
-                "name": "Compressor {index} Hours"
+                "name": "Compressor Hours"
+            },
+            "compressor_hours_numbered": {
+                "name": "Compressor {number} Hours"
             },
             "compressor_starts": {
-                "name": "Compressor {index} Starts"
+                "name": "Compressor Starts"
+            },
+            "compressor_starts_numbered": {
+                "name": "Compressor {number} Starts"
             },
             "heating_rod_starts": {
                 "name": "Heating Rod Starts"
@@ -311,10 +436,16 @@
                 "name": "Total Consumption Year"
             },
             "burner_starts": {
-                "name": "Burner {index} Starts"
+                "name": "Burner Starts"
+            },
+            "burner_starts_numbered": {
+                "name": "Burner {number} Starts"
             },
             "burner_hours": {
-                "name": "Burner {index} Hours"
+                "name": "Burner Hours"
+            },
+            "burner_hours_numbered": {
+                "name": "Burner {number} Hours"
             },
             "production_cooling_current_day": {
                 "name": "Cooling Production Day"
@@ -389,43 +520,82 @@
                 "name": "Solar Production Today"
             },
             "compressor_phase": {
-                "name": "Compressor {index} Phase"
+                "name": "Compressor Phase"
+            },
+            "compressor_phase_numbered": {
+                "name": "Compressor {number} Phase"
             },
             "compressor_inlet_pressure": {
-                "name": "Compressor {index} Inlet Pressure"
+                "name": "Compressor Inlet Pressure"
+            },
+            "compressor_inlet_pressure_numbered": {
+                "name": "Compressor {number} Inlet Pressure"
             },
             "compressor_inlet_temperature": {
-                "name": "Compressor {index} Inlet Temperature"
+                "name": "Compressor Inlet Temperature"
+            },
+            "compressor_inlet_temperature_numbered": {
+                "name": "Compressor {number} Inlet Temperature"
             },
             "compressor_motor_temperature": {
-                "name": "Compressor {index} Motor Temperature"
+                "name": "Compressor Motor Temperature"
+            },
+            "compressor_motor_temperature_numbered": {
+                "name": "Compressor {number} Motor Temperature"
             },
             "compressor_oil_temperature": {
-                "name": "Compressor {index} Oil Temperature"
+                "name": "Compressor Oil Temperature"
+            },
+            "compressor_oil_temperature_numbered": {
+                "name": "Compressor {number} Oil Temperature"
             },
             "compressor_outlet_temperature": {
-                "name": "Compressor {index} Outlet Temperature"
+                "name": "Compressor Outlet Temperature"
+            },
+            "compressor_outlet_temperature_numbered": {
+                "name": "Compressor {number} Outlet Temperature"
             },
             "compressor_speed_current": {
-                "name": "Compressor {index} Speed"
+                "name": "Compressor Speed"
+            },
+            "compressor_speed_current_numbered": {
+                "name": "Compressor {number} Speed"
             },
             "compressor_speed_setpoint": {
-                "name": "Compressor {index} Speed Setpoint"
+                "name": "Compressor Speed Setpoint"
+            },
+            "compressor_speed_setpoint_numbered": {
+                "name": "Compressor {number} Speed Setpoint"
             },
             "condensor_liquid_temperature": {
-                "name": "Condensor {index} Liquid Temperature"
+                "name": "Condensor Liquid Temperature"
+            },
+            "condensor_liquid_temperature_numbered": {
+                "name": "Condensor {number} Liquid Temperature"
             },
             "fan_speed": {
-                "name": "Fan {index} Speed"
+                "name": "Fan Speed"
+            },
+            "fan_speed_numbered": {
+                "name": "Fan {number} Speed"
             },
             "economizer_liquid_temperature": {
-                "name": "Economizer {index} Liquid Temperature"
+                "name": "Economizer Liquid Temperature"
+            },
+            "economizer_liquid_temperature_numbered": {
+                "name": "Economizer {number} Liquid Temperature"
             },
             "evaporator_liquid_temperature": {
-                "name": "Evaporator {index} Liquid Temperature"
+                "name": "Evaporator Liquid Temperature"
+            },
+            "evaporator_liquid_temperature_numbered": {
+                "name": "Evaporator {number} Liquid Temperature"
             },
             "evaporator_overheat_temperature": {
-                "name": "Evaporator {index} Overheat Temperature"
+                "name": "Evaporator Overheat Temperature"
+            },
+            "evaporator_overheat_temperature_numbered": {
+                "name": "Evaporator {number} Overheat Temperature"
             },
             "noise_reduction_program": {
                 "name": "Noise Reduction",
@@ -443,6 +613,12 @@
                     "climate_circuit_one": "Position heating circuit 1",
                     "domestic_hot_water": "Position domestic hot water"
                 }
+            },
+            "internal_pump": {
+                "name": "Internal Pump"
+            },
+            "outside_temperature_damping_factor": {
+                "name": "Outside Temperature Damping Factor"
             }
         },
         "switch": {
