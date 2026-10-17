@@ -1042,67 +1042,6 @@
     }),
     dict({
       'attributes': dict({
-        'active_codes': list([
-          dict({
-            'bus_address': '1',
-            'code': 'S.134',
-            'since': '2026-10-11T10:03:07-07:00',
-          }),
-          dict({
-            'bus_address': '1',
-            'code': 'S.123',
-            'since': '2026-10-11T10:03:04-07:00',
-          }),
-          dict({
-            'bus_address': '54',
-            'code': 'S.165',
-            'since': '2026-05-17T09:01:28-07:00',
-          }),
-          dict({
-            'bus_address': '1',
-            'code': 'S.219',
-            'since': '2026-05-11T15:02:43-07:00',
-          }),
-          dict({
-            'bus_address': '1',
-            'code': 'S.218',
-            'since': '2026-05-11T15:02:13-07:00',
-          }),
-          dict({
-            'bus_address': '1',
-            'code': 'S.217',
-            'since': '2026-05-11T15:01:32-07:00',
-          }),
-          dict({
-            'bus_address': '1',
-            'code': 'S.120',
-            'since': '2025-10-31T11:28:49-07:00',
-          }),
-          dict({
-            'bus_address': '1',
-            'code': 'S.165',
-            'since': '2025-10-31T11:28:46-07:00',
-          }),
-        ]),
-        'device_class': 'enum',
-        'friendly_name': 'Vitocal250A Heat pump state',
-        'options': list([
-          'cooling',
-          'defrost_preparation',
-          'defrosting',
-          'heating',
-          'off',
-          'post_run',
-          'pre_run',
-        ]),
-        'state_code': 'S.123',
-        'viessmann_feature_name': 'device.messages.status.raw',
-      }),
-      'entity_id': 'sensor.vitocal250a_heat_pump_state',
-      'state': 'off',
-    }),
-    dict({
-      'attributes': dict({
         'device_class': 'enum',
         'friendly_name': 'Vitocal250A Heating Active Program',
         'options': list([
@@ -1581,6 +1520,67 @@
       }),
       'entity_id': 'sensor.vitocal250a_spf_total',
       'state': '3.7',
+    }),
+    dict({
+      'attributes': dict({
+        'active_codes': list([
+          dict({
+            'bus_address': '1',
+            'code': 'S.134',
+            'since': '2026-10-11T10:03:07-07:00',
+          }),
+          dict({
+            'bus_address': '1',
+            'code': 'S.123',
+            'since': '2026-10-11T10:03:04-07:00',
+          }),
+          dict({
+            'bus_address': '54',
+            'code': 'S.165',
+            'since': '2026-05-17T09:01:28-07:00',
+          }),
+          dict({
+            'bus_address': '1',
+            'code': 'S.219',
+            'since': '2026-05-11T15:02:43-07:00',
+          }),
+          dict({
+            'bus_address': '1',
+            'code': 'S.218',
+            'since': '2026-05-11T15:02:13-07:00',
+          }),
+          dict({
+            'bus_address': '1',
+            'code': 'S.217',
+            'since': '2026-05-11T15:01:32-07:00',
+          }),
+          dict({
+            'bus_address': '1',
+            'code': 'S.120',
+            'since': '2025-10-31T11:28:49-07:00',
+          }),
+          dict({
+            'bus_address': '1',
+            'code': 'S.165',
+            'since': '2025-10-31T11:28:46-07:00',
+          }),
+        ]),
+        'device_class': 'enum',
+        'friendly_name': 'Vitocal250A State',
+        'options': list([
+          'cooling',
+          'defrost_preparation',
+          'defrosting',
+          'heating',
+          'off',
+          'post_run',
+          'pre_run',
+        ]),
+        'state_code': 'S.123',
+        'viessmann_feature_name': 'device.messages.status.raw',
+      }),
+      'entity_id': 'sensor.vitocal250a_state',
+      'state': 'off',
     }),
     dict({
       'attributes': dict({
