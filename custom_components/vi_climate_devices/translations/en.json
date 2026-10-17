@@ -252,6 +252,15 @@
             },
             "holiday_at_home": {
                 "name": "Holiday at Home Mode"
+            },
+            "dhw_heating": {
+                "name": "DHW heating active"
+            },
+            "utility_lock": {
+                "name": "Utility lock"
+            },
+            "grid_power_limitation": {
+                "name": "Grid power limitation"
             }
         },
         "climate": {
@@ -587,6 +596,27 @@
             },
             "outside_temperature_damping_factor": {
                 "name": "Outside Temperature Damping Factor"
+            },
+            "heat_pump_state": {
+                "name": "Heat pump state",
+                "state": {
+                    "off": "Off",
+                    "pre_run": "Pre-run",
+                    "heating": "Heating",
+                    "cooling": "Cooling",
+                    "defrost_preparation": "Preparing defrost",
+                    "defrosting": "Defrosting",
+                    "post_run": "Post-run"
+                }
+            },
+            "heating_rod_stage": {
+                "name": "Heating rod",
+                "state": {
+                    "off": "Off",
+                    "stage_1": "Stage 1",
+                    "stage_2": "Stage 2",
+                    "stage_3": "Stage 3"
+                }
             }
         },
         "switch": {

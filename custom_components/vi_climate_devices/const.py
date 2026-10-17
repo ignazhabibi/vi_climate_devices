@@ -26,7 +26,6 @@ IGNORED_FEATURES = [
     "device.lock.malfunction.active",
     "device.messages.info.raw",
     "device.messages.service.raw",
-    "device.messages.status.raw",
     "device.parameterIdentification.version",
     "device.power.consumption.limitation",
     "device.power.statusReport.consumption.limit",

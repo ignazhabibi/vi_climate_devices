@@ -113,11 +113,11 @@ account, not that setup failed.
 
 | Platform | Functionality |
 | --- | --- |
-| `binary_sensor` | Operating states such as compressor, pump, defrosting, and frost-protection status |
+| `binary_sensor` | Operating states such as compressor, pump, defrosting, frost-protection, and hot-water heating status; utility lock and grid power limitation (disabled by default) |
 | `climate` | Heating and cooling circuit target temperature and HVAC mode; the active program is available as the `active_program` attribute |
 | `number` | Heating-curve values, temperature limits, hot-water target temperature, and selected configuration values |
 | `select` | Hot-water and heating-circuit operation modes where exposed by the API |
-| `sensor` | Temperatures, pressure, humidity, flow, energy, power, SCOP, and diagnostic statistics |
+| `sensor` | Temperatures, pressure, humidity, flow, energy, power, SCOP, diagnostic statistics, and the heat pump state and heating rod stage from the active status messages |
 | `switch` | One-time domestic hot-water charge, hygiene function, and supported boolean controls |
 | `water_heater` | Domestic hot-water target temperature and operation mode |
 
@@ -130,6 +130,15 @@ Unknown auto-discovered features use concise English names derived from their
 Viessmann API feature paths. This intentional fallback means the integration
 does not fully satisfy Home Assistant's `entity-translations` Quality Scale
 rule for dynamically discovered entities.
+
+On heat pumps, the heat pump state (off, pre-run, heating, cooling, defrost
+preparation, defrosting, post-run) and the heating rod stage are read from the
+device's active status messages. The heat pump state sensor names the code
+behind its state in the `state_code` attribute and lists all active status
+codes with bus address and activation time in `active_codes`. Viessmann reports
+the activation time as installation local time, so it carries the Home
+Assistant time zone. `active_codes` is not stored in the recorder history. The
+heating rod sensor lists the running stages in `active_stages`.
 
 ### Actions, triggers, and conditions
 

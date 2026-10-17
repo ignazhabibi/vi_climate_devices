@@ -33,7 +33,7 @@ affect the solution.
 - Narrow client feature values only with the shared `FeatureValue` helpers in
   `utils.py` (`get_feature_number_value`, `get_feature_string_value`,
   `get_feature_string_options`, `get_feature_bool_value`,
-  `normalize_sensor_value`); never cast raw values or convert them with
+  `get_feature_status_entries`, `normalize_sensor_value`); never cast raw values or convert them with
   `str()` or `float()` before narrowing.
 
 ## Python and Tests

@@ -11,6 +11,7 @@ import pytest
 from custom_components.vi_climate_devices.binary_sensor import (
     BINARY_SENSOR_TEMPLATES,
     BINARY_SENSOR_TYPES,
+    STATUS_BINARY_SENSOR_TYPES,
 )
 from custom_components.vi_climate_devices.exceptions import ExceptionTranslationKey
 from custom_components.vi_climate_devices.number import NUMBER_TEMPLATES, NUMBER_TYPES
@@ -20,7 +21,12 @@ from custom_components.vi_climate_devices.sensor import (
     NOISE_REDUCTION_OPTIONS,
     SENSOR_TEMPLATES,
     SENSOR_TYPES,
+    STATUS_SENSOR_TYPES,
     VALVE_POSITION_OPTIONS,
+)
+from custom_components.vi_climate_devices.status_messages import (
+    HEAT_PUMP_STATE_OPTIONS,
+    HEATING_ROD_STAGE_OPTIONS,
 )
 from custom_components.vi_climate_devices.switch import SWITCH_TYPES
 from custom_components.vi_climate_devices.water_heater import ViClimateWaterHeater
@@ -44,11 +50,13 @@ def get_entity_definitions(platform):
         # Templates.
         for t in SENSOR_TEMPLATES:
             descriptions.append(t.description)
+        descriptions.extend(STATUS_SENSOR_TYPES)
 
     elif platform == "binary_sensor":
         descriptions.extend(BINARY_SENSOR_TYPES.values())
         for t in BINARY_SENSOR_TEMPLATES:
             descriptions.append(t.description)
+        descriptions.extend(STATUS_BINARY_SENSOR_TYPES)
 
     elif platform == "number":
         descriptions.extend(NUMBER_TYPES.values())
@@ -293,6 +301,8 @@ def test_config_flow_abort_reasons_exist_in_all_maintained_translations(
         ("heating_circuit_active_program", ACTIVE_PROGRAM_OPTIONS),
         ("noise_reduction_program", NOISE_REDUCTION_OPTIONS),
         ("valve_position", VALVE_POSITION_OPTIONS),
+        ("heat_pump_state", HEAT_PUMP_STATE_OPTIONS),
+        ("heating_rod_stage", HEATING_ROD_STAGE_OPTIONS),
     ],
 )
 def test_enum_sensor_states_are_translated(translations, translation_key, options):
