@@ -169,6 +169,18 @@
             },
             "outside_temperature_damping_factor": {
                 "default": "mdi:timer-sand"
+            },
+            "heat_pump_state": {
+                "default": "mdi:heat-pump",
+                "state": {
+                    "off": "mdi:heat-pump-outline",
+                    "defrosting": "mdi:snowflake-melt",
+                    "defrost_preparation": "mdi:snowflake-melt",
+                    "cooling": "mdi:snowflake"
+                }
+            },
+            "heating_rod_stage": {
+                "default": "mdi:heating-coil"
             }
         },
         "switch": {
@@ -177,6 +189,17 @@
             },
             "dhw_hygiene": {
                 "default": "mdi:shield-check"
+            }
+        },
+        "binary_sensor": {
+            "dhw_heating": {
+                "default": "mdi:water-boiler"
+            },
+            "utility_lock": {
+                "default": "mdi:transmission-tower-off"
+            },
+            "grid_power_limitation": {
+                "default": "mdi:transmission-tower-import"
             }
         }
     }

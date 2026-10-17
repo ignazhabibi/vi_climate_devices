@@ -118,6 +118,26 @@ def get_feature_string_options(options: Sequence[JsonValue] | None) -> list[str]
     return [option for option in options if isinstance(option, str)]
 
 
+def get_feature_status_entries(
+    value: FeatureValue,
+) -> list[dict[str, JsonValue]] | None:
+    """Return the object entries of a `device.messages.*.raw` feature value.
+
+    The flattened feature keeps the raw `entries` property, whose `value` is
+    the list of messages. Any other shape returns None; non-object entries are
+    skipped.
+    """
+    if not isinstance(value, dict):
+        return None
+    entries_property = value.get("entries")
+    if not isinstance(entries_property, dict):
+        return None
+    entries = entries_property.get("value")
+    if not isinstance(entries, list):
+        return None
+    return [entry for entry in entries if isinstance(entry, dict)]
+
+
 def api_value_to_option_key(value: str) -> str:
     """Return the lowercase translation key for a camelCase API value.
 

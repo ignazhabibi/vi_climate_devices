@@ -252,6 +252,15 @@
             },
             "holiday_at_home": {
                 "name": "Urlaub zu Hause Modus"
+            },
+            "dhw_heating": {
+                "name": "Warmwasserbereitung aktiv"
+            },
+            "utility_lock": {
+                "name": "EVU-Sperre"
+            },
+            "grid_power_limitation": {
+                "name": "Leistungsbegrenzung Netzbezug"
             }
         },
         "climate": {
@@ -587,6 +596,27 @@
             },
             "outside_temperature_damping_factor": {
                 "name": "Dämpfungsfaktor Außentemperatur"
+            },
+            "heat_pump_state": {
+                "name": "Wärmepumpe Zustand",
+                "state": {
+                    "off": "Aus",
+                    "pre_run": "Anlauf",
+                    "heating": "Heizen",
+                    "cooling": "Kühlen",
+                    "defrost_preparation": "Abtauen vorbereiten",
+                    "defrosting": "Abtauen",
+                    "post_run": "Nachlauf"
+                }
+            },
+            "heating_rod_stage": {
+                "name": "Heizstab",
+                "state": {
+                    "off": "Aus",
+                    "stage_1": "Stufe 1",
+                    "stage_2": "Stufe 2",
+                    "stage_3": "Stufe 3"
+                }
             }
         },
         "switch": {

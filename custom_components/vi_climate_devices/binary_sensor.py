@@ -26,6 +26,15 @@ from .entity import (
     async_setup_dynamic_entities,
     get_template_translation,
 )
+from .status_messages import (
+    DHW_HEATING_CODES,
+    GRID_POWER_LIMITATION_CODES,
+    STATUS_MESSAGES_FEATURE,
+    UTILITY_LOCK_CODES,
+    has_active_code,
+    is_heat_pump,
+    parse_status_messages,
+)
 from .utils import (
     beautify_name,
     get_feature_bool_value,
@@ -141,6 +150,37 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
 }
 
 
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class ViClimateStatusBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describe a binary sensor that is on while a status code is active."""
+
+    codes: frozenset[str]
+
+
+# Heat pump binary sensors derived from the active status messages. Their keys
+# extend the feature name because several entities share one feature.
+STATUS_BINARY_SENSOR_TYPES: tuple[ViClimateStatusBinarySensorEntityDescription, ...] = (
+    ViClimateStatusBinarySensorEntityDescription(
+        key=f"{STATUS_MESSAGES_FEATURE}.dhwHeating",
+        translation_key="dhw_heating",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        codes=DHW_HEATING_CODES,
+    ),
+    ViClimateStatusBinarySensorEntityDescription(
+        key=f"{STATUS_MESSAGES_FEATURE}.utilityLock",
+        translation_key="utility_lock",
+        entity_registry_enabled_default=False,
+        codes=UTILITY_LOCK_CODES,
+    ),
+    ViClimateStatusBinarySensorEntityDescription(
+        key=f"{STATUS_MESSAGES_FEATURE}.gridPowerLimitation",
+        translation_key="grid_power_limitation",
+        entity_registry_enabled_default=False,
+        codes=GRID_POWER_LIMITATION_CODES,
+    ),
+)
+
+
 def _get_binary_sensor_entity_description(
     feature_name: str, device: Device
 ) -> tuple[BinarySensorEntityDescription, dict[str, str]] | None:
@@ -192,6 +232,16 @@ def _discover_binary_sensors(
             for feature in device.features:
                 # Skip ignored features early
                 if is_feature_ignored(feature.name, IGNORED_FEATURES):
+                    continue
+
+                if feature.name == STATUS_MESSAGES_FEATURE:
+                    if is_heat_pump(device):
+                        entities.extend(
+                            ViClimateStatusBinarySensor(
+                                coordinator, map_key, feature.name, description
+                            )
+                            for description in STATUS_BINARY_SENSOR_TYPES
+                        )
                     continue
 
                 if feature.name in BINARY_SENSOR_TYPES:
@@ -281,3 +331,35 @@ class ViClimateBinarySensor(ViClimateFeatureEntity, BinarySensorEntity):
         """Return True if entity is available."""
         feat = self.feature_data
         return super().available and feat is not None and feat.is_enabled
+
+
+class ViClimateStatusBinarySensor(ViClimateBinarySensor):
+    """Binary sensor that is on while one of its status codes is active."""
+
+    def __init__(
+        self,
+        coordinator: ViClimateDataUpdateCoordinator,
+        map_key: str,
+        feature_name: str,
+        description: ViClimateStatusBinarySensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor with the registry default of its description."""
+        super().__init__(
+            coordinator,
+            map_key,
+            feature_name,
+            description,
+            enabled_default=description.entity_registry_enabled_default,
+        )
+        self._status_codes = description.codes
+
+    @property
+    def is_on(self) -> bool | None:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return true while one of the status codes is active."""
+        feat = self.feature_data
+        if not feat:
+            return None
+        messages = parse_status_messages(feat.value)
+        if messages is None:
+            return None
+        return has_active_code(messages, self._status_codes)

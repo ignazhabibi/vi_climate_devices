@@ -5,6 +5,7 @@ from __future__ import annotations
 import dataclasses
 import logging
 import re
+from collections.abc import Callable
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -36,6 +37,17 @@ from .entity import (
     ViClimateFeatureEntity,
     async_setup_dynamic_entities,
     get_template_translation,
+)
+from .status_messages import (
+    HEAT_PUMP_STATE_OPTIONS,
+    HEATING_ROD_STAGE_OPTIONS,
+    STATUS_MESSAGES_FEATURE,
+    StatusMessage,
+    get_active_heating_rod_stages,
+    get_heat_pump_state,
+    get_heating_rod_state,
+    is_heat_pump,
+    parse_status_messages,
 )
 from .utils import (
     api_value_to_option_key,
@@ -96,6 +108,47 @@ VALVE_POSITION_OPTIONS = [
     "climate_circuit_one",
     "domestic_hot_water",
 ]
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class ViClimateStatusSensorEntityDescription(SensorEntityDescription):
+    """Describe a sensor derived from the active status messages."""
+
+    value_fn: Callable[[list[StatusMessage]], str | None]
+    attributes_fn: Callable[[list[StatusMessage]], dict[str, JsonValue]]
+
+
+def _active_codes_attributes(messages: list[StatusMessage]) -> dict[str, JsonValue]:
+    """Return every active status message, including unmapped codes."""
+    return {"active_codes": [message.as_attribute() for message in messages]}
+
+
+def _active_stages_attributes(messages: list[StatusMessage]) -> dict[str, JsonValue]:
+    """Return the running heating rod stages to expose non-cumulative switching."""
+    active_stages: list[JsonValue] = [*get_active_heating_rod_stages(messages)]
+    return {"active_stages": active_stages}
+
+
+# Heat pump sensors derived from the active status messages. Their keys extend
+# the feature name because several entities share one feature.
+STATUS_SENSOR_TYPES: tuple[ViClimateStatusSensorEntityDescription, ...] = (
+    ViClimateStatusSensorEntityDescription(
+        key=f"{STATUS_MESSAGES_FEATURE}.heatPumpState",
+        translation_key="heat_pump_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=HEAT_PUMP_STATE_OPTIONS,
+        value_fn=get_heat_pump_state,
+        attributes_fn=_active_codes_attributes,
+    ),
+    ViClimateStatusSensorEntityDescription(
+        key=f"{STATUS_MESSAGES_FEATURE}.heatingRodStage",
+        translation_key="heating_rod_stage",
+        device_class=SensorDeviceClass.ENUM,
+        options=HEATING_ROD_STAGE_OPTIONS,
+        value_fn=get_heating_rod_state,
+        attributes_fn=_active_stages_attributes,
+    ),
+)
 
 AUTO_DISCOVERED_TOTAL_INCREASING_ENERGY_FEATURES = frozenset(
     {
@@ -863,14 +916,24 @@ async def async_setup_entry(
 
 def _discover_realtime_sensors(
     coordinator: ViClimateDataUpdateCoordinator,
-) -> list[ViClimateSensor]:
+) -> list[ViClimateSensor | ViClimateStatusSensor]:
     """Discover and return realtime sensor entities."""
-    entities: list[ViClimateSensor] = []
+    entities: list[ViClimateSensor | ViClimateStatusSensor] = []
     for map_key, device in coordinator.data.items():
         # Iterate over FLATTENED features
         for feature in device.features:
             # Skip ignored features early
             if is_feature_ignored(feature.name, IGNORED_FEATURES):
+                continue
+
+            if feature.name == STATUS_MESSAGES_FEATURE:
+                if is_heat_pump(device):
+                    entities.extend(
+                        ViClimateStatusSensor(
+                            coordinator, map_key, feature.name, description
+                        )
+                        for description in STATUS_SENSOR_TYPES
+                    )
                 continue
 
             # 1. Defined Entities (High Quality)
@@ -977,6 +1040,52 @@ class ViClimateSensor(ViClimateFeatureEntity, SensorEntity):
         feat = self.feature_data
         if feat and isinstance(feat.value, (dict, list)):
             attrs["raw_value"] = feat.value
+        return attrs
+
+    @property
+    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return True if entity is available."""
+        feat = self.feature_data
+        return super().available and feat is not None and feat.is_enabled
+
+
+class ViClimateStatusSensor(ViClimateFeatureEntity, SensorEntity):
+    """Sensor whose state is derived from the active status messages."""
+
+    def __init__(
+        self,
+        coordinator: ViClimateDataUpdateCoordinator,
+        map_key: str,
+        feature_name: str,
+        description: ViClimateStatusSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, map_key, feature_name, description)
+        self.entity_description = description
+        self._status_description = description
+
+    def _get_messages(self) -> list[StatusMessage] | None:
+        """Return the active status messages, or None if they are unreadable."""
+        feat = self.feature_data
+        if not feat:
+            return None
+        return parse_status_messages(feat.value)
+
+    @property
+    def native_value(self) -> StateType:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return the state derived from the active status messages."""
+        messages = self._get_messages()
+        if messages is None:
+            return None
+        return self._status_description.value_fn(messages)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, JsonValue]:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return the feature name and the status details behind the state."""
+        attrs: dict[str, JsonValue] = {"viessmann_feature_name": self._feature_name}
+        messages = self._get_messages()
+        if messages is not None:
+            attrs.update(self._status_description.attributes_fn(messages))
         return attrs
 
     @property
