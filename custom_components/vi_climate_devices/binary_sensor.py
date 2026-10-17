@@ -73,6 +73,7 @@ BINARY_SENSOR_TEMPLATES: tuple[EntityTemplate[BinarySensorEntityDescription], ..
         description=BinarySensorEntityDescription(
             key="placeholder",
             translation_key="summer_eco",
+            entity_registry_enabled_default=False,
         ),
     ),
     # Compressors Active (heating.compressors.N.active)
@@ -129,11 +130,13 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     "heating.operating.programs.holiday.active": BinarySensorEntityDescription(
         key="heating.operating.programs.holiday.active",
         translation_key="holiday",
+        entity_registry_enabled_default=False,
     ),
     # Holiday at Home (heating.operating.programs.holidayAtHome.active)
     "heating.operating.programs.holidayAtHome.active": BinarySensorEntityDescription(
         key="heating.operating.programs.holidayAtHome.active",
         translation_key="holiday_at_home",
+        entity_registry_enabled_default=False,
     ),
     # Outdoor Defrosting (heating.outdoor.defrosting.active)
     "heating.outdoor.defrosting.active": BinarySensorEntityDescription(
@@ -300,9 +303,13 @@ class ViClimateBinarySensor(ViClimateFeatureEntity, BinarySensorEntity):
         feature_name: str,
         description: BinarySensorEntityDescription,
         translation_placeholders: dict[str, str] | None = None,
-        enabled_default: bool = True,
+        enabled_default: bool | None = None,
     ) -> None:
-        """Initialize the sensor."""
+        """Initialize the sensor.
+
+        Without an explicit `enabled_default`, the description decides whether
+        the entity is enabled by default.
+        """
         super().__init__(
             coordinator,
             map_key,
@@ -343,14 +350,8 @@ class ViClimateStatusBinarySensor(ViClimateBinarySensor):
         feature_name: str,
         description: ViClimateStatusBinarySensorEntityDescription,
     ) -> None:
-        """Initialize the sensor with the registry default of its description."""
-        super().__init__(
-            coordinator,
-            map_key,
-            feature_name,
-            description,
-            enabled_default=description.entity_registry_enabled_default,
-        )
+        """Initialize the sensor."""
+        super().__init__(coordinator, map_key, feature_name, description)
         self._status_codes = description.codes
 
     @property

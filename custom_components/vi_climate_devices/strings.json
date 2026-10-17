@@ -254,7 +254,7 @@
                 "name": "Holiday at Home Mode"
             },
             "dhw_heating": {
-                "name": "DHW heating active"
+                "name": "DHW heating"
             },
             "utility_lock": {
                 "name": "Utility lock"
@@ -273,7 +273,7 @@
         },
         "select": {
             "dhw_mode": {
-                "name": "DHW Mode",
+                "name": "DHW mode",
                 "state": {
                     "off": "Off",
                     "eco": "Eco",
@@ -326,7 +326,7 @@
                 "name": "Heating Circuit {number} Supply Temperature"
             },
             "heating_circuit_active_program": {
-                "name": "Heating Active Program",
+                "name": "Heating program",
                 "state": {
                     "comfort": "Comfort",
                     "comfort_cooling": "Comfort (cooling)",
@@ -354,7 +354,7 @@
                 }
             },
             "heating_circuit_active_program_numbered": {
-                "name": "Heating Circuit {number} Active Program",
+                "name": "Heating circuit {number} program",
                 "state": {
                     "comfort": "Comfort",
                     "comfort_cooling": "Comfort (cooling)",
@@ -627,7 +627,7 @@
                 "name": "Outside Temperature Damping Factor"
             },
             "heat_pump_state": {
-                "name": "State",
+                "name": "Operating phase",
                 "state": {
                     "off": "Off",
                     "pre_run": "Pre-run",
