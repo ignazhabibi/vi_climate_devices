@@ -14,6 +14,9 @@ from custom_components.vi_climate_devices.const import DOMAIN
 
 _COORDINATOR_LOGGER = "custom_components.vi_climate_devices.coordinator"
 
+# Vitocal 250-A has no select; the Vitopure 350 ventilation mode is one.
+_FIXTURE_BY_DOMAIN = {"select": "Vitopure350"}
+
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("success", [True, False], ids=["accepted", "rejected"])
@@ -32,8 +35,11 @@ _COORDINATOR_LOGGER = "custom_components.vi_climate_devices.coordinator"
         (
             "select",
             "select_option",
-            {"entity_id": "select.vitocal250a_dhw_mode", "option": "off"},
-            "heating.dhw.operating.modes.active",
+            {
+                "entity_id": "select.vitopure350_ventilation_operating_modes_active",
+                "option": "permanent",
+            },
+            "ventilation.operating.modes.active",
         ),
         (
             "switch",
@@ -80,12 +86,17 @@ async def test_command_response_is_logged_once_without_private_data(
     async def set_feature(device, feature, value):
         return response, device
 
-    mock_client.set_feature = AsyncMock(side_effect=set_feature)
+    client = (
+        FixtureViClient(_FIXTURE_BY_DOMAIN[domain])
+        if domain in _FIXTURE_BY_DOMAIN
+        else mock_client
+    )
+    client.set_feature = AsyncMock(side_effect=set_feature)
 
     with (
         patch(
             "custom_components.vi_climate_devices.ViessmannClient",
-            return_value=mock_client,
+            return_value=client,
         ),
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
@@ -125,7 +136,7 @@ async def test_command_response_is_logged_once_without_private_data(
         assert "gw-main" not in result_text
         assert "MOCK_GATEWAY_SERIAL" not in result_text
         assert "abc" not in result_text
-        mock_client.set_feature.assert_awaited_once()
+        client.set_feature.assert_awaited_once()
 
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()

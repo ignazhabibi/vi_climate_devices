@@ -209,7 +209,7 @@
                 "name": "Compressor {number}"
             },
             "dhw_circulation_pump": {
-                "name": "DHW Circulation Pump"
+                "name": "Circulation Pump"
             },
             "frost_protection": {
                 "name": "Frost Protection"
@@ -269,35 +269,6 @@
             },
             "heating_circuit_numbered": {
                 "name": "Heating Circuit {number}"
-            }
-        },
-        "select": {
-            "dhw_mode": {
-                "name": "DHW mode",
-                "state": {
-                    "off": "Off",
-                    "eco": "Eco",
-                    "comfort": "Comfort",
-                    "efficient": "Eco",
-                    "efficientWithMinComfort": "Comfort",
-                    "balanced": "Balanced",
-                    "standby": "Standby",
-                    "standard": "Standard"
-                }
-            },
-            "heating_circuit_operation_mode": {
-                "name": "Heating Circuit Operation Mode",
-                "state": {
-                    "heating": "Heating",
-                    "standby": "Standby"
-                }
-            },
-            "heating_circuit_operation_mode_numbered": {
-                "name": "Heating Circuit {number} Operation Mode",
-                "state": {
-                    "heating": "Heating",
-                    "standby": "Standby"
-                }
             }
         },
         "sensor": {
@@ -621,7 +592,7 @@
                 }
             },
             "internal_pump": {
-                "name": "Internal Pump"
+                "name": "Secondary Circuit Pump"
             },
             "outside_temperature_damping_factor": {
                 "name": "Outside Temperature Damping Factor"

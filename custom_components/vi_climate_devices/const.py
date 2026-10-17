@@ -57,6 +57,8 @@ IGNORED_FEATURES = [
     "heating.configuration.houseOrientation.horizontal",
     "heating.configuration.houseOrientation.vertical",
     "heating.device.variant",
+    # Set through the water heater entity only.
+    "heating.dhw.operating.modes.active",
     "heating.dhw.operating.modes.efficient.active",
     "heating.dhw.operating.modes.efficientWithMinComfort.active",
     "heating.dhw.operating.modes.off.active",
@@ -120,6 +122,8 @@ IGNORED_FEATURES = [
     re.compile(r"^heating\.bufferCylinder\..*\.status$"),
     re.compile(r"^heating\.circuits\.\d+\.active$"),
     re.compile(r"^heating\.circuits\.\d+\.name$"),
+    # Set through the climate entity only.
+    re.compile(r"^heating\.circuits\.\d+\.operating\.modes\.active$"),
     re.compile(r"^heating\.circuits\.\d+\.operating\.modes\..*\.active$"),
     re.compile(r"^heating\.circuits\.\d+\.sensors\.temperature\..*\.status$"),
     re.compile(r"^heating\.compressors\.\d+\.sensors\.pressure\..*\.status$"),

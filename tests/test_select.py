@@ -26,6 +26,41 @@ from custom_components.vi_climate_devices.const import DOMAIN
 from custom_components.vi_climate_devices.exceptions import config_entry_auth_failed
 from custom_components.vi_climate_devices.select import ViClimateSelect
 
+# Heating circuit and DHW modes have no select; the ventilation mode of the
+# Vitopure 350 is an auto-discovered select.
+VENTILATION_FIXTURE = "Vitopure350"
+VENTILATION_MODE_FEATURE = "ventilation.operating.modes.active"
+VENTILATION_MODE_ENTITY = "select.vitopure350_ventilation_operating_modes_active"
+
+
+async def _setup_integration(hass: HomeAssistant, client: FixtureViClient) -> None:
+    """Set up the integration with the given fixture client."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "client_id": "123",
+            "token": {"access_token": "mock", "expires_at": 9999999999},
+        },
+    )
+    entry.add_to_hass(hass)
+    with (
+        patch(
+            "custom_components.vi_climate_devices.ViessmannClient",
+            return_value=client,
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+            return_value=None,
+        ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
 
 @pytest.mark.asyncio
 async def test_select_handles_device_removed_by_refresh() -> None:
@@ -69,252 +104,107 @@ async def test_select_handles_device_removed_by_refresh() -> None:
 
 
 @pytest.mark.asyncio
-async def test_select_creation_and_services(hass: HomeAssistant, mock_client):
-    """Test select entity creation and service calls."""
-    # Arrange: Mock Config Entry.
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "client_id": "123",
-            "token": {
-                "access_token": "mock_access_token",
-                "refresh_token": "mock_refresh_token",
-                "expires_at": 3800000000,
-                "token_type": "Bearer",
-            },
-        },
-    )
-    entry.add_to_hass(hass)
+async def test_heating_and_dhw_modes_have_no_select(hass: HomeAssistant, mock_client):
+    """Set heating circuit and DHW modes only through climate and water heater."""
+    # Act: Set up the integration with the Vitocal 250-A fixture.
+    await _setup_integration(hass, mock_client)
 
-    # Spy on set_feature to verify service calls.
-    mock_client.set_feature = AsyncMock(wraps=mock_client.set_feature)
-
-    with (
-        patch(
-            "custom_components.vi_climate_devices.ViessmannClient",
-            return_value=mock_client,
-        ),
-        patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-            return_value=MagicMock(),
-        ),
-        patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
-            return_value=None,
-        ),
-        patch("custom_components.vi_climate_devices.HAAuth"),
-    ):
-        # Act: Load Integration.
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        # Test 1: DHW Mode (Standard Entity).
-
-        # Verify initial state and options from fixture.
-        dhw_mode = hass.states.get("select.vitocal250a_dhw_mode")
-        assert dhw_mode is not None
-        assert dhw_mode.state == "efficient"
-        assert "efficientWithMinComfort" in dhw_mode.attributes["options"]
-
-        # Act: Select 'efficientWithMinComfort' option.
-        await hass.services.async_call(
-            "select",
-            SERVICE_SELECT_OPTION,
-            {
-                "entity_id": "select.vitocal250a_dhw_mode",
-                "option": "efficientWithMinComfort",
-            },
-            blocking=True,
-        )
-
-        # Verify Service Call.
-        assert mock_client.set_feature.call_count == 1
-        args, _ = mock_client.set_feature.call_args
-        assert args[1].name == "heating.dhw.operating.modes.active"
-        assert args[2] == "efficientWithMinComfort"
-
-        # Verify Optimistic Update (Option A).
-        dhw_mode = hass.states.get("select.vitocal250a_dhw_mode")
-        assert dhw_mode is not None
-        assert dhw_mode.state == "efficientWithMinComfort"
-
-        # Test 2: Circuit Mode (Circuit 0).
-
-        # Reset Mock.
-        mock_client.set_feature.reset_mock()
-
-        # Verify initial state.
-        circuit_mode = hass.states.get(
-            "select.vitocal250a_heating_circuit_operation_mode"
-        )
-        assert circuit_mode is not None
-        assert circuit_mode.state == "heating"
-
-        # Act: Select 'standby' option.
-        await hass.services.async_call(
-            "select",
-            SERVICE_SELECT_OPTION,
-            {
-                "entity_id": "select.vitocal250a_heating_circuit_operation_mode",
-                "option": "standby",
-            },
-            blocking=True,
-        )
-
-        # Verify Service Call.
-        assert mock_client.set_feature.call_count == 1
-        args, _ = mock_client.set_feature.call_args
-        assert args[1].name == "heating.circuits.0.operating.modes.active"
-        assert args[2] == "standby"
-
-        # Verify Optimistic Update.
-        circuit_mode = hass.states.get(
-            "select.vitocal250a_heating_circuit_operation_mode"
-        )
-        assert circuit_mode is not None
-        assert circuit_mode.state == "standby"
-
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
+    # Assert: No select exists, the climate and water heater entities do.
+    assert hass.states.async_entity_ids("select") == []
+    assert hass.states.get("climate.vitocal250a_heating_circuit") is not None
+    assert hass.states.get("water_heater.vitocal250a_dhw_water_heater") is not None
 
 
 @pytest.mark.asyncio
-async def test_select_error_handling(hass: HomeAssistant, mock_client):
-    """Test select error handling and rollback (Option B)."""
-    # Arrange: Setup integration.
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "client_id": "123",
-            "token": {"access_token": "mock", "expires_at": 9999999999},
-        },
+async def test_select_creation_and_services(hass: HomeAssistant):
+    """Create an auto-discovered select and write the selected option."""
+    # Arrange: Spy on writes of the ventilation fixture client.
+    client = FixtureViClient(VENTILATION_FIXTURE)
+    client.set_feature = AsyncMock(wraps=client.set_feature)
+    await _setup_integration(hass, client)
+
+    # Assert: The initial state and options come from the fixture.
+    state = hass.states.get(VENTILATION_MODE_ENTITY)
+    assert state is not None
+    assert state.state == "sensorDriven"
+    assert state.attributes["options"] == ["permanent", "ventilation", "sensorDriven"]
+
+    # Act: Select another option.
+    await hass.services.async_call(
+        "select",
+        SERVICE_SELECT_OPTION,
+        {"entity_id": VENTILATION_MODE_ENTITY, "option": "permanent"},
+        blocking=True,
     )
-    entry.add_to_hass(hass)
 
-    # Simulate API Error.
-    async def mock_set_feature_error(device, feature, value):
-        raise HomeAssistantError("API Error")
-
-    mock_client.set_feature = AsyncMock(side_effect=mock_set_feature_error)
-
-    with (
-        patch(
-            "custom_components.vi_climate_devices.ViessmannClient",
-            return_value=mock_client,
-        ),
-        patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-            return_value=MagicMock(),
-        ),
-        patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
-            return_value=None,
-        ),
-        patch("custom_components.vi_climate_devices.HAAuth"),
-    ):
-        # Act: Initialize integration.
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        # Initial State Check.
-        entity_id = "select.vitocal250a_dhw_mode"
-        state = hass.states.get(entity_id)
-        assert state is not None
-        original_state = state.state
-        assert original_state == "efficient"
-
-        # Act: Try to change option (Should fail).
-        target_option = "off"
-
-        with pytest.raises(HomeAssistantError) as error:
-            await hass.services.async_call(
-                "select",
-                SERVICE_SELECT_OPTION,
-                {"entity_id": entity_id, "option": target_option},
-                blocking=True,
-            )
-
-        assert error.value.translation_domain == DOMAIN
-        assert error.value.translation_key == "selection_failed"
-        assert error.value.translation_placeholders is None
-        assert isinstance(error.value.__cause__, HomeAssistantError)
-
-        # Assert: Rollback occurred.
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == original_state
-
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
+    # Assert: The option is written and shown.
+    assert client.set_feature.call_count == 1
+    args, _ = client.set_feature.call_args
+    assert args[1].name == VENTILATION_MODE_FEATURE
+    assert args[2] == "permanent"
+    state = hass.states.get(VENTILATION_MODE_ENTITY)
+    assert state is not None
+    assert state.state == "permanent"
 
 
 @pytest.mark.asyncio
-async def test_select_api_rejection(hass: HomeAssistant, mock_client):
-    """Test select handling of API logical rejection (success=False)."""
-    # Arrange: Setup integration.
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "client_id": "123",
-            "token": {"access_token": "mock", "expires_at": 9999999999},
-        },
-    )
-    entry.add_to_hass(hass)
+async def test_select_error_handling(hass: HomeAssistant):
+    """Roll back the optimistic option when the write fails."""
+    # Arrange: Fail every write.
+    client = FixtureViClient(VENTILATION_FIXTURE)
+    client.set_feature = AsyncMock(side_effect=HomeAssistantError("API Error"))
+    await _setup_integration(hass, client)
 
-    # Simulate API Logical Failure.
+    # Act: Try to change the option.
+    with pytest.raises(HomeAssistantError) as error:
+        await hass.services.async_call(
+            "select",
+            SERVICE_SELECT_OPTION,
+            {"entity_id": VENTILATION_MODE_ENTITY, "option": "permanent"},
+            blocking=True,
+        )
 
-    async def mock_set_feature_rejection(device, feature, value):
+    # Assert: The error is translated and the previous option is restored.
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "selection_failed"
+    assert error.value.translation_placeholders is None
+    assert isinstance(error.value.__cause__, HomeAssistantError)
+    state = hass.states.get(VENTILATION_MODE_ENTITY)
+    assert state is not None
+    assert state.state == "sensorDriven"
+
+
+@pytest.mark.asyncio
+async def test_select_api_rejection(hass: HomeAssistant):
+    """Roll back the optimistic option when the API rejects the command."""
+
+    # Arrange: Reject every write logically.
+    async def reject(device, feature, value):
         response = CommandResponse(
             success=False, message="Rejected", reason="DEVICE_COMMUNICATION_ERROR"
         )
         return (response, device)
 
-    mock_client.set_feature = AsyncMock(side_effect=mock_set_feature_rejection)
+    client = FixtureViClient(VENTILATION_FIXTURE)
+    client.set_feature = AsyncMock(side_effect=reject)
+    await _setup_integration(hass, client)
 
-    with (
-        patch(
-            "custom_components.vi_climate_devices.ViessmannClient",
-            return_value=mock_client,
-        ),
-        patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-            return_value=MagicMock(),
-        ),
-        patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
-            return_value=None,
-        ),
-        patch("custom_components.vi_climate_devices.HAAuth"),
-    ):
-        # Act: Initialize.
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    # Act: Try to change the option.
+    with pytest.raises(ServiceValidationError) as error:
+        await hass.services.async_call(
+            "select",
+            SERVICE_SELECT_OPTION,
+            {"entity_id": VENTILATION_MODE_ENTITY, "option": "permanent"},
+            blocking=True,
+        )
 
-        entity_id = "select.vitocal250a_dhw_mode"
-        state = hass.states.get(entity_id)
-        assert state is not None
-        original_state = state.state  # "efficient"
-
-        # Act: Try to change option.
-        with pytest.raises(ServiceValidationError) as error:
-            await hass.services.async_call(
-                "select",
-                SERVICE_SELECT_OPTION,
-                {"entity_id": entity_id, "option": "off"},
-                blocking=True,
-            )
-
-        assert error.value.translation_domain == DOMAIN
-        assert error.value.translation_key == "command_rejected"
-        assert error.value.translation_placeholders is None
-
-        # Assert: Rollback occurred.
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == original_state
-
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
+    # Assert: The rejection is translated and the previous option is restored.
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "command_rejected"
+    assert error.value.translation_placeholders is None
+    state = hass.states.get(VENTILATION_MODE_ENTITY)
+    assert state is not None
+    assert state.state == "sensorDriven"
 
 
 @pytest.mark.asyncio
