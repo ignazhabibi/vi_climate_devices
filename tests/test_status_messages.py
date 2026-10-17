@@ -26,7 +26,7 @@ from custom_components.vi_climate_devices.status_messages import (
     parse_status_messages,
 )
 
-HEAT_PUMP_STATE_ENTITY = "sensor.vitocal250a_heat_pump_state"
+HEAT_PUMP_STATE_ENTITY = "sensor.vitocal250a_state"
 HEATING_ROD_ENTITY = "sensor.vitocal250a_heating_rod"
 DHW_HEATING_ENTITY = "binary_sensor.vitocal250a_dhw_heating_active"
 
@@ -149,6 +149,8 @@ async def test_fixture_reports_off_and_all_active_codes(
     state = hass.states.get(HEAT_PUMP_STATE_ENTITY)
     assert state is not None
     assert state.state == "off"
+    # Home Assistant prefixes the device name, so the entity name is only "State".
+    assert state.attributes["friendly_name"] == "Vitocal250A State"
     assert state.attributes["device_class"] == "enum"
     assert state.attributes["options"] == list(HEAT_PUMP_STATE_CODES.values())
     assert state.attributes["state_code"] == "S.123"

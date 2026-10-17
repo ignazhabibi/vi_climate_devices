@@ -598,7 +598,7 @@
                 "name": "Dämpfungsfaktor Außentemperatur"
             },
             "heat_pump_state": {
-                "name": "Wärmepumpe Zustand",
+                "name": "Zustand",
                 "state": {
                     "off": "Aus",
                     "pre_run": "Anlauf",

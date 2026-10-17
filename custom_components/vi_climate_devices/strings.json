@@ -627,7 +627,7 @@
                 "name": "Outside Temperature Damping Factor"
             },
             "heat_pump_state": {
-                "name": "Heat pump state",
+                "name": "State",
                 "state": {
                     "off": "Off",
                     "pre_run": "Pre-run",
