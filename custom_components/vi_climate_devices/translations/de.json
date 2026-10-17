@@ -209,7 +209,7 @@
                 "name": "Verdichter {number}"
             },
             "dhw_circulation_pump": {
-                "name": "Zirkulationspumpe Warmwasser"
+                "name": "Zirkulationspumpe"
             },
             "frost_protection": {
                 "name": "Frostschutz"
@@ -592,7 +592,7 @@
                 }
             },
             "internal_pump": {
-                "name": "Interne Pumpe"
+                "name": "Sekundärkreispumpe"
             },
             "outside_temperature_damping_factor": {
                 "name": "Dämpfungsfaktor Außentemperatur"

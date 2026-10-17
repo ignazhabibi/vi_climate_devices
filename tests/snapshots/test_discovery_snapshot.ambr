@@ -132,6 +132,15 @@
     dict({
       'attributes': dict({
         'device_class': 'running',
+        'friendly_name': 'Vitocal250A Circulation Pump',
+        'viessmann_feature_name': 'heating.dhw.pumps.circulation.status',
+      }),
+      'entity_id': 'binary_sensor.vitocal250a_circulation_pump',
+      'state': 'off',
+    }),
+    dict({
+      'attributes': dict({
+        'device_class': 'running',
         'friendly_name': 'Vitocal250A Compressor',
         'viessmann_feature_name': 'heating.compressors.0.active',
       }),
@@ -154,15 +163,6 @@
       }),
       'entity_id': 'binary_sensor.vitocal250a_dhw_active',
       'state': 'on',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'running',
-        'friendly_name': 'Vitocal250A DHW Circulation Pump',
-        'viessmann_feature_name': 'heating.dhw.pumps.circulation.status',
-      }),
-      'entity_id': 'binary_sensor.vitocal250a_dhw_circulation_pump',
-      'state': 'off',
     }),
     dict({
       'attributes': dict({
@@ -1163,16 +1163,6 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Internal Pump',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
-        'viessmann_feature_name': 'heating.boiler.pumps.internal.current',
-      }),
-      'entity_id': 'sensor.vitocal250a_internal_pump',
-      'state': '0',
-    }),
-    dict({
-      'attributes': dict({
         'friendly_name': 'Vitocal250A Internal Pump One Default Limit',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
@@ -1454,6 +1444,16 @@
       }),
       'entity_id': 'sensor.vitocal250a_secondary_circuit_operation_state_target_value',
       'state': 'standby',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Secondary Circuit Pump',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+        'viessmann_feature_name': 'heating.boiler.pumps.internal.current',
+      }),
+      'entity_id': 'sensor.vitocal250a_secondary_circuit_pump',
+      'state': '0',
     }),
     dict({
       'attributes': dict({

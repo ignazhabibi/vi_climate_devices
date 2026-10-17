@@ -209,7 +209,7 @@
                 "name": "Compressor {number}"
             },
             "dhw_circulation_pump": {
-                "name": "DHW Circulation Pump"
+                "name": "Circulation Pump"
             },
             "frost_protection": {
                 "name": "Frost Protection"
@@ -592,7 +592,7 @@
                 }
             },
             "internal_pump": {
-                "name": "Internal Pump"
+                "name": "Secondary Circuit Pump"
             },
             "outside_temperature_damping_factor": {
                 "name": "Outside Temperature Damping Factor"
