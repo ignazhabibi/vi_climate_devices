@@ -181,6 +181,30 @@
             },
             "heating_rod_stage": {
                 "default": "mdi:heating-coil"
+            },
+            "expansion_valve_opening": {
+                "default": "mdi:valve"
+            },
+            "expansion_valve_opening_numbered": {
+                "default": "mdi:valve"
+            },
+            "inverter_power": {
+                "default": "mdi:flash"
+            },
+            "inverter_power_numbered": {
+                "default": "mdi:flash"
+            },
+            "inverter_current": {
+                "default": "mdi:current-ac"
+            },
+            "inverter_current_numbered": {
+                "default": "mdi:current-ac"
+            },
+            "inverter_temperature": {
+                "default": "mdi:thermometer"
+            },
+            "inverter_temperature_numbered": {
+                "default": "mdi:thermometer"
             }
         },
         "switch": {

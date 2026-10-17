@@ -425,6 +425,56 @@ SENSOR_TEMPLATES: tuple[EntityTemplate[SensorEntityDescription], ...] = (
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
+    # Electronic expansion valve opening; the API reports the target opening,
+    # which the Viessmann display shows as the opening width.
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.sensors\.valve\.(\d+)\.expansion\.target$"),
+        description=SensorEntityDescription(
+            key="placeholder",
+            translation_key="expansion_valve_opening",
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    # Inverter Power Output
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.inverters\.(\d+)\.sensors\.power\.output$"),
+        description=SensorEntityDescription(
+            key="placeholder",
+            translation_key="inverter_power",
+            native_unit_of_measurement=UnitOfPower.WATT,
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    # Inverter Current
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.inverters\.(\d+)\.sensors\.power\.current$"),
+        description=SensorEntityDescription(
+            key="placeholder",
+            translation_key="inverter_current",
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    # Inverter Power Module Temperature
+    EntityTemplate(
+        pattern=re.compile(
+            r"^heating\.inverters\.(\d+)\.sensors\.temperature\.powerModule$"
+        ),
+        description=SensorEntityDescription(
+            key="placeholder",
+            translation_key="inverter_temperature",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
 )
 
 

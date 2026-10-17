@@ -617,6 +617,30 @@
                     "stage_2": "Stufe 2",
                     "stage_3": "Stufe 3"
                 }
+            },
+            "expansion_valve_opening": {
+                "name": "Expansionsventil Öffnung"
+            },
+            "expansion_valve_opening_numbered": {
+                "name": "Expansionsventil {number} Öffnung"
+            },
+            "inverter_power": {
+                "name": "Inverter Leistung"
+            },
+            "inverter_power_numbered": {
+                "name": "Inverter {number} Leistung"
+            },
+            "inverter_current": {
+                "name": "Inverter Strom"
+            },
+            "inverter_current_numbered": {
+                "name": "Inverter {number} Strom"
+            },
+            "inverter_temperature": {
+                "name": "Inverter Temperatur"
+            },
+            "inverter_temperature_numbered": {
+                "name": "Inverter {number} Temperatur"
             }
         },
         "switch": {
