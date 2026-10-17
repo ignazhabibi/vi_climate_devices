@@ -44,17 +44,6 @@
                 "default": "mdi:thermometer-high"
             }
         },
-        "select": {
-            "dhw_mode": {
-                "default": "mdi:water-boiler-auto"
-            },
-            "heating_circuit_operation_mode": {
-                "default": "mdi:home-thermometer"
-            },
-            "heating_circuit_operation_mode_numbered": {
-                "default": "mdi:home-thermometer"
-            }
-        },
         "sensor": {
             "heat_production_current": {
                 "default": "mdi:heat-wave"

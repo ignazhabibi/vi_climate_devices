@@ -651,35 +651,6 @@
                 "name": "DHW Hygiene"
             }
         },
-        "select": {
-            "dhw_mode": {
-                "name": "DHW mode",
-                "state": {
-                    "off": "Off",
-                    "eco": "Eco",
-                    "comfort": "Comfort",
-                    "efficient": "Eco",
-                    "efficientWithMinComfort": "Comfort",
-                    "balanced": "Balanced",
-                    "standby": "Standby",
-                    "standard": "Standard"
-                }
-            },
-            "heating_circuit_operation_mode": {
-                "name": "Heating Circuit Operation Mode",
-                "state": {
-                    "heating": "Heating",
-                    "standby": "Standby"
-                }
-            },
-            "heating_circuit_operation_mode_numbered": {
-                "name": "Heating Circuit {number} Operation Mode",
-                "state": {
-                    "heating": "Heating",
-                    "standby": "Standby"
-                }
-            }
-        },
         "water_heater": {
             "dhw_water_heater": {
                 "name": "DHW Water Heater",

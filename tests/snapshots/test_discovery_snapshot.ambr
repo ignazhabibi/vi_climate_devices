@@ -465,29 +465,6 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A DHW mode',
-        'options': list([
-          'efficient',
-          'efficientWithMinComfort',
-          'off',
-        ]),
-      }),
-      'entity_id': 'select.vitocal250a_dhw_mode',
-      'state': 'efficient',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Heating Circuit Operation Mode',
-        'options': list([
-          'heating',
-          'standby',
-        ]),
-      }),
-      'entity_id': 'select.vitocal250a_heating_circuit_operation_mode',
-      'state': 'heating',
-    }),
-    dict({
-      'attributes': dict({
         'device_class': 'enum',
         'friendly_name': 'Vitocal250A 4/3-Way Valve Position',
         'options': list([

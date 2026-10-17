@@ -2,23 +2,18 @@
 
 from __future__ import annotations
 
-import dataclasses
-import re
-
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from vi_api_client import Device, Feature
+from vi_api_client import Feature
 
 from . import ViClimateDevicesConfigEntry
 from .const import IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
 from .entity import (
-    EntityTemplate,
     ViClimateFeatureEntity,
     async_setup_dynamic_entities,
-    get_template_translation,
 )
 from .exceptions import (
     ExceptionTranslationKey,
@@ -27,53 +22,6 @@ from .exceptions import (
 from .utils import beautify_name, is_feature_ignored
 
 PARALLEL_UPDATES = 0
-
-
-SELECT_TYPES: dict[str, SelectEntityDescription] = {
-    "heating.dhw.operating.modes.active": SelectEntityDescription(
-        key="heating.dhw.operating.modes.active",
-        translation_key="dhw_mode",
-        entity_category=EntityCategory.CONFIG,
-    ),
-}
-
-
-# Templates with regex patterns for dynamic feature names
-SELECT_TEMPLATES: tuple[EntityTemplate[SelectEntityDescription], ...] = (
-    # Heating Circuit Operating Modes (heating.circuits.N.operating.modes.active)
-    EntityTemplate(
-        pattern=re.compile(r"^heating\.circuits\.(\d+)\.operating\.modes\.active$"),
-        description=SelectEntityDescription(
-            key="placeholder",
-            translation_key="heating_circuit_operation_mode",
-            entity_category=EntityCategory.CONFIG,
-        ),
-    ),
-)
-
-
-def _get_select_entity_description(
-    feature_name: str, device: Device
-) -> tuple[SelectEntityDescription, dict[str, str]] | None:
-    """Find a matching entity description for a dynamic feature name.
-
-    Returns:
-        tuple: (description, translation_placeholders) or None
-    """
-    for template in SELECT_TEMPLATES:
-        match = template.pattern.match(feature_name)
-        if match:
-            base_desc = template.description
-            translation_key, placeholders = get_template_translation(
-                match, str(base_desc.translation_key), device
-            )
-            new_desc = dataclasses.replace(
-                base_desc,
-                key=feature_name,
-                translation_key=translation_key,
-            )
-            return new_desc, placeholders
-    return None
 
 
 async def async_setup_entry(
@@ -108,29 +56,8 @@ def _discover_selects(
                 if not feature.is_writable:
                     continue
 
-                # 1. Defined Entities
-                if feature.name in SELECT_TYPES:
-                    desc = SELECT_TYPES[feature.name]
-                    entities.append(
-                        ViClimateSelect(coordinator, map_key, feature.name, desc)
-                    )
-                    continue
-
-                # 2. Dynamic Templates
-                if match_result := _get_select_entity_description(feature.name, device):
-                    description, placeholders = match_result
-                    entities.append(
-                        ViClimateSelect(
-                            coordinator,
-                            map_key,
-                            feature.name,
-                            description,
-                            translation_placeholders=placeholders,
-                        )
-                    )
-                    continue
-
-                # Automatic Discovery (Fallback)
+                # Automatic Discovery. Heating circuit and DHW modes are set
+                # through the climate and water heater entities only.
                 # Control must exist and have enum options
                 if feature.control and feature.control.options is not None:
                     description = SelectEntityDescription(

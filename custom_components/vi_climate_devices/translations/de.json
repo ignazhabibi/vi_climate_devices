@@ -651,35 +651,6 @@
                 "name": "Warmwasser Hygieneprogramm"
             }
         },
-        "select": {
-            "dhw_mode": {
-                "name": "Warmwassermodus",
-                "state": {
-                    "off": "Aus",
-                    "eco": "Eco",
-                    "comfort": "Komfort",
-                    "efficient": "Eco",
-                    "efficientWithMinComfort": "Komfort",
-                    "balanced": "Normal",
-                    "standby": "Standby",
-                    "standard": "Standard"
-                }
-            },
-            "heating_circuit_operation_mode": {
-                "name": "Betriebsart Heizkreis",
-                "state": {
-                    "heating": "Heizen",
-                    "standby": "Standby"
-                }
-            },
-            "heating_circuit_operation_mode_numbered": {
-                "name": "Betriebsart Heizkreis {number}",
-                "state": {
-                    "heating": "Heizen",
-                    "standby": "Standby"
-                }
-            }
-        },
         "water_heater": {
             "dhw_water_heater": {
                 "name": "Warmwasser",

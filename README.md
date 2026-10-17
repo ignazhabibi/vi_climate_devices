@@ -116,7 +116,7 @@ account, not that setup failed.
 | `binary_sensor` | Operating states such as compressor, pump, defrosting, frost-protection, and hot-water heating status; utility lock and grid power limitation (disabled by default) |
 | `climate` | Heating and cooling circuit target temperature and HVAC mode; the active program is available as the `active_program` attribute |
 | `number` | Heating-curve values, temperature limits, hot-water target temperature, and selected configuration values |
-| `select` | Hot-water and heating-circuit operation modes where exposed by the API |
+| `select` | Other operation modes exposed by the API, such as ventilation modes; heating-circuit and hot-water modes are set through `climate` and `water_heater` |
 | `sensor` | Temperatures, pressure, humidity, flow, energy, power, SCOP, diagnostic statistics, and the heat pump state and heating rod stage from the active status messages |
 | `switch` | One-time domestic hot-water charge, hygiene function, and supported boolean controls |
 | `water_heater` | Domestic hot-water target temperature and operation mode |

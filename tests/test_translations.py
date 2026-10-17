@@ -15,7 +15,6 @@ from custom_components.vi_climate_devices.binary_sensor import (
 )
 from custom_components.vi_climate_devices.exceptions import ExceptionTranslationKey
 from custom_components.vi_climate_devices.number import NUMBER_TEMPLATES, NUMBER_TYPES
-from custom_components.vi_climate_devices.select import SELECT_TEMPLATES, SELECT_TYPES
 from custom_components.vi_climate_devices.sensor import (
     ACTIVE_PROGRAM_OPTIONS,
     NOISE_REDUCTION_OPTIONS,
@@ -63,11 +62,6 @@ def get_entity_definitions(platform):
         for t in NUMBER_TEMPLATES:
             descriptions.append(t.description)
 
-    elif platform == "select":
-        descriptions.extend(SELECT_TYPES.values())
-        for template in SELECT_TEMPLATES:
-            descriptions.append(template.description)
-
     elif platform == "switch":
         descriptions.extend(SWITCH_TYPES.values())
 
@@ -96,10 +90,6 @@ MIGRATED_ENTITY_ICONS = {
         "heating_circuit_program_temperature": "mdi:thermometer",
         "heating_circuit_temperature_limit_min": "mdi:thermometer-low",
         "heating_circuit_temperature_limit_max": "mdi:thermometer-high",
-    },
-    "select": {
-        "dhw_mode": "mdi:water-boiler-auto",
-        "heating_circuit_operation_mode": "mdi:home-thermometer",
     },
     "sensor": {
         "heating_rod_hours": "mdi:counter",
@@ -146,7 +136,7 @@ def translations():
 
 @pytest.mark.parametrize(
     "platform",
-    ["sensor", "binary_sensor", "number", "select", "switch", "water_heater"],
+    ["sensor", "binary_sensor", "number", "switch", "water_heater"],
 )
 def test_entity_has_translation_key(platform):
     """Verify that every entity description has a translation_key set."""
@@ -164,7 +154,7 @@ def test_entity_has_translation_key(platform):
 
 @pytest.mark.parametrize(
     "platform",
-    ["sensor", "binary_sensor", "number", "select", "switch", "water_heater"],
+    ["sensor", "binary_sensor", "number", "switch", "water_heater"],
 )
 def test_translation_keys_exist(platform, translations):
     """Verify that all used translation keys exist in translation files."""
@@ -237,12 +227,9 @@ def test_migrated_entity_icons_are_translated_without_direct_descriptions(
 def test_dhw_mode_translations_match_api_modes(translations):
     """Keep the English DHW mode labels aligned with their API semantics."""
     for translation in (translations["strings"], translations["en"]):
-        for platform in ("select", "water_heater"):
-            states = translation["entity"][platform][
-                "dhw_mode" if platform == "select" else "dhw_water_heater"
-            ]["state"]
-            assert states["efficient"] == "Eco"
-            assert states["efficientWithMinComfort"] == "Comfort"
+        states = translation["entity"]["water_heater"]["dhw_water_heater"]["state"]
+        assert states["efficient"] == "Eco"
+        assert states["efficientWithMinComfort"] == "Comfort"
 
 
 def test_exception_translation_keys_exist_in_all_maintained_translations(
@@ -322,7 +309,6 @@ def test_numbered_names_have_a_plain_variant(translations):
             ("sensor", SENSOR_TEMPLATES),
             ("binary_sensor", BINARY_SENSOR_TEMPLATES),
             ("number", NUMBER_TEMPLATES),
-            ("select", SELECT_TEMPLATES),
         )
         for template in templates
     }
