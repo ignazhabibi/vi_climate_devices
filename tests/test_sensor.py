@@ -805,3 +805,76 @@ async def test_enum_sensor_without_string_value_is_unknown(
     # Act and assert: A device missing after refresh is unknown as well.
     coordinator.data = {}
     assert sensor.native_value is None
+
+
+REFRIGERANT_CIRCUIT_SENSORS = {
+    "heating.sensors.valve.0.expansion.target": (
+        "Vitocal250A Expansion Valve 1 Opening",
+        "50",
+        "%",
+    ),
+    "heating.sensors.valve.1.expansion.target": (
+        "Vitocal250A Expansion Valve 2 Opening",
+        "0",
+        "%",
+    ),
+    "heating.inverters.0.sensors.power.output": (
+        "Vitocal250A Inverter Power",
+        "0",
+        "W",
+    ),
+    "heating.inverters.0.sensors.power.current": (
+        "Vitocal250A Inverter Current",
+        "0",
+        "A",
+    ),
+    "heating.inverters.0.sensors.temperature.powerModule": (
+        "Vitocal250A Inverter Temperature",
+        "25.7",
+        "°C",
+    ),
+}
+
+
+@pytest.mark.asyncio
+async def test_refrigerant_circuit_sensors_are_defined_on_tested_devices(
+    hass: HomeAssistant, mock_client
+):
+    """Keep valve and inverter sensors enabled and named on tested devices."""
+    # Arrange: Treat the fixture as a tested device and keep a renamed entity ID.
+    device = (await mock_client.get_full_installation_status("99999"))[0]
+    unique_id_prefix = f"{device.gateway_serial}-{device.id}"
+    registry = er.async_get(hass)
+    renamed = registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{unique_id_prefix}-heating.inverters.0.sensors.power.output",
+        suggested_object_id="vitocal250a_aktueller_stromverbrauch_0",
+    )
+
+    # Act: Set up the integration.
+    with patch(
+        "custom_components.vi_climate_devices.sensor.TESTED_DEVICES",
+        [device.model_id],
+    ):
+        await _setup_integration(hass, mock_client)
+
+    # Assert: Each sensor keeps its feature-based unique ID and is enabled.
+    for feature_name, (name, value, unit) in REFRIGERANT_CIRCUIT_SENSORS.items():
+        entity_id = registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{unique_id_prefix}-{feature_name}"
+        )
+        assert entity_id is not None
+        registry_entry = registry.async_get(entity_id)
+        assert registry_entry is not None
+        assert registry_entry.disabled_by is None
+        assert registry_entry.entity_category == "diagnostic"
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.attributes["friendly_name"] == name
+        assert state.state == value
+        assert state.attributes["unit_of_measurement"] == unit
+
+    # Assert: An existing entity ID survives the new name.
+    assert renamed.entity_id == "sensor.vitocal250a_aktueller_stromverbrauch_0"
+    assert hass.states.get(renamed.entity_id) is not None

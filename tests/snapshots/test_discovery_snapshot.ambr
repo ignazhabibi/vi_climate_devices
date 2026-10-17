@@ -991,6 +991,26 @@
     }),
     dict({
       'attributes': dict({
+        'friendly_name': 'Vitocal250A Expansion Valve 1 Opening',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+        'viessmann_feature_name': 'heating.sensors.valve.0.expansion.target',
+      }),
+      'entity_id': 'sensor.vitocal250a_expansion_valve_1_opening',
+      'state': '50',
+    }),
+    dict({
+      'attributes': dict({
+        'friendly_name': 'Vitocal250A Expansion Valve 2 Opening',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+        'viessmann_feature_name': 'heating.sensors.valve.1.expansion.target',
+      }),
+      'entity_id': 'sensor.vitocal250a_expansion_valve_2_opening',
+      'state': '0',
+    }),
+    dict({
+      'attributes': dict({
         'friendly_name': 'Vitocal250A Fan 1 Speed',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
@@ -1352,34 +1372,34 @@
     dict({
       'attributes': dict({
         'device_class': 'current',
-        'friendly_name': 'Vitocal250A Inverters 0 Sensors Power Current',
+        'friendly_name': 'Vitocal250A Inverter Current',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
         'viessmann_feature_name': 'heating.inverters.0.sensors.power.current',
       }),
-      'entity_id': 'sensor.vitocal250a_inverters_0_sensors_power_current',
+      'entity_id': 'sensor.vitocal250a_inverter_current',
       'state': '0',
     }),
     dict({
       'attributes': dict({
         'device_class': 'power',
-        'friendly_name': 'Vitocal250A Inverters 0 Sensors Power Output',
+        'friendly_name': 'Vitocal250A Inverter Power',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
         'viessmann_feature_name': 'heating.inverters.0.sensors.power.output',
       }),
-      'entity_id': 'sensor.vitocal250a_inverters_0_sensors_power_output',
+      'entity_id': 'sensor.vitocal250a_inverter_power',
       'state': '0',
     }),
     dict({
       'attributes': dict({
         'device_class': 'temperature',
-        'friendly_name': 'Vitocal250A Inverters 0 Sensors Temperature Power Module',
+        'friendly_name': 'Vitocal250A Inverter Temperature',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
         'viessmann_feature_name': 'heating.inverters.0.sensors.temperature.powerModule',
       }),
-      'entity_id': 'sensor.vitocal250a_inverters_0_sensors_temperature_power_module',
+      'entity_id': 'sensor.vitocal250a_inverter_temperature',
       'state': '25.7',
     }),
     dict({
@@ -1534,26 +1554,6 @@
       }),
       'entity_id': 'sensor.vitocal250a_sensors_temperature_allengra',
       'state': '35.9',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Sensors Valve 0 Expansion Target',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
-        'viessmann_feature_name': 'heating.sensors.valve.0.expansion.target',
-      }),
-      'entity_id': 'sensor.vitocal250a_sensors_valve_0_expansion_target',
-      'state': '50',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Sensors Valve 1 Expansion Target',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
-        'viessmann_feature_name': 'heating.sensors.valve.1.expansion.target',
-      }),
-      'entity_id': 'sensor.vitocal250a_sensors_valve_1_expansion_target',
-      'state': '0',
     }),
     dict({
       'attributes': dict({
