@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, tzinfo
 
 from vi_api_client import Device, FeatureValue, JsonValue
 
@@ -56,12 +56,18 @@ class StatusMessage:
     bus_address: str | None
     since: datetime | None
 
-    def as_attribute(self) -> dict[str, JsonValue]:
-        """Return the message as a state attribute entry with a local time."""
+    def as_attribute(self, time_zone: tzinfo) -> dict[str, JsonValue]:
+        """Return the message as a state attribute entry.
+
+        The activation time is local time of the installation, so the time zone
+        is attached without converting the wall-clock time.
+        """
         return {
             "code": self.code,
             "bus_address": self.bus_address,
-            "since": self.since.isoformat() if self.since else None,
+            "since": (
+                self.since.replace(tzinfo=time_zone).isoformat() if self.since else None
+            ),
         }
 
 
@@ -116,8 +122,10 @@ def parse_status_messages(value: FeatureValue) -> list[StatusMessage] | None:
     return messages
 
 
-def get_heat_pump_state(messages: Iterable[StatusMessage]) -> str | None:
-    """Return the most recently activated heat pump state, if any is active.
+def get_heat_pump_state_message(
+    messages: Iterable[StatusMessage],
+) -> StatusMessage | None:
+    """Return the most recently activated heat pump state message, if any.
 
     Messages without an activation time rank behind every timed message.
     """
@@ -126,8 +134,15 @@ def get_heat_pump_state(messages: Iterable[StatusMessage]) -> str | None:
     ]
     if not state_messages:
         return None
-    newest = max(state_messages, key=lambda message: message.since or datetime.min)
-    return HEAT_PUMP_STATE_CODES[newest.code]
+    return max(state_messages, key=lambda message: message.since or datetime.min)
+
+
+def get_heat_pump_state(messages: Iterable[StatusMessage]) -> str | None:
+    """Return the most recently activated heat pump state, if any is active."""
+    state_message = get_heat_pump_state_message(messages)
+    if state_message is None:
+        return None
+    return HEAT_PUMP_STATE_CODES[state_message.code]
 
 
 def get_active_heating_rod_stages(messages: Iterable[StatusMessage]) -> list[int]:

@@ -6,6 +6,7 @@ import dataclasses
 import logging
 import re
 from collections.abc import Callable
+from datetime import tzinfo
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -27,6 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 from vi_api_client import Device, Feature, JsonValue
 
 from . import ViClimateDevicesConfigEntry
@@ -45,6 +47,7 @@ from .status_messages import (
     StatusMessage,
     get_active_heating_rod_stages,
     get_heat_pump_state,
+    get_heat_pump_state_message,
     get_heating_rod_state,
     is_heat_pump,
     parse_status_messages,
@@ -115,15 +118,26 @@ class ViClimateStatusSensorEntityDescription(SensorEntityDescription):
     """Describe a sensor derived from the active status messages."""
 
     value_fn: Callable[[list[StatusMessage]], str | None]
-    attributes_fn: Callable[[list[StatusMessage]], dict[str, JsonValue]]
+    attributes_fn: Callable[[list[StatusMessage], tzinfo], dict[str, JsonValue]]
 
 
-def _active_codes_attributes(messages: list[StatusMessage]) -> dict[str, JsonValue]:
-    """Return every active status message, including unmapped codes."""
-    return {"active_codes": [message.as_attribute() for message in messages]}
+def _heat_pump_state_attributes(
+    messages: list[StatusMessage], time_zone: tzinfo
+) -> dict[str, JsonValue]:
+    """Return the code behind the state and every active status message.
+
+    The active messages include unmapped codes.
+    """
+    state_message = get_heat_pump_state_message(messages)
+    return {
+        "state_code": state_message.code if state_message else None,
+        "active_codes": [message.as_attribute(time_zone) for message in messages],
+    }
 
 
-def _active_stages_attributes(messages: list[StatusMessage]) -> dict[str, JsonValue]:
+def _active_stages_attributes(
+    messages: list[StatusMessage], _time_zone: tzinfo
+) -> dict[str, JsonValue]:
     """Return the running heating rod stages to expose non-cumulative switching."""
     active_stages: list[JsonValue] = [*get_active_heating_rod_stages(messages)]
     return {"active_stages": active_stages}
@@ -138,7 +152,7 @@ STATUS_SENSOR_TYPES: tuple[ViClimateStatusSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=HEAT_PUMP_STATE_OPTIONS,
         value_fn=get_heat_pump_state,
-        attributes_fn=_active_codes_attributes,
+        attributes_fn=_heat_pump_state_attributes,
     ),
     ViClimateStatusSensorEntityDescription(
         key=f"{STATUS_MESSAGES_FEATURE}.heatingRodStage",
@@ -1052,6 +1066,10 @@ class ViClimateSensor(ViClimateFeatureEntity, SensorEntity):
 class ViClimateStatusSensor(ViClimateFeatureEntity, SensorEntity):
     """Sensor whose state is derived from the active status messages."""
 
+    # The full message list is current-state detail; recording it on every
+    # change would bloat the history without adding value.
+    _unrecorded_attributes = frozenset({"active_codes"})
+
     def __init__(
         self,
         coordinator: ViClimateDataUpdateCoordinator,
@@ -1085,7 +1103,11 @@ class ViClimateStatusSensor(ViClimateFeatureEntity, SensorEntity):
         attrs: dict[str, JsonValue] = {"viessmann_feature_name": self._feature_name}
         messages = self._get_messages()
         if messages is not None:
-            attrs.update(self._status_description.attributes_fn(messages))
+            attrs.update(
+                self._status_description.attributes_fn(
+                    messages, dt_util.get_default_time_zone()
+                )
+            )
         return attrs
 
     @property

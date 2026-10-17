@@ -2,6 +2,7 @@
 
 import dataclasses
 from unittest.mock import MagicMock, patch
+from zoneinfo import ZoneInfo
 
 import pytest
 from homeassistant.core import HomeAssistant
@@ -138,6 +139,9 @@ async def test_fixture_reports_off_and_all_active_codes(
     hass: HomeAssistant, mock_client
 ):
     """The Vitocal 250-A fixture is off with the heating rod switched off."""
+    # Arrange: Use the installation time zone of the fixture device.
+    await hass.config.async_set_time_zone("Europe/Berlin")
+
     # Act: Set up the integration with the unchanged fixture.
     await _setup_integration(hass, mock_client)
 
@@ -147,10 +151,15 @@ async def test_fixture_reports_off_and_all_active_codes(
     assert state.state == "off"
     assert state.attributes["device_class"] == "enum"
     assert state.attributes["options"] == list(HEAT_PUMP_STATE_CODES.values())
+    assert state.attributes["state_code"] == "S.123"
     assert state.attributes["active_codes"][:3] == [
-        {"code": "S.134", "bus_address": "1", "since": "2026-10-11T10:03:07"},
-        {"code": "S.123", "bus_address": "1", "since": "2026-10-11T10:03:04"},
-        {"code": "S.165", "bus_address": "54", "since": "2026-05-17T09:01:28"},
+        {"code": "S.134", "bus_address": "1", "since": "2026-10-11T10:03:07+02:00"},
+        {"code": "S.123", "bus_address": "1", "since": "2026-10-11T10:03:04+02:00"},
+        {
+            "code": "S.165",
+            "bus_address": "54",
+            "since": "2026-05-17T09:01:28+02:00",
+        },
     ]
     assert [entry["code"] for entry in state.attributes["active_codes"]].count(
         "S.165"
@@ -309,16 +318,57 @@ async def test_newest_state_code_wins_and_duplicates_are_kept(
     state = hass.states.get(HEAT_PUMP_STATE_ENTITY)
     assert state is not None
     assert state.state == "off"
+    assert state.attributes["state_code"] == "S.123"
     assert [
         (active["code"], active["bus_address"])
         for active in state.attributes["active_codes"]
     ] == [("S.123", "1"), ("S.129", "1"), ("S.165", "54"), ("S.165", "1")]
 
 
+@pytest.mark.parametrize(
+    ("timestamp", "expected_since"),
+    [
+        ("2026-10-17T09:24:28.000Z", "2026-10-17T09:24:28+02:00"),
+        ("2026-12-01T09:24:28.000Z", "2026-12-01T09:24:28+01:00"),
+    ],
+)
+@pytest.mark.asyncio
+async def test_since_is_installation_local_time_not_utc(
+    hass: HomeAssistant, mock_client, timestamp: str, expected_since: str
+):
+    """Read the Z-suffixed activation time as installation local time."""
+    # Arrange: Set up the integration in the installation time zone.
+    await hass.config.async_set_time_zone("Europe/Berlin")
+    entry = await _setup_integration(hass, mock_client)
+
+    # Act: Report a state code with a Z-suffixed local activation time.
+    await _publish_status_value(hass, entry, _status_value(_entry("S.123", timestamp)))
+
+    # Assert: The wall-clock time is kept and only the local offset is added.
+    state = hass.states.get(HEAT_PUMP_STATE_ENTITY)
+    assert state is not None
+    assert state.attributes["active_codes"][0]["since"] == expected_since
+
+
+@pytest.mark.asyncio
+async def test_active_codes_are_not_recorded(hass: HomeAssistant, mock_client):
+    """Exclude the message list, but not the state code, from the recorder."""
+    # Act: Set up the integration.
+    await _setup_integration(hass, mock_client)
+
+    # Assert: The entity marks only the message list as unrecorded.
+    entity = hass.data["entity_components"]["sensor"].get_entity(HEAT_PUMP_STATE_ENTITY)
+    assert entity is not None
+    unrecorded_attributes = entity._state_info["unrecorded_attributes"]
+    assert "active_codes" in unrecorded_attributes
+    assert "state_code" not in unrecorded_attributes
+
+
 @pytest.mark.asyncio
 async def test_unknown_codes_are_kept_without_a_state(hass: HomeAssistant, mock_client):
     """Ignore unknown codes for the state but keep them in the attribute."""
-    # Arrange: Set up the integration.
+    # Arrange: Set up the integration in the installation time zone.
+    await hass.config.async_set_time_zone("Europe/Berlin")
     entry = await _setup_integration(hass, mock_client)
 
     # Act: Report only an unmapped code.
@@ -328,8 +378,9 @@ async def test_unknown_codes_are_kept_without_a_state(hass: HomeAssistant, mock_
     state = hass.states.get(HEAT_PUMP_STATE_ENTITY)
     assert state is not None
     assert state.state == "unknown"
+    assert state.attributes["state_code"] is None
     assert state.attributes["active_codes"] == [
-        {"code": "S.999", "bus_address": "1", "since": "2026-10-17T09:24:28"}
+        {"code": "S.999", "bus_address": "1", "since": "2026-10-17T09:24:28+02:00"}
     ]
     heating_rod = hass.states.get(HEATING_ROD_ENTITY)
     assert heating_rod is not None
@@ -409,10 +460,11 @@ def test_parse_status_messages_skips_malformed_entries():
 
     # Assert: Only coded entries remain; the offset is dropped, not converted.
     assert messages is not None
-    assert [message.as_attribute() for message in messages] == [
+    time_zone = ZoneInfo("Europe/Berlin")
+    assert [message.as_attribute(time_zone) for message in messages] == [
         {"code": "S.125", "bus_address": None, "since": None},
         {"code": "S.124", "bus_address": None, "since": None},
-        {"code": "S.129", "bus_address": "1", "since": "2026-10-17T09:24:28"},
+        {"code": "S.129", "bus_address": "1", "since": "2026-10-17T09:24:28+02:00"},
     ]
     assert get_heat_pump_state(messages) == "post_run"
     assert parse_status_messages(None) is None

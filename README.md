@@ -133,10 +133,12 @@ rule for dynamically discovered entities.
 
 On heat pumps, the heat pump state (off, pre-run, heating, cooling, defrost
 preparation, defrosting, post-run) and the heating rod stage are read from the
-device's active status messages. The heat pump state sensor lists all active
-status codes with bus address and activation time (local time) in its
-`active_codes` attribute; the heating rod sensor lists the running stages in
-`active_stages`.
+device's active status messages. The heat pump state sensor names the code
+behind its state in the `state_code` attribute and lists all active status
+codes with bus address and activation time in `active_codes`. Viessmann reports
+the activation time as installation local time, so it carries the Home
+Assistant time zone. `active_codes` is not stored in the recorder history. The
+heating rod sensor lists the running stages in `active_stages`.
 
 ### Actions, triggers, and conditions
 
