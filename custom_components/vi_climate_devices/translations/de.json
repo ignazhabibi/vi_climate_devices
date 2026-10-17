@@ -254,7 +254,7 @@
                 "name": "Urlaub zu Hause Modus"
             },
             "dhw_heating": {
-                "name": "Warmwasserbereitung aktiv"
+                "name": "Warmwasserbereitung"
             },
             "utility_lock": {
                 "name": "EVU-Sperre"
@@ -297,7 +297,7 @@
                 "name": "Vorlauf Heizkreis {number}"
             },
             "heating_circuit_active_program": {
-                "name": "Heizung Aktives Programm",
+                "name": "Heizprogramm",
                 "state": {
                     "comfort": "Komfort",
                     "comfort_cooling": "Komfort (Kühlen)",
@@ -325,7 +325,7 @@
                 }
             },
             "heating_circuit_active_program_numbered": {
-                "name": "Aktives Programm Heizkreis {number}",
+                "name": "Heizprogramm Heizkreis {number}",
                 "state": {
                     "comfort": "Komfort",
                     "comfort_cooling": "Komfort (Kühlen)",
@@ -598,7 +598,7 @@
                 "name": "Dämpfungsfaktor Außentemperatur"
             },
             "heat_pump_state": {
-                "name": "Zustand",
+                "name": "Betriebsphase",
                 "state": {
                     "off": "Aus",
                     "pre_run": "Anlauf",
@@ -653,7 +653,7 @@
         },
         "select": {
             "dhw_mode": {
-                "name": "Warmwasser Modus",
+                "name": "Warmwassermodus",
                 "state": {
                     "off": "Aus",
                     "eco": "Eco",

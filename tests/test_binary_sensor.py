@@ -284,7 +284,7 @@ async def test_binary_sensor_feature_discovered_after_setup_is_added_once(
 async def test_special_state_binary_sensors(
     hass: HomeAssistant, mock_client, feature_name: str, expected_name: str
 ):
-    """Expose summer eco and holiday programs as named binary sensors."""
+    """Expose summer eco and holiday programs as disabled, named binary sensors."""
     # Arrange: Set up the integration with the Vitocal250A fixture.
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -320,7 +320,7 @@ async def test_special_state_binary_sensors(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        # Assert: The feature keeps its unique ID and gets a translated name.
+        # Assert: The feature keeps its unique ID and is disabled by default.
         registry = er.async_get(hass)
         unique_id = f"{device.gateway_serial}-{device.id}-{feature_name}"
         entity_id = registry.async_get_entity_id("binary_sensor", DOMAIN, unique_id)
@@ -328,6 +328,15 @@ async def test_special_state_binary_sensors(
         registry_entry = registry.async_get(entity_id)
         assert registry_entry is not None
         assert registry_entry.translation_key is not None
+        assert registry_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        assert hass.states.get(entity_id) is None
+
+        # Act: Enable the entity and reload the integration.
+        registry.async_update_entity(entity_id, disabled_by=None)
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Assert: The enabled entity reports its state with a translated name.
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == "off"
