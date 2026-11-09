@@ -37,7 +37,7 @@
     },
     {
       "matchPackageNames": [
-        "ignazhabibi/vi_api_client"
+        "vi_api_client"
       ],
       "groupName": "vi_api_client"
     }
@@ -46,14 +46,12 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
-        "/(^|/)pyproject\\.toml$/",
         "/(^|/)custom_components/vi_climate_devices/manifest\\.json$/"
       ],
       "matchStrings": [
-        "vi_api_client @ git\\+https://github\\.com/(?<depName>[^/]+/[^.]+)\\.git@(?<currentValue>v[^\"\\s,\\]]+)"
+        "\"(?<depName>vi_api_client)==(?<currentValue>[^\"\\s,\\]]+)\""
       ],
-      "datasourceTemplate": "github-tags",
-      "versioningTemplate": "semver-coerced"
+      "datasourceTemplate": "pypi"
     }
   ]
 }
