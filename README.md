@@ -122,7 +122,7 @@ account, not that setup failed.
 | `binary_sensor` | Operating states such as compressor, pump, defrosting, frost-protection, and hot-water heating status; utility lock and grid power limitation (disabled by default) |
 | `climate` | Heating and cooling circuit target temperature and HVAC mode; the active program is available as the `active_program` attribute |
 | `number` | Heating-curve values, temperature limits, hot-water target temperature, and selected configuration values |
-| `select` | Other operation modes exposed by the API, such as ventilation modes; heating-circuit and hot-water modes are set through `climate` and `water_heater` |
+| `select` | Other writable options exposed by the API; heating-circuit and hot-water modes are set through `climate` and `water_heater` |
 | `sensor` | Temperatures, pressure, humidity, flow, energy, power, SCOP, diagnostic statistics, and the heat pump state and heating rod stage from the active status messages |
 | `switch` | One-time domestic hot-water charge, hygiene function, and supported boolean controls |
 | `water_heater` | Domestic hot-water target temperature and operation mode |
@@ -130,12 +130,11 @@ account, not that setup failed.
 Entities use appropriate device classes and are grouped under their Viessmann
 device. Heating-circuit and component numbers (for example "Heating Circuit 2"
 or "Fan 2 Speed") appear only when a device has more than one of them, and
-count from 1 like the Viessmann app. Less commonly useful auto-discovered features may be disabled by
-default on tested device models; they can be enabled from the entity settings.
+count from 1 like the Viessmann app. Less commonly useful auto-discovered
+features may be disabled by default on tested device models; they can be
+enabled from the entity settings.
 Unknown auto-discovered features use concise English names derived from their
-Viessmann API feature paths. This intentional fallback means the integration
-does not fully satisfy Home Assistant's `entity-translations` Quality Scale
-rule for dynamically discovered entities.
+Viessmann API feature paths.
 
 On heat pumps, the heat pump state (off, pre-run, heating, cooling, defrost
 preparation, defrosting, post-run) and the heating rod stage are read from the
@@ -145,21 +144,6 @@ codes with bus address and activation time in `active_codes`. Viessmann reports
 the activation time as installation local time, so it carries the Home
 Assistant time zone. `active_codes` is not stored in the recorder history. The
 heating rod sensor lists the running stages in `active_stages`.
-
-### Actions, triggers, and conditions
-
-The integration does not register custom `vi_climate_devices.*` actions,
-triggers, or conditions. Its controls use the standard actions provided by
-their entity platforms:
-
-- `climate.set_temperature` and `climate.set_hvac_mode`
-- `water_heater.set_temperature` and `water_heater.set_operation_mode`
-- `number.set_value`, `select.select_option`, `switch.turn_on`, and
-  `switch.turn_off`
-
-Use standard state and numeric-state triggers and conditions with the entities
-provided by this integration. This keeps automations portable and avoids a
-second, integration-specific interface for the same controls.
 
 ## Automation examples
 
@@ -201,136 +185,6 @@ actions:
 mode: single
 ```
 
-### Notify when a monitored temperature falls below a threshold
-
-```yaml
-alias: Notify about low buffer temperature
-triggers:
-  - trigger: numeric_state
-    entity_id: sensor.your_buffer_temperature
-    below: 35
-conditions: []
-actions:
-  - action: notify.notify
-    data:
-      message: Buffer temperature is below 35 °C.
-mode: single
-```
-
-## Energy counters and derived values
-
-Where the device reports them, the integration exposes electricity
-consumption and heat production for heating, domestic hot water, and cooling
-as yearly and daily kWh counters. A total yearly electricity counter is also
-available.
-
-- Use the **yearly** counters in the Energy dashboard. Home Assistant derives
-  days, weeks, and months from their statistics. Never add a daily and a yearly
-  counter of the same quantity, because the energy would be counted twice.
-- The **daily** counters are meant for dashboards. They reset at midnight;
-  like Home Assistant's own daily utility meters, they use the
-  `total_increasing` state class.
-- There is no total daily electricity counter, because the corresponding
-  Viessmann value lags behind the heating and hot-water values. Sum the two
-  daily counters instead.
-
-The integration only exposes values reported by the API. Values combined from
-several entities, such as totals, the coefficient of performance (COP), or the
-supply/return spread, are better created as template sensors, so their
-assumptions stay visible and adjustable. Create them as **Template** helpers
-in **Settings > Devices & services > Helpers**, or in YAML as shown below.
-Replace the example entity IDs with the IDs created in your Home Assistant
-instance.
-
-```yaml
-template:
-  - sensor:
-      - name: Heat production year
-        unit_of_measurement: kWh
-        device_class: energy
-        state_class: total_increasing
-        state: >
-          {{ (states('sensor.your_heating_production_year') | float
-              + states('sensor.your_dhw_production_year') | float) | round(1) }}
-        availability: >
-          {{ has_value('sensor.your_heating_production_year')
-             and has_value('sensor.your_dhw_production_year') }}
-
-      - name: Heat production today
-        unit_of_measurement: kWh
-        device_class: energy
-        state_class: total_increasing
-        state: >
-          {{ (states('sensor.your_heating_production_day') | float
-              + states('sensor.your_dhw_production_day') | float) | round(1) }}
-        availability: >
-          {{ has_value('sensor.your_heating_production_day')
-             and has_value('sensor.your_dhw_production_day') }}
-
-      - name: Electricity consumption today
-        unit_of_measurement: kWh
-        device_class: energy
-        state_class: total_increasing
-        state: >
-          {{ (states('sensor.your_heating_consumption_day') | float
-              + states('sensor.your_dhw_consumption_day') | float) | round(1) }}
-        availability: >
-          {{ has_value('sensor.your_heating_consumption_day')
-             and has_value('sensor.your_dhw_consumption_day') }}
-
-      # Current COP; 0 while the electrical power is below 0.1 kW.
-      - name: Heat pump COP
-        state_class: measurement
-        state: >
-          {% set power = states('sensor.your_current_power_consumption') | float %}
-          {% set heat = states('sensor.your_current_heat_production') | float %}
-          {{ (heat / power) | round(2) if power >= 0.1 else 0 }}
-        availability: >
-          {{ has_value('sensor.your_current_power_consumption')
-             and has_value('sensor.your_current_heat_production') }}
-
-      # Daily COP; unknown until 0.5 kWh of electricity has been used today.
-      - name: Heat pump COP today
-        state_class: measurement
-        state: >
-          {% set power = states('sensor.electricity_consumption_today') | float %}
-          {% set heat = states('sensor.heat_production_today') | float %}
-          {{ (heat / power) | round(2) if power >= 0.5 else none }}
-        availability: >
-          {{ has_value('sensor.electricity_consumption_today')
-             and has_value('sensor.heat_production_today') }}
-
-      - name: Environmental heat today
-        unit_of_measurement: kWh
-        device_class: energy
-        state_class: total_increasing
-        state: >
-          {{ ([states('sensor.heat_production_today') | float
-               - states('sensor.electricity_consumption_today') | float, 0]
-              | max) | round(1) }}
-        availability: >
-          {{ has_value('sensor.electricity_consumption_today')
-             and has_value('sensor.heat_production_today') }}
-
-      # Supply/return spread; 0 while there is no volumetric flow.
-      - name: Supply return spread
-        unit_of_measurement: K
-        state_class: measurement
-        state: >
-          {% set flow = states('sensor.your_volumetric_flow') | float %}
-          {{ (states('sensor.your_common_supply_temperature') | float
-              - states('sensor.your_return_temperature') | float) | round(1)
-             if flow >= 100 else 0 }}
-        availability: >
-          {{ has_value('sensor.your_common_supply_temperature')
-             and has_value('sensor.your_return_temperature')
-             and has_value('sensor.your_volumetric_flow') }}
-```
-
-Viessmann reports heat production through a separate summary that can lag
-behind the electricity values. COP values over short periods can therefore be
-skewed; daily, monthly, and yearly values are more reliable.
-
 ## Data updates
 
 This is a cloud-polling integration. After the initial account discovery, it
@@ -354,9 +208,7 @@ They recover after the next successful refresh.
   changes may take up to the next successful 90-second refresh to appear if
   they were not initiated through Home Assistant.
 - Devices and features added to the Viessmann account can take up to 24 hours
-  to appear. Devices missing from an inventory are retained to avoid unsafe
-  automatic removal; Home Assistant permits manual removal only after a fresh
-  inventory confirms the device is gone.
+  to appear.
 - The integration does not provide local-network discovery, firmware updates,
   schedules, or a local fallback when the Viessmann cloud is unavailable.
 - The polling interval does not by itself guarantee API rate-limit compliance:
