@@ -10,6 +10,12 @@ password is stored by the integration.
 This is a custom integration distributed through HACS. It is not affiliated
 with, maintained by, or supported by Viessmann or Home Assistant.
 
+> [!WARNING]
+> Do not run this integration together with the official Home Assistant
+> Viessmann integration for the same Viessmann account. Both poll the same
+> Viessmann API, so their combined requests will likely exceed the API rate
+> limit. Remove or disable the official integration before using this one.
+
 ## Use cases
 
 - See heating-system and hot-water status alongside the rest of the home.
