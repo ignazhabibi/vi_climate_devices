@@ -656,13 +656,7 @@
                 "name": "DHW Water Heater",
                 "state": {
                     "off": "Off",
-                    "eco": "Eco",
-                    "comfort": "Comfort",
-                    "efficient": "Eco",
-                    "efficientWithMinComfort": "Comfort",
-                    "balanced": "Balanced",
-                    "standby": "Standby",
-                    "standard": "Standard"
+                    "eco": "Eco"
                 }
             }
         }
