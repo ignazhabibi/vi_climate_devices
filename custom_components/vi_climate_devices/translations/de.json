@@ -656,13 +656,7 @@
                 "name": "Warmwasser",
                 "state": {
                     "off": "Aus",
-                    "eco": "Eco",
-                    "comfort": "Komfort",
-                    "efficient": "Eco",
-                    "efficientWithMinComfort": "Komfort",
-                    "balanced": "Normal",
-                    "standby": "Standby",
-                    "standard": "Standard"
+                    "eco": "Eco"
                 }
             }
         }

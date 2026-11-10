@@ -28,7 +28,11 @@ from custom_components.vi_climate_devices.status_messages import (
     HEATING_ROD_STAGE_OPTIONS,
 )
 from custom_components.vi_climate_devices.switch import SWITCH_TYPES
-from custom_components.vi_climate_devices.water_heater import ViClimateWaterHeater
+from custom_components.vi_climate_devices.water_heater import (
+    DEVICE_FAMILY_MODE_MAPPINGS,
+    VIESSMANN_TO_HA_MODE,
+    ViClimateWaterHeater,
+)
 
 
 def load_json(path: Path):
@@ -224,12 +228,18 @@ def test_migrated_entity_icons_are_translated_without_direct_descriptions(
                 assert "icon" not in translation
 
 
-def test_dhw_mode_translations_match_api_modes(translations):
-    """Keep the English DHW mode labels aligned with their API semantics."""
-    for translation in (translations["strings"], translations["en"]):
-        states = translation["entity"]["water_heater"]["dhw_water_heater"]["state"]
-        assert states["efficient"] == "Eco"
-        assert states["efficientWithMinComfort"] == "Comfort"
+def test_water_heater_state_translations_cover_only_exposed_states(translations):
+    """Translate only HA operation states the water heater can expose."""
+    # Arrange: The entity maps every API mode to an HA standard state.
+    exposed_states = set(VIESSMANN_TO_HA_MODE.values())
+    for family_modes in DEVICE_FAMILY_MODE_MAPPINGS.values():
+        exposed_states.update(family_modes.values())
+
+    # Act & Assert: Raw API modes never appear as state translation keys.
+    for source_name in ("strings", "en", "de"):
+        entity = translations[source_name]["entity"]["water_heater"]
+        states = entity["dhw_water_heater"]["state"]
+        assert set(states) <= exposed_states, source_name
 
 
 def test_exception_translation_keys_exist_in_all_maintained_translations(
