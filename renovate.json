@@ -37,9 +37,11 @@
     },
     {
       "matchPackageNames": [
-        "vi_api_client"
+        "vi_api_client",
+        "vi-api-client"
       ],
-      "groupName": "vi_api_client"
+      "groupName": "vi_api_client",
+      "semanticCommitType": "chore"
     }
   ],
   "customManagers": [
