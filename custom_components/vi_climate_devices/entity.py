@@ -19,7 +19,13 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from vi_api_client import Device, Feature, FeatureValue, ViError
+from vi_api_client import (
+    Device,
+    Feature,
+    FeatureValue,
+    ViCommandRejectedError,
+    ViError,
+)
 
 from .const import DOMAIN
 from .coordinator import ViClimateDataUpdateCoordinator
@@ -85,6 +91,18 @@ def get_template_translation(
     """
     prefix = match.string[: match.start(1)]
     return get_numbered_translation(translation_key, device, prefix, match.group(1))
+
+
+def describe_write_rejection(err: ValueError | ViCommandRejectedError) -> str:
+    """Return a log-safe description of a rejected write.
+
+    A local validation error describes the requested value. The API's
+    rejection message can carry installation details, so only its reason is
+    logged.
+    """
+    if isinstance(err, ViCommandRejectedError):
+        return f"reason={err.reason}"
+    return str(err)
 
 
 class ViClimateEntity(CoordinatorEntity[ViClimateDataUpdateCoordinator]):
@@ -158,15 +176,16 @@ class ViClimateEntity(CoordinatorEntity[ViClimateDataUpdateCoordinator]):
             HomeAssistantError: If the write fails for another reason.
         """
         try:
-            response = await self.coordinator.async_set_feature(
-                self._map_key, feature_name, value
-            )
-            if not response.success:
-                raise service_validation_error(ExceptionTranslationKey.COMMAND_REJECTED)
+            await self.coordinator.async_set_feature(self._map_key, feature_name, value)
         except ServiceValidationError, ConfigEntryAuthFailed:
             raise
-        except ValueError as err:
-            _LOGGER.debug("Viessmann rejected a feature command: %s", err)
+        except (ValueError, ViCommandRejectedError) as err:
+            # Handled before ViError: a rejection is a user-facing validation
+            # outcome, not a general write failure.
+            _LOGGER.debug(
+                "Viessmann rejected a feature command: %s",
+                describe_write_rejection(err),
+            )
             raise service_validation_error(
                 ExceptionTranslationKey.COMMAND_REJECTED
             ) from err
@@ -216,21 +235,30 @@ class ViClimateFeatureEntity(ViClimateEntity):
         return self._get_feature(self._feature_name)
 
 
-def async_setup_dynamic_entities(
+def async_setup_dynamic_entities(  # noqa: PLR0913, PLR0917
     hass: HomeAssistant,
     entry: ConfigEntry,
     coordinator: ViClimateDataUpdateCoordinator,
     async_add_entities: AddEntitiesCallback,
     discover_entities: Callable[[], Sequence[Entity]],
+    superseded_domains: Sequence[str] = (),
 ) -> None:
-    """Add discovered entities initially and whenever coordinator data changes."""
+    """Add discovered entities initially and whenever coordinator data changes.
+
+    A feature keeps its unique ID when it moves to another platform, for
+    example a read-only boolean that becomes writable and turns from a binary
+    sensor into a switch. Entries with the same unique ID in a superseded
+    domain are removed when the replacing entity is added, so no orphaned
+    registry entry stays behind.
+    """
     added_unique_ids: set[str] = set()
 
     def add_new_entities() -> None:
         """Add only entities that have not been created by this platform."""
+        registry = er.async_get(hass)
         registry_unique_ids = {
             entity.unique_id
-            for entity in er.async_get(hass).entities.values()
+            for entity in registry.entities.values()
             if entity.config_entry_id == entry.entry_id
         }
         added_unique_ids.intersection_update(registry_unique_ids)
@@ -239,10 +267,33 @@ def async_setup_dynamic_entities(
             for entity in discover_entities()
             if entity.unique_id is not None and entity.unique_id not in added_unique_ids
         ]
-        added_unique_ids.update(
+        new_unique_ids = sorted(
             entity.unique_id for entity in entities if entity.unique_id is not None
         )
+        added_unique_ids.update(new_unique_ids)
+        _remove_superseded_entries(registry, entry, new_unique_ids, superseded_domains)
         async_add_entities(entities)
 
     add_new_entities()
     entry.async_on_unload(coordinator.async_add_listener(add_new_entities))
+
+
+def _remove_superseded_entries(
+    registry: er.EntityRegistry,
+    entry: ConfigEntry,
+    unique_ids: Sequence[str],
+    superseded_domains: Sequence[str],
+) -> None:
+    """Remove this entry's registry entries that a new entity replaces."""
+    for domain in superseded_domains:
+        for unique_id in unique_ids:
+            entity_id = registry.async_get_entity_id(domain, DOMAIN, unique_id)
+            if entity_id is None:
+                continue
+            registry_entry = registry.async_get(entity_id)
+            if registry_entry is None or registry_entry.config_entry_id != (
+                entry.entry_id
+            ):
+                continue
+            _LOGGER.debug("Removing superseded entity %s", entity_id)
+            registry.async_remove(entity_id)

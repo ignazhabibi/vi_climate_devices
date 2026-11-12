@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     EntityCategory,
+    Platform,
     UnitOfElectricCurrent,
     UnitOfEnergy,
     UnitOfPower,
@@ -975,6 +976,7 @@ async def async_setup_entry(
         coordinator,
         async_add_entities,
         lambda: _discover_realtime_sensors(coordinator),
+        superseded_domains=(Platform.NUMBER,),
     )
 
 

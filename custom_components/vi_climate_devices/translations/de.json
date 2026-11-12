@@ -644,11 +644,41 @@
             }
         },
         "switch": {
-            "dhw_one_time_charge": {
-                "name": "Einmalige Warmwasserbereitung"
+            "comfort_program": {
+                "name": "Komfortprogramm"
+            },
+            "comfort_program_numbered": {
+                "name": "Komfortprogramm Heizkreis {number}"
             },
             "dhw_hygiene": {
                 "name": "Warmwasser Hygieneprogramm"
+            },
+            "dhw_one_time_charge": {
+                "name": "Einmalige Warmwasserbereitung"
+            },
+            "eco_program": {
+                "name": "Eco-Programm"
+            },
+            "eco_program_numbered": {
+                "name": "Eco-Programm Heizkreis {number}"
+            },
+            "forced_last_from_schedule": {
+                "name": "Letzte Zeitprogrammphase erzwungen"
+            },
+            "forced_last_from_schedule_numbered": {
+                "name": "Letzte Zeitprogrammphase erzwungen Heizkreis {number}"
+            },
+            "ventilation_quick_mode_comfort": {
+                "name": "Lüftung Schnellmodus Komfort"
+            },
+            "ventilation_quick_mode_eco": {
+                "name": "Lüftung Schnellmodus Eco"
+            },
+            "ventilation_quick_mode_forced_level_four": {
+                "name": "Lüftung Schnellmodus Stufe 4 erzwungen"
+            },
+            "ventilation_quick_mode_silent": {
+                "name": "Lüftung Schnellmodus Leise"
             }
         },
         "water_heater": {

@@ -17,6 +17,7 @@ from vi_api_client import (
     ViAuthError,
     ViClient as ViessmannClient,
     ViConnectionError,
+    ViDeviceCommunicationError,
     ViError,
     ViRateLimitError,
     ViServerInternalError,
@@ -152,6 +153,7 @@ class OAuth2FlowHandler(
         except (
             TimeoutError,
             ViConnectionError,
+            ViDeviceCommunicationError,
             ViRateLimitError,
             ViServerInternalError,
         ):

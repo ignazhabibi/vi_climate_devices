@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import dataclasses
+import re
 from typing import Any
 
 # TODO(HA 2026.10): Import SwitchDeviceClass from
@@ -11,14 +13,20 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from vi_api_client import Device
 
 from . import ViClimateDevicesConfigEntry
 from .const import IGNORED_FEATURES, TESTED_DEVICES
 from .coordinator import ViClimateDataUpdateCoordinator
-from .entity import ViClimateFeatureEntity, async_setup_dynamic_entities
+from .entity import (
+    EntityTemplate,
+    ViClimateFeatureEntity,
+    async_setup_dynamic_entities,
+    get_template_translation,
+)
 from .exceptions import ExceptionTranslationKey, home_assistant_error
 from .utils import (
     beautify_name,
@@ -42,7 +50,73 @@ SWITCH_TYPES: dict[str, SwitchEntityDescription] = {
         translation_key="dhw_hygiene",
         device_class=SwitchDeviceClass.SWITCH,
     ),
+    # Ventilation quick modes are written through an on/off command pair. The
+    # API may allow only one direction at a time, so they start disabled.
+    "ventilation.quickmodes.comfort.active": SwitchEntityDescription(
+        key="ventilation.quickmodes.comfort.active",
+        translation_key="ventilation_quick_mode_comfort",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_registry_enabled_default=False,
+    ),
+    "ventilation.quickmodes.eco.active": SwitchEntityDescription(
+        key="ventilation.quickmodes.eco.active",
+        translation_key="ventilation_quick_mode_eco",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_registry_enabled_default=False,
+    ),
+    "ventilation.quickmodes.forcedLevelFour.active": SwitchEntityDescription(
+        key="ventilation.quickmodes.forcedLevelFour.active",
+        translation_key="ventilation_quick_mode_forced_level_four",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_registry_enabled_default=False,
+    ),
+    "ventilation.quickmodes.silent.active": SwitchEntityDescription(
+        key="ventilation.quickmodes.silent.active",
+        translation_key="ventilation_quick_mode_silent",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_registry_enabled_default=False,
+    ),
 }
+
+# Heating circuit programs written through an on/off command pair. A device can
+# report a pair it never allows (comfort on Vitodens 200-W), so they start
+# disabled instead of failing on every write.
+SWITCH_TEMPLATES: tuple[EntityTemplate[SwitchEntityDescription], ...] = tuple(
+    EntityTemplate(
+        pattern=re.compile(
+            rf"^heating\.circuits\.(\d+)\.operating\.programs\.{program}\.active$"
+        ),
+        description=SwitchEntityDescription(
+            key="placeholder",
+            translation_key=translation_key,
+            device_class=SwitchDeviceClass.SWITCH,
+            entity_registry_enabled_default=False,
+        ),
+    )
+    for program, translation_key in (
+        ("comfort", "comfort_program"),
+        ("eco", "eco_program"),
+        ("forcedLastFromSchedule", "forced_last_from_schedule"),
+    )
+)
+
+
+def _get_switch_entity_description(
+    feature_name: str, device: Device
+) -> tuple[SwitchEntityDescription, dict[str, str]] | None:
+    """Return the templated description and placeholders for a feature, if any."""
+    for template in SWITCH_TEMPLATES:
+        if match := template.pattern.match(feature_name):
+            translation_key, placeholders = get_template_translation(
+                match, str(template.description.translation_key), device
+            )
+            description = dataclasses.replace(
+                template.description,
+                key=feature_name,
+                translation_key=translation_key,
+            )
+            return description, placeholders
+    return None
 
 
 async def async_setup_entry(
@@ -58,6 +132,7 @@ async def async_setup_entry(
         coordinator,
         async_add_entities,
         lambda: _discover_switches(coordinator),
+        superseded_domains=(Platform.BINARY_SENSOR,),
     )
 
 
@@ -80,6 +155,20 @@ def _discover_switches(
                         desc = SWITCH_TYPES[feature.name]
                         entities.append(
                             ViClimateSwitch(coordinator, map_key, feature.name, desc)
+                        )
+                    continue
+
+                if match_result := _get_switch_entity_description(feature.name, device):
+                    if feature.is_enabled and feature.is_writable:
+                        description, placeholders = match_result
+                        entities.append(
+                            ViClimateSwitch(
+                                coordinator,
+                                map_key,
+                                feature.name,
+                                description,
+                                translation_placeholders=placeholders,
+                            )
                         )
                     continue
 
@@ -114,13 +203,14 @@ def _discover_switches(
 class ViClimateSwitch(ViClimateFeatureEntity, SwitchEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """Representation of a Viessmann Climate Devices Switch Entity."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913, PLR0917
         self,
         coordinator: ViClimateDataUpdateCoordinator,
         map_key: str,
         feature_name: str,
         description: SwitchEntityDescription,
-        enabled_default: bool = True,
+        enabled_default: bool | None = None,
+        translation_placeholders: dict[str, str] | None = None,
     ) -> None:
         """Initialize the entity."""
         super().__init__(
@@ -128,6 +218,7 @@ class ViClimateSwitch(ViClimateFeatureEntity, SwitchEntity):  # pyright: ignore[
             map_key,
             feature_name,
             description,
+            translation_placeholders=translation_placeholders,
             enabled_default=enabled_default,
         )
         self.entity_description = description

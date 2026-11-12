@@ -203,11 +203,14 @@ def _discover_numbers(
                 if is_feature_ignored(feature.name, IGNORED_FEATURES):
                     continue
 
-                # Numbers need a writable feature and bounded control.
+                # Numbers need a writable feature and bounded constraints.
                 if (
                     not feature.is_writable
-                    or not feature.control
-                    or (feature.control.min is None and feature.control.max is None)
+                    or not feature.constraints
+                    or (
+                        feature.constraints.min is None
+                        and feature.constraints.max is None
+                    )
                 ):
                     continue
 
@@ -282,14 +285,14 @@ class ViClimateNumber(ViClimateFeatureEntity, NumberEntity):  # pyright: ignore[
         self._update_constraints(self.feature_data)
 
     def _update_constraints(self, feature: Feature | None) -> None:
-        """Extract min/max/step from feature control."""
-        if feature and feature.control:
-            if feature.control.min is not None:
-                self._attr_native_min_value = float(feature.control.min)
-            if feature.control.max is not None:
-                self._attr_native_max_value = float(feature.control.max)
-            if feature.control.step is not None:
-                self._attr_native_step = float(feature.control.step)
+        """Extract min/max/step from the feature constraints."""
+        if feature and feature.constraints:
+            if feature.constraints.min is not None:
+                self._attr_native_min_value = float(feature.constraints.min)
+            if feature.constraints.max is not None:
+                self._attr_native_max_value = float(feature.constraints.max)
+            if feature.constraints.step is not None:
+                self._attr_native_step = float(feature.constraints.step)
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:  # pyright: ignore[reportIncompatibleVariableOverride]

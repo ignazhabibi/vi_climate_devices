@@ -18,6 +18,7 @@ from vi_api_client import (
     JsonValue,
     ViAuthError,
     ViConnectionError,
+    ViDeviceCommunicationError,
     ViError,
     ViRateLimitError,
     ViServerInternalError,
@@ -159,6 +160,12 @@ async def test_oauth_entry_creation_validates_installation_access(
         (ViConnectionError("offline"), "cannot_connect"),
         (ViRateLimitError("limited"), "cannot_connect"),
         (ViServerInternalError("unavailable"), "cannot_connect"),
+        (
+            ViDeviceCommunicationError(
+                "unreachable", error_type="DEVICE_COMMUNICATION_ERROR"
+            ),
+            "cannot_connect",
+        ),
         (ViError("invalid response"), "unknown"),
     ],
 )

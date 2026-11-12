@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import OAuth2TokenRequestError
 from homeassistant.helpers.device_registry import DeviceEntry
-from vi_api_client import Device, Feature, FeatureControl, ViError, redact_device
+from vi_api_client import Device, Feature, FeatureConstraints, ViError, redact_device
 
 from .const import DOMAIN
 from .coordinator import ViClimateDataUpdateCoordinator
@@ -63,17 +63,17 @@ def _serialize_value(value: object) -> JsonValue:
     return serialized
 
 
-def _serialize_constraints(control: FeatureControl | None) -> JsonObject:
+def _serialize_constraints(constraints: FeatureConstraints | None) -> JsonObject:
     """Return the applicable constraints for a writable feature."""
-    if control is None:
+    if constraints is None:
         return {}
 
-    constraints: JsonObject = {}
+    serialized: JsonObject = {}
     for name in ("min", "max", "step", "value_type", "options"):
-        value = getattr(control, name)
+        value = getattr(constraints, name)
         if value is not None:
-            constraints[name] = _serialize_value(value)
-    return constraints
+            serialized[name] = _serialize_value(value)
+    return serialized
 
 
 def _serialize_device(device: Device, labels: tuple[str, str, str]) -> JsonObject:
@@ -109,7 +109,7 @@ def _serialize_feature(feature: Feature) -> JsonObject:
         "is_enabled": feature.is_enabled,
         "is_ready": feature.is_ready,
         "is_writable": feature.is_writable,
-        "constraints": _serialize_constraints(feature.control),
+        "constraints": _serialize_constraints(feature.constraints),
     }
 
 

@@ -5,12 +5,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from homeassistant.components.switch import SwitchEntityDescription
-from homeassistant.const import STATE_OFF
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client import CommandResponse, FeatureValue, FixtureViClient
+from vi_api_client import FeatureValue, FixtureViClient, ViCommandRejectedError
 
 from custom_components.vi_climate_devices.const import DOMAIN
 from custom_components.vi_climate_devices.switch import ViClimateSwitch
@@ -179,10 +179,10 @@ async def test_switch_creation_and_services(hass: HomeAssistant, mock_client):
         ("Vitodens200W", "vitodens200w"),
     ],
 )
-async def test_read_only_hygiene_does_not_create_switch_or_write(
+async def test_command_pair_hygiene_creates_switch_and_writes(
     hass: HomeAssistant, device_name: str, entity_prefix: str
 ):
-    """Keep read-only hygiene state as a binary sensor without a control."""
+    """Expose hygiene reported only as an on/off command pair as a switch."""
     # Arrange: Set up each fixture with a client-write spy.
     entry = MockConfigEntry(domain=DOMAIN, data={"client_id": "1", "token": "x"})
     entry.add_to_hass(hass)
@@ -204,21 +204,29 @@ async def test_read_only_hygiene_does_not_create_switch_or_write(
         ),
         patch("custom_components.vi_climate_devices.HAAuth"),
     ):
-        # Act: Load the integration and attempt to turn on the absent switch.
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         hygiene_switch_id = f"switch.{entity_prefix}_dhw_hygiene"
+        hygiene_switch = hass.states.get(hygiene_switch_id)
+        assert hygiene_switch is not None
+        was_on = hygiene_switch.state == STATE_ON
+
+        # Act: Toggle the hygiene program through the switch.
         await hass.services.async_call(
-            "switch", "turn_on", {"entity_id": hygiene_switch_id}, blocking=True
+            "switch", "toggle", {"entity_id": hygiene_switch_id}, blocking=True
         )
 
-        # Assert: The state remains available but cannot trigger a client write.
-        assert hass.states.get(hygiene_switch_id) is None
-        hygiene_binary_sensor = hass.states.get(
-            f"binary_sensor.{entity_prefix}_dhw_hygiene_enabled"
+        # Assert: The switch replaces the binary sensor and writes the feature.
+        assert (
+            hass.states.get(f"binary_sensor.{entity_prefix}_dhw_hygiene_enabled")
+            is None
         )
-        assert hygiene_binary_sensor is not None
-        mock_client.set_feature.assert_not_awaited()
+        mock_client.set_feature.assert_awaited_once()
+        write_call = mock_client.set_feature.await_args
+        assert write_call is not None
+        written_feature, written_value = write_call.args[1:]
+        assert written_feature.name == "heating.dhw.hygiene.enabled"
+        assert written_value is not was_on
 
         # Cleanup: Unload the integration to prevent thread leaks.
         await hass.config_entries.async_unload(entry.entry_id)
@@ -298,7 +306,7 @@ async def test_switch_error_handling(hass: HomeAssistant, mock_client):
 
 @pytest.mark.asyncio
 async def test_switch_api_rejection(hass: HomeAssistant):
-    """Test switch handling of API logical rejection (success=False)."""
+    """Test switch handling of a command the API rejects."""
     # Arrange: Setup integration.
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -311,16 +319,9 @@ async def test_switch_api_rejection(hass: HomeAssistant):
 
     mock_client = FixtureViClient("Vitocal250A")
 
-    # Simulate API Logical Failure (Blocked).
-
-    # set_feature returns success=False object.
-    async def mock_set_feature_rejection(device, feature, value):
-        response = CommandResponse(
-            success=False, message="Blocked by device", reason=None
-        )
-        return (response, device)
-
-    mock_client.set_feature = AsyncMock(side_effect=mock_set_feature_rejection)
+    mock_client.set_feature = AsyncMock(
+        side_effect=ViCommandRejectedError("Blocked by device")
+    )
 
     with (
         patch(
@@ -347,7 +348,7 @@ async def test_switch_api_rejection(hass: HomeAssistant):
         assert state.state == STATE_OFF
 
         # Act: Call turn_on.
-        # We expect HomeAssistantError because success=False.
+        # Act and assert: The rejection reaches the caller as a validation error.
         with pytest.raises(ServiceValidationError) as error:
             await hass.services.async_call(
                 "switch",

@@ -907,10 +907,11 @@
           }),
           dict({
             'constraints': dict({
+              'value_type': 'boolean',
             }),
             'is_enabled': True,
             'is_ready': True,
-            'is_writable': False,
+            'is_writable': True,
             'name': 'heating.circuits.0.operating.programs.forcedLastFromSchedule.active',
             'unit': None,
             'value': False,
@@ -2753,22 +2754,20 @@
           }),
           dict({
             'constraints': dict({
-              'value_type': 'string',
             }),
             'is_enabled': True,
             'is_ready': True,
-            'is_writable': True,
+            'is_writable': False,
             'name': 'heating.operating.programs.holiday.end',
             'unit': None,
             'value': '2000-01-01',
           }),
           dict({
             'constraints': dict({
-              'value_type': 'string',
             }),
             'is_enabled': True,
             'is_ready': True,
-            'is_writable': True,
+            'is_writable': False,
             'name': 'heating.operating.programs.holiday.start',
             'unit': None,
             'value': '2000-01-01',
@@ -2785,22 +2784,20 @@
           }),
           dict({
             'constraints': dict({
-              'value_type': 'string',
             }),
             'is_enabled': True,
             'is_ready': True,
-            'is_writable': True,
+            'is_writable': False,
             'name': 'heating.operating.programs.holidayAtHome.end',
             'unit': None,
             'value': '2000-01-01',
           }),
           dict({
             'constraints': dict({
-              'value_type': 'string',
             }),
             'is_enabled': True,
             'is_ready': True,
-            'is_writable': True,
+            'is_writable': False,
             'name': 'heating.operating.programs.holidayAtHome.start',
             'unit': None,
             'value': '2000-01-01',

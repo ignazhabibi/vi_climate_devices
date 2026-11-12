@@ -16,7 +16,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client import CommandResponse, FeatureValue, FixtureViClient
+from vi_api_client import FeatureValue, FixtureViClient, ViCommandRejectedError
 
 from custom_components.vi_climate_devices.const import DOMAIN
 from custom_components.vi_climate_devices.number import ViClimateNumber
@@ -324,7 +324,7 @@ async def test_number_error_handling(hass: HomeAssistant, mock_client):
 
 @pytest.mark.asyncio
 async def test_number_api_rejection(hass: HomeAssistant, mock_client):
-    """Test number handling of API logical rejection (success=False)."""
+    """Test number handling of a command the API rejects."""
     # Arrange: Setup integration.
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -335,15 +335,9 @@ async def test_number_api_rejection(hass: HomeAssistant, mock_client):
     )
     entry.add_to_hass(hass)
 
-    # Simulate API Logical Failure.
-
-    async def mock_set_feature_rejection(device, feature, value):
-        response = CommandResponse(
-            success=False, message="Parameter out of range", reason=None
-        )
-        return (response, device)
-
-    mock_client.set_feature = AsyncMock(side_effect=mock_set_feature_rejection)
+    mock_client.set_feature = AsyncMock(
+        side_effect=ViCommandRejectedError("Parameter out of range")
+    )
 
     with (
         patch(
@@ -438,10 +432,7 @@ async def test_number_floating_point_precision(hass: HomeAssistant, mock_client)
 
     async def mock_set_feature(device, feature, value):
         api_calls.append({"feature": feature.name, "value": value})
-        response = CommandResponse(
-            success=True, message=None, reason="COMMAND_EXECUTION_SUCCESS"
-        )
-        return (response, device)
+        return device
 
     mock_client.set_feature = AsyncMock(side_effect=mock_set_feature)
 

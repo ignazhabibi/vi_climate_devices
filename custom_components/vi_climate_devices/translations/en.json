@@ -644,11 +644,41 @@
             }
         },
         "switch": {
-            "dhw_one_time_charge": {
-                "name": "One Time DHW Charge"
+            "comfort_program": {
+                "name": "Comfort Program"
+            },
+            "comfort_program_numbered": {
+                "name": "Comfort Program Heating Circuit {number}"
             },
             "dhw_hygiene": {
                 "name": "DHW Hygiene"
+            },
+            "dhw_one_time_charge": {
+                "name": "One Time DHW Charge"
+            },
+            "eco_program": {
+                "name": "Eco Program"
+            },
+            "eco_program_numbered": {
+                "name": "Eco Program Heating Circuit {number}"
+            },
+            "forced_last_from_schedule": {
+                "name": "Last Schedule Phase Forced"
+            },
+            "forced_last_from_schedule_numbered": {
+                "name": "Last Schedule Phase Forced Heating Circuit {number}"
+            },
+            "ventilation_quick_mode_comfort": {
+                "name": "Ventilation Quick Mode Comfort"
+            },
+            "ventilation_quick_mode_eco": {
+                "name": "Ventilation Quick Mode Eco"
+            },
+            "ventilation_quick_mode_forced_level_four": {
+                "name": "Ventilation Quick Mode Forced Level Four"
+            },
+            "ventilation_quick_mode_silent": {
+                "name": "Ventilation Quick Mode Silent"
             }
         },
         "water_heater": {

@@ -21,12 +21,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from vi_api_client import (
-    CommandResponse,
     Device,
     Feature,
     FeatureValue,
     FixtureViClient,
     GatewayDeviceRefreshResult,
+    ViCommandRejectedError,
 )
 
 from custom_components.vi_climate_devices.const import DOMAIN
@@ -89,9 +89,7 @@ async def test_water_heater_uses_requested_mode_when_device_lists_no_match() -> 
     target_feature = device.get_feature(FEATURE_TARGET_TEMP)
     assert target_feature is not None
     coordinator = MagicMock(data={"device": device})
-    coordinator.async_set_feature = AsyncMock(
-        return_value=CommandResponse(success=True)
-    )
+    coordinator.async_set_feature = AsyncMock(return_value=None)
     entity = ViClimateWaterHeater(coordinator, "device", target_feature)
 
     # Act: Request an operation that has no known candidates for this device.
@@ -114,16 +112,16 @@ async def test_water_heater_uses_standard_fallback_without_mode_constraints() ->
     device = replace(
         fixture_device,
         features=[
-            replace(feature, control=None) if feature.name == FEATURE_MODE else feature
+            replace(feature, constraints=None)
+            if feature.name == FEATURE_MODE
+            else feature
             for feature in fixture_device.features
         ],
     )
     target_feature = device.get_feature(FEATURE_TARGET_TEMP)
     assert target_feature is not None
     coordinator = MagicMock(data={"device": device})
-    coordinator.async_set_feature = AsyncMock(
-        return_value=CommandResponse(success=True)
-    )
+    coordinator.async_set_feature = AsyncMock(return_value=None)
     entity = ViClimateWaterHeater(coordinator, "device", target_feature)
 
     # Act: Request the supported off operation without advertised API options.
@@ -179,11 +177,11 @@ async def test_water_heater_maps_device_family_operation_modes(
     fixture_device = (await client.get_full_installation_status("99999"))[0]
     mode_feature = fixture_device.get_feature(FEATURE_MODE)
     assert mode_feature is not None
-    assert mode_feature.control is not None
+    assert mode_feature.constraints is not None
     configured_mode_feature = replace(
         mode_feature,
         value=api_mode,
-        control=replace(mode_feature.control, options=api_modes),
+        constraints=replace(mode_feature.constraints, options=api_modes),
     )
     device = replace(
         fixture_device,
@@ -194,9 +192,7 @@ async def test_water_heater_maps_device_family_operation_modes(
     )
     coordinator = MagicMock()
     coordinator.data = {"device": device}
-    coordinator.async_set_feature = AsyncMock(
-        return_value=CommandResponse(success=True)
-    )
+    coordinator.async_set_feature = AsyncMock(return_value=None)
     target_feature = device.get_feature(FEATURE_TARGET_TEMP)
     assert target_feature is not None
     entity = ViClimateWaterHeater(coordinator, "device", target_feature)
@@ -220,11 +216,11 @@ async def test_water_heater_omits_unknown_api_operation_modes() -> None:
     fixture_device = (await client.get_full_installation_status("99999"))[0]
     mode_feature = fixture_device.get_feature(FEATURE_MODE)
     assert mode_feature is not None
-    assert mode_feature.control is not None
+    assert mode_feature.constraints is not None
     unknown_mode_feature = replace(
         mode_feature,
         value="unknownMode",
-        control=replace(mode_feature.control, options=("unknownMode",)),
+        constraints=replace(mode_feature.constraints, options=("unknownMode",)),
     )
     device = replace(
         fixture_device,
@@ -394,7 +390,6 @@ async def test_water_heater_requires_writable_target_and_mode(
                 unit=feature.unit,
                 is_enabled=feature.is_enabled,
                 is_ready=feature.is_ready,
-                control=None,
             )
             if feature.name == read_only_feature_name
             else feature
@@ -497,18 +492,11 @@ async def test_water_heater_error_handling(hass: HomeAssistant, mock_client):
 
 @pytest.mark.asyncio
 async def test_water_heater_api_rejection(hass: HomeAssistant, mock_client):
-    """Test water heater handling of API logical rejection (success=False)."""
-    # Arrange: Setup integration.
+    """Test water heater handling of a command the API rejects."""
+    # Arrange: Setup integration and reject every write command.
     entry = MockConfigEntry(domain=DOMAIN, data={"client_id": "123", "token": "abc"})
     entry.add_to_hass(hass)
-
-    # Simulate API Logical Failure.
-
-    async def mock_set_feature_rejection(device, feature, value):
-        response = CommandResponse(success=False, message="Locked", reason=None)
-        return (response, device)
-
-    mock_client.set_feature = AsyncMock(side_effect=mock_set_feature_rejection)
+    mock_client.set_feature = AsyncMock(side_effect=ViCommandRejectedError("Locked"))
 
     with (
         patch(
@@ -585,7 +573,7 @@ async def test_water_heater_translates_mode_and_temperature_failures() -> None:
     assert isinstance(mode_error.value.__cause__, HomeAssistantError)
 
     coordinator.async_set_feature = AsyncMock(
-        return_value=CommandResponse(success=False, message="private detail")
+        side_effect=ViCommandRejectedError("private detail")
     )
     with (
         patch.object(entity, "async_write_ha_state"),
@@ -656,9 +644,7 @@ async def test_water_heater_reports_unknown_operation_for_malformed_mode_values(
     entity = await _create_water_heater_with_values(
         mock_client, {FEATURE_MODE: mode_value}
     )
-    entity.coordinator.async_set_feature = AsyncMock(
-        return_value=CommandResponse(success=True)
-    )
+    entity.coordinator.async_set_feature = AsyncMock(return_value=None)
 
     # Act: Still execute the temperature control with a malformed operation read.
     with patch.object(entity, "async_write_ha_state"):
@@ -689,9 +675,7 @@ async def test_water_heater_reports_unknown_target_for_malformed_values(
     entity = await _create_water_heater_with_values(
         mock_client, {FEATURE_TARGET_TEMP: target_value}
     )
-    entity.coordinator.async_set_feature = AsyncMock(
-        return_value=CommandResponse(success=True)
-    )
+    entity.coordinator.async_set_feature = AsyncMock(return_value=None)
 
     # Act: Still execute the temperature control with a malformed target read.
     with patch.object(entity, "async_write_ha_state"):
