@@ -10,11 +10,16 @@ from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from vi_api_client import Device, Feature, FixtureViClient, GatewayDeviceRefreshResult
 
-from custom_components.vi_climate_devices.const import DOMAIN, IGNORED_FEATURES
+from custom_components.vi_climate_devices.const import (
+    DOMAIN,
+    FEATURE_SUCCESSORS,
+    IGNORED_FEATURES,
+)
 from custom_components.vi_climate_devices.sensor import (
     SENSOR_TEMPLATES,
     SENSOR_TYPES,
     ViClimateSensor,
+    _discover_realtime_sensors,
 )
 from custom_components.vi_climate_devices.utils import is_feature_ignored
 
@@ -81,8 +86,8 @@ EXPECTED_AUTO_DISCOVERED_ENERGY_FEATURES = {
 }
 
 
-async def _setup_integration(hass: HomeAssistant, mock_client):
-    """Helper to setup the integration with the provided mock client."""
+def _create_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Add a config entry with a valid token to Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -96,6 +101,15 @@ async def _setup_integration(hass: HomeAssistant, mock_client):
         },
     )
     entry.add_to_hass(hass)
+    return entry
+
+
+async def _setup_integration(
+    hass: HomeAssistant, mock_client, entry: MockConfigEntry | None = None
+):
+    """Helper to setup the integration with the provided mock client."""
+    if entry is None:
+        entry = _create_config_entry(hass)
 
     with (
         patch(
@@ -878,3 +892,202 @@ async def test_refrigerant_circuit_sensors_are_defined_on_tested_devices(
     # Assert: An existing entity ID survives the new name.
     assert renamed.entity_id == "sensor.vitocal250a_aktueller_stromverbrauch_0"
     assert hass.states.get(renamed.entity_id) is not None
+
+
+DHW_TEMPERATURE_FEATURE = "heating.dhw.sensors.temperature.hotWaterStorage"
+DHW_TEMPERATURE_SUCCESSOR = "heating.dhw.sensors.temperature.dhwCylinder"
+DHW_TEMPERATURE_ENTITY_ID = "sensor.vitocal250a_hot_water_temperature"
+
+
+def _replace_features(
+    device: Device,
+    values: dict[str, float] | None = None,
+    removed: frozenset[str] = frozenset(),
+) -> Device:
+    """Return the device with changed feature values and removed features."""
+    values = values or {}
+    return dataclasses.replace(
+        device,
+        features=[
+            dataclasses.replace(feature, value=values.get(feature.name, feature.value))
+            for feature in device.features
+            if feature.name not in removed
+        ],
+    )
+
+
+def test_dhw_temperature_successor_is_mapped() -> None:
+    """Map the deprecated DHW temperature to the successor Viessmann announces."""
+    assert FEATURE_SUCCESSORS[DHW_TEMPERATURE_FEATURE] == DHW_TEMPERATURE_SUCCESSOR
+
+
+@pytest.mark.asyncio
+async def test_dhw_temperature_reads_successor_and_falls_back(
+    hass: HomeAssistant, mock_client
+) -> None:
+    """Keep the DHW temperature entity while its source feature changes."""
+    # Arrange: Set up the fixture, which reports both features.
+    await _setup_integration(hass, mock_client)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    coordinator = entry.runtime_data
+    device_key, device = next(iter(coordinator.data.items()))
+    registry = er.async_get(hass)
+    unique_id_prefix = f"{device.gateway_serial}-{device.id}"
+
+    # Assert: The deprecated feature keeps identifying the single entity.
+    assert (
+        registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{unique_id_prefix}-{DHW_TEMPERATURE_FEATURE}"
+        )
+        == DHW_TEMPERATURE_ENTITY_ID
+    )
+    assert (
+        registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{unique_id_prefix}-{DHW_TEMPERATURE_SUCCESSOR}"
+        )
+        is None
+    )
+
+    # Act: Report different values so the source of the state is visible.
+    coordinator.data = {
+        device_key: _replace_features(
+            device,
+            values={DHW_TEMPERATURE_FEATURE: 40.0, DHW_TEMPERATURE_SUCCESSOR: 50.0},
+        )
+    }
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    # Assert: The successor wins while both features are reported.
+    state = hass.states.get(DHW_TEMPERATURE_ENTITY_ID)
+    assert state is not None
+    assert state.state == "50.0"
+    assert state.attributes["viessmann_feature_name"] == DHW_TEMPERATURE_SUCCESSOR
+
+    # Act: Report a device firmware that no longer serves the deprecated feature.
+    coordinator.data = {
+        device_key: _replace_features(
+            device,
+            values={DHW_TEMPERATURE_SUCCESSOR: 51.0},
+            removed=frozenset({DHW_TEMPERATURE_FEATURE}),
+        )
+    }
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    # Assert: The existing entity stays available and reads the successor.
+    state = hass.states.get(DHW_TEMPERATURE_ENTITY_ID)
+    assert state is not None
+    assert state.state == "51.0"
+
+    # Act: Report a device firmware that does not serve the successor yet.
+    coordinator.data = {
+        device_key: _replace_features(
+            device,
+            values={DHW_TEMPERATURE_FEATURE: 41.0},
+            removed=frozenset({DHW_TEMPERATURE_SUCCESSOR}),
+        )
+    }
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    # Assert: The entity falls back to the deprecated feature.
+    state = hass.states.get(DHW_TEMPERATURE_ENTITY_ID)
+    assert state is not None
+    assert state.state == "41.0"
+    assert state.attributes["viessmann_feature_name"] == DHW_TEMPERATURE_FEATURE
+
+    # Cleanup: Unload the integration to stop the coordinator listener.
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.asyncio
+async def test_successor_only_device_uses_deprecated_unique_id(mock_client) -> None:
+    """Identify a successor-only DHW temperature by its deprecated feature."""
+    # Arrange: Discover a device that reports only the successor.
+    device = (await mock_client.get_full_installation_status("99999"))[0]
+    device = _replace_features(device, removed=frozenset({DHW_TEMPERATURE_FEATURE}))
+    coordinator = MagicMock(data={"device": device})
+
+    # Act: Discover the sensors of the device.
+    entities = _discover_realtime_sensors(coordinator)
+
+    # Assert: One defined entity reads the successor under the deprecated ID.
+    unique_id_prefix = f"{device.gateway_serial}-{device.id}"
+    dhw_entities = [
+        entity
+        for entity in entities
+        if entity.unique_id
+        in {
+            f"{unique_id_prefix}-{DHW_TEMPERATURE_FEATURE}",
+            f"{unique_id_prefix}-{DHW_TEMPERATURE_SUCCESSOR}",
+        }
+    ]
+    assert len(dhw_entities) == 1
+    dhw_entity = dhw_entities[0]
+    assert dhw_entity.unique_id == f"{unique_id_prefix}-{DHW_TEMPERATURE_FEATURE}"
+    assert dhw_entity.entity_description.translation_key == "dhw_temperature"
+    assert dhw_entity.native_value == 48.8
+
+
+@pytest.mark.asyncio
+async def test_auto_discovered_successor_entry_is_removed(
+    hass: HomeAssistant, mock_client
+) -> None:
+    """Remove the duplicate that auto-discovery created for the successor."""
+    # Arrange: Register the auto-discovered successor entity of an older release.
+    device = (await mock_client.get_full_installation_status("99999"))[0]
+    unique_id_prefix = f"{device.gateway_serial}-{device.id}"
+    entry = _create_config_entry(hass)
+    registry = er.async_get(hass)
+    duplicate = registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{unique_id_prefix}-{DHW_TEMPERATURE_SUCCESSOR}",
+        config_entry=entry,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+    )
+
+    # Act: Set up the integration.
+    await _setup_integration(hass, mock_client, entry)
+
+    # Assert: The duplicate is gone and the defined entity reports the value.
+    assert registry.async_get(duplicate.entity_id) is None
+    state = hass.states.get(DHW_TEMPERATURE_ENTITY_ID)
+    assert state is not None
+    assert state.state == "48.8"
+
+    # Cleanup: Unload the integration to stop the coordinator listener.
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.asyncio
+async def test_successor_entry_of_another_config_entry_is_kept(
+    hass: HomeAssistant, mock_client
+) -> None:
+    """Leave a successor registry entry alone that another entry owns."""
+    # Arrange: Register the successor unique ID for a different config entry.
+    device = (await mock_client.get_full_installation_status("99999"))[0]
+    unique_id_prefix = f"{device.gateway_serial}-{device.id}"
+    other_entry = MockConfigEntry(domain="other_domain")
+    other_entry.add_to_hass(hass)
+    registry = er.async_get(hass)
+    foreign = registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{unique_id_prefix}-{DHW_TEMPERATURE_SUCCESSOR}",
+        config_entry=other_entry,
+    )
+
+    # Act: Set up the integration with its own config entry.
+    await _setup_integration(hass, mock_client)
+
+    # Assert: The registry entry of the other config entry stays.
+    assert registry.async_get(foreign.entity_id) is not None
+
+    # Cleanup: Unload the integration to stop the coordinator listener.
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

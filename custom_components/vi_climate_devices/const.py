@@ -15,6 +15,18 @@ TESTED_DEVICES = [
     "E3_Vitocal_16",
 ]
 
+# Successors Viessmann announces for deprecated features that back defined
+# entities. The entity keeps the deprecated feature name in its unique ID, so
+# its entity ID, history, and customizations survive. It reads the successor
+# whenever the device reports it and falls back to the deprecated feature on
+# devices that do not report the successor yet.
+# Sort the keys alphabetically.
+FEATURE_SUCCESSORS = {
+    "heating.dhw.sensors.temperature.hotWaterStorage": (
+        "heating.dhw.sensors.temperature.dhwCylinder"
+    ),
+}
+
 # Features to ignore during auto-discovery
 # List feature names (dot-notation) or regex patterns (compiled) to exclude them
 IGNORED_FEATURES = [

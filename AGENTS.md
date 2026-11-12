@@ -24,6 +24,10 @@ affect the solution.
   `set_feature` for writes; do not construct raw API payloads.
 - Preserve explicitly defined entities. Automatic discovery is a fallback for
   unmapped features.
+- When Viessmann deprecates a feature that backs a defined entity, map it to
+  its successor in `FEATURE_SUCCESSORS` (`const.py`). The entity keeps the
+  deprecated feature in its unique ID, reads the successor when the device
+  reports it, and falls back to the deprecated feature otherwise.
 - Keep the single-coordinator model. Do not poll individual features or add a
   separate analytics coordinator without an explicit product decision.
 - The production integration and `scripts` run under Pyright strict, while

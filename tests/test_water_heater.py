@@ -29,7 +29,7 @@ from vi_api_client import (
     ViCommandRejectedError,
 )
 
-from custom_components.vi_climate_devices.const import DOMAIN
+from custom_components.vi_climate_devices.const import DOMAIN, FEATURE_SUCCESSORS
 from custom_components.vi_climate_devices.water_heater import (
     FEATURE_CURRENT_TEMP,
     FEATURE_MODE,
@@ -615,7 +615,11 @@ async def test_water_heater_reports_unknown_temperature_for_malformed_values(
     """Test a malformed storage temperature affects only its own property."""
     # Arrange: Publish a non-numeric storage temperature next to valid controls.
     entity = await _create_water_heater_with_values(
-        mock_client, {FEATURE_CURRENT_TEMP: storage_temperature}
+        mock_client,
+        {
+            FEATURE_CURRENT_TEMP: storage_temperature,
+            FEATURE_SUCCESSORS[FEATURE_CURRENT_TEMP]: storage_temperature,
+        },
     )
 
     # Act: Read the malformed temperature alongside the unaffected controls.
@@ -686,3 +690,35 @@ async def test_water_heater_reports_unknown_target_for_malformed_values(
     entity.coordinator.async_set_feature.assert_awaited_once()
     assert entity.current_temperature == 48.8
     assert entity.current_operation == STATE_ECO
+
+
+@pytest.mark.asyncio
+async def test_water_heater_reads_successor_temperature_and_falls_back(
+    mock_client: FixtureViClient,
+) -> None:
+    """Read the successor DHW temperature and fall back without it."""
+    # Arrange: Report different values for the deprecated feature and successor.
+    successor_name = FEATURE_SUCCESSORS[FEATURE_CURRENT_TEMP]
+    entity = await _create_water_heater_with_values(
+        mock_client, {FEATURE_CURRENT_TEMP: 40.0, successor_name: 50.0}
+    )
+
+    # Act: Read the current temperature while both features are reported.
+    successor_temperature = entity.current_temperature
+
+    # Assert: The successor wins.
+    assert successor_temperature == 50.0
+
+    # Act: Publish a refreshed device that does not report the successor yet.
+    device = entity.coordinator.data["device"]
+    entity.coordinator.data = {
+        "device": replace(
+            device,
+            features=[
+                feature for feature in device.features if feature.name != successor_name
+            ],
+        )
+    }
+
+    # Assert: The deprecated feature is read as the fallback.
+    assert entity.current_temperature == 40.0
