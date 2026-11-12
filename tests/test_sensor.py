@@ -1002,12 +1002,36 @@ async def test_dhw_temperature_reads_successor_and_falls_back(
     await hass.async_block_till_done()
 
 
+def _rename_feature(device: Device, old_name: str, new_name: str) -> Device:
+    """Return the device with one feature reported under another name."""
+    return dataclasses.replace(
+        device,
+        features=[
+            dataclasses.replace(feature, name=new_name)
+            for feature in device.features
+            if feature.name == old_name
+        ]
+        + [
+            feature
+            for feature in device.features
+            if feature.name not in {old_name, new_name}
+        ],
+    )
+
+
+@pytest.mark.parametrize(
+    ("deprecated_name", "successor_name"), sorted(FEATURE_SUCCESSORS.items())
+)
 @pytest.mark.asyncio
-async def test_successor_only_device_uses_deprecated_unique_id(mock_client) -> None:
-    """Identify a successor-only DHW temperature by its deprecated feature."""
-    # Arrange: Discover a device that reports only the successor.
-    device = (await mock_client.get_full_installation_status("99999"))[0]
-    device = _replace_features(device, removed=frozenset({DHW_TEMPERATURE_FEATURE}))
+async def test_successor_only_device_uses_deprecated_unique_id(
+    mock_client, deprecated_name: str, successor_name: str
+) -> None:
+    """Identify a successor-only feature by its deprecated feature."""
+    # Arrange: Report the fixture value only under the successor name.
+    fixture_device = (await mock_client.get_full_installation_status("99999"))[0]
+    deprecated = fixture_device.get_feature(deprecated_name)
+    assert deprecated is not None
+    device = _rename_feature(fixture_device, deprecated_name, successor_name)
     coordinator = MagicMock(data={"device": device})
 
     # Act: Discover the sensors of the device.
@@ -1015,20 +1039,21 @@ async def test_successor_only_device_uses_deprecated_unique_id(mock_client) -> N
 
     # Assert: One defined entity reads the successor under the deprecated ID.
     unique_id_prefix = f"{device.gateway_serial}-{device.id}"
-    dhw_entities = [
+    matching = [
         entity
         for entity in entities
         if entity.unique_id
         in {
-            f"{unique_id_prefix}-{DHW_TEMPERATURE_FEATURE}",
-            f"{unique_id_prefix}-{DHW_TEMPERATURE_SUCCESSOR}",
+            f"{unique_id_prefix}-{deprecated_name}",
+            f"{unique_id_prefix}-{successor_name}",
         }
     ]
-    assert len(dhw_entities) == 1
-    dhw_entity = dhw_entities[0]
-    assert dhw_entity.unique_id == f"{unique_id_prefix}-{DHW_TEMPERATURE_FEATURE}"
-    assert dhw_entity.entity_description.translation_key == "dhw_temperature"
-    assert dhw_entity.native_value == 48.8
+    assert len(matching) == 1
+    entity = matching[0]
+    assert entity.unique_id == f"{unique_id_prefix}-{deprecated_name}"
+    assert entity.entity_description == SENSOR_TYPES[deprecated_name]
+    assert entity.native_value == deprecated.value
+    assert entity.extra_state_attributes["viessmann_feature_name"] == successor_name
 
 
 @pytest.mark.asyncio
