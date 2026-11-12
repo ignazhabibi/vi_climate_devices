@@ -19,5 +19,5 @@
     "vi_api_client==7.0.0"
   ],
   "single_config_entry": true,
-  "version": "5.0.0-beta.2"
+  "version": "5.0.0"
 }
