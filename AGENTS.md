@@ -27,7 +27,9 @@ affect the solution.
 - When Viessmann deprecates a feature that backs a defined entity, map it to
   its successor in `FEATURE_SUCCESSORS` (`const.py`). The entity keeps the
   deprecated feature in its unique ID, reads the successor when the device
-  reports it, and falls back to the deprecated feature otherwise.
+  reports it, and falls back to the deprecated feature otherwise. Only sensors
+  resolve successors. `tests/test_deprecations.py` fails for a deprecated
+  defined feature that is neither mapped nor recorded with a reason.
 - Keep the single-coordinator model. Do not poll individual features or add a
   separate analytics coordinator without an explicit product decision.
 - The production integration and `scripts` run under Pyright strict, while

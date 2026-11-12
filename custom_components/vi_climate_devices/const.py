@@ -22,9 +22,15 @@ TESTED_DEVICES = [
 # devices that do not report the successor yet.
 # Sort the keys alphabetically.
 FEATURE_SUCCESSORS = {
+    "heating.configuration.temperature.outside.DampingFactor": (
+        "heating.configuration.temperature.outside.dampingFactor"
+    ),
     "heating.dhw.sensors.temperature.hotWaterStorage": (
         "heating.dhw.sensors.temperature.dhwCylinder"
     ),
+    "heating.scop.dhw": "heating.spf.dhw",
+    "heating.scop.heating": "heating.spf.heating",
+    "heating.scop.total": "heating.spf.total",
 }
 
 # Features to ignore during auto-discovery

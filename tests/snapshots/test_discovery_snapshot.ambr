@@ -1387,7 +1387,7 @@
       'attributes': dict({
         'friendly_name': 'Vitocal250A SCOP DHW',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'viessmann_feature_name': 'heating.scop.dhw',
+        'viessmann_feature_name': 'heating.spf.dhw',
       }),
       'entity_id': 'sensor.vitocal250a_scop_dhw',
       'state': '3.1',
@@ -1396,7 +1396,7 @@
       'attributes': dict({
         'friendly_name': 'Vitocal250A SCOP Heating',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'viessmann_feature_name': 'heating.scop.heating',
+        'viessmann_feature_name': 'heating.spf.heating',
       }),
       'entity_id': 'sensor.vitocal250a_scop_heating',
       'state': '4',
@@ -1405,7 +1405,7 @@
       'attributes': dict({
         'friendly_name': 'Vitocal250A SCOP Total',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'viessmann_feature_name': 'heating.scop.total',
+        'viessmann_feature_name': 'heating.spf.total',
       }),
       'entity_id': 'sensor.vitocal250a_scop_total',
       'state': '3.7',
@@ -1488,33 +1488,6 @@
       }),
       'entity_id': 'sensor.vitocal250a_sensors_temperature_allengra',
       'state': '35.9',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Spf Dhw',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'viessmann_feature_name': 'heating.spf.dhw',
-      }),
-      'entity_id': 'sensor.vitocal250a_spf_dhw',
-      'state': '3.1',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Spf Heating',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'viessmann_feature_name': 'heating.spf.heating',
-      }),
-      'entity_id': 'sensor.vitocal250a_spf_heating',
-      'state': '4',
-    }),
-    dict({
-      'attributes': dict({
-        'friendly_name': 'Vitocal250A Spf Total',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'viessmann_feature_name': 'heating.spf.total',
-      }),
-      'entity_id': 'sensor.vitocal250a_spf_total',
-      'state': '3.7',
     }),
     dict({
       'attributes': dict({
