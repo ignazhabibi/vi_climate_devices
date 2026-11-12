@@ -19,7 +19,7 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from vi_api_client import Feature, ViError
+from vi_api_client import Feature, ViCommandRejectedError, ViError
 
 from . import ViClimateDevicesConfigEntry
 from .const import DOMAIN
@@ -27,6 +27,7 @@ from .coordinator import ViClimateDataUpdateCoordinator
 from .entity import (
     ViClimateEntity,
     async_setup_dynamic_entities,
+    describe_write_rejection,
     get_numbered_translation,
 )
 from .exceptions import (
@@ -393,10 +394,10 @@ class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncomp
         temp_feature = self._get_active_temp_feature()
         if (
             temp_feature
-            and temp_feature.control
-            and temp_feature.control.min is not None
+            and temp_feature.constraints
+            and temp_feature.constraints.min is not None
         ):
-            return float(temp_feature.control.min)
+            return float(temp_feature.constraints.min)
         return super().min_temp
 
     @property
@@ -405,10 +406,10 @@ class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncomp
         temp_feature = self._get_active_temp_feature()
         if (
             temp_feature
-            and temp_feature.control
-            and temp_feature.control.max is not None
+            and temp_feature.constraints
+            and temp_feature.constraints.max is not None
         ):
-            return float(temp_feature.control.max)
+            return float(temp_feature.constraints.max)
         return super().max_temp
 
     @property
@@ -417,10 +418,10 @@ class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncomp
         temp_feature = self._get_active_temp_feature()
         if (
             temp_feature
-            and temp_feature.control
-            and temp_feature.control.step is not None
+            and temp_feature.constraints
+            and temp_feature.constraints.step is not None
         ):
-            return float(temp_feature.control.step)
+            return float(temp_feature.constraints.step)
         return super().target_temperature_step
 
     @property
@@ -480,13 +481,13 @@ class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncomp
         )
         if (
             not mode_feature
-            or not mode_feature.control
-            or not mode_feature.control.options
+            or not mode_feature.constraints
+            or not mode_feature.constraints.options
         ):
             return [HVACMode.HEAT, HVACMode.OFF]
 
         modes: set[HVACMode] = set()
-        api_options = get_feature_string_options(mode_feature.control.options)
+        api_options = get_feature_string_options(mode_feature.constraints.options)
 
         for option in api_options:
             if option in API_TO_HA_HVAC_MODE:
@@ -523,11 +524,9 @@ class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncomp
             has_optimistic_temp = True
             self.async_write_ha_state()
 
-            response = await self.coordinator.async_set_feature(
+            await self.coordinator.async_set_feature(
                 self._map_key, temp_feature.name, value
             )
-            if not response.success:
-                raise service_validation_error(ExceptionTranslationKey.COMMAND_REJECTED)
 
             if (
                 hvac_mode is not None
@@ -544,11 +543,16 @@ class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncomp
                 self._optimistic_temp = None
                 self.async_write_ha_state()
             raise
-        except ValueError as err:
+        except (ValueError, ViCommandRejectedError) as err:
+            # Handled before ViError: a rejection is a user-facing validation
+            # outcome, not a general write failure.
             if has_optimistic_temp:
                 self._optimistic_temp = None
                 self.async_write_ha_state()
-            _LOGGER.debug("Viessmann rejected requested temperature: %s", err)
+            _LOGGER.debug(
+                "Viessmann rejected requested temperature: %s",
+                describe_write_rejection(err),
+            )
             raise service_validation_error(
                 ExceptionTranslationKey.COMMAND_REJECTED
             ) from err
@@ -573,7 +577,7 @@ class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncomp
             raise home_assistant_error(ExceptionTranslationKey.FEATURE_UNAVAILABLE)
 
         available_options = get_feature_string_options(
-            mode_feature.control.options if mode_feature.control else None
+            mode_feature.constraints.options if mode_feature.constraints else None
         )
 
         candidates = HA_TO_API_HVAC_MODE.get(hvac_mode, [])

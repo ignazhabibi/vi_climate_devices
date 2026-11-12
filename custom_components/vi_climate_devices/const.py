@@ -133,6 +133,10 @@ IGNORED_FEATURES = [
     re.compile(r"^heating\.economizers\.\d+\.sensors\.temperature\..*\.status$"),
     re.compile(r"^heating\.evaporators\.\d+\.sensors\.temperature\..*\.status$"),
     re.compile(r"^heating\.inverters\.\d+\.sensors\..*\.status$"),
+    # Holiday dates are read-only and report placeholders such as "" or
+    # 2000-01-01 when no holiday is planned; the active state is a binary sensor.
+    re.compile(r"^heating\.operating\.programs\.holiday(AtHome)?\.(start|end)$"),
     re.compile(r"^heating\.primaryCircuit\.sensors\.temperature\..*\.status$"),
     re.compile(r"^heating\.sensors\..*\.status$"),
+    re.compile(r"^ventilation\.quickmodes\.holiday\.(start|end)$"),
 ]

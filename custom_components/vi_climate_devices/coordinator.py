@@ -12,11 +12,11 @@ from homeassistant.exceptions import OAuth2TokenRequestError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 from vi_api_client import (
-    CommandResponse,
     Device,
     FeatureValue,
     ViAuthError,
     ViClient as ViessmannClient,
+    ViCommandRejectedError,
     ViError,
     redact_sensitive,
 )
@@ -81,11 +81,12 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
     async def async_set_feature(
         self, device_key: str, feature_name: str, value: FeatureValue
-    ) -> CommandResponse:
+    ) -> None:
         """Set a feature while serializing writes with refreshes.
 
         Raises:
             ValueError: If the device or feature is absent from coordinator data.
+            ViCommandRejectedError: If the API or device rejects the command.
         """
         async with self._refresh_write_lock:
             device = self.data.get(device_key)
@@ -97,30 +98,27 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 raise ValueError(f"Feature {feature_name} not found in device data")
 
             try:
-                response, updated_device = await self.client.set_feature(
-                    device, feature, value
-                )
+                updated_device = await self.client.set_feature(device, feature, value)
             except ViAuthError as err:
                 _LOGGER.warning(
                     "Viessmann authentication failed while writing a feature: %s", err
                 )
                 raise config_entry_auth_failed() from err
-            _LOGGER.debug(
-                "Feature command response %s: feature=%s, success=%s, reason=%s",
-                "accepted" if response.success else "rejected",
-                feature_name,
-                response.success,
-                response.reason,
-            )
-            if response.success:
-                updated_data = dict(self.data)
-                updated_data[device_key] = updated_device
-                self._known_devices = list(updated_data.values())
-                # A command confirms values, not refresh availability. Preserve
-                # the scheduled poll and the outcome of the last refresh.
-                self.data = updated_data
-                self.async_update_listeners()
-            return response
+            except ViCommandRejectedError as err:
+                _LOGGER.debug(
+                    "Feature command response rejected: feature=%s, reason=%s",
+                    feature_name,
+                    err.reason,
+                )
+                raise
+            _LOGGER.debug("Feature command response accepted: feature=%s", feature_name)
+            updated_data = dict(self.data)
+            updated_data[device_key] = updated_device
+            self._known_devices = list(updated_data.values())
+            # A command confirms values, not refresh availability. Preserve
+            # the scheduled poll and the outcome of the last refresh.
+            self.data = updated_data
+            self.async_update_listeners()
 
     # Overrides a private DataUpdateCoordinator method because no public hook
     # wraps a whole refresh. Keep the signature in sync with Home Assistant.
@@ -260,12 +258,12 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                         updated_data[key] = device
 
                 else:
-                    updated_devices_by_id = {
-                        device.id: device for device in refresh_result.updated_devices
+                    refreshed_devices_by_id = {
+                        device.id: device for device in refresh_result.refreshed_devices
                     }
                     for device in gateway_devices:
                         key = device_key(device)
-                        refreshed_device = updated_devices_by_id.get(device.id)
+                        refreshed_device = refreshed_devices_by_id.get(device.id)
                         if refreshed_device is not None:
                             updated_data[key] = refreshed_device
                             continue

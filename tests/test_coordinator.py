@@ -24,7 +24,6 @@ from pytest_homeassistant_custom_component.common import (
     async_fire_time_changed,
 )
 from vi_api_client import (
-    CommandResponse,
     Device,
     Feature,
     GatewayDeviceRefreshResult,
@@ -174,10 +173,11 @@ def _build_curve_device(slope: float, shift: float) -> Device:
 
 
 def _refresh_result(
-    updated_devices: list[Device], errors_by_device_id: dict[str, ViError] | None = None
+    refreshed_devices: list[Device],
+    errors_by_device_id: dict[str, ViError] | None = None,
 ) -> GatewayDeviceRefreshResult:
     """Build a gateway refresh result for coordinator tests."""
-    return GatewayDeviceRefreshResult(updated_devices, errors_by_device_id or {})
+    return GatewayDeviceRefreshResult(refreshed_devices, errors_by_device_id or {})
 
 
 def _successful_gateway_refresh(devices: list[Device]) -> GatewayDeviceRefreshResult:
@@ -660,12 +660,7 @@ async def test_confirmed_write_survives_partial_failure_and_recovery(
     other_entity = ViClimateNumber(
         coordinator, other_key, feature_name, NumberEntityDescription(key=feature_name)
     )
-    mock_client.set_feature = AsyncMock(
-        return_value=(
-            CommandResponse(success=True, message=None, reason=None),
-            written_device,
-        )
-    )
+    mock_client.set_feature = AsyncMock(return_value=written_device)
     await coordinator.async_set_feature(device_key, feature_name, 1.2)
 
     # Act: The written device fails to poll while the second device stays reachable.
@@ -682,12 +677,7 @@ async def test_confirmed_write_survives_partial_failure_and_recovery(
     assert other_entity.available
 
     # Act: Confirm a new slope for the reachable second device.
-    mock_client.set_feature = AsyncMock(
-        return_value=(
-            CommandResponse(success=True, message=None, reason=None),
-            other_written_device,
-        )
-    )
+    mock_client.set_feature = AsyncMock(return_value=other_written_device)
     await coordinator.async_set_feature(other_key, feature_name, 1.2)
 
     # Assert: The second device updates without recovering the first.
@@ -707,10 +697,7 @@ async def test_confirmed_write_survives_partial_failure_and_recovery(
     assert other_entity.available
 
     # Act: Update the recovered device.
-    mock_client.set_feature.return_value = (
-        CommandResponse(success=True, message=None, reason=None),
-        _build_curve_device(slope=1.4, shift=0.0),
-    )
+    mock_client.set_feature.return_value = _build_curve_device(slope=1.4, shift=0.0)
     await coordinator.async_set_feature(device_key, feature_name, 1.4)
 
     # Assert: The write starts from the device confirmed by recovery.
@@ -745,10 +732,10 @@ async def test_refresh_waits_for_write_and_polls_confirmed_device(
 
     async def mock_set_feature(
         device: Device, feature: Feature, value: object
-    ) -> tuple[CommandResponse, Device]:
+    ) -> Device:
         write_started.set()
         await allow_write_to_finish.wait()
-        return CommandResponse(success=True, message=None, reason=None), written_device
+        return written_device
 
     mock_client.set_feature = AsyncMock(side_effect=mock_set_feature)
     mock_client.refresh_gateway_devices = AsyncMock(
@@ -789,15 +776,13 @@ async def test_data_coordinator_serializes_writes_per_device(
 
     async def mock_set_feature(
         device: Device, feature: Feature, value: object
-    ) -> tuple[CommandResponse, Device]:
+    ) -> Device:
         calls.append((device, feature, value))
         if feature.name.endswith("slope"):
             first_write_started.set()
             await allow_first_write_to_finish.wait()
-            return CommandResponse(
-                success=True, message=None, reason=None
-            ), slope_updated_device
-        return CommandResponse(success=True, message=None, reason=None), final_device
+            return slope_updated_device
+        return final_device
 
     mock_client.set_feature = AsyncMock(side_effect=mock_set_feature)
     coordinator = _build_coordinator(hass, mock_client)
@@ -847,15 +832,13 @@ async def test_platform_commands_share_current_device_state(
 
     async def mock_set_feature(
         device: Device, feature: Feature, value: object
-    ) -> tuple[CommandResponse, Device]:
+    ) -> Device:
         calls.append((device, feature, value))
         if feature.name == select_feature_name:
             first_write_started.set()
             await allow_first_write_to_finish.wait()
-            return CommandResponse(
-                success=True, message=None, reason=None
-            ), select_updated_device
-        return CommandResponse(success=True, message=None, reason=None), final_device
+            return select_updated_device
+        return final_device
 
     mock_client.set_feature = AsyncMock(side_effect=mock_set_feature)
     coordinator = _build_coordinator(hass, mock_client)
@@ -917,12 +900,7 @@ async def test_data_coordinator_does_not_overwrite_a_write_with_stale_refresh(
     mock_client.refresh_gateway_devices = AsyncMock(
         side_effect=mock_refresh_gateway_devices
     )
-    mock_client.set_feature = AsyncMock(
-        return_value=(
-            CommandResponse(success=True, message=None, reason=None),
-            written_device,
-        )
-    )
+    mock_client.set_feature = AsyncMock(return_value=written_device)
     coordinator = _build_coordinator(hass, mock_client)
     coordinator.data = {device_key: initial_device}
     coordinator._known_devices = [initial_device]
@@ -959,12 +937,7 @@ async def test_data_coordinator_notifies_entities_after_successful_write(
     device_key = "gw-main_device-0"
     initial_device = _build_curve_device(slope=0.7, shift=0.0)
     updated_device = _build_curve_device(slope=1.2, shift=0.0)
-    mock_client.set_feature = AsyncMock(
-        return_value=(
-            CommandResponse(success=True, message=None, reason=None),
-            updated_device,
-        )
-    )
+    mock_client.set_feature = AsyncMock(return_value=updated_device)
     coordinator = _build_coordinator(hass, mock_client)
     coordinator.data = {device_key: initial_device}
     listener_data: list[Device] = []
@@ -1090,12 +1063,7 @@ async def test_write_after_full_outage_preserves_availability_until_poll(
         assert observed_states == [(False, False, 0.7)]
 
         # Act: A command succeeds for the first device.
-        mock_client.set_feature = AsyncMock(
-            return_value=(
-                CommandResponse(success=True, message=None, reason=None),
-                written_device,
-            )
-        )
+        mock_client.set_feature = AsyncMock(return_value=written_device)
         await coordinator.async_set_feature("gw-main_device-0", feature_name, 1.2)
 
         # Assert: Publish confirmed values without claiming either device recovered.

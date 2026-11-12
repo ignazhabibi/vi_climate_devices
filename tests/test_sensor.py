@@ -550,7 +550,7 @@ async def test_fixture_auto_discovered_energy_state_classes(
     mock_client = FixtureViClient(device_name)
     installations = await mock_client.get_installations()
     devices = await mock_client.get_full_installation_status(
-        installations[0].id, only_enabled=False
+        installations[0].id, only_available=False
     )
     expected_feature_names = EXPECTED_AUTO_DISCOVERED_ENERGY_FEATURES[device_name]
     fixture_features = {

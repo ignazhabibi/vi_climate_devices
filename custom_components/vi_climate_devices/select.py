@@ -59,7 +59,7 @@ def _discover_selects(
                 # Automatic Discovery. Heating circuit and DHW modes are set
                 # through the climate and water heater entities only.
                 # Control must exist and have enum options
-                if feature.control and feature.control.options is not None:
+                if feature.constraints and feature.constraints.options is not None:
                     description = SelectEntityDescription(
                         key=feature.name,
                         name=beautify_name(feature.name),
@@ -107,13 +107,13 @@ class ViClimateSelect(ViClimateFeatureEntity, SelectEntity):  # pyright: ignore[
         self._update_options(self.feature_data)
 
     def _update_options(self, feature: Feature | None) -> None:
-        """Extract available options from feature control."""
+        """Extract available options from the feature constraints."""
         self._attr_options = []
-        if feature and feature.control and feature.control.options:
+        if feature and feature.constraints and feature.constraints.options:
             # Options can be Dict[value, label] or List[value]
             # We normalize to list of strings
             normalized_opts: list[str] = []
-            for opt in feature.control.options:
+            for opt in feature.constraints.options:
                 if isinstance(opt, dict):
                     option_value = opt.get("value")
                     if isinstance(option_value, str):

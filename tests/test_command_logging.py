@@ -8,7 +8,7 @@ import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from vi_api_client import CommandResponse, FixtureViClient
+from vi_api_client import FixtureViClient, ViCommandRejectedError
 
 from custom_components.vi_climate_devices.const import DOMAIN
 
@@ -71,20 +71,19 @@ async def test_command_response_is_logged_once_without_private_data(
     case: tuple[str, str, dict[str, str | float], str],
     success: bool,
 ) -> None:
-    """Every writable platform reports one safe response per API command."""
-    # Arrange: Load one writable fixture device and a response with private text.
+    """Every writable platform reports one safe result per API command."""
+    # Arrange: Load one writable fixture device; a rejection carries private text.
     domain, service, data, feature_name = case
     entry = MockConfigEntry(domain=DOMAIN, data={"client_id": "123", "token": "abc"})
     entry.add_to_hass(hass)
-    reason = "COMMAND_EXECUTION_SUCCESS" if success else "DEVICE_COMMUNICATION_ERROR"
-    response = CommandResponse(
-        success=success,
-        message="secret response for installation-123 and gw-main",
-        reason=reason,
-    )
 
     async def set_feature(device, feature, value):
-        return response, device
+        if not success:
+            raise ViCommandRejectedError(
+                "secret response for installation-123 and gw-main",
+                reason="COMMAND_NOT_EXECUTABLE",
+            )
+        return device
 
     client = (
         FixtureViClient(_FIXTURE_BY_DOMAIN[domain])
@@ -127,9 +126,17 @@ async def test_command_response_is_logged_once_without_private_data(
             and "command response" in record.getMessage().lower()
         ]
         assert result_logs == [
-            f"Feature command response {'accepted' if success else 'rejected'}: "
-            f"feature={feature_name}, success={success}, reason={reason}"
+            f"Feature command response accepted: feature={feature_name}"
+            if success
+            else f"Feature command response rejected: feature={feature_name}, "
+            "reason=COMMAND_NOT_EXECUTABLE"
         ]
+        all_logs = "\n".join(
+            record.getMessage()
+            for record in caplog.records
+            if record.name.startswith("custom_components.vi_climate_devices")
+        )
+        assert "secret response" not in all_logs
         result_text = "\n".join(result_logs)
         assert "secret response" not in result_text
         assert "installation-123" not in result_text

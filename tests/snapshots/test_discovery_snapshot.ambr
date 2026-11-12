@@ -43,14 +43,6 @@
     }),
     dict({
       'attributes': dict({
-        'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Forced Last From Schedule Active',
-        'viessmann_feature_name': 'heating.circuits.0.operating.programs.forcedLastFromSchedule.active',
-      }),
-      'entity_id': 'binary_sensor.vitocal250a_circuits_0_operating_programs_forced_last_from_schedule_active',
-      'state': 'off',
-    }),
-    dict({
-      'attributes': dict({
         'friendly_name': 'Vitocal250A Circuits 0 Operating Programs Frostprotection Active',
         'viessmann_feature_name': 'heating.circuits.0.operating.programs.frostprotection.active',
       }),

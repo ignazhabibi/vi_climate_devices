@@ -16,10 +16,10 @@ from homeassistant.exceptions import (
 )
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from vi_api_client import (
-    CommandResponse,
-    FeatureControl,
+    FeatureConstraints,
     FeatureValue,
     FixtureViClient,
+    ViCommandRejectedError,
 )
 
 from custom_components.vi_climate_devices.const import DOMAIN
@@ -178,15 +178,11 @@ async def test_select_error_handling(hass: HomeAssistant):
 async def test_select_api_rejection(hass: HomeAssistant):
     """Roll back the optimistic option when the API rejects the command."""
 
-    # Arrange: Reject every write logically.
-    async def reject(device, feature, value):
-        response = CommandResponse(
-            success=False, message="Rejected", reason="DEVICE_COMMUNICATION_ERROR"
-        )
-        return (response, device)
-
+    # Arrange: Reject every write command.
     client = FixtureViClient(VENTILATION_FIXTURE)
-    client.set_feature = AsyncMock(side_effect=reject)
+    client.set_feature = AsyncMock(
+        side_effect=ViCommandRejectedError("Rejected", reason="COMMAND_NOT_EXECUTABLE")
+    )
     await _setup_integration(hass, client)
 
     # Act: Try to change the option.
@@ -238,17 +234,12 @@ async def test_select_preserves_reauthentication_failure() -> None:
 @pytest.mark.asyncio
 async def test_select_options_reject_non_string_shapes() -> None:
     """Build options only from string entries, never by stringifying JSON."""
-    # Arrange: Replace the mode feature with a control carrying mixed shapes.
+    # Arrange: Replace the mode constraints with options carrying mixed shapes.
     device = (
         await FixtureViClient("Vitocal250A").get_full_installation_status("99999")
     )[0]
     feature_name = "heating.dhw.operating.modes.active"
-    control = FeatureControl(
-        command_name="setMode",
-        parameter_name="mode",
-        required_parameters=(),
-        parent_feature_name="heating.dhw.operating.modes",
-        uri="https://mock.local/command",
+    constraints = FeatureConstraints(
         options=(
             5,
             True,
@@ -261,7 +252,7 @@ async def test_select_options_reject_non_string_shapes() -> None:
     )
     feature = device.get_feature(feature_name)
     assert feature is not None
-    feature = dataclasses.replace(feature, control=control, is_enabled=True)
+    feature = dataclasses.replace(feature, constraints=constraints, is_enabled=True)
     coordinator = MagicMock(
         data={"device": dataclasses.replace(device, features=[feature])}
     )

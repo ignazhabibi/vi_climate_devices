@@ -18,7 +18,7 @@ from syrupy.assertion import SnapshotAssertion
 from vi_api_client import (
     Device,
     Feature,
-    FeatureControl,
+    FeatureConstraints,
     FeatureValue,
     FixtureViClient,
     ViConnectionError,
@@ -128,6 +128,12 @@ async def test_config_entry_diagnostics_omit_sensitive_cached_data(
     installation_canary = "installation-canary"
     gateway_serial_canary = "gateway-serial-canary"
     device_id_canary = "device-id-canary"
+    fixture_device = (
+        await FixtureViClient("Vitocal250A").get_full_installation_status("99999")
+    )[0]
+    writable_feature = fixture_device.get_feature("heating.dhw.temperature.main")
+    assert writable_feature is not None
+    assert writable_feature.is_writable
     device = Device(
         id=device_id_canary,
         gateway_serial=gateway_serial_canary,
@@ -183,18 +189,13 @@ async def test_config_entry_diagnostics_omit_sensitive_cached_data(
                 is_enabled=True,
                 is_ready=True,
             ),
-            Feature(
+            # A hand-built feature is read-only; derive a writable one from a
+            # client read so diagnostics see a real write binding.
+            dataclasses.replace(
+                writable_feature,
                 name="heating.configuration.targetTemperature",
                 value=20.0,
-                unit="celsius",
-                is_enabled=True,
-                is_ready=True,
-                control=FeatureControl(
-                    command_name="setTargetTemperature",
-                    parameter_name="temperature",
-                    required_parameters=(),
-                    parent_feature_name="heating.configuration.targetTemperature",
-                    uri="https://api.example.invalid/command-uri-canary",
+                constraints=FeatureConstraints(
                     min=3.0,
                     max=37.0,
                     step=0.1,
@@ -244,7 +245,6 @@ async def test_config_entry_diagnostics_omit_sensitive_cached_data(
         "2345678",
         "3456789012345678",
         "option-token-canary",
-        "command-uri-canary",
         "cache-key-canary",
         "entry-title-canary",
         "unique-id-canary",
@@ -270,9 +270,19 @@ async def test_config_entry_diagnostics_omit_sensitive_cached_data(
         "longitude": 0,
     }
     assert diagnostic_features["device.serial"]["value"] == "################"
-    assert diagnostic_features["heating.configuration.targetTemperature"][
-        "constraints"
-    ] == {
+    target_temperature = diagnostic_features["heating.configuration.targetTemperature"]
+    # Command names, parameters and URIs are not part of the projection.
+    assert sorted(target_temperature) == [
+        "constraints",
+        "is_enabled",
+        "is_ready",
+        "is_writable",
+        "name",
+        "unit",
+        "value",
+    ]
+    assert target_temperature["is_writable"] is True
+    assert target_temperature["constraints"] == {
         "max": 37.0,
         "min": 3.0,
         "options": [

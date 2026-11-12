@@ -19,11 +19,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from vi_api_client import (
-    CommandResponse,
     Device,
     Feature,
     FeatureValue,
     FixtureViClient,
+    ViCommandRejectedError,
 )
 
 from custom_components.vi_climate_devices.climate import ViClimate
@@ -57,14 +57,7 @@ async def _create_hvac_action_entity(
     fixture_feature_names = {feature.name for feature in fixture_device.features}
 
     updated_features = [
-        Feature(
-            name=feature.name,
-            value=feature_values.get(feature.name, feature.value),
-            unit=feature.unit,
-            is_enabled=feature.is_enabled,
-            is_ready=feature.is_ready,
-            control=feature.control,
-        )
+        replace(feature, value=feature_values.get(feature.name, feature.value))
         for feature in fixture_device.features
         if feature.name not in removed_feature_names
     ]
@@ -505,7 +498,16 @@ async def test_climate_requires_writable_active_program_temperature(
         elif temperature_feature_state == "disabled":
             features.append(replace(feature, is_enabled=False))
         elif temperature_feature_state == "read-only":
-            features.append(replace(feature, control=None))
+            # A hand-built feature carries no write binding and is read-only.
+            features.append(
+                Feature(
+                    name=feature.name,
+                    value=feature.value,
+                    unit=feature.unit,
+                    is_enabled=feature.is_enabled,
+                    is_ready=feature.is_ready,
+                )
+            )
 
     device = replace(device, features=features)
     map_key = f"{device.gateway_serial}_{device.id}"
@@ -575,19 +577,21 @@ async def test_climate_sets_temperature_on_program_selected_by_requested_mode(
         name="heating.circuits.0.operating.programs.normalCooling.temperature",
         value=18.0,
     )
-    mode_control = next(
-        feature.control
+    mode_constraints = next(
+        feature.constraints
         for feature in initial_device.features
         if feature.name == CIRCUIT_MODE_FEATURE
     )
-    assert mode_control is not None
+    assert mode_constraints is not None
     initial_features = [
         replace(feature, value=initial_program)
         if feature.name == ACTIVE_PROGRAM_FEATURE
         else replace(
             feature,
             value=initial_mode,
-            control=replace(mode_control, options=("heating", "cooling", "standby")),
+            constraints=replace(
+                mode_constraints, options=("heating", "cooling", "standby")
+            ),
         )
         if feature.name == CIRCUIT_MODE_FEATURE
         else feature
@@ -610,9 +614,7 @@ async def test_climate_sets_temperature_on_program_selected_by_requested_mode(
     map_key = f"{initial_device.gateway_serial}_{initial_device.id}"
     coordinator = MagicMock()
     coordinator.data = {map_key: initial_device}
-    coordinator.async_set_feature = AsyncMock(
-        return_value=CommandResponse(success=True, message=None, reason=None)
-    )
+    coordinator.async_set_feature = AsyncMock(return_value=None)
 
     async def refresh_after_mode_change() -> None:
         coordinator.data = {map_key: transitioned_device}
@@ -636,8 +638,8 @@ async def test_climate_sets_temperature_on_program_selected_by_requested_mode(
     coordinator.data = {map_key: initial_device}
     coordinator.async_set_feature.reset_mock()
     coordinator.async_set_feature.side_effect = [
-        CommandResponse(success=True, message=None, reason=None),
-        CommandResponse(success=False, message="temperature rejected", reason=None),
+        None,
+        ViCommandRejectedError("temperature rejected"),
     ]
 
     # Act and assert: Preserve the successful mode change in the failure message.
@@ -784,7 +786,7 @@ async def test_climate_rejects_unknown_and_rejected_hvac_commands() -> None:
     map_key = f"{device.gateway_serial}_{device.id}"
     coordinator = MagicMock(data={map_key: device})
     coordinator.async_set_feature = AsyncMock(
-        return_value=CommandResponse(success=False, message="Locked")
+        side_effect=ViCommandRejectedError("Locked")
     )
     entity = ViClimate(coordinator, map_key, "0")
 
@@ -1018,9 +1020,7 @@ async def test_climate_reports_unknown_mode_for_malformed_values(
         {CIRCUIT_MODE_FEATURE: mode_value},
         frozenset(),
     )
-    entity.coordinator.async_set_feature = AsyncMock(
-        return_value=CommandResponse(success=True)
-    )
+    entity.coordinator.async_set_feature = AsyncMock(return_value=None)
 
     # Act: Still execute the mode control with a malformed mode read.
     with patch.object(entity, "async_write_ha_state"):
@@ -1115,18 +1115,16 @@ async def test_climate_heating_and_cooling_mode(
             replace(
                 feature,
                 value=expected_api_mode,
-                control=replace(feature.control, options=mode_options),
+                constraints=replace(feature.constraints, options=mode_options),
             )
-            if feature.name == CIRCUIT_MODE_FEATURE and feature.control
+            if feature.name == CIRCUIT_MODE_FEATURE and feature.constraints
             else feature
             for feature in device.features
         ],
     )
     map_key = f"{device.gateway_serial}_{device.id}"
     coordinator = MagicMock(data={map_key: device})
-    coordinator.async_set_feature = AsyncMock(
-        return_value=CommandResponse(success=True)
-    )
+    coordinator.async_set_feature = AsyncMock(return_value=None)
     entity = ViClimate(coordinator, map_key, "0")
 
     # Act: Read the mode, then select the combined mode.
@@ -1164,3 +1162,27 @@ async def test_climate_reports_cooling_in_heating_and_cooling_mode(
     # Act and assert: The demand direction drives the action.
     assert entity.hvac_mode == HVACMode.HEAT_COOL
     assert entity.hvac_action == HVACAction.COOLING
+
+
+@pytest.mark.asyncio
+async def test_climate_clears_optimistic_temperature_when_later_mode_is_rejected(
+    mock_client: FixtureViClient,
+) -> None:
+    """Clear the optimistic temperature if the follow-up mode change is rejected."""
+    # Arrange: Accept the temperature write and reject the following mode write.
+    entity = await _create_hvac_action_entity(mock_client, {}, frozenset())
+    assert entity.hvac_mode == HVACMode.HEAT
+    entity.coordinator.async_set_feature = AsyncMock(
+        side_effect=[None, ViCommandRejectedError("mode rejected")]
+    )
+
+    # Act and assert: The rejection reaches the caller as a validation error.
+    with (
+        pytest.raises(ServiceValidationError) as error,
+        patch.object(entity, "async_write_ha_state"),
+    ):
+        await entity.async_set_temperature(temperature=21.0, hvac_mode=HVACMode.OFF)
+
+    assert error.value.translation_key == "command_rejected"
+    assert entity.coordinator.async_set_feature.await_count == 2
+    assert entity._optimistic_temp is None

@@ -137,14 +137,14 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):  # pyright: igno
 
     def _update_constraints(self, feature: Feature | None) -> None:
         """Extract min/max/step from target temp command."""
-        # Use new FeatureControl object
-        if feature and feature.control:
-            if feature.control.min is not None:
-                self._attr_min_temp = feature.control.min
-            if feature.control.max is not None:
-                self._attr_max_temp = feature.control.max
-            if feature.control.step is not None:
-                self._attr_target_temperature_step = feature.control.step
+        # Read the write constraints
+        if feature and feature.constraints:
+            if feature.constraints.min is not None:
+                self._attr_min_temp = feature.constraints.min
+            if feature.constraints.max is not None:
+                self._attr_max_temp = feature.constraints.max
+            if feature.constraints.step is not None:
+                self._attr_target_temperature_step = feature.constraints.step
 
     def _get_device_family_mode_mapping(self) -> dict[str, str] | None:
         """Return the current device family's API-to-HA mode mapping."""
@@ -231,12 +231,12 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):  # pyright: igno
     def operation_list(self) -> list[str]:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return available operation modes as HA standard states."""
         feat = self._get_feature(FEATURE_MODE)
-        if not feat or not feat.control or not feat.control.options:
+        if not feat or not feat.constraints or not feat.constraints.options:
             # Fallback
             return [STATE_OFF, STATE_ECO, STATE_PERFORMANCE]
 
         # Get API modes from constraints
-        api_modes = get_feature_string_options(feat.control.options)
+        api_modes = get_feature_string_options(feat.constraints.options)
 
         # Convert to HA standard states (deduplicated)
         ha_modes: set[str] = set()
@@ -315,6 +315,6 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):  # pyright: igno
 
     def _get_available_api_modes(self, feat: Feature) -> list[str]:
         """Get list of available API modes from feature constraints."""
-        if feat.control and feat.control.options:
-            return get_feature_string_options(feat.control.options)
+        if feat.constraints and feat.constraints.options:
+            return get_feature_string_options(feat.constraints.options)
         return []

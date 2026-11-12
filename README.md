@@ -124,7 +124,7 @@ account, not that setup failed.
 | `number` | Heating-curve values, temperature limits, hot-water target temperature, and selected configuration values |
 | `select` | Other writable options exposed by the API; heating-circuit and hot-water modes are set through `climate` and `water_heater` |
 | `sensor` | Temperatures, pressure, humidity, flow, energy, power, SCOP, diagnostic statistics, and the heat pump state and heating rod stage from the active status messages |
-| `switch` | One-time domestic hot-water charge, hygiene function, and supported boolean controls |
+| `switch` | One-time domestic hot-water charge, hygiene function, heating-circuit comfort, eco, and forced-schedule programs and ventilation quick modes (disabled by default), and supported boolean controls |
 | `water_heater` | Domestic hot-water target temperature and operation mode |
 
 Entities use appropriate device classes and are grouped under their Viessmann
