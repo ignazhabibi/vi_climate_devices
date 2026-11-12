@@ -38,7 +38,9 @@ from .coordinator import ViClimateDataUpdateCoordinator
 from .entity import (
     EntityTemplate,
     ViClimateFeatureEntity,
+    async_remove_successor_entries,
     async_setup_dynamic_entities,
+    get_entity_feature_name,
     get_template_translation,
 )
 from .status_messages import (
@@ -970,6 +972,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Viessmann Climate Devices sensor based on a config entry."""
     coordinator = entry.runtime_data
+    async_remove_successor_entries(hass, entry, coordinator, Platform.SENSOR)
     async_setup_dynamic_entities(
         hass,
         entry,
@@ -1002,11 +1005,17 @@ def _discover_realtime_sensors(
                     )
                 continue
 
+            entity_feature_name = get_entity_feature_name(device, feature.name)
+            if entity_feature_name is None:
+                continue
+
             # 1. Defined Entities (High Quality)
-            if feature.name in SENSOR_TYPES:
-                description = SENSOR_TYPES[feature.name]
+            if entity_feature_name in SENSOR_TYPES:
+                description = SENSOR_TYPES[entity_feature_name]
                 entities.append(
-                    ViClimateSensor(coordinator, map_key, feature.name, description)
+                    ViClimateSensor(
+                        coordinator, map_key, entity_feature_name, description
+                    )
                 )
                 continue
 
@@ -1101,9 +1110,11 @@ class ViClimateSensor(ViClimateFeatureEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, JsonValue]:  # pyright: ignore[reportIncompatibleVariableOverride]
-        """Return the state attributes."""
-        attrs: dict[str, JsonValue] = {"viessmann_feature_name": self._feature_name}
+        """Return the name of the feature read and its raw structured value."""
         feat = self.feature_data
+        attrs: dict[str, JsonValue] = {
+            "viessmann_feature_name": feat.name if feat else self._feature_name
+        }
         if feat and isinstance(feat.value, (dict, list)):
             attrs["raw_value"] = feat.value
         return attrs

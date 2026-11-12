@@ -27,7 +27,7 @@ from vi_api_client import (
     ViError,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, FEATURE_SUCCESSORS
 from .coordinator import ViClimateDataUpdateCoordinator
 from .exceptions import (
     ExceptionTranslationKey,
@@ -93,6 +93,68 @@ def get_template_translation(
     return get_numbered_translation(translation_key, device, prefix, match.group(1))
 
 
+_DEPRECATED_FEATURES_BY_SUCCESSOR = {
+    successor: deprecated for deprecated, successor in FEATURE_SUCCESSORS.items()
+}
+
+
+def get_feature_or_successor(device: Device, feature_name: str) -> Feature | None:
+    """Return the successor of a deprecated feature, or the feature itself.
+
+    Depending on the firmware, a device reports the successor, the deprecated
+    feature, or both. The successor wins when the device reports it.
+    """
+    if (successor_name := FEATURE_SUCCESSORS.get(feature_name)) is not None and (
+        successor := device.get_feature(successor_name)
+    ) is not None:
+        return successor
+    return device.get_feature(feature_name)
+
+
+def get_entity_feature_name(device: Device, feature_name: str) -> str | None:
+    """Return the feature name that identifies the entity of a reported feature.
+
+    A successor is identified by its deprecated feature, so the existing
+    entity keeps its unique ID instead of being replaced. When the device also
+    reports the deprecated feature, that feature creates the entity, and None
+    is returned for the successor to avoid a duplicate.
+    """
+    deprecated_name = _DEPRECATED_FEATURES_BY_SUCCESSOR.get(feature_name)
+    if deprecated_name is None:
+        return feature_name
+    if device.get_feature(deprecated_name) is not None:
+        return None
+    return deprecated_name
+
+
+def async_remove_successor_entries(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    coordinator: ViClimateDataUpdateCoordinator,
+    domain: str,
+) -> None:
+    """Remove registry entries that were auto-discovered for a successor.
+
+    Before a successor was mapped, auto-discovery created a separate entity
+    for it next to the defined entity of the deprecated feature. The defined
+    entity now reads the successor, so the duplicate would stay orphaned.
+    """
+    registry = er.async_get(hass)
+    for device in coordinator.data.values():
+        for successor_name in sorted(_DEPRECATED_FEATURES_BY_SUCCESSOR):
+            unique_id = f"{device.gateway_serial}-{device.id}-{successor_name}"
+            entity_id = registry.async_get_entity_id(domain, DOMAIN, unique_id)
+            if entity_id is None:
+                continue
+            registry_entry = registry.async_get(entity_id)
+            if registry_entry is None or registry_entry.config_entry_id != (
+                entry.entry_id
+            ):
+                continue
+            _LOGGER.debug("Removing duplicate successor entity %s", entity_id)
+            registry.async_remove(entity_id)
+
+
 def describe_write_rejection(err: ValueError | ViCommandRejectedError) -> str:
     """Return a log-safe description of a rejected write.
 
@@ -147,16 +209,20 @@ class ViClimateEntity(CoordinatorEntity[ViClimateDataUpdateCoordinator]):
         if device is None:
             return False
         return all(
-            device.get_feature(feature_name) is not None
+            get_feature_or_successor(device, feature_name) is not None
             for feature_name in self._availability_feature_names
         )
 
     def _get_feature(self, name: str) -> Feature | None:
-        """Return the latest feature by name, or None without a device."""
+        """Return the latest feature by name, or None without a device.
+
+        A deprecated feature with a known successor resolves to the successor
+        whenever the device reports it.
+        """
         device = self.coordinator.data.get(self._map_key)
         if device is None:
             return None
-        return device.get_feature(name)
+        return get_feature_or_successor(device, name)
 
     async def _async_write_feature(
         self,

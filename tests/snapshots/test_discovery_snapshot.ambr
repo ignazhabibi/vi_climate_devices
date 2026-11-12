@@ -860,17 +860,6 @@
     dict({
       'attributes': dict({
         'device_class': 'temperature',
-        'friendly_name': 'Vitocal250A Dhw Sensors Temperature Dhw Cylinder',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-        'viessmann_feature_name': 'heating.dhw.sensors.temperature.dhwCylinder',
-      }),
-      'entity_id': 'sensor.vitocal250a_dhw_sensors_temperature_dhw_cylinder',
-      'state': '48.8',
-    }),
-    dict({
-      'attributes': dict({
-        'device_class': 'temperature',
         'friendly_name': 'Vitocal250A Dhw Temperature Levels Default',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
@@ -1139,7 +1128,7 @@
         'friendly_name': 'Vitocal250A Hot Water Temperature',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-        'viessmann_feature_name': 'heating.dhw.sensors.temperature.hotWaterStorage',
+        'viessmann_feature_name': 'heating.dhw.sensors.temperature.dhwCylinder',
       }),
       'entity_id': 'sensor.vitocal250a_hot_water_temperature',
       'state': '48.8',
