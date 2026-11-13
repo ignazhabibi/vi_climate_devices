@@ -1,6 +1,7 @@
 """Tests for Viessmann Climate Devices utilities."""
 
 import pytest
+from vi_api_client import Feature, FeatureValue
 
 from custom_components.vi_climate_devices.utils import (
     api_value_to_option_key,
@@ -11,6 +12,7 @@ from custom_components.vi_climate_devices.utils import (
     get_feature_string_value,
     get_suggested_precision,
     is_feature_boolean_like,
+    is_sensor_status_companion,
     normalize_sensor_value,
 )
 
@@ -223,3 +225,53 @@ def test_get_suggested_precision():
 def test_api_value_to_option_key(api_value: str, expected_key: str):
     """Convert camelCase API values to lowercase translation keys."""
     assert api_value_to_option_key(api_value) == expected_key
+
+
+@pytest.mark.parametrize(
+    ("feature_name", "value", "feature_names", "expected"),
+    [
+        pytest.param(
+            "ventilation.sensors.humidity.supply.status",
+            "connected",
+            {"ventilation.sensors.humidity.supply"},
+            True,
+            id="status-next-to-reading",
+        ),
+        pytest.param(
+            "ventilation.airQuality.co2.status",
+            "error",
+            set(),
+            True,
+            id="failed-sensor-without-reading",
+        ),
+        pytest.param(
+            "ventilation.fan.supply.status",
+            "shortCircuit",
+            {"ventilation.fan.supply.status", "ventilation.fan.supply"},
+            True,
+            id="unknown-status-next-to-reading",
+        ),
+        pytest.param("heating.dhw.status", "on", set(), False, id="real-state"),
+        pytest.param(
+            "photovoltaic.status.status", "ready", set(), False, id="device-state"
+        ),
+        pytest.param(
+            "heating.sensors.temperature.outside",
+            "connected",
+            set(),
+            False,
+            id="no-status-feature",
+        ),
+    ],
+)
+def test_is_sensor_status_companion(
+    feature_name: str, value: FeatureValue, feature_names: set[str], expected: bool
+) -> None:
+    """Recognize sensor connection statuses but keep real device states."""
+    # Arrange: Build the feature with the given value.
+    feature = Feature(
+        name=feature_name, value=value, unit=None, is_enabled=True, is_ready=True
+    )
+
+    # Act and assert: Only connection statuses of sensors are recognized.
+    assert is_sensor_status_companion(feature, feature_names) is expected
