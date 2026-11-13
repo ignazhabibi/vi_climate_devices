@@ -83,6 +83,9 @@
             "dhw_hysteresis_off": {
                 "name": "DHW Hysteresis Switch Off"
             },
+            "dhw_hygiene_temperature": {
+                "name": "DHW Hygiene Temperature"
+            },
             "dhw_target_temperature": {
                 "name": "DHW Target Temperature"
             },

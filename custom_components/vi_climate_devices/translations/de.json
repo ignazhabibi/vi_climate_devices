@@ -83,6 +83,9 @@
             "dhw_hysteresis_off": {
                 "name": "Warmwasser Hysterese Aus"
             },
+            "dhw_hygiene_temperature": {
+                "name": "Warmwasser Hygienetemperatur"
+            },
             "dhw_target_temperature": {
                 "name": "Warmwasser Solltemperatur"
             },
