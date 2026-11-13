@@ -88,40 +88,66 @@ async def test_binary_sensor_values(hass: HomeAssistant, mock_client):
 
         # Assert: Verify a Standard Binary Sensor (Outdoor Defrosting).
         # Fixture value is False -> State 'off'.
-        defrosting = hass.states.get("binary_sensor.vitocal250a_outdoor_defrosting")
+        defrosting = hass.states.get("binary_sensor.e3_vitocal_16_outdoor_defrosting")
         assert defrosting is not None
         assert defrosting.state == "off"
 
         # Assert: The one-time charge is exposed only by its switch.
-        assert hass.states.get("binary_sensor.vitocal250a_one_time_charge") is None
+        assert hass.states.get("binary_sensor.e3_vitocal_16_one_time_charge") is None
 
         # Assert: Verify a Template/Regex Binary Sensor (Circulation Pump).
         # Fixture value is 'on' -> State 'on'.
-        pump = hass.states.get("binary_sensor.vitocal250a_heating_circuit_pump")
+        pump = hass.states.get("binary_sensor.e3_vitocal_16_heating_circuit_pump")
         assert pump is not None
         assert pump.state == "on"
         assert pump.attributes["device_class"] == "running"
 
-        # Assert: Verify a Generic 'Off' Sensor (Compressor Active).
-        # This confirms that 'off' values in the fixture are correctly mapped.
-        compressor = hass.states.get("binary_sensor.vitocal250a_compressor")
+        # Assert: Verify generic boolean sensors in both fixture states.
+        compressor = hass.states.get("binary_sensor.e3_vitocal_16_compressor")
         assert compressor is not None
-        assert compressor.state == "off"
+        assert compressor.state == "on"
+        crankcase_heater = hass.states.get(
+            "binary_sensor.e3_vitocal_16_compressor_crankcase_heater"
+        )
+        assert crankcase_heater is not None
+        assert crankcase_heater.state == "off"
 
         # Cleanup: Unload the integration to prevent thread leaks.
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize(
+    ("device_name", "entity_id", "expected_disabled_by"),
+    [
+        pytest.param(
+            "Vitocal250A",
+            "binary_sensor.e3_vitocal_16_dhw_status",
+            er.RegistryEntryDisabler.INTEGRATION,
+            id="tested-device-disabled",
+        ),
+        pytest.param(
+            "Vitocal252A",
+            "binary_sensor.vitocal252a_dhw_status",
+            None,
+            id="untested-device-enabled",
+        ),
+    ],
+)
 @pytest.mark.asyncio
 async def test_binary_sensor_discovers_generic_on_off_string(
-    hass: HomeAssistant, mock_client
+    hass: HomeAssistant,
+    device_name: str,
+    entity_id: str,
+    expected_disabled_by: er.RegistryEntryDisabler | None,
 ):
     """Test that a feature with 'on'/'off' string value IS created as a binary sensor.
 
     Using real fixture key: heating.dhw.status (value: "on")
     This feature is NOT in BINARY_SENSOR_TYPES, so it tests the generic discovery.
+    Only devices in TESTED_DEVICES create it disabled by default.
     """
+    mock_client = FixtureViClient(device_name)
     # Arrange: Setup integration and mock client fixture.
     entry = MockConfigEntry(domain=DOMAIN, data={"client_id": "1", "token": "x"})
     entry.add_to_hass(hass)
@@ -150,12 +176,9 @@ async def test_binary_sensor_discovers_generic_on_off_string(
         # Assert: Verify the generic 'on' feature is discovered as a binary sensor.
         registry = er.async_get(hass)
 
-        # heating.dhw.status (auto-discovered) - Vitocal250A is not E3_Vitocal_16
-        # so this should be enabled by default
-        reg_entry = registry.async_get("binary_sensor.vitocal250a_dhw_status")
+        reg_entry = registry.async_get(entity_id)
         assert reg_entry is not None
-        # Vitocal250A is not in TESTED_DEVICES, so should be enabled
-        assert reg_entry.disabled_by is None
+        assert reg_entry.disabled_by is expected_disabled_by
 
         # Cleanup: Unload the integration to prevent thread leaks.
         await hass.config_entries.async_unload(entry.entry_id)
@@ -257,9 +280,8 @@ async def test_binary_sensor_feature_discovered_after_setup_is_added_once(
         if item.platform == DOMAIN and item.unique_id == unique_id
     ]
     assert len(entries) == 1
-    state = hass.states.get(entries[0].entity_id)
-    assert state is not None
-    assert state.state == "on"
+    # The tested Vitocal 250-A creates fallback entities disabled by default.
+    assert entries[0].disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Cleanup: Unload the integration to stop the coordinator listener.
     await hass.config_entries.async_unload(entry.entry_id)
@@ -271,12 +293,12 @@ async def test_binary_sensor_feature_discovered_after_setup_is_added_once(
     [
         (
             "heating.circuits.0.operating.programs.summerEco.active",
-            "Vitocal250A Summer Eco Mode",
+            "E3_Vitocal_16 Summer Eco Mode",
         ),
-        ("heating.operating.programs.holiday.active", "Vitocal250A Holiday Mode"),
+        ("heating.operating.programs.holiday.active", "E3_Vitocal_16 Holiday Mode"),
         (
             "heating.operating.programs.holidayAtHome.active",
-            "Vitocal250A Holiday at Home Mode",
+            "E3_Vitocal_16 Holiday at Home Mode",
         ),
     ],
 )

@@ -125,7 +125,7 @@ async def test_number_creation_and_services(hass: HomeAssistant, mock_client):
 
         # Verify initial state and attributes from fixture.
         # Fixture: Value=0.6, Min=0.2, Max=3.5, Step=0.1.
-        slope = hass.states.get("number.vitocal250a_heating_curve_slope")
+        slope = hass.states.get("number.e3_vitocal_16_heating_curve_slope")
         assert slope is not None
         assert slope.state == "0.6"
         assert slope.attributes[ATTR_MIN] == 0.2
@@ -135,14 +135,14 @@ async def test_number_creation_and_services(hass: HomeAssistant, mock_client):
         # Verify precision on entity
         component = hass.data.get("number")
         assert component is not None
-        entity_id = "number.vitocal250a_heating_curve_slope"
+        entity_id = "number.e3_vitocal_16_heating_curve_slope"
         entity = component.get_entity(entity_id)
         assert entity is not None
         assert entity.suggested_display_precision == 1
 
         # Assert: The noisy DHW hysteresis control stays disabled by default.
         registry = er.async_get(hass)
-        hysteresis_entry = registry.async_get("number.vitocal250a_dhw_hysteresis")
+        hysteresis_entry = registry.async_get("number.e3_vitocal_16_dhw_hysteresis")
         assert hysteresis_entry is not None
         assert hysteresis_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
@@ -151,7 +151,7 @@ async def test_number_creation_and_services(hass: HomeAssistant, mock_client):
             "number",
             SERVICE_SET_VALUE,
             {
-                "entity_id": "number.vitocal250a_heating_curve_slope",
+                "entity_id": "number.e3_vitocal_16_heating_curve_slope",
                 "value": 1.6,
             },
             blocking=True,
@@ -165,14 +165,14 @@ async def test_number_creation_and_services(hass: HomeAssistant, mock_client):
 
         # Verify Optimistic Update (Option A).
         # State should update immediately to 1.6.
-        slope = hass.states.get("number.vitocal250a_heating_curve_slope")
+        slope = hass.states.get("number.e3_vitocal_16_heating_curve_slope")
         assert slope is not None
         assert slope.state == "1.6"
 
         # Test 2: DHW Target Temperature (Standard Entity).
 
         # Verify initial state (Fixture has 55.0).
-        dhw_temp = hass.states.get("number.vitocal250a_dhw_target_temperature")
+        dhw_temp = hass.states.get("number.e3_vitocal_16_dhw_target_temperature")
         assert dhw_temp is not None
         assert float(dhw_temp.state) == 55.0
         assert dhw_temp.attributes[ATTR_MIN] == 10.0
@@ -185,7 +185,7 @@ async def test_number_creation_and_services(hass: HomeAssistant, mock_client):
         await hass.services.async_call(
             "number",
             SERVICE_SET_VALUE,
-            {"entity_id": "number.vitocal250a_dhw_target_temperature", "value": 45.0},
+            {"entity_id": "number.e3_vitocal_16_dhw_target_temperature", "value": 45.0},
             blocking=True,
         )
 
@@ -196,7 +196,7 @@ async def test_number_creation_and_services(hass: HomeAssistant, mock_client):
         assert args[2] == 45.0
 
         # Verify Optimistic Update.
-        dhw_temp = hass.states.get("number.vitocal250a_dhw_target_temperature")
+        dhw_temp = hass.states.get("number.e3_vitocal_16_dhw_target_temperature")
         assert dhw_temp is not None
         assert float(dhw_temp.state) == 45.0
 
@@ -245,7 +245,7 @@ async def test_curve_shift_uses_temperature_delta_conversion(
         await hass.async_block_till_done()
 
         # Assert: Temperature-delta values remain in their native Celsius unit.
-        shift = hass.states.get("number.vitocal250a_heating_curve_shift")
+        shift = hass.states.get("number.e3_vitocal_16_heating_curve_shift")
         assert shift is not None
         assert shift.attributes["unit_of_measurement"] == "°C"
         assert float(shift.state) == 6.0
@@ -293,7 +293,7 @@ async def test_number_error_handling(hass: HomeAssistant, mock_client):
         await hass.async_block_till_done()
 
         # Check Initial State.
-        entity_id = "number.vitocal250a_heating_curve_slope"
+        entity_id = "number.e3_vitocal_16_heating_curve_slope"
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == "0.6"
@@ -358,7 +358,7 @@ async def test_number_api_rejection(hass: HomeAssistant, mock_client):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        entity_id = "number.vitocal250a_heating_curve_slope"
+        entity_id = "number.e3_vitocal_16_heating_curve_slope"
         state = hass.states.get(entity_id)
         assert state is not None
         original_state = state.state  # "0.6"
@@ -462,7 +462,7 @@ async def test_number_floating_point_precision(hass: HomeAssistant, mock_client)
             "number",
             SERVICE_SET_VALUE,
             {
-                "entity_id": "number.vitocal250a_heating_curve_slope",
+                "entity_id": "number.e3_vitocal_16_heating_curve_slope",
                 "value": 0.7000000000000001,
             },
             blocking=True,
@@ -482,7 +482,7 @@ async def test_number_floating_point_precision(hass: HomeAssistant, mock_client)
             "number",
             SERVICE_SET_VALUE,
             {
-                "entity_id": "number.vitocal250a_dhw_target_temperature",
+                "entity_id": "number.e3_vitocal_16_dhw_target_temperature",
                 "value": 45.00000000001,
             },
             blocking=True,

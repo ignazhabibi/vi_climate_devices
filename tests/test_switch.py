@@ -100,18 +100,20 @@ async def test_switch_creation_and_services(hass: HomeAssistant, mock_client):
         # Test 1: Initial State (Offline/Fixture Data).
 
         # Verify the writable hygiene state is a switch, not a binary sensor.
-        hygiene_switch = hass.states.get("switch.vitocal250a_dhw_hygiene")
+        hygiene_switch = hass.states.get("switch.e3_vitocal_16_dhw_hygiene")
         assert hygiene_switch is not None
         assert hygiene_switch.state == STATE_OFF
-        assert hass.states.get("binary_sensor.vitocal250a_dhw_hygiene_enabled") is None
+        assert (
+            hass.states.get("binary_sensor.e3_vitocal_16_dhw_hygiene_enabled") is None
+        )
 
         # Verify 'heating.dhw.oneTimeCharge.active' (Standard Switch).
         # Fixture value is false/off.
-        one_time_charge = hass.states.get("switch.vitocal250a_one_time_dhw_charge")
+        one_time_charge = hass.states.get("switch.e3_vitocal_16_one_time_dhw_charge")
         assert one_time_charge is not None
         assert one_time_charge.state == STATE_OFF
         registry_entry = er.async_get(hass).async_get(
-            "switch.vitocal250a_one_time_dhw_charge"
+            "switch.e3_vitocal_16_one_time_dhw_charge"
         )
         assert registry_entry is not None
         assert (
@@ -125,7 +127,7 @@ async def test_switch_creation_and_services(hass: HomeAssistant, mock_client):
         await hass.services.async_call(
             "switch",
             "turn_on",
-            {"entity_id": "switch.vitocal250a_one_time_dhw_charge"},
+            {"entity_id": "switch.e3_vitocal_16_one_time_dhw_charge"},
             blocking=True,
         )
 
@@ -139,7 +141,7 @@ async def test_switch_creation_and_services(hass: HomeAssistant, mock_client):
 
         # Verify Optimistic State Update.
         # The switch should match the requested state immediately.
-        one_time_charge = hass.states.get("switch.vitocal250a_one_time_dhw_charge")
+        one_time_charge = hass.states.get("switch.e3_vitocal_16_one_time_dhw_charge")
         assert one_time_charge is not None
         assert one_time_charge.state == "on"
 
@@ -152,7 +154,7 @@ async def test_switch_creation_and_services(hass: HomeAssistant, mock_client):
         await hass.services.async_call(
             "switch",
             "turn_off",
-            {"entity_id": "switch.vitocal250a_one_time_dhw_charge"},
+            {"entity_id": "switch.e3_vitocal_16_one_time_dhw_charge"},
             blocking=True,
         )
 
@@ -163,7 +165,7 @@ async def test_switch_creation_and_services(hass: HomeAssistant, mock_client):
         assert args[2] is False
 
         # Verify Optimistic State Update.
-        one_time_charge = hass.states.get("switch.vitocal250a_one_time_dhw_charge")
+        one_time_charge = hass.states.get("switch.e3_vitocal_16_one_time_dhw_charge")
         assert one_time_charge is not None
         assert one_time_charge.state == STATE_OFF
 
@@ -274,7 +276,7 @@ async def test_switch_error_handling(hass: HomeAssistant, mock_client):
         await hass.async_block_till_done()
 
         # Initial State Check (should be OFF according to fixture).
-        switch_id = "switch.vitocal250a_one_time_dhw_charge"
+        switch_id = "switch.e3_vitocal_16_one_time_dhw_charge"
         state = hass.states.get(switch_id)
         assert state is not None
         assert state.state == STATE_OFF
@@ -342,7 +344,7 @@ async def test_switch_api_rejection(hass: HomeAssistant):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        switch_id = "switch.vitocal250a_one_time_dhw_charge"
+        switch_id = "switch.e3_vitocal_16_one_time_dhw_charge"
         state = hass.states.get(switch_id)
         assert state is not None
         assert state.state == STATE_OFF

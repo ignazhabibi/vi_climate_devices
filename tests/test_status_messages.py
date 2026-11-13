@@ -26,9 +26,9 @@ from custom_components.vi_climate_devices.status_messages import (
     parse_status_messages,
 )
 
-HEAT_PUMP_STATE_ENTITY = "sensor.vitocal250a_operating_phase"
-HEATING_ROD_ENTITY = "sensor.vitocal250a_heating_rod"
-DHW_HEATING_ENTITY = "binary_sensor.vitocal250a_dhw_heating"
+HEAT_PUMP_STATE_ENTITY = "sensor.e3_vitocal_16_operating_phase"
+HEATING_ROD_ENTITY = "sensor.e3_vitocal_16_heating_rod"
+DHW_HEATING_ENTITY = "binary_sensor.e3_vitocal_16_dhw_heating"
 
 
 def _entry(
@@ -135,10 +135,10 @@ def _status_sensor(device: Device, translation_key: str) -> ViClimateStatusSenso
 
 
 @pytest.mark.asyncio
-async def test_fixture_reports_off_and_all_active_codes(
+async def test_fixture_reports_heating_and_all_active_codes(
     hass: HomeAssistant, mock_client
 ):
-    """The Vitocal 250-A fixture is off with the heating rod switched off."""
+    """The Vitocal 250-A fixture is heating with the heating rod switched off."""
     # Arrange: Use the installation time zone of the fixture device.
     await hass.config.async_set_time_zone("Europe/Berlin")
 
@@ -148,19 +148,19 @@ async def test_fixture_reports_off_and_all_active_codes(
     # Assert: The states and the raw attribute reflect the fixture codes.
     state = hass.states.get(HEAT_PUMP_STATE_ENTITY)
     assert state is not None
-    assert state.state == "off"
+    assert state.state == "heating"
     # Home Assistant prefixes the device name, so the name does not repeat it.
-    assert state.attributes["friendly_name"] == "Vitocal250A Operating phase"
+    assert state.attributes["friendly_name"] == "E3_Vitocal_16 Operating phase"
     assert state.attributes["device_class"] == "enum"
     assert state.attributes["options"] == list(HEAT_PUMP_STATE_CODES.values())
-    assert state.attributes["state_code"] == "S.123"
+    assert state.attributes["state_code"] == "S.125"
     assert state.attributes["active_codes"][:3] == [
-        {"code": "S.134", "bus_address": "1", "since": "2026-10-11T10:03:07+02:00"},
-        {"code": "S.123", "bus_address": "1", "since": "2026-10-11T10:03:04+02:00"},
+        {"code": "S.125", "bus_address": "1", "since": "2026-11-13T09:41:44+01:00"},
+        {"code": "S.118", "bus_address": "1", "since": "2026-11-13T09:41:40+01:00"},
         {
             "code": "S.165",
             "bus_address": "54",
-            "since": "2026-05-17T09:01:28+02:00",
+            "since": "2026-11-13T09:41:40+01:00",
         },
     ]
     assert [entry["code"] for entry in state.attributes["active_codes"]].count(

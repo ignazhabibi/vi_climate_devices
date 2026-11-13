@@ -155,6 +155,14 @@ async def test_water_heater_uses_standard_fallback_without_mode_constraints() ->
             id="vitodens-standard-is-gas",
         ),
         pytest.param(
+            "Vitodens300W-B3HF-19",
+            "balanced",
+            ("balanced", "off"),
+            STATE_GAS,
+            "balanced",
+            id="e3-vitodens-balanced-is-gas",
+        ),
+        pytest.param(
             "Vitocal250A",
             "balanced",
             ("balanced", "off"),
@@ -205,6 +213,64 @@ async def test_water_heater_maps_device_family_operation_modes(
 
     coordinator.async_set_feature.assert_awaited_once_with(
         "device", FEATURE_MODE, expected_api_mode
+    )
+
+
+@pytest.mark.asyncio
+async def test_water_heater_detects_heat_pump_family_from_roles() -> None:
+    """Map balanced to heat pump when only the device roles name the family."""
+    # Arrange: Report a legacy heat pump whose model ID omits the family name.
+    client = FixtureViClient("Vitocal250A")
+    fixture_device = (await client.get_full_installation_status("99999"))[0]
+    mode_feature = fixture_device.get_feature(FEATURE_MODE)
+    assert mode_feature is not None
+    assert mode_feature.constraints is not None
+    configured_mode_feature = replace(
+        mode_feature,
+        value="balanced",
+        constraints=replace(mode_feature.constraints, options=("balanced", "off")),
+    )
+    device = replace(
+        fixture_device,
+        model_id="CU401B_G",
+        roles=("type:heatpump", "type:legacy"),
+        features=[
+            configured_mode_feature if feature.name == FEATURE_MODE else feature
+            for feature in fixture_device.features
+        ],
+    )
+    target_feature = device.get_feature(FEATURE_TARGET_TEMP)
+    assert target_feature is not None
+    entity = ViClimateWaterHeater(
+        MagicMock(data={"device": device}), "device", target_feature
+    )
+
+    # Act and assert: The role identifies the heat pump family.
+    assert entity.current_operation == STATE_HEAT_PUMP
+
+
+@pytest.mark.asyncio
+async def test_water_heater_without_family_maps_only_common_modes() -> None:
+    """Map only device-independent modes when no family is identified."""
+    # Arrange: Report a device without family role or family name in the model.
+    client = FixtureViClient("Vitocal250A")
+    fixture_device = (await client.get_full_installation_status("99999"))[0]
+    device = replace(fixture_device, model_id="VScotHO1_200", roles=())
+    coordinator = MagicMock(data={"device": device})
+    coordinator.async_set_feature = AsyncMock(return_value=None)
+    target_feature = device.get_feature(FEATURE_TARGET_TEMP)
+    assert target_feature is not None
+    entity = ViClimateWaterHeater(coordinator, "device", target_feature)
+
+    # Act: Read the fixture mode and select the eco operation.
+    current_operation = entity.current_operation
+    with patch.object(entity, "async_write_ha_state"):
+        await entity.async_set_operation_mode(STATE_ECO)
+
+    # Assert: The common mapping still applies without a family.
+    assert current_operation == STATE_ECO
+    coordinator.async_set_feature.assert_awaited_once_with(
+        "device", FEATURE_MODE, "efficient"
     )
 
 
@@ -281,14 +347,14 @@ async def test_water_heater_creation_and_services(hass: HomeAssistant, mock_clie
         await hass.async_block_till_done()
 
         # Get the Water Heater Entity.
-        entity_id = "water_heater.vitocal250a_dhw_water_heater"
+        entity_id = "water_heater.e3_vitocal_16_dhw_water_heater"
         state = hass.states.get(entity_id)
         assert state is not None
 
         # Verify Initial Attributes from Fixture.
-        # Temp: 55.0, Current: 48.8, Mode: efficient -> STATE_ECO.
+        # Temp: 55.0, Current: 46.3, Mode: efficient -> STATE_ECO.
         assert state.state == STATE_ECO
-        assert float(state.attributes["current_temperature"]) == 48.8
+        assert float(state.attributes["current_temperature"]) == 46.3
         assert float(state.attributes["temperature"]) == 55.0
         assert state.attributes["min_temp"] == 10.0
         assert state.attributes["max_temp"] == 60.0
@@ -425,7 +491,7 @@ async def test_water_heater_requires_writable_target_and_mode(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert hass.states.get("water_heater.vitocal250a_dhw_water_heater") is None
+        assert hass.states.get("water_heater.e3_vitocal_16_dhw_water_heater") is None
 
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
@@ -462,7 +528,7 @@ async def test_water_heater_error_handling(hass: HomeAssistant, mock_client):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        entity_id = "water_heater.vitocal250a_dhw_water_heater"
+        entity_id = "water_heater.e3_vitocal_16_dhw_water_heater"
         state = hass.states.get(entity_id)
         assert state is not None
         original_temp = float(state.attributes["temperature"])
@@ -516,7 +582,7 @@ async def test_water_heater_api_rejection(hass: HomeAssistant, mock_client):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        entity_id = "water_heater.vitocal250a_dhw_water_heater"
+        entity_id = "water_heater.e3_vitocal_16_dhw_water_heater"
         state = hass.states.get(entity_id)
         assert state is not None
         original_temp = float(state.attributes["temperature"])
@@ -662,7 +728,7 @@ async def test_water_heater_reports_unknown_operation_for_malformed_mode_values(
     args = await_args.args
     assert args[1] == FEATURE_TARGET_TEMP
     assert args[2] == 45.0
-    assert entity.current_temperature == 48.8
+    assert entity.current_temperature == 46.3
     assert entity.operation_list == [STATE_ECO, STATE_OFF, STATE_PERFORMANCE]
 
 
@@ -688,7 +754,7 @@ async def test_water_heater_reports_unknown_target_for_malformed_values(
     # Assert: The malformed read is unknown while the control wrote its value.
     assert entity.target_temperature is None
     entity.coordinator.async_set_feature.assert_awaited_once()
-    assert entity.current_temperature == 48.8
+    assert entity.current_temperature == 46.3
     assert entity.current_operation == STATE_ECO
 
 

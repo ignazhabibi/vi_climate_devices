@@ -47,7 +47,8 @@ AUTO_DISCOVERED_TOTAL_INCREASING_ENERGY_FEATURES = frozenset(
     }
 )
 
-AUTO_DISCOVERED_NON_CUMULATIVE_ENERGY_FEATURES = frozenset(
+# Usable energy per battery module, reported by every energy storage system.
+SIX_MODULE_USABLE_ENERGY_FEATURES = frozenset(
     {
         "ess.battery.usedAverage.averageUsableSystemEnergy",
         "ess.battery.usedAverage.usableEnergyModuleOne",
@@ -56,6 +57,17 @@ AUTO_DISCOVERED_NON_CUMULATIVE_ENERGY_FEATURES = frozenset(
         "ess.battery.usedAverage.usableEnergyModuleFour",
         "ess.battery.usedAverage.usableEnergyModuleFive",
         "ess.battery.usedAverage.usableEnergyModuleSix",
+    }
+)
+
+# Larger storage systems such as the Vitocharge Evolution 08 add two modules.
+EIGHT_MODULE_USABLE_ENERGY_FEATURES = SIX_MODULE_USABLE_ENERGY_FEATURES | {
+    "ess.battery.usedAverage.usableEnergyModuleSeven",
+    "ess.battery.usedAverage.usableEnergyModuleEight",
+}
+
+WEEKLY_COMPRESSOR_ENERGY_FEATURES = frozenset(
+    {
         "heating.compressors.0.heat.production.cooling.week",
         "heating.compressors.0.heat.production.dhw.week",
         "heating.compressors.0.heat.production.heating.week",
@@ -64,24 +76,32 @@ AUTO_DISCOVERED_NON_CUMULATIVE_ENERGY_FEATURES = frozenset(
     }
 )
 
+AUTO_DISCOVERED_NON_CUMULATIVE_ENERGY_FEATURES = (
+    EIGHT_MODULE_USABLE_ENERGY_FEATURES | WEEKLY_COMPRESSOR_ENERGY_FEATURES
+)
+
 EXPECTED_AUTO_DISCOVERED_ENERGY_FEATURES = {
+    "VitoairFs300E": frozenset(),
+    "Vitocal200A": frozenset(),
     "Vitocal200S": frozenset(),
     "Vitocal222S": frozenset(),
     "Vitocal250A": frozenset(),
-    "Vitocal333G-with-Vitovent300F": frozenset(
-        feature_name
-        for feature_name in AUTO_DISCOVERED_NON_CUMULATIVE_ENERGY_FEATURES
-        if feature_name.startswith("heating.")
-    ),
+    "Vitocal250A-TwoCircuits": frozenset(),
+    "Vitocal252A": frozenset(),
+    "Vitocal262A-T2H-R290": frozenset(),
+    "Vitocal300G-CU401B": frozenset(),
+    "Vitocal333G-with-Vitovent300F": WEEKLY_COMPRESSOR_ENERGY_FEATURES,
     "Vitocharge03": (
         AUTO_DISCOVERED_TOTAL_INCREASING_ENERGY_FEATURES
-        | frozenset(
-            feature_name
-            for feature_name in AUTO_DISCOVERED_NON_CUMULATIVE_ENERGY_FEATURES
-            if feature_name.startswith("ess.")
-        )
+        | SIX_MODULE_USABLE_ENERGY_FEATURES
     ),
+    "VitochargeEvolution08": (
+        AUTO_DISCOVERED_TOTAL_INCREASING_ENERGY_FEATURES
+        | EIGHT_MODULE_USABLE_ENERGY_FEATURES
+    ),
+    "Vitodens100W": frozenset(),
     "Vitodens200W": frozenset(),
+    "Vitodens300W-B3HF-19": frozenset(),
     "Vitopure350": frozenset(),
 }
 
@@ -137,19 +157,19 @@ async def test_sensor_values(hass: HomeAssistant, mock_client):
     await _setup_integration(hass, mock_client)
 
     # Assert: Verify a Standard Sensor (Outside Temperature).
-    # Fixture value is 11.1 -> State '11.1'.
-    outside_temp = hass.states.get("sensor.vitocal250a_outside_temperature")
+    # Fixture value is 3.1 -> State '3.1'.
+    outside_temp = hass.states.get("sensor.e3_vitocal_16_outside_temperature")
     assert outside_temp is not None
-    assert outside_temp.state == "11.1"
+    assert outside_temp.state == "3.1"
     assert outside_temp.attributes["unit_of_measurement"] == "°C"
 
     # Assert: Verify a Template/Regex Sensor (Compressor Speed).
     # Checks if regex matches 'heating.compressors.0.speed.current' correctly.
-    compressor_speed = hass.states.get("sensor.vitocal250a_compressor_speed")
+    compressor_speed = hass.states.get("sensor.e3_vitocal_16_compressor_speed")
     assert compressor_speed is not None
-    assert compressor_speed.state == "0"
+    assert compressor_speed.state == "41"
     assert (
-        compressor_speed.attributes["friendly_name"] == "Vitocal250A Compressor Speed"
+        compressor_speed.attributes["friendly_name"] == "E3_Vitocal_16 Compressor Speed"
     )
 
     # Cleanup: Unload the integration to prevent thread leaks.
@@ -165,19 +185,21 @@ async def test_current_power_and_heat_sensors(hass: HomeAssistant, mock_client):
     await _setup_integration(hass, mock_client)
 
     # Assert: Both features are defined power sensors with a kW unit.
-    for entity_id, friendly_name in (
+    for entity_id, friendly_name, expected_state in (
         (
-            "sensor.vitocal250a_current_power_consumption",
-            "Vitocal250A Current Power Consumption",
+            "sensor.e3_vitocal_16_current_power_consumption",
+            "E3_Vitocal_16 Current Power Consumption",
+            "1.69",
         ),
         (
-            "sensor.vitocal250a_current_heat_production",
-            "Vitocal250A Current Heat Production",
+            "sensor.e3_vitocal_16_current_heat_production",
+            "E3_Vitocal_16 Current Heat Production",
+            "6.689",
         ),
     ):
         state = hass.states.get(entity_id)
         assert state is not None
-        assert state.state == "0"
+        assert state.state == expected_state
         assert state.attributes["friendly_name"] == friendly_name
         assert state.attributes["unit_of_measurement"] == "kW"
         assert state.attributes["device_class"] == "power"
@@ -204,14 +226,14 @@ async def test_no_duplicate_entity_creation(hass: HomeAssistant, mock_client):
 
     # Assert: Verify duplicate prevention for Defined Features.
     # The specific entity 'outside_temperature' should exist, but the generic fallback 'heating_sensors_...' should not.
-    assert hass.states.get("sensor.vitocal250a_outside_temperature") is not None
-    assert hass.states.get("sensor.vitocal250a_sensors_temperature_outside") is None
+    assert hass.states.get("sensor.e3_vitocal_16_outside_temperature") is not None
+    assert hass.states.get("sensor.e3_vitocal_16_sensors_temperature_outside") is None
 
     # Assert: Verify duplicate prevention for Template Features.
     # The template entity 'compressor_speed' should exist, but the generic fallback 'heating_compressors_...' should not.
-    assert hass.states.get("sensor.vitocal250a_compressor_speed") is not None
+    assert hass.states.get("sensor.e3_vitocal_16_compressor_speed") is not None
     assert (
-        hass.states.get("sensor.vitocal250a_heating_compressors_0_speed_current")
+        hass.states.get("sensor.e3_vitocal_16_heating_compressors_0_speed_current")
         is None
     )
 
@@ -256,9 +278,8 @@ async def test_sensor_feature_discovered_after_setup_is_added_once(
         if item.platform == DOMAIN and item.unique_id == unique_id
     ]
     assert len(entries) == 1
-    state = hass.states.get(entries[0].entity_id)
-    assert state is not None
-    assert state.state == "18.5"
+    # The tested Vitocal 250-A creates fallback entities disabled by default.
+    assert entries[0].disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Cleanup: Unload the integration to stop the coordinator listener.
     await hass.config_entries.async_unload(entry.entry_id)
@@ -281,10 +302,10 @@ DAILY_ENERGY_FEATURES = (
             "Vitocal250A",
             {
                 "heating.heat.production.summary.cooling.currentDay": 0.0,
-                "heating.heat.production.summary.dhw.currentDay": 6.3,
-                "heating.heat.production.summary.heating.currentDay": 25.7,
-                "heating.power.consumption.dhw.currentDay": 1.8,
-                "heating.power.consumption.heating.currentDay": 4.5,
+                "heating.heat.production.summary.dhw.currentDay": 9.6,
+                "heating.heat.production.summary.heating.currentDay": 47.1,
+                "heating.power.consumption.dhw.currentDay": 3.3,
+                "heating.power.consumption.heating.currentDay": 0.0,
             },
             id="e3-heat-pump",
         ),
@@ -678,7 +699,7 @@ async def test_sensor_ignores_generic_on_off_string(hass: HomeAssistant, mock_cl
 
         # Assert: Sensor should NOT exist for 'heating.dhw.status'.
         # The feature returns "on", so it should be picked up by binary_sensor, NOT sensor.
-        sensor_entity = hass.states.get("sensor.vitocal250a_heating_dhw_status")
+        sensor_entity = hass.states.get("sensor.e3_vitocal_16_heating_dhw_status")
         assert sensor_entity is None
 
         # Cleanup: Unload the integration to prevent thread leaks.
@@ -696,7 +717,7 @@ async def test_sensor_ignores_generic_on_off_string(hass: HomeAssistant, mock_cl
                 "heating.noise.reduction.operating.programs.active": (
                     "slightly_reduced"
                 ),
-                "heating.valves.fourThreeWay.position": "climat_circuit_two_defrost",
+                "heating.valves.fourThreeWay.position": "climate_circuit_one",
             },
             id="e3-heat-pump",
         ),
@@ -823,28 +844,28 @@ async def test_enum_sensor_without_string_value_is_unknown(
 
 REFRIGERANT_CIRCUIT_SENSORS = {
     "heating.sensors.valve.0.expansion.target": (
-        "Vitocal250A Expansion Valve 1 Opening",
-        "50",
+        "E3_Vitocal_16 Expansion Valve 1 Opening",
+        "35",
         "%",
     ),
     "heating.sensors.valve.1.expansion.target": (
-        "Vitocal250A Expansion Valve 2 Opening",
-        "0",
+        "E3_Vitocal_16 Expansion Valve 2 Opening",
+        "43",
         "%",
     ),
     "heating.inverters.0.sensors.power.output": (
-        "Vitocal250A Inverter Power",
-        "0",
+        "E3_Vitocal_16 Inverter Power",
+        "1550",
         "W",
     ),
     "heating.inverters.0.sensors.power.current": (
-        "Vitocal250A Inverter Current",
-        "0",
+        "E3_Vitocal_16 Inverter Current",
+        "8",
         "A",
     ),
     "heating.inverters.0.sensors.temperature.powerModule": (
-        "Vitocal250A Inverter Temperature",
-        "25.7",
+        "E3_Vitocal_16 Inverter Temperature",
+        "31.6",
         "°C",
     ),
 }
@@ -863,7 +884,7 @@ async def test_refrigerant_circuit_sensors_are_defined_on_tested_devices(
         "sensor",
         DOMAIN,
         f"{unique_id_prefix}-heating.inverters.0.sensors.power.output",
-        suggested_object_id="vitocal250a_aktueller_stromverbrauch_0",
+        suggested_object_id="e3_vitocal_16_aktueller_stromverbrauch_0",
     )
 
     # Act: Set up the integration.
@@ -890,13 +911,13 @@ async def test_refrigerant_circuit_sensors_are_defined_on_tested_devices(
         assert state.attributes["unit_of_measurement"] == unit
 
     # Assert: An existing entity ID survives the new name.
-    assert renamed.entity_id == "sensor.vitocal250a_aktueller_stromverbrauch_0"
+    assert renamed.entity_id == "sensor.e3_vitocal_16_aktueller_stromverbrauch_0"
     assert hass.states.get(renamed.entity_id) is not None
 
 
 DHW_TEMPERATURE_FEATURE = "heating.dhw.sensors.temperature.hotWaterStorage"
 DHW_TEMPERATURE_SUCCESSOR = "heating.dhw.sensors.temperature.dhwCylinder"
-DHW_TEMPERATURE_ENTITY_ID = "sensor.vitocal250a_hot_water_temperature"
+DHW_TEMPERATURE_ENTITY_ID = "sensor.e3_vitocal_16_hot_water_temperature"
 
 
 def _replace_features(
@@ -1081,7 +1102,7 @@ async def test_auto_discovered_successor_entry_is_removed(
     assert registry.async_get(duplicate.entity_id) is None
     state = hass.states.get(DHW_TEMPERATURE_ENTITY_ID)
     assert state is not None
-    assert state.state == "48.8"
+    assert state.state == "46.3"
 
     # Cleanup: Unload the integration to stop the coordinator listener.
     await hass.config_entries.async_unload(entry.entry_id)

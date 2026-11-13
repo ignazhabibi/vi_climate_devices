@@ -68,18 +68,18 @@ async def test_auto_discovery_ignore_list(hass: HomeAssistant, mock_client):
         await _setup_integration(hass, mock_client)
 
         # Assert: Verify the 'outside value' sensor is NOT created.
-        # Standard entity name would be sensor.vitocal250a_outside_temperature
-        state_outside = hass.states.get("sensor.vitocal250a_outside_temperature")
+        # Standard entity name would be sensor.e3_vitocal_16_outside_temperature
+        state_outside = hass.states.get("sensor.e3_vitocal_16_outside_temperature")
         assert state_outside is None
 
         # Assert: Verify the circuit supply sensor is NOT created.
         state_circuit = hass.states.get(
-            "sensor.vitocal250a_heating_circuit_supply_temperature"
+            "sensor.e3_vitocal_16_heating_circuit_supply_temperature"
         )
         assert state_circuit is None
 
         # Assert: Verify OTHER sensors (not ignored) ARE created.
-        state_return = hass.states.get("sensor.vitocal250a_return_temperature")
+        state_return = hass.states.get("sensor.e3_vitocal_16_return_temperature")
         assert state_return is not None
 
 

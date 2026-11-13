@@ -159,9 +159,9 @@
                     ]),
                     'busAddress': '1',
                     'busType': 'OwnBus',
-                    'errorCode': 'S.134',
+                    'errorCode': 'S.125',
                     'priority': 'status',
-                    'timestamp': '2026-10-11T10:03:07.000Z',
+                    'timestamp': '2026-11-13T09:41:44.000Z',
                   }),
                   dict({
                     'accessLevel': 'customer',
@@ -177,9 +177,9 @@
                     ]),
                     'busAddress': '1',
                     'busType': 'OwnBus',
-                    'errorCode': 'S.123',
+                    'errorCode': 'S.118',
                     'priority': 'status',
-                    'timestamp': '2026-10-11T10:03:04.000Z',
+                    'timestamp': '2026-11-13T09:41:40.000Z',
                   }),
                   dict({
                     'accessLevel': 'customer',
@@ -197,25 +197,7 @@
                     'busType': 'CanInternal',
                     'errorCode': 'S.165',
                     'priority': 'status',
-                    'timestamp': '2026-05-17T09:01:28.000Z',
-                  }),
-                  dict({
-                    'accessLevel': 'customer',
-                    'audiences': list([
-                      'IS-SUPPLIER',
-                      'IS-DEVELOPMENT',
-                      'IS-MANUFACTURING',
-                      'IS-AFTERSALES',
-                      'IS-AFTERMARKET',
-                      'IS-DEVELOPER-VEG',
-                      'IS-BIG-DATA',
-                      'IS-MANUFACTURING-VEG',
-                    ]),
-                    'busAddress': '1',
-                    'busType': 'OwnBus',
-                    'errorCode': 'S.219',
-                    'priority': 'status',
-                    'timestamp': '2026-05-11T15:02:43.000Z',
+                    'timestamp': '2026-11-13T09:41:40.000Z',
                   }),
                   dict({
                     'accessLevel': 'customer',
@@ -233,7 +215,7 @@
                     'busType': 'OwnBus',
                     'errorCode': 'S.218',
                     'priority': 'status',
-                    'timestamp': '2026-05-11T15:02:13.000Z',
+                    'timestamp': '2026-11-12T14:46:24.000Z',
                   }),
                   dict({
                     'accessLevel': 'customer',
@@ -251,7 +233,25 @@
                     'busType': 'OwnBus',
                     'errorCode': 'S.217',
                     'priority': 'status',
-                    'timestamp': '2026-05-11T15:01:32.000Z',
+                    'timestamp': '2026-11-12T14:45:54.000Z',
+                  }),
+                  dict({
+                    'accessLevel': 'customer',
+                    'audiences': list([
+                      'IS-SUPPLIER',
+                      'IS-DEVELOPMENT',
+                      'IS-MANUFACTURING',
+                      'IS-AFTERSALES',
+                      'IS-AFTERMARKET',
+                      'IS-DEVELOPER-VEG',
+                      'IS-BIG-DATA',
+                      'IS-MANUFACTURING-VEG',
+                    ]),
+                    'busAddress': '1',
+                    'busType': 'OwnBus',
+                    'errorCode': 'S.219',
+                    'priority': 'status',
+                    'timestamp': '2026-11-12T14:45:13.000Z',
                   }),
                   dict({
                     'accessLevel': 'customer',
@@ -397,6 +397,32 @@
           }),
           dict({
             'constraints': dict({
+            }),
+            'is_enabled': True,
+            'is_ready': True,
+            'is_writable': False,
+            'name': 'device.serial.materialId',
+            'unit': None,
+            'value': dict({
+              'profile': None,
+              'uid': None,
+            }),
+          }),
+          dict({
+            'constraints': dict({
+            }),
+            'is_enabled': True,
+            'is_ready': True,
+            'is_writable': False,
+            'name': 'device.serial.vin',
+            'unit': None,
+            'value': dict({
+              'profile': None,
+              'uid': None,
+            }),
+          }),
+          dict({
+            'constraints': dict({
               'value_type': 'boolean',
             }),
             'is_enabled': True,
@@ -476,7 +502,7 @@
             'is_writable': False,
             'name': 'heating.boiler.pumps.internal.current',
             'unit': 'percent',
-            'value': 0,
+            'value': 69,
           }),
           dict({
             'constraints': dict({
@@ -486,7 +512,7 @@
             'is_writable': False,
             'name': 'heating.boiler.pumps.internal.status',
             'unit': None,
-            'value': 'off',
+            'value': 'on',
           }),
           dict({
             'constraints': dict({
@@ -496,7 +522,7 @@
             'is_writable': False,
             'name': 'heating.boiler.pumps.internal.target',
             'unit': 'percent',
-            'value': 0,
+            'value': 55,
           }),
           dict({
             'constraints': dict({
@@ -506,7 +532,7 @@
             'is_writable': False,
             'name': 'heating.boiler.sensors.temperature.commonSupply',
             'unit': 'celsius',
-            'value': 35.2,
+            'value': 40.4,
           }),
           dict({
             'constraints': dict({
@@ -536,7 +562,7 @@
             'is_writable': False,
             'name': 'heating.boiler.temperature.current',
             'unit': 'celsius',
-            'value': 0,
+            'value': 37.7,
           }),
           dict({
             'constraints': dict({
@@ -546,7 +572,7 @@
             'is_writable': False,
             'name': 'heating.buffer.sensors.temperature.main',
             'unit': 'celsius',
-            'value': 35.1,
+            'value': 36.9,
           }),
           dict({
             'constraints': dict({
@@ -566,7 +592,7 @@
             'is_writable': False,
             'name': 'heating.bufferCylinder.sensors.temperature.main',
             'unit': 'celsius',
-            'value': 35.1,
+            'value': 36.9,
           }),
           dict({
             'constraints': dict({
@@ -1142,7 +1168,7 @@
             'is_writable': False,
             'name': 'heating.circuits.0.sensors.temperature.supply',
             'unit': 'celsius',
-            'value': 35.5,
+            'value': 36.8,
           }),
           dict({
             'constraints': dict({
@@ -1162,7 +1188,7 @@
             'is_writable': False,
             'name': 'heating.circuits.0.temperature',
             'unit': 'celsius',
-            'value': 32.8,
+            'value': 37.7,
           }),
           dict({
             'constraints': dict({
@@ -1234,7 +1260,7 @@
             'is_writable': False,
             'name': 'heating.compressors.0.active',
             'unit': None,
-            'value': False,
+            'value': True,
           }),
           dict({
             'constraints': dict({
@@ -1264,7 +1290,7 @@
             'is_writable': False,
             'name': 'heating.compressors.0.sensors.pressure.inlet',
             'unit': 'bar',
-            'value': 6.59,
+            'value': 4.18,
           }),
           dict({
             'constraints': dict({
@@ -1284,7 +1310,7 @@
             'is_writable': False,
             'name': 'heating.compressors.0.sensors.temperature.inlet',
             'unit': 'celsius',
-            'value': 22.2,
+            'value': 9.2,
           }),
           dict({
             'constraints': dict({
@@ -1304,7 +1330,7 @@
             'is_writable': False,
             'name': 'heating.compressors.0.sensors.temperature.motorChamber',
             'unit': 'celsius',
-            'value': 25.2,
+            'value': 20,
           }),
           dict({
             'constraints': dict({
@@ -1324,7 +1350,7 @@
             'is_writable': False,
             'name': 'heating.compressors.0.sensors.temperature.oil',
             'unit': 'celsius',
-            'value': 50.7,
+            'value': 62.2,
           }),
           dict({
             'constraints': dict({
@@ -1344,7 +1370,7 @@
             'is_writable': False,
             'name': 'heating.compressors.0.sensors.temperature.outlet',
             'unit': 'celsius',
-            'value': 33.1,
+            'value': 65.5,
           }),
           dict({
             'constraints': dict({
@@ -1364,7 +1390,7 @@
             'is_writable': False,
             'name': 'heating.compressors.0.speed.current',
             'unit': 'revolutionsPerSecond',
-            'value': 0,
+            'value': 41,
           }),
           dict({
             'constraints': dict({
@@ -1374,7 +1400,7 @@
             'is_writable': False,
             'name': 'heating.compressors.0.speed.setpoint',
             'unit': 'revolutionsPerSecond',
-            'value': 0,
+            'value': 41.1,
           }),
           dict({
             'constraints': dict({
@@ -1384,7 +1410,7 @@
             'is_writable': False,
             'name': 'heating.compressors.0.statistics.hours',
             'unit': 'hour',
-            'value': 11755,
+            'value': 12275,
           }),
           dict({
             'constraints': dict({
@@ -1394,7 +1420,7 @@
             'is_writable': False,
             'name': 'heating.compressors.0.statistics.starts',
             'unit': '',
-            'value': 3142,
+            'value': 3417,
           }),
           dict({
             'constraints': dict({
@@ -1416,7 +1442,7 @@
             'is_writable': False,
             'name': 'heating.condensors.0.sensors.temperature.liquid',
             'unit': 'celsius',
-            'value': 27.6,
+            'value': 36.3,
           }),
           dict({
             'constraints': dict({
@@ -2034,7 +2060,7 @@
             'is_writable': False,
             'name': 'heating.dhw.sensors.temperature.dhwCylinder',
             'unit': 'celsius',
-            'value': 48.8,
+            'value': 46.3,
           }),
           dict({
             'constraints': dict({
@@ -2054,7 +2080,7 @@
             'is_writable': False,
             'name': 'heating.dhw.sensors.temperature.hotWaterStorage',
             'unit': 'celsius',
-            'value': 48.8,
+            'value': 46.3,
           }),
           dict({
             'constraints': dict({
@@ -2170,7 +2196,7 @@
             'is_writable': False,
             'name': 'heating.economizers.0.sensors.temperature.liquid',
             'unit': 'celsius',
-            'value': 24.5,
+            'value': 10.4,
           }),
           dict({
             'constraints': dict({
@@ -2200,7 +2226,7 @@
             'is_writable': False,
             'name': 'heating.evaporators.0.sensors.temperature.liquid',
             'unit': 'celsius',
-            'value': 16.9,
+            'value': -0.9,
           }),
           dict({
             'constraints': dict({
@@ -2220,7 +2246,7 @@
             'is_writable': False,
             'name': 'heating.evaporators.0.sensors.temperature.overheat',
             'unit': 'celsius',
-            'value': 16,
+            'value': -2.3,
           }),
           dict({
             'constraints': dict({
@@ -2250,7 +2276,7 @@
             'is_writable': False,
             'name': 'heating.heat.production.current',
             'unit': 'kilowatt',
-            'value': 0,
+            'value': 6.689,
           }),
           dict({
             'constraints': dict({
@@ -2330,7 +2356,7 @@
             'is_writable': False,
             'name': 'heating.heat.production.summary.dhw.currentDay',
             'unit': 'kilowattHour',
-            'value': 6.3,
+            'value': 9.6,
           }),
           dict({
             'constraints': dict({
@@ -2340,7 +2366,7 @@
             'is_writable': False,
             'name': 'heating.heat.production.summary.dhw.currentMonth',
             'unit': 'kilowattHour',
-            'value': 99.9,
+            'value': 244.6,
           }),
           dict({
             'constraints': dict({
@@ -2350,7 +2376,7 @@
             'is_writable': False,
             'name': 'heating.heat.production.summary.dhw.currentYear',
             'unit': 'kilowattHour',
-            'value': 3064,
+            'value': 3657.5,
           }),
           dict({
             'constraints': dict({
@@ -2360,7 +2386,7 @@
             'is_writable': False,
             'name': 'heating.heat.production.summary.dhw.lastMonth',
             'unit': 'kilowattHour',
-            'value': 255.3,
+            'value': 448.8,
           }),
           dict({
             'constraints': dict({
@@ -2370,7 +2396,7 @@
             'is_writable': False,
             'name': 'heating.heat.production.summary.dhw.lastSevenDays',
             'unit': 'kilowattHour',
-            'value': 59.1,
+            'value': 137.5,
           }),
           dict({
             'constraints': dict({
@@ -2390,7 +2416,7 @@
             'is_writable': False,
             'name': 'heating.heat.production.summary.heating.currentDay',
             'unit': 'kilowattHour',
-            'value': 25.7,
+            'value': 47.1,
           }),
           dict({
             'constraints': dict({
@@ -2400,7 +2426,7 @@
             'is_writable': False,
             'name': 'heating.heat.production.summary.heating.currentMonth',
             'unit': 'kilowattHour',
-            'value': 125,
+            'value': 1040.2,
           }),
           dict({
             'constraints': dict({
@@ -2410,7 +2436,7 @@
             'is_writable': False,
             'name': 'heating.heat.production.summary.heating.currentYear',
             'unit': 'kilowattHour',
-            'value': 10252.7,
+            'value': 12355.6,
           }),
           dict({
             'constraints': dict({
@@ -2420,7 +2446,7 @@
             'is_writable': False,
             'name': 'heating.heat.production.summary.heating.lastMonth',
             'unit': 'kilowattHour',
-            'value': 0,
+            'value': 1187.7,
           }),
           dict({
             'constraints': dict({
@@ -2430,7 +2456,7 @@
             'is_writable': False,
             'name': 'heating.heat.production.summary.heating.lastSevenDays',
             'unit': 'kilowattHour',
-            'value': 125,
+            'value': 554.4,
           }),
           dict({
             'constraints': dict({
@@ -2550,7 +2576,7 @@
             'is_writable': False,
             'name': 'heating.heatingRod.power.consumption.summary.heating.currentMonth',
             'unit': 'kilowattHour',
-            'value': 0,
+            'value': 6.3,
           }),
           dict({
             'constraints': dict({
@@ -2560,7 +2586,7 @@
             'is_writable': False,
             'name': 'heating.heatingRod.power.consumption.summary.heating.currentYear',
             'unit': 'kilowattHour',
-            'value': 43.6,
+            'value': 53.1,
           }),
           dict({
             'constraints': dict({
@@ -2570,7 +2596,7 @@
             'is_writable': False,
             'name': 'heating.heatingRod.power.consumption.summary.heating.lastMonth',
             'unit': 'kilowattHour',
-            'value': 0,
+            'value': 3.2,
           }),
           dict({
             'constraints': dict({
@@ -2580,7 +2606,7 @@
             'is_writable': False,
             'name': 'heating.heatingRod.power.consumption.summary.heating.lastSevenDays',
             'unit': 'kilowattHour',
-            'value': 0,
+            'value': 3.8,
           }),
           dict({
             'constraints': dict({
@@ -2600,7 +2626,7 @@
             'is_writable': False,
             'name': 'heating.heatingRod.statistics.hours',
             'unit': 'hour',
-            'value': 79,
+            'value': 81,
           }),
           dict({
             'constraints': dict({
@@ -2610,7 +2636,7 @@
             'is_writable': False,
             'name': 'heating.heatingRod.statistics.starts',
             'unit': '',
-            'value': 480,
+            'value': 500,
           }),
           dict({
             'constraints': dict({
@@ -2620,7 +2646,7 @@
             'is_writable': False,
             'name': 'heating.inverters.0.sensors.power.current',
             'unit': 'ampere',
-            'value': 0,
+            'value': 8,
           }),
           dict({
             'constraints': dict({
@@ -2640,7 +2666,7 @@
             'is_writable': False,
             'name': 'heating.inverters.0.sensors.power.output',
             'unit': 'watt',
-            'value': 0,
+            'value': 1550,
           }),
           dict({
             'constraints': dict({
@@ -2660,7 +2686,7 @@
             'is_writable': False,
             'name': 'heating.inverters.0.sensors.temperature.powerModule',
             'unit': 'celsius',
-            'value': 25.7,
+            'value': 31.6,
           }),
           dict({
             'constraints': dict({
@@ -2760,7 +2786,7 @@
             'is_writable': False,
             'name': 'heating.operating.programs.holiday.end',
             'unit': None,
-            'value': '2000-01-01',
+            'value': '',
           }),
           dict({
             'constraints': dict({
@@ -2770,7 +2796,7 @@
             'is_writable': False,
             'name': 'heating.operating.programs.holiday.start',
             'unit': None,
-            'value': '2000-01-01',
+            'value': '',
           }),
           dict({
             'constraints': dict({
@@ -2790,7 +2816,7 @@
             'is_writable': False,
             'name': 'heating.operating.programs.holidayAtHome.end',
             'unit': None,
-            'value': '2000-01-01',
+            'value': '',
           }),
           dict({
             'constraints': dict({
@@ -2800,7 +2826,7 @@
             'is_writable': False,
             'name': 'heating.operating.programs.holidayAtHome.start',
             'unit': None,
-            'value': '2000-01-01',
+            'value': '',
           }),
           dict({
             'constraints': dict({
@@ -2820,7 +2846,7 @@
             'is_writable': False,
             'name': 'heating.power.consumption.current',
             'unit': 'kilowatt',
-            'value': 0,
+            'value': 1.69,
           }),
           dict({
             'constraints': dict({
@@ -2845,25 +2871,26 @@
                 'type': 'array',
                 'unit': 'kilowattHour',
                 'value': list([
-                  1.8,
-                  3.9,
-                  4.2,
-                  3.6,
-                  0,
-                  0,
-                  2.3,
-                  0,
+                  3.3,
+                  5.5,
+                  5.7,
+                  6.5,
+                  4.9,
+                  9.8,
+                  7,
+                  4.9,
                 ]),
               }),
               'dayValueReadAt': dict({
                 'type': 'string',
-                'value': '2026-10-08T21:34:34.782Z',
+                'value': '2026-11-12T05:20:41.985Z',
               }),
               'month': dict({
                 'type': 'array',
                 'unit': 'kilowattHour',
                 'value': list([
-                  16.3,
+                  74.7,
+                  120,
                   57.2,
                   21.4,
                   18.7,
@@ -2875,39 +2902,39 @@
                   350.3,
                   205.9,
                   180.2,
-                  151.4,
                 ]),
               }),
               'monthValueReadAt': dict({
                 'type': 'string',
-                'value': '2026-10-08T21:34:34.782Z',
+                'value': '2026-11-12T05:20:41.985Z',
               }),
               'week': dict({
                 'type': 'array',
                 'unit': 'kilowattHour',
                 'value': list([
-                  15.8,
-                  11.8,
-                  15.8,
-                  14.9,
-                  13.5,
+                  25.9,
+                  44.6,
+                  35.699999999999996,
+                  33.9,
+                  28.7,
+                  18.400000000000002,
                 ]),
               }),
               'weekValueReadAt': dict({
                 'type': 'string',
-                'value': '2026-10-08T21:34:34.782Z',
+                'value': '2026-11-12T05:20:41.985Z',
               }),
               'year': dict({
                 'type': 'array',
                 'unit': 'kilowattHour',
                 'value': list([
-                  994.1999999999999,
+                  1165.6000000000001,
                   1396.6,
                 ]),
               }),
               'yearValueReadAt': dict({
                 'type': 'string',
-                'value': '2026-10-08T21:34:34.782Z',
+                'value': '2026-11-12T05:20:41.985Z',
               }),
             }),
           }),
@@ -2919,7 +2946,7 @@
             'is_writable': False,
             'name': 'heating.power.consumption.dhw.currentDay',
             'unit': 'kilowattHour',
-            'value': 1.8,
+            'value': 3.3,
           }),
           dict({
             'constraints': dict({
@@ -2929,7 +2956,7 @@
             'is_writable': False,
             'name': 'heating.power.consumption.dhw.currentYear',
             'unit': 'kilowattHour',
-            'value': 994.1999999999999,
+            'value': 1165.6000000000001,
           }),
           dict({
             'constraints': dict({
@@ -2944,25 +2971,26 @@
                 'type': 'array',
                 'unit': 'kilowattHour',
                 'value': list([
-                  4.5,
-                  8.6,
-                  5.2,
-                  3,
                   0,
-                  0,
-                  0,
-                  0,
+                  16.400000000000002,
+                  17.400000000000002,
+                  18,
+                  17,
+                  20.700000000000003,
+                  26.2,
+                  22.4,
                 ]),
               }),
               'dayValueReadAt': dict({
                 'type': 'string',
-                'value': '2026-10-08T21:34:34.782Z',
+                'value': '2026-11-12T13:45:57.263Z',
               }),
               'month': dict({
                 'type': 'array',
                 'unit': 'kilowattHour',
                 'value': list([
-                  3.4,
+                  228.60000000000002,
+                  222.7,
                   0,
                   0,
                   0,
@@ -2974,39 +3002,39 @@
                   1171.8,
                   736.3000000000001,
                   590.4,
-                  243.8,
                 ]),
               }),
               'monthValueReadAt': dict({
                 'type': 'string',
-                'value': '2026-10-08T21:34:34.782Z',
+                'value': '2026-11-12T13:45:57.329Z',
               }),
               'week': dict({
                 'type': 'array',
                 'unit': 'kilowattHour',
                 'value': list([
-                  21.3,
-                  0,
-                  0,
-                  0,
-                  0,
+                  68.8,
+                  143,
+                  93,
+                  70.50000000000001,
+                  50.4,
+                  25.599999999999998,
                 ]),
               }),
               'weekValueReadAt': dict({
                 'type': 'string',
-                'value': '2026-10-08T21:34:34.782Z',
+                'value': '2026-11-12T13:45:57.263Z',
               }),
               'year': dict({
                 'type': 'array',
                 'unit': 'kilowattHour',
                 'value': list([
-                  2642.7999999999997,
+                  3085.9,
                   4103.9,
                 ]),
               }),
               'yearValueReadAt': dict({
                 'type': 'string',
-                'value': '2026-10-08T21:34:34.782Z',
+                'value': '2026-11-12T22:59:22.284Z',
               }),
             }),
           }),
@@ -3018,7 +3046,7 @@
             'is_writable': False,
             'name': 'heating.power.consumption.heating.currentDay',
             'unit': 'kilowattHour',
-            'value': 4.5,
+            'value': 0,
           }),
           dict({
             'constraints': dict({
@@ -3028,7 +3056,7 @@
             'is_writable': False,
             'name': 'heating.power.consumption.heating.currentYear',
             'unit': 'kilowattHour',
-            'value': 2642.7999999999997,
+            'value': 3085.9,
           }),
           dict({
             'constraints': dict({
@@ -3098,7 +3126,7 @@
             'is_writable': False,
             'name': 'heating.power.consumption.summary.dhw.currentDay',
             'unit': 'kilowattHour',
-            'value': 1.9,
+            'value': 2.3,
           }),
           dict({
             'constraints': dict({
@@ -3108,7 +3136,7 @@
             'is_writable': False,
             'name': 'heating.power.consumption.summary.dhw.currentMonth',
             'unit': 'kilowattHour',
-            'value': 16.3,
+            'value': 74.7,
           }),
           dict({
             'constraints': dict({
@@ -3118,7 +3146,7 @@
             'is_writable': False,
             'name': 'heating.power.consumption.summary.dhw.currentYear',
             'unit': 'kilowattHour',
-            'value': 986.1999999999999,
+            'value': 1164.6000000000001,
           }),
           dict({
             'constraints': dict({
@@ -3128,7 +3156,7 @@
             'is_writable': False,
             'name': 'heating.power.consumption.summary.dhw.lastMonth',
             'unit': 'kilowattHour',
-            'value': 57.2,
+            'value': 120,
           }),
           dict({
             'constraints': dict({
@@ -3138,7 +3166,7 @@
             'is_writable': False,
             'name': 'heating.power.consumption.summary.dhw.lastSevenDays',
             'unit': 'kilowattHour',
-            'value': 10.2,
+            'value': 41.7,
           }),
           dict({
             'constraints': dict({
@@ -3158,7 +3186,7 @@
             'is_writable': False,
             'name': 'heating.power.consumption.summary.heating.currentDay',
             'unit': 'kilowattHour',
-            'value': 0.4,
+            'value': 0,
           }),
           dict({
             'constraints': dict({
@@ -3168,7 +3196,7 @@
             'is_writable': False,
             'name': 'heating.power.consumption.summary.heating.currentMonth',
             'unit': 'kilowattHour',
-            'value': 3.4,
+            'value': 228.60000000000002,
           }),
           dict({
             'constraints': dict({
@@ -3178,7 +3206,7 @@
             'is_writable': False,
             'name': 'heating.power.consumption.summary.heating.currentYear',
             'unit': 'kilowattHour',
-            'value': 2624.9,
+            'value': 3072.7999999999997,
           }),
           dict({
             'constraints': dict({
@@ -3188,7 +3216,7 @@
             'is_writable': False,
             'name': 'heating.power.consumption.summary.heating.lastMonth',
             'unit': 'kilowattHour',
-            'value': 0,
+            'value': 222.7,
           }),
           dict({
             'constraints': dict({
@@ -3198,7 +3226,7 @@
             'is_writable': False,
             'name': 'heating.power.consumption.summary.heating.lastSevenDays',
             'unit': 'kilowattHour',
-            'value': 3.4,
+            'value': 115.7,
           }),
           dict({
             'constraints': dict({
@@ -3223,25 +3251,26 @@
                 'type': 'array',
                 'unit': 'kilowattHour',
                 'value': list([
-                  2.1,
-                  12.5,
-                  9.4,
-                  6.6,
-                  0,
-                  0,
                   2.3,
-                  0,
+                  21.900000000000002,
+                  23.1,
+                  24.5,
+                  21.9,
+                  30.500000000000004,
+                  33.2,
+                  27.299999999999997,
                 ]),
               }),
               'dayValueReadAt': dict({
                 'type': 'string',
-                'value': '2026-10-08T21:34:34.772Z',
+                'value': '2026-11-12T05:20:41.966Z',
               }),
               'month': dict({
                 'type': 'array',
                 'unit': 'kilowattHour',
                 'value': list([
-                  19.7,
+                  303.3,
+                  342.7,
                   57.2,
                   21.4,
                   18.7,
@@ -3253,39 +3282,39 @@
                   1522.1,
                   942.2,
                   770.5999999999999,
-                  395.20000000000005,
                 ]),
               }),
               'monthValueReadAt': dict({
                 'type': 'string',
-                'value': '2026-10-08T21:34:34.772Z',
+                'value': '2026-11-12T05:20:41.966Z',
               }),
               'week': dict({
                 'type': 'array',
                 'unit': 'kilowattHour',
                 'value': list([
-                  32.900000000000006,
-                  11.8,
-                  15.8,
-                  14.9,
-                  13.5,
+                  93.69999999999999,
+                  187.6,
+                  128.7,
+                  104.4,
+                  79.1,
+                  44,
                 ]),
               }),
               'weekValueReadAt': dict({
                 'type': 'string',
-                'value': '2026-10-08T21:34:34.772Z',
+                'value': '2026-11-12T05:20:41.966Z',
               }),
               'year': dict({
                 'type': 'array',
                 'unit': 'kilowattHour',
                 'value': list([
-                  3637,
+                  4251.5,
                   5500.5,
                 ]),
               }),
               'yearValueReadAt': dict({
                 'type': 'string',
-                'value': '2026-10-08T21:34:34.772Z',
+                'value': '2026-11-12T05:20:41.966Z',
               }),
             }),
           }),
@@ -3297,7 +3326,7 @@
             'is_writable': False,
             'name': 'heating.power.consumption.total.currentDay',
             'unit': 'kilowattHour',
-            'value': 2.1,
+            'value': 2.3,
           }),
           dict({
             'constraints': dict({
@@ -3307,7 +3336,7 @@
             'is_writable': False,
             'name': 'heating.power.consumption.total.currentYear',
             'unit': 'kilowattHour',
-            'value': 3637,
+            'value': 4251.5,
           }),
           dict({
             'constraints': dict({
@@ -3317,7 +3346,7 @@
             'is_writable': False,
             'name': 'heating.primaryCircuit.fans.0.current',
             'unit': 'percent',
-            'value': 0,
+            'value': 41,
           }),
           dict({
             'constraints': dict({
@@ -3337,7 +3366,7 @@
             'is_writable': False,
             'name': 'heating.primaryCircuit.fans.1.current',
             'unit': 'percent',
-            'value': 0,
+            'value': 46,
           }),
           dict({
             'constraints': dict({
@@ -3357,7 +3386,7 @@
             'is_writable': False,
             'name': 'heating.primaryCircuit.sensors.temperature.supply',
             'unit': 'celsius',
-            'value': 14.7,
+            'value': 2.7,
           }),
           dict({
             'constraints': dict({
@@ -3417,7 +3446,7 @@
             'is_writable': False,
             'name': 'heating.secondaryCircuit.operation.state.currentValue',
             'unit': None,
-            'value': 'standby',
+            'value': 'heating',
           }),
           dict({
             'constraints': dict({
@@ -3427,7 +3456,7 @@
             'is_writable': False,
             'name': 'heating.secondaryCircuit.operation.state.targetValue',
             'unit': None,
-            'value': 'standby',
+            'value': 'heating',
           }),
           dict({
             'constraints': dict({
@@ -3437,7 +3466,7 @@
             'is_writable': False,
             'name': 'heating.secondaryCircuit.sensors.temperature.supply',
             'unit': 'celsius',
-            'value': 35.2,
+            'value': 40.4,
           }),
           dict({
             'constraints': dict({
@@ -3467,7 +3496,7 @@
             'is_writable': False,
             'name': 'heating.secondaryCircuit.valves.fourThreeWay.current',
             'unit': 'percent',
-            'value': 52,
+            'value': 0,
           }),
           dict({
             'constraints': dict({
@@ -3477,7 +3506,7 @@
             'is_writable': False,
             'name': 'heating.secondaryCircuit.valves.fourThreeWay.target',
             'unit': 'percent',
-            'value': 50,
+            'value': 0,
           }),
           dict({
             'constraints': dict({
@@ -3507,7 +3536,7 @@
             'is_writable': False,
             'name': 'heating.sensors.pressure.supply',
             'unit': 'bar',
-            'value': 1.6,
+            'value': 1.7,
           }),
           dict({
             'constraints': dict({
@@ -3527,7 +3556,7 @@
             'is_writable': False,
             'name': 'heating.sensors.temperature.allengra',
             'unit': 'celsius',
-            'value': 35.9,
+            'value': 37.3,
           }),
           dict({
             'constraints': dict({
@@ -3547,7 +3576,7 @@
             'is_writable': False,
             'name': 'heating.sensors.temperature.outside',
             'unit': 'celsius',
-            'value': 11.1,
+            'value': 3.1,
           }),
           dict({
             'constraints': dict({
@@ -3567,7 +3596,7 @@
             'is_writable': False,
             'name': 'heating.sensors.temperature.return',
             'unit': 'celsius',
-            'value': 35.3,
+            'value': 36.9,
           }),
           dict({
             'constraints': dict({
@@ -3587,7 +3616,7 @@
             'is_writable': False,
             'name': 'heating.sensors.valve.0.expansion.target',
             'unit': 'percent',
-            'value': 50,
+            'value': 35,
           }),
           dict({
             'constraints': dict({
@@ -3597,7 +3626,7 @@
             'is_writable': False,
             'name': 'heating.sensors.valve.1.expansion.target',
             'unit': 'percent',
-            'value': 0,
+            'value': 43,
           }),
           dict({
             'constraints': dict({
@@ -3607,7 +3636,7 @@
             'is_writable': False,
             'name': 'heating.sensors.volumetricFlow.allengra',
             'unit': 'liter/hour',
-            'value': 0,
+            'value': 1330,
           }),
           dict({
             'constraints': dict({
@@ -3657,7 +3686,7 @@
             'is_writable': False,
             'name': 'heating.valves.fourThreeWay.position',
             'unit': None,
-            'value': 'climatCircuitTwoDefrost',
+            'value': 'climateCircuitOne',
           }),
           dict({
             'constraints': dict({
@@ -3667,12 +3696,12 @@
             'is_writable': False,
             'name': 'tcu.wifi.strength',
             'unit': '',
-            'value': -34,
+            'value': -27,
           }),
         ]),
         'gateway': 'gateway_1',
         'installation': 'installation_1',
-        'model': 'Vitocal250A',
+        'model': 'E3_Vitocal_16',
         'status': 'connected',
         'type': 'heating',
       }),
