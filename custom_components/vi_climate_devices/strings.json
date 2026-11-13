@@ -767,6 +767,22 @@
                     "eco": "Eco"
                 }
             }
+        },
+        "fan": {
+            "ventilation": {
+                "name": "Ventilation",
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "permanent": "Fixed level",
+                            "ventilation": "Schedule",
+                            "sensor_override": "Sensor override",
+                            "sensor_driven": "Sensor-driven",
+                            "standard": "Standard"
+                        }
+                    }
+                }
+            }
         }
     }
 }

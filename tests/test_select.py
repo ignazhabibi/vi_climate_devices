@@ -26,11 +26,11 @@ from custom_components.vi_climate_devices.const import DOMAIN
 from custom_components.vi_climate_devices.exceptions import config_entry_auth_failed
 from custom_components.vi_climate_devices.select import ViClimateSelect
 
-# Heating circuit and DHW modes have no select; the ventilation mode of the
-# Vitopure 350 is an auto-discovered select.
-VENTILATION_FIXTURE = "Vitopure350"
-VENTILATION_MODE_FEATURE = "ventilation.operating.modes.active"
-VENTILATION_MODE_ENTITY = "select.e3_vitopure_ventilation_operating_modes_active"
+# Heating circuit, DHW, and ventilation modes have no select; the battery
+# control mode of the Vitocharge Evolution 08 is an auto-discovered select.
+SELECT_FIXTURE = "VitochargeEvolution08"
+SELECT_FEATURE = "ess.battery.control.mode.active"
+SELECT_ENTITY = "select.e3_vitocharge_evolution_08_ess_battery_control_mode_active"
 
 
 async def _setup_integration(hass: HomeAssistant, client: FixtureViClient) -> None:
@@ -118,40 +118,44 @@ async def test_heating_and_dhw_modes_have_no_select(hass: HomeAssistant, mock_cl
 @pytest.mark.asyncio
 async def test_select_creation_and_services(hass: HomeAssistant):
     """Create an auto-discovered select and write the selected option."""
-    # Arrange: Spy on writes of the ventilation fixture client.
-    client = FixtureViClient(VENTILATION_FIXTURE)
+    # Arrange: Spy on writes of the energy storage fixture client.
+    client = FixtureViClient(SELECT_FIXTURE)
     client.set_feature = AsyncMock(wraps=client.set_feature)
     await _setup_integration(hass, client)
 
     # Assert: The initial state and options come from the fixture.
-    state = hass.states.get(VENTILATION_MODE_ENTITY)
+    state = hass.states.get(SELECT_ENTITY)
     assert state is not None
-    assert state.state == "sensorDriven"
-    assert state.attributes["options"] == ["permanent", "ventilation", "sensorDriven"]
+    assert state.state == "nothing"
+    assert state.attributes["options"] == [
+        "powerControlMode",
+        "nothing",
+        "pccControlMode",
+    ]
 
     # Act: Select another option.
     await hass.services.async_call(
         "select",
         SERVICE_SELECT_OPTION,
-        {"entity_id": VENTILATION_MODE_ENTITY, "option": "permanent"},
+        {"entity_id": SELECT_ENTITY, "option": "powerControlMode"},
         blocking=True,
     )
 
     # Assert: The option is written and shown.
     assert client.set_feature.call_count == 1
     args, _ = client.set_feature.call_args
-    assert args[1].name == VENTILATION_MODE_FEATURE
-    assert args[2] == "permanent"
-    state = hass.states.get(VENTILATION_MODE_ENTITY)
+    assert args[1].name == SELECT_FEATURE
+    assert args[2] == "powerControlMode"
+    state = hass.states.get(SELECT_ENTITY)
     assert state is not None
-    assert state.state == "permanent"
+    assert state.state == "powerControlMode"
 
 
 @pytest.mark.asyncio
 async def test_select_error_handling(hass: HomeAssistant):
     """Roll back the optimistic option when the write fails."""
     # Arrange: Fail every write.
-    client = FixtureViClient(VENTILATION_FIXTURE)
+    client = FixtureViClient(SELECT_FIXTURE)
     client.set_feature = AsyncMock(side_effect=HomeAssistantError("API Error"))
     await _setup_integration(hass, client)
 
@@ -160,7 +164,7 @@ async def test_select_error_handling(hass: HomeAssistant):
         await hass.services.async_call(
             "select",
             SERVICE_SELECT_OPTION,
-            {"entity_id": VENTILATION_MODE_ENTITY, "option": "permanent"},
+            {"entity_id": SELECT_ENTITY, "option": "powerControlMode"},
             blocking=True,
         )
 
@@ -169,9 +173,9 @@ async def test_select_error_handling(hass: HomeAssistant):
     assert error.value.translation_key == "selection_failed"
     assert error.value.translation_placeholders is None
     assert isinstance(error.value.__cause__, HomeAssistantError)
-    state = hass.states.get(VENTILATION_MODE_ENTITY)
+    state = hass.states.get(SELECT_ENTITY)
     assert state is not None
-    assert state.state == "sensorDriven"
+    assert state.state == "nothing"
 
 
 @pytest.mark.asyncio
@@ -179,7 +183,7 @@ async def test_select_api_rejection(hass: HomeAssistant):
     """Roll back the optimistic option when the API rejects the command."""
 
     # Arrange: Reject every write command.
-    client = FixtureViClient(VENTILATION_FIXTURE)
+    client = FixtureViClient(SELECT_FIXTURE)
     client.set_feature = AsyncMock(
         side_effect=ViCommandRejectedError("Rejected", reason="COMMAND_NOT_EXECUTABLE")
     )
@@ -190,7 +194,7 @@ async def test_select_api_rejection(hass: HomeAssistant):
         await hass.services.async_call(
             "select",
             SERVICE_SELECT_OPTION,
-            {"entity_id": VENTILATION_MODE_ENTITY, "option": "permanent"},
+            {"entity_id": SELECT_ENTITY, "option": "powerControlMode"},
             blocking=True,
         )
 
@@ -198,9 +202,9 @@ async def test_select_api_rejection(hass: HomeAssistant):
     assert error.value.translation_domain == DOMAIN
     assert error.value.translation_key == "command_rejected"
     assert error.value.translation_placeholders is None
-    state = hass.states.get(VENTILATION_MODE_ENTITY)
+    state = hass.states.get(SELECT_ENTITY)
     assert state is not None
-    assert state.state == "sensorDriven"
+    assert state.state == "nothing"
 
 
 @pytest.mark.asyncio

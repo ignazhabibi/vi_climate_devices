@@ -292,6 +292,22 @@
             "burner_active_numbered": {
                 "default": "mdi:fire"
             }
+        },
+        "fan": {
+            "ventilation": {
+                "default": "mdi:fan",
+                "state_attributes": {
+                    "preset_mode": {
+                        "default": "mdi:fan",
+                        "state": {
+                            "permanent": "mdi:fan-speed-2",
+                            "ventilation": "mdi:calendar-clock",
+                            "sensor_override": "mdi:fan-alert",
+                            "sensor_driven": "mdi:air-filter"
+                        }
+                    }
+                }
+            }
         }
     }
 }

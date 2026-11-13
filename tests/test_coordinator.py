@@ -258,6 +258,50 @@ async def test_async_set_feature_translates_auth_and_rejects_missing_data(
 
 
 @pytest.mark.asyncio
+async def test_async_run_command_translates_auth_and_rejects_missing_data(
+    hass: HomeAssistant, mock_client
+) -> None:
+    """Keep command errors translated without leaking client details."""
+    coordinator = _build_coordinator(hass, mock_client)
+    coordinator.data = {}
+    with pytest.raises(ValueError, match="Device missing"):
+        await coordinator.async_run_command("missing", "feature", "command", {})
+
+    coordinator.data = {
+        "device": _build_device(device_id="device-0", gateway_serial="gw-main")
+    }
+    mock_client.run_command = AsyncMock(side_effect=ViAuthError("private detail"))
+    with pytest.raises(ConfigEntryAuthFailed) as error:
+        await coordinator.async_run_command("device", "feature", "command", {})
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "authentication_failed"
+    assert isinstance(error.value.__cause__, ViAuthError)
+
+
+@pytest.mark.asyncio
+async def test_async_run_command_refreshes_after_success(
+    hass: HomeAssistant, mock_client
+) -> None:
+    """Request a refresh because a command changes no snapshot."""
+    # Arrange: Accept every command and record refresh requests.
+    coordinator = _build_coordinator(hass, mock_client)
+    coordinator.data = {
+        "device": _build_device(device_id="device-0", gateway_serial="gw-main")
+    }
+    mock_client.run_command = AsyncMock(return_value=None)
+
+    # Act: Run a command.
+    with patch.object(coordinator, "async_request_refresh") as request_refresh:
+        await coordinator.async_run_command(
+            "device", "feature", "command", {"level": "levelOne"}
+        )
+
+    # Assert: The command is sent once and a refresh follows.
+    mock_client.run_command.assert_awaited_once()
+    request_refresh.assert_awaited_once()
+
+
+@pytest.mark.asyncio
 async def test_data_coordinator_raises_reauth_when_installation_lookup_loses_auth(
     hass: HomeAssistant, mock_client
 ) -> None:

@@ -14,8 +14,8 @@ from custom_components.vi_climate_devices.const import DOMAIN
 
 _COORDINATOR_LOGGER = "custom_components.vi_climate_devices.coordinator"
 
-# Vitocal 250-A has no select; the Vitopure 350 ventilation mode is one.
-_FIXTURE_BY_DOMAIN = {"select": "Vitopure350"}
+# Vitocal 250-A has no select; the Vitocharge battery control mode is one.
+_FIXTURE_BY_DOMAIN = {"select": "VitochargeEvolution08"}
 
 
 @pytest.mark.asyncio
@@ -36,10 +36,12 @@ _FIXTURE_BY_DOMAIN = {"select": "Vitopure350"}
             "select",
             "select_option",
             {
-                "entity_id": "select.e3_vitopure_ventilation_operating_modes_active",
-                "option": "permanent",
+                "entity_id": (
+                    "select.e3_vitocharge_evolution_08_ess_battery_control_mode_active"
+                ),
+                "option": "powerControlMode",
             },
-            "ventilation.operating.modes.active",
+            "ess.battery.control.mode.active",
         ),
         (
             "switch",
