@@ -870,6 +870,15 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Outside temperature of system controllers such as the Vitocal 200-A,
+    # which do not report heating.sensors.temperature.outside.
+    "system.temperature.outside": SensorEntityDescription(
+        key="system.temperature.outside",
+        translation_key="outside_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     # Return Temperature (Generic)
     "heating.sensors.temperature.return": SensorEntityDescription(
         key="heating.sensors.temperature.return",
