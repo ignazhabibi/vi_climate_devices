@@ -264,6 +264,12 @@
             },
             "grid_power_limitation": {
                 "name": "Grid power limitation"
+            },
+            "burner_active": {
+                "name": "Burner"
+            },
+            "burner_active_numbered": {
+                "name": "Burner {number}"
             }
         },
         "climate": {
@@ -644,6 +650,21 @@
             },
             "inverter_temperature_numbered": {
                 "name": "Inverter {number} Temperature"
+            },
+            "gas_consumption_heating_current_day": {
+                "name": "Heating Gas Consumption Day"
+            },
+            "gas_consumption_heating_current_year": {
+                "name": "Heating Gas Consumption Year"
+            },
+            "gas_consumption_dhw_current_day": {
+                "name": "DHW Gas Consumption Day"
+            },
+            "gas_consumption_dhw_current_year": {
+                "name": "DHW Gas Consumption Year"
+            },
+            "hydraulic_separator_temperature": {
+                "name": "Hydraulic Separator Temperature"
             }
         },
         "switch": {
