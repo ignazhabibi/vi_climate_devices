@@ -303,8 +303,7 @@
                             "permanent": "mdi:fan-speed-2",
                             "ventilation": "mdi:calendar-clock",
                             "sensor_override": "mdi:fan-alert",
-                            "sensor_driven": "mdi:air-filter",
-                            "standard": "mdi:fan"
+                            "sensor_driven": "mdi:air-filter"
                         }
                     }
                 }
