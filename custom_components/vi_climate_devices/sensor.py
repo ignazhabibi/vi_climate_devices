@@ -732,6 +732,35 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
+    # Gas consumption of boilers, reset each day or year.
+    "heating.gas.consumption.summary.heating.currentDay": SensorEntityDescription(
+        key="heating.gas.consumption.summary.heating.currentDay",
+        translation_key="gas_consumption_heating_current_day",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        device_class=SensorDeviceClass.GAS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "heating.gas.consumption.summary.heating.currentYear": SensorEntityDescription(
+        key="heating.gas.consumption.summary.heating.currentYear",
+        translation_key="gas_consumption_heating_current_year",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        device_class=SensorDeviceClass.GAS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "heating.gas.consumption.summary.dhw.currentDay": SensorEntityDescription(
+        key="heating.gas.consumption.summary.dhw.currentDay",
+        translation_key="gas_consumption_dhw_current_day",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        device_class=SensorDeviceClass.GAS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "heating.gas.consumption.summary.dhw.currentYear": SensorEntityDescription(
+        key="heating.gas.consumption.summary.dhw.currentYear",
+        translation_key="gas_consumption_dhw_current_year",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        device_class=SensorDeviceClass.GAS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
     # Realtime Consumption Heating (Current Day).
     "heating.power.consumption.heating.currentDay": SensorEntityDescription(
         key="heating.power.consumption.heating.currentDay",
@@ -875,6 +904,14 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "system.temperature.outside": SensorEntityDescription(
         key="system.temperature.outside",
         translation_key="outside_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Hydraulic separator temperature of boilers.
+    "heating.sensors.temperature.hydraulicSeparator": SensorEntityDescription(
+        key="heating.sensors.temperature.hydraulicSeparator",
+        translation_key="hydraulic_separator_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,

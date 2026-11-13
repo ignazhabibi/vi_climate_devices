@@ -1150,15 +1150,6 @@ async def test_successor_entry_of_another_config_entry_is_kept(
     ),
     [
         pytest.param(
-            "Vitodens200W",
-            "heating.gas.consumption.summary.dhw.currentYear",
-            "m³",
-            "gas",
-            None,
-            False,
-            id="gas-volume",
-        ),
-        pytest.param(
             "VitoairFs300E",
             "ventilation.volumeFlow.current.input",
             "m³/h",

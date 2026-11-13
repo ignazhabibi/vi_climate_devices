@@ -197,6 +197,21 @@
             },
             "inverter_temperature_numbered": {
                 "default": "mdi:thermometer"
+            },
+            "gas_consumption_heating_current_day": {
+                "default": "mdi:meter-gas"
+            },
+            "gas_consumption_heating_current_year": {
+                "default": "mdi:meter-gas"
+            },
+            "gas_consumption_dhw_current_day": {
+                "default": "mdi:meter-gas"
+            },
+            "gas_consumption_dhw_current_year": {
+                "default": "mdi:meter-gas"
+            },
+            "hydraulic_separator_temperature": {
+                "default": "mdi:thermometer"
             }
         },
         "switch": {
@@ -216,6 +231,12 @@
             },
             "grid_power_limitation": {
                 "default": "mdi:transmission-tower-import"
+            },
+            "burner_active": {
+                "default": "mdi:fire"
+            },
+            "burner_active_numbered": {
+                "default": "mdi:fire"
             }
         }
     }

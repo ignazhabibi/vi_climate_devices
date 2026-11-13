@@ -264,6 +264,12 @@
             },
             "grid_power_limitation": {
                 "name": "Leistungsbegrenzung Netzbezug"
+            },
+            "burner_active": {
+                "name": "Brenner"
+            },
+            "burner_active_numbered": {
+                "name": "Brenner {number}"
             }
         },
         "climate": {
@@ -644,6 +650,21 @@
             },
             "inverter_temperature_numbered": {
                 "name": "Inverter {number} Temperatur"
+            },
+            "gas_consumption_heating_current_day": {
+                "name": "Gasverbrauch Heizung Tag"
+            },
+            "gas_consumption_heating_current_year": {
+                "name": "Gasverbrauch Heizung Jahr"
+            },
+            "gas_consumption_dhw_current_day": {
+                "name": "Gasverbrauch Warmwasser Tag"
+            },
+            "gas_consumption_dhw_current_year": {
+                "name": "Gasverbrauch Warmwasser Jahr"
+            },
+            "hydraulic_separator_temperature": {
+                "name": "Weichentemperatur"
             }
         },
         "switch": {

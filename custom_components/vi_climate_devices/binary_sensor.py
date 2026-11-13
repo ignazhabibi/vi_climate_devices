@@ -85,6 +85,15 @@ BINARY_SENSOR_TEMPLATES: tuple[EntityTemplate[BinarySensorEntityDescription], ..
             device_class=BinarySensorDeviceClass.RUNNING,
         ),
     ),
+    # Burner flame (heating.burners.N.active)
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.burners\.(\d+)\.active$"),
+        description=BinarySensorEntityDescription(
+            key="placeholder",
+            translation_key="burner_active",
+            device_class=BinarySensorDeviceClass.RUNNING,
+        ),
+    ),
     # Crankcase Heater (heating.compressors.N.heater.crankcase.active)
     EntityTemplate(
         pattern=re.compile(r"^heating\.compressors\.(\d+)\.heater\.crankcase\.active$"),
