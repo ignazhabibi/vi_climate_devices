@@ -131,6 +131,14 @@ NUMBER_TYPES: dict[str, NumberEntityDescription] = {
             device_class=NumberDeviceClass.TEMPERATURE_DELTA,
         )
     ),
+    "heating.dhw.temperature.hygiene": NumberEntityDescription(
+        key="heating.dhw.temperature.hygiene",
+        translation_key="dhw_hygiene_temperature",
+        mode=NumberMode.BOX,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=NumberDeviceClass.TEMPERATURE,
+    ),
     "heating.dhw.temperature.main": NumberEntityDescription(
         key="heating.dhw.temperature.main",
         translation_key="dhw_target_temperature",

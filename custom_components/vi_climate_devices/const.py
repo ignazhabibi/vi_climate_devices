@@ -13,6 +13,7 @@ IGNORED_DEVICES = ["gateway", "RoomControl-1"]
 # For untested devices, all entities are enabled by default so users can decide.
 TESTED_DEVICES = [
     "E3_Vitocal_16",
+    "E3_Vitocal_17",
 ]
 
 # Successors Viessmann announces for deprecated features that back defined

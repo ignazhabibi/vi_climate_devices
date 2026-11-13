@@ -607,3 +607,59 @@ async def test_number_state_is_stable_between_write_and_refresh(
 
     # Assert: Both shapes produce the step-appropriate state.
     assert states == [expected_state, expected_state]
+
+
+@pytest.mark.asyncio
+async def test_dhw_hygiene_temperature_is_a_defined_number(hass: HomeAssistant):
+    """Expose the DHW hygiene temperature as a named, enabled config number."""
+    # Arrange: Use the Vitocal 250-A fixture that has the hygiene program set up.
+    client = FixtureViClient("Vitocal250A-TwoCircuits")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "client_id": "123",
+            "token": {
+                "access_token": "mock_access_token",
+                "refresh_token": "mock_refresh_token",
+                "expires_at": 3800000000,
+                "token_type": "Bearer",
+            },
+        },
+    )
+    entry.add_to_hass(hass)
+
+    # Act: Set up the integration.
+    with (
+        patch(
+            "custom_components.vi_climate_devices.ViessmannClient",
+            return_value=client,
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+            return_value=None,
+        ),
+        patch("custom_components.vi_climate_devices.HAAuth"),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Assert: The tested device keeps it enabled with the reported limits.
+    entity_id = "number.e3_vitocal_17_dhw_hygiene_temperature"
+    registry_entry = er.async_get(hass).async_get(entity_id)
+    assert registry_entry is not None
+    assert registry_entry.disabled_by is None
+    assert registry_entry.entity_category == "config"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "60"
+    assert state.attributes["friendly_name"] == "E3_Vitocal_17 DHW Hygiene Temperature"
+    assert state.attributes[ATTR_MIN] == 10
+    assert state.attributes[ATTR_MAX] == 85
+    assert state.attributes[ATTR_STEP] == 1
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
