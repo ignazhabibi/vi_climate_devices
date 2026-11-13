@@ -236,6 +236,36 @@
             },
             "dhw_minimum_comfort_temperature": {
                 "default": "mdi:thermometer-low"
+            },
+            "battery_state_of_charge": {
+                "default": "mdi:battery"
+            },
+            "battery_power": {
+                "default": "mdi:battery-charging"
+            },
+            "battery_ambient_temperature": {
+                "default": "mdi:thermometer"
+            },
+            "battery_charge_total": {
+                "default": "mdi:battery-arrow-up"
+            },
+            "battery_discharge_total": {
+                "default": "mdi:battery-arrow-down"
+            },
+            "grid_import_total": {
+                "default": "mdi:transmission-tower-import"
+            },
+            "grid_export_total": {
+                "default": "mdi:transmission-tower-export"
+            },
+            "grid_power": {
+                "default": "mdi:transmission-tower"
+            },
+            "pv_production_total": {
+                "default": "mdi:solar-power"
+            },
+            "pv_power": {
+                "default": "mdi:solar-power"
             }
         },
         "switch": {

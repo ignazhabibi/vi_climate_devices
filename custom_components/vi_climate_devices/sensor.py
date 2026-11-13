@@ -247,19 +247,14 @@ AUTO_DISCOVERED_TOTAL_INCREASING_ENERGY_FEATURES = frozenset(
         "ess.transfer.charge.cumulated.currentWeek",
         "ess.transfer.charge.cumulated.currentMonth",
         "ess.transfer.charge.cumulated.currentYear",
-        "ess.transfer.charge.cumulated.lifeCycle",
         "ess.transfer.discharge.cumulated.currentDay",
         "ess.transfer.discharge.cumulated.currentWeek",
         "ess.transfer.discharge.cumulated.currentMonth",
         "ess.transfer.discharge.cumulated.currentYear",
-        "ess.transfer.discharge.cumulated.lifeCycle",
         "photovoltaic.production.cumulated.currentDay",
         "photovoltaic.production.cumulated.currentWeek",
         "photovoltaic.production.cumulated.currentMonth",
         "photovoltaic.production.cumulated.currentYear",
-        "photovoltaic.production.cumulated.lifeCycle",
-        "pcc.transfer.consumption.total",
-        "pcc.transfer.feedIn.total",
     }
 )
 
@@ -556,6 +551,77 @@ SENSOR_TEMPLATES: tuple[EntityTemplate[SensorEntityDescription], ...] = (
 
 
 SENSOR_TYPES: dict[str, SensorEntityDescription] = {
+    # Energy storage systems such as the Vitocharge: battery, grid, and PV.
+    "ess.stateOfCharge": SensorEntityDescription(
+        key="ess.stateOfCharge",
+        translation_key="battery_state_of_charge",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "ess.power": SensorEntityDescription(
+        key="ess.power",
+        translation_key="battery_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "ess.sensors.temperature.ambient": SensorEntityDescription(
+        key="ess.sensors.temperature.ambient",
+        translation_key="battery_ambient_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "ess.transfer.charge.cumulated.lifeCycle": SensorEntityDescription(
+        key="ess.transfer.charge.cumulated.lifeCycle",
+        translation_key="battery_charge_total",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "ess.transfer.discharge.cumulated.lifeCycle": SensorEntityDescription(
+        key="ess.transfer.discharge.cumulated.lifeCycle",
+        translation_key="battery_discharge_total",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "pcc.transfer.consumption.total": SensorEntityDescription(
+        key="pcc.transfer.consumption.total",
+        translation_key="grid_import_total",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "pcc.transfer.feedIn.total": SensorEntityDescription(
+        key="pcc.transfer.feedIn.total",
+        translation_key="grid_export_total",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "pcc.transfer.power.exchange": SensorEntityDescription(
+        key="pcc.transfer.power.exchange",
+        translation_key="grid_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "photovoltaic.production.cumulated.lifeCycle": SensorEntityDescription(
+        key="photovoltaic.production.cumulated.lifeCycle",
+        translation_key="pv_production_total",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "photovoltaic.production.current": SensorEntityDescription(
+        key="photovoltaic.production.current",
+        translation_key="pv_power",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     # Boiler Common Supply Temperature
     "heating.boiler.sensors.temperature.commonSupply": SensorEntityDescription(
         key="heating.boiler.sensors.temperature.commonSupply",

@@ -689,6 +689,36 @@
             },
             "dhw_minimum_comfort_temperature": {
                 "name": "Warmwasser Mindestkomforttemperatur"
+            },
+            "battery_state_of_charge": {
+                "name": "Batterie Ladezustand"
+            },
+            "battery_power": {
+                "name": "Batterie Leistung"
+            },
+            "battery_ambient_temperature": {
+                "name": "Batterie Umgebungstemperatur"
+            },
+            "battery_charge_total": {
+                "name": "Batterie Ladung Gesamt"
+            },
+            "battery_discharge_total": {
+                "name": "Batterie Entladung Gesamt"
+            },
+            "grid_import_total": {
+                "name": "Netzbezug Gesamt"
+            },
+            "grid_export_total": {
+                "name": "Netzeinspeisung Gesamt"
+            },
+            "grid_power": {
+                "name": "Netz Leistung"
+            },
+            "pv_production_total": {
+                "name": "PV Ertrag Gesamt"
+            },
+            "pv_power": {
+                "name": "PV Leistung"
             }
         },
         "switch": {
