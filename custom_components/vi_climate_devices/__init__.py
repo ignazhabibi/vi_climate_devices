@@ -36,6 +36,7 @@ type ViClimateDevicesConfigEntry = ConfigEntry[ViClimateDataUpdateCoordinator]
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.FAN,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,

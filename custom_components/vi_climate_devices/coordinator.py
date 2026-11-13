@@ -14,6 +14,7 @@ from homeassistant.util import dt as dt_util
 from vi_api_client import (
     Device,
     FeatureValue,
+    JsonValue,
     ViAuthError,
     ViClient as ViessmannClient,
     ViCommandRejectedError,
@@ -119,6 +120,44 @@ class ViClimateDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             # the scheduled poll and the outcome of the last refresh.
             self.data = updated_data
             self.async_update_listeners()
+
+    async def async_run_command(
+        self,
+        device_key: str,
+        api_feature_name: str,
+        command_name: str,
+        parameters: dict[str, JsonValue],
+    ) -> None:
+        """Run a reported API command that no writable feature represents.
+
+        A command changes no snapshot, so a refresh is requested afterwards.
+
+        Raises:
+            ValueError: If the device is absent or the command is not reported.
+            ViCommandRejectedError: If the API or device rejects the command.
+        """
+        async with self._refresh_write_lock:
+            device = self.data.get(device_key)
+            if device is None:
+                raise ValueError(f"Device {device_key} not found in coordinator data")
+            try:
+                await self.client.run_command(
+                    device, api_feature_name, command_name, parameters
+                )
+            except ViAuthError as err:
+                _LOGGER.warning(
+                    "Viessmann authentication failed while running a command: %s", err
+                )
+                raise config_entry_auth_failed() from err
+            except ViCommandRejectedError as err:
+                _LOGGER.debug(
+                    "Command response rejected: command=%s, reason=%s",
+                    command_name,
+                    err.reason,
+                )
+                raise
+            _LOGGER.debug("Command response accepted: command=%s", command_name)
+        await self.async_request_refresh()
 
     # Overrides a private DataUpdateCoordinator method because no public hook
     # wraps a whole refresh. Keep the signature in sync with Home Assistant.

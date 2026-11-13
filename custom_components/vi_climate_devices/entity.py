@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import logging
 import re
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Coroutine, Sequence
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -23,6 +24,7 @@ from vi_api_client import (
     Device,
     Feature,
     FeatureValue,
+    JsonValue,
     ViCommandRejectedError,
     ViError,
 )
@@ -241,8 +243,52 @@ class ViClimateEntity(CoordinatorEntity[ViClimateDataUpdateCoordinator]):
             ConfigEntryAuthFailed: If Viessmann rejects the credentials.
             HomeAssistantError: If the write fails for another reason.
         """
+        await self._async_send(
+            self.coordinator.async_set_feature(self._map_key, feature_name, value),
+            failure_key,
+            clear_optimistic_state,
+        )
+
+    async def _async_run_command(
+        self,
+        api_feature_name: str,
+        command_name: str,
+        parameters: dict[str, JsonValue],
+        failure_key: ExceptionTranslationKey,
+    ) -> None:
+        """Run an API command and translate failures for the action caller.
+
+        Only for commands that no writable feature represents; use
+        `_async_write_feature` otherwise.
+
+        Raises:
+            ServiceValidationError: If Viessmann or the client rejects the command.
+            ConfigEntryAuthFailed: If Viessmann rejects the credentials.
+            HomeAssistantError: If the command fails for another reason.
+        """
+        await self._async_send(
+            self.coordinator.async_run_command(
+                self._map_key, api_feature_name, command_name, parameters
+            ),
+            failure_key,
+            lambda: None,
+        )
+
+    async def _async_send(
+        self,
+        send: Coroutine[Any, Any, None],
+        failure_key: ExceptionTranslationKey,
+        clear_optimistic_state: Callable[[], None],
+    ) -> None:
+        """Await a write and translate its failures for the action caller.
+
+        Raises:
+            ServiceValidationError: If Viessmann or the client rejects the write.
+            ConfigEntryAuthFailed: If Viessmann rejects the credentials.
+            HomeAssistantError: If the write fails for another reason.
+        """
         try:
-            await self.coordinator.async_set_feature(self._map_key, feature_name, value)
+            await send
         except ServiceValidationError, ConfigEntryAuthFailed:
             raise
         except (ValueError, ViCommandRejectedError) as err:

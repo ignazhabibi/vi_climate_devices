@@ -767,6 +767,22 @@
                     "eco": "Eco"
                 }
             }
+        },
+        "fan": {
+            "ventilation": {
+                "name": "Lüftung",
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "permanent": "Feste Stufe",
+                            "ventilation": "Zeitprogramm",
+                            "sensor_override": "Sensorsteuerung übersteuert",
+                            "sensor_driven": "Sensorgesteuert",
+                            "standard": "Standard"
+                        }
+                    }
+                }
+            }
         }
     }
 }

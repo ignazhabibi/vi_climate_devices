@@ -21,7 +21,10 @@ affect the solution.
 - The client has a flat feature model: look up dot-named `Feature` objects with
   `device.get_feature(...)`; do not navigate nested API properties.
 - A refreshed device returned by `refresh_device` replaces the old object. Use
-  `set_feature` for writes; do not construct raw API payloads.
+  `set_feature` for writes. Only for an API command that no writable feature
+  represents, such as the ventilation level, use `run_command` with
+  parameters checked against `Device.get_command_parameters`. Never construct
+  raw API payloads.
 - Preserve explicitly defined entities. Automatic discovery is a fallback for
   unmapped features.
 - When Viessmann deprecates a feature that backs a defined entity, map it to

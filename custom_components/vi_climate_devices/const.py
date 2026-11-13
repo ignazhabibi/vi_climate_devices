@@ -187,4 +187,6 @@ IGNORED_FEATURES = [
     re.compile(r"^heating\.primaryCircuit\.sensors\.temperature\..*\.status$"),
     re.compile(r"^heating\.sensors\..*\.status$"),
     re.compile(r"^ventilation\.quickmodes\.holiday\.(start|end)$"),
+    # Set through the fan entity only.
+    "ventilation.operating.modes.active",
 ]
