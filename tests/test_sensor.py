@@ -1040,16 +1040,27 @@ def _rename_feature(device: Device, old_name: str, new_name: str) -> Device:
     )
 
 
+async def _first_fixture_device_reporting(feature_name: str) -> Device:
+    """Return the first fixture device that reports the feature."""
+    for fixture_name in FixtureViClient.get_available_fixture_devices():
+        for device in await FixtureViClient(fixture_name).get_full_installation_status(
+            "99999"
+        ):
+            if device.get_feature(feature_name) is not None:
+                return device
+    raise AssertionError(f"No fixture reports {feature_name}")
+
+
 @pytest.mark.parametrize(
     ("deprecated_name", "successor_name"), sorted(FEATURE_SUCCESSORS.items())
 )
 @pytest.mark.asyncio
 async def test_successor_only_device_uses_deprecated_unique_id(
-    mock_client, deprecated_name: str, successor_name: str
+    deprecated_name: str, successor_name: str
 ) -> None:
     """Identify a successor-only feature by its deprecated feature."""
-    # Arrange: Report the fixture value only under the successor name.
-    fixture_device = (await mock_client.get_full_installation_status("99999"))[0]
+    # Arrange: Report a fixture value only under the successor name.
+    fixture_device = await _first_fixture_device_reporting(deprecated_name)
     deprecated = fixture_device.get_feature(deprecated_name)
     assert deprecated is not None
     device = _rename_feature(fixture_device, deprecated_name, successor_name)
@@ -1193,15 +1204,6 @@ async def test_successor_entry_of_another_config_entry_is_kept(
             SensorStateClass.MEASUREMENT,
             False,
             id="voltage",
-        ),
-        pytest.param(
-            "Vitocal262A-T2H-R290",
-            "heating.dhw.sensors.dhwCylinder.rustSurveillance.anode",
-            "mA",
-            "current",
-            SensorStateClass.MEASUREMENT,
-            False,
-            id="anode-current",
         ),
         pytest.param(
             "VitoairFs300E",

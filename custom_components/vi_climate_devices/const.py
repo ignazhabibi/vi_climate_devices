@@ -23,11 +23,23 @@ TESTED_DEVICES = [
 # devices that do not report the successor yet.
 # Sort the keys alphabetically.
 FEATURE_SUCCESSORS = {
+    "heating.configuration.dhw.temperature.minimumComfort": (
+        "heating.dhw.configuration.temperature.minimumComfort"
+    ),
     "heating.configuration.temperature.outside.DampingFactor": (
         "heating.configuration.temperature.outside.dampingFactor"
     ),
     "heating.dhw.sensors.temperature.hotWaterStorage": (
         "heating.dhw.sensors.temperature.dhwCylinder"
+    ),
+    "heating.dhw.sensors.temperature.hotWaterStorage.bottom": (
+        "heating.dhw.sensors.temperature.dhwCylinder.bottom"
+    ),
+    "heating.dhw.sensors.temperature.hotWaterStorage.middle": (
+        "heating.dhw.sensors.temperature.dhwCylinder.middle"
+    ),
+    "heating.dhw.sensors.temperature.hotWaterStorage.top": (
+        "heating.dhw.sensors.temperature.dhwCylinder.top"
     ),
     "heating.scop.dhw": "heating.spf.dhw",
     "heating.scop.heating": "heating.spf.heating",

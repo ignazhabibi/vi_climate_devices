@@ -680,6 +680,15 @@
             },
             "compressor_outlet_pressure": {
                 "name": "Verdichter Heißgasdruck"
+            },
+            "dhw_storage_middle_temperature": {
+                "name": "Warmwassertemperatur (Mitte)"
+            },
+            "dhw_anode_current": {
+                "name": "Warmwasser Anodenstrom"
+            },
+            "dhw_minimum_comfort_temperature": {
+                "name": "Warmwasser Mindestkomforttemperatur"
             }
         },
         "switch": {

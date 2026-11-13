@@ -680,6 +680,15 @@
             },
             "compressor_outlet_pressure": {
                 "name": "Compressor Discharge Pressure"
+            },
+            "dhw_storage_middle_temperature": {
+                "name": "Hot Water Storage Temperature (Middle)"
+            },
+            "dhw_anode_current": {
+                "name": "DHW Anode Current"
+            },
+            "dhw_minimum_comfort_temperature": {
+                "name": "DHW Minimum Comfort Temperature"
             }
         },
         "switch": {
