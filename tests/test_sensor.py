@@ -1286,3 +1286,37 @@ async def test_sensor_connection_statuses_create_no_sensors(device_name: str) ->
         "photovoltaic.status.status",
         "ventilation.sensors.actuator.selftest.status",
     }
+
+
+@pytest.mark.asyncio
+async def test_vitocal_200a_devices_report_their_own_sensors(hass: HomeAssistant):
+    """Expose the system controller and the outdoor unit as separate devices."""
+    # Arrange: Use the Vitocal 200-A fixture with its two devices.
+    mock_client = FixtureViClient("Vitocal200A")
+
+    # Act: Set up the integration.
+    await _setup_integration(hass, mock_client)
+
+    # Assert: The system controller reports the outside temperature.
+    outside_temperature = hass.states.get(
+        "sensor.vitocal200a_systemcontroller_outside_temperature"
+    )
+    assert outside_temperature is not None
+    assert outside_temperature.state == "17.7"
+    assert outside_temperature.attributes["unit_of_measurement"] == "°C"
+
+    # Assert: The outdoor unit reports the compressor on its own device.
+    registry = er.async_get(hass)
+    compressor_entry = registry.async_get(
+        "sensor.vitocal200a_outdoorunit_compressor_hours"
+    )
+    assert compressor_entry is not None
+    outside_entry = registry.async_get(
+        "sensor.vitocal200a_systemcontroller_outside_temperature"
+    )
+    assert outside_entry is not None
+    assert compressor_entry.device_id != outside_entry.device_id
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
