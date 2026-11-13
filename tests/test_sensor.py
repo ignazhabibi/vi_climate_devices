@@ -1137,3 +1137,126 @@ async def test_successor_entry_of_another_config_entry_is_kept(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    (
+        "device_name",
+        "feature_name",
+        "expected_unit",
+        "expected_device_class",
+        "expected_state_class",
+        "is_diagnostic",
+    ),
+    [
+        pytest.param(
+            "Vitodens200W",
+            "heating.gas.consumption.summary.dhw.currentYear",
+            "m³",
+            "gas",
+            None,
+            False,
+            id="gas-volume",
+        ),
+        pytest.param(
+            "VitoairFs300E",
+            "ventilation.volumeFlow.current.input",
+            "m³/h",
+            "volume_flow_rate",
+            SensorStateClass.MEASUREMENT,
+            False,
+            id="air-volume-flow",
+        ),
+        pytest.param(
+            "Vitopure350",
+            "ventilation.sensors.airBorneDust.pm2d5",
+            "μg/m³",
+            "pm25",
+            SensorStateClass.MEASUREMENT,
+            False,
+            id="particulate-matter",
+        ),
+        pytest.param(
+            "VitoairFs300E",
+            "ventilation.fan.supply.current",
+            "rpm",
+            None,
+            SensorStateClass.MEASUREMENT,
+            True,
+            id="fan-speed",
+        ),
+        pytest.param(
+            "Vitocal252A",
+            "heating.circuits.0.heating.hysteresis.switch.switchOnValue",
+            "K",
+            None,
+            SensorStateClass.MEASUREMENT,
+            True,
+            id="temperature-difference",
+        ),
+        pytest.param(
+            "VitochargeEvolution08",
+            "photovoltaic.string.0.voltage",
+            "V",
+            "voltage",
+            SensorStateClass.MEASUREMENT,
+            False,
+            id="voltage",
+        ),
+        pytest.param(
+            "Vitocal262A-T2H-R290",
+            "heating.dhw.sensors.dhwCylinder.rustSurveillance.anode",
+            "mA",
+            "current",
+            SensorStateClass.MEASUREMENT,
+            False,
+            id="anode-current",
+        ),
+        pytest.param(
+            "VitoairFs300E",
+            "ventilation.filter.runtime.remainingHours",
+            "h",
+            "duration",
+            SensorStateClass.MEASUREMENT,
+            True,
+            id="duration",
+        ),
+        pytest.param(
+            "Vitocal250A-TwoCircuits",
+            "heating.dhw.hygiene.trigger.startHour",
+            None,
+            None,
+            SensorStateClass.MEASUREMENT,
+            True,
+            id="clock-time-is-no-duration",
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_auto_discovered_units_follow_the_api_unit(  # noqa: PLR0913, PLR0917
+    device_name: str,
+    feature_name: str,
+    expected_unit: str | None,
+    expected_device_class: str | None,
+    expected_state_class: SensorStateClass | None,
+    is_diagnostic: bool,
+) -> None:
+    """Map the API units of real fixture features to Home Assistant units."""
+    # Arrange: Load the real device fixture.
+    device = (await FixtureViClient(device_name).get_full_installation_status("99999"))[
+        0
+    ]
+
+    # Act: Discover the fixture's sensors.
+    descriptions = {
+        entity.entity_description.key: entity.entity_description
+        for entity in _discover_realtime_sensors(MagicMock(data={"device": device}))
+    }
+
+    # Assert: The fallback sensor carries the mapped unit and classes.
+    description = descriptions[feature_name]
+    assert description.translation_key is None
+    assert description.native_unit_of_measurement == expected_unit
+    assert description.device_class == expected_device_class
+    assert description.state_class == expected_state_class
+    assert (description.entity_category == "diagnostic") is is_diagnostic
