@@ -212,6 +212,21 @@
             },
             "hydraulic_separator_temperature": {
                 "default": "mdi:thermometer"
+            },
+            "cop_cooling": {
+                "default": "mdi:chart-line"
+            },
+            "cop_dhw": {
+                "default": "mdi:chart-line"
+            },
+            "cop_heating": {
+                "default": "mdi:chart-line"
+            },
+            "cop_total": {
+                "default": "mdi:chart-line"
+            },
+            "compressor_outlet_pressure": {
+                "default": "mdi:gauge"
             }
         },
         "switch": {
