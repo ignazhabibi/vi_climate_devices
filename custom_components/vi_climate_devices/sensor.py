@@ -858,6 +858,40 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    # Coefficients of performance of legacy heat pumps such as the CU401B.
+    "heating.cop.cooling": SensorEntityDescription(
+        key="heating.cop.cooling",
+        translation_key="cop_cooling",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "heating.cop.dhw": SensorEntityDescription(
+        key="heating.cop.dhw",
+        translation_key="cop_dhw",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "heating.cop.heating": SensorEntityDescription(
+        key="heating.cop.heating",
+        translation_key="cop_heating",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "heating.cop.total": SensorEntityDescription(
+        key="heating.cop.total",
+        translation_key="cop_total",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    # Discharge pressure of the refrigerant circuit of legacy heat pumps.
+    "heating.sensors.pressure.hotGas": SensorEntityDescription(
+        key="heating.sensors.pressure.hotGas",
+        translation_key="compressor_outlet_pressure",
+        native_unit_of_measurement=UnitOfPressure.BAR,
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     # Secondary Circuit Return Temperature
     "heating.secondaryCircuit.sensors.temperature.return": SensorEntityDescription(
         key="heating.secondaryCircuit.sensors.temperature.return",

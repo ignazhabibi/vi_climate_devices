@@ -665,6 +665,21 @@
             },
             "hydraulic_separator_temperature": {
                 "name": "Hydraulic Separator Temperature"
+            },
+            "cop_cooling": {
+                "name": "COP Cooling"
+            },
+            "cop_dhw": {
+                "name": "COP DHW"
+            },
+            "cop_heating": {
+                "name": "COP Heating"
+            },
+            "cop_total": {
+                "name": "COP Total"
+            },
+            "compressor_outlet_pressure": {
+                "name": "Compressor Discharge Pressure"
             }
         },
         "switch": {

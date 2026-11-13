@@ -143,6 +143,12 @@ IGNORED_FEATURES = [
     "heating.primaryCircuit.fans.1.current.status",
     "heating.primaryCircuit.valves.fourThreeWay.active",
     "heating.secondaryCircuit.sensors.temperature.supply.status",
+    # Legacy heat pumps such as the CU401B report these refrigerant values a
+    # second time next to the defined compressor and evaporator sensors.
+    "heating.sensors.pressure.suctionGas",
+    "heating.sensors.temperature.hotGas",
+    "heating.sensors.temperature.liquidGas",
+    "heating.sensors.temperature.suctionGas",
     "heating.secondaryHeatGenerator.connectionType",
     re.compile(r"^.*\.schedule\.active$"),
     re.compile(r"^device\.zigbee\.status\.status$"),

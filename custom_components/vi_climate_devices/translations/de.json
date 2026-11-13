@@ -665,6 +665,21 @@
             },
             "hydraulic_separator_temperature": {
                 "name": "Weichentemperatur"
+            },
+            "cop_cooling": {
+                "name": "COP Kühlung"
+            },
+            "cop_dhw": {
+                "name": "COP Warmwasser"
+            },
+            "cop_heating": {
+                "name": "COP Heizung"
+            },
+            "cop_total": {
+                "name": "COP Gesamt"
+            },
+            "compressor_outlet_pressure": {
+                "name": "Verdichter Heißgasdruck"
             }
         },
         "switch": {
