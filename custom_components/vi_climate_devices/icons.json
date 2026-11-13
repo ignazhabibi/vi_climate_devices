@@ -227,6 +227,15 @@
             },
             "compressor_outlet_pressure": {
                 "default": "mdi:gauge"
+            },
+            "dhw_storage_middle_temperature": {
+                "default": "mdi:thermometer"
+            },
+            "dhw_anode_current": {
+                "default": "mdi:current-dc"
+            },
+            "dhw_minimum_comfort_temperature": {
+                "default": "mdi:thermometer-low"
             }
         },
         "switch": {

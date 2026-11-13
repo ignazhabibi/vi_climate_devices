@@ -644,6 +644,45 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # DHW cylinder layers; they read the dhwCylinder successors.
+    "heating.dhw.sensors.temperature.hotWaterStorage.top": SensorEntityDescription(
+        key="heating.dhw.sensors.temperature.hotWaterStorage.top",
+        translation_key="dhw_storage_top_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "heating.dhw.sensors.temperature.hotWaterStorage.middle": SensorEntityDescription(
+        key="heating.dhw.sensors.temperature.hotWaterStorage.middle",
+        translation_key="dhw_storage_middle_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "heating.dhw.sensors.temperature.hotWaterStorage.bottom": SensorEntityDescription(
+        key="heating.dhw.sensors.temperature.hotWaterStorage.bottom",
+        translation_key="dhw_storage_bottom_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Anode current of the DHW cylinder's corrosion protection.
+    "heating.dhw.sensors.dhwCylinder.rustSurveillance.anode": SensorEntityDescription(
+        key="heating.dhw.sensors.dhwCylinder.rustSurveillance.anode",
+        translation_key="dhw_anode_current",
+        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    # Minimum comfort temperature of domestic hot water; reads the successor.
+    "heating.configuration.dhw.temperature.minimumComfort": SensorEntityDescription(
+        key="heating.configuration.dhw.temperature.minimumComfort",
+        translation_key="dhw_minimum_comfort_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     # DHW Outlet Temperature
     "heating.dhw.sensors.temperature.outlet": SensorEntityDescription(
         key="heating.dhw.sensors.temperature.outlet",
