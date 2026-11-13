@@ -1,10 +1,10 @@
 """Shared utility functions for the Viessmann Climate Devices integration."""
 
 import re
-from collections.abc import Sequence
+from collections.abc import Sequence, Set
 
 from homeassistant.helpers.typing import StateType
-from vi_api_client import FeatureValue, JsonValue
+from vi_api_client import Feature, FeatureValue, JsonValue
 
 
 def beautify_name(name: str | None) -> str | None:
@@ -105,6 +105,27 @@ def get_feature_string_value(value: FeatureValue) -> str | None:
     if isinstance(value, str):
         return value
     return None
+
+
+# Values with which a sensor reports its own connection instead of a reading.
+SENSOR_CONNECTION_STATES = frozenset({"connected", "error", "notConnected"})
+
+
+def is_sensor_status_companion(feature: Feature, feature_names: Set[str]) -> bool:
+    """Return whether a feature only reports the connection of a sensor.
+
+    The API reports such a status next to a reading, for example
+    ``ventilation.sensors.humidity.supply.status`` next to
+    ``ventilation.sensors.humidity.supply``. Real states such as
+    ``heating.dhw.status`` report on or off and have no reading beside them.
+    """
+    if not feature.name.endswith(".status"):
+        return False
+    reading_name = feature.name.removesuffix(".status")
+    return (
+        reading_name in feature_names
+        or get_feature_string_value(feature.value) in SENSOR_CONNECTION_STATES
+    )
 
 
 def get_feature_string_options(options: Sequence[JsonValue] | None) -> list[str]:

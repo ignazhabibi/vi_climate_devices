@@ -1260,3 +1260,29 @@ async def test_auto_discovered_units_follow_the_api_unit(  # noqa: PLR0913, PLR0
     assert description.device_class == expected_device_class
     assert description.state_class == expected_state_class
     assert (description.entity_category == "diagnostic") is is_diagnostic
+
+
+@pytest.mark.parametrize(
+    "device_name", ["VitoairFs300E", "Vitopure350", "VitochargeEvolution08"]
+)
+@pytest.mark.asyncio
+async def test_sensor_connection_statuses_create_no_sensors(device_name: str) -> None:
+    """Skip sensor connection statuses but keep real device states."""
+    # Arrange: Load a fixture that reports many sensor connection statuses.
+    device = (await FixtureViClient(device_name).get_full_installation_status("99999"))[
+        0
+    ]
+
+    # Act: Discover the fixture's sensors.
+    keys = {
+        entity.entity_description.key
+        for entity in _discover_realtime_sensors(MagicMock(data={"device": device}))
+    }
+
+    # Assert: Status features remain only where they report a device state.
+    status_keys = {key for key in keys if key.endswith(".status")}
+    assert status_keys <= {
+        "device.commissioning.information.status",
+        "photovoltaic.status.status",
+        "ventilation.sensors.actuator.selftest.status",
+    }

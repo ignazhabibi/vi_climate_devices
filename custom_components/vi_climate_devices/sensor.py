@@ -66,6 +66,7 @@ from .utils import (
     get_feature_string_value,
     is_feature_boolean_like,
     is_feature_ignored,
+    is_sensor_status_companion,
     normalize_sensor_value,
 )
 
@@ -1050,6 +1051,7 @@ def _discover_realtime_sensors(
     """Discover and return realtime sensor entities."""
     entities: list[ViClimateSensor | ViClimateStatusSensor] = []
     for map_key, device in coordinator.data.items():
+        feature_names = {feature.name for feature in device.features}
         # Iterate over FLATTENED features
         for feature in device.features:
             # Skip ignored features early
@@ -1094,6 +1096,8 @@ def _discover_realtime_sensors(
                 continue
 
             # 2. Automatic Discovery (Fallback)
+            if is_sensor_status_companion(feature, feature_names):
+                continue
             # If not writable (Sensors) and not boolean-like
             # (Binary Sensor platform handles all boolean-like values)
             if not feature.is_writable and not is_feature_boolean_like(feature.value):
