@@ -31,19 +31,14 @@ AUTO_DISCOVERED_TOTAL_INCREASING_ENERGY_FEATURES = frozenset(
         "ess.transfer.charge.cumulated.currentWeek",
         "ess.transfer.charge.cumulated.currentMonth",
         "ess.transfer.charge.cumulated.currentYear",
-        "ess.transfer.charge.cumulated.lifeCycle",
         "ess.transfer.discharge.cumulated.currentDay",
         "ess.transfer.discharge.cumulated.currentWeek",
         "ess.transfer.discharge.cumulated.currentMonth",
         "ess.transfer.discharge.cumulated.currentYear",
-        "ess.transfer.discharge.cumulated.lifeCycle",
         "photovoltaic.production.cumulated.currentDay",
         "photovoltaic.production.cumulated.currentWeek",
         "photovoltaic.production.cumulated.currentMonth",
         "photovoltaic.production.cumulated.currentYear",
-        "photovoltaic.production.cumulated.lifeCycle",
-        "pcc.transfer.consumption.total",
-        "pcc.transfer.feedIn.total",
     }
 )
 
@@ -633,7 +628,7 @@ async def test_fixture_auto_discovered_energy_state_classes(
             "Vitocal333G-with-Vitovent300F",
             "heating.compressors.0.power.consumption.current",
         ),
-        ("Vitocharge03", "photovoltaic.production.current"),
+        ("VitochargeEvolution08", "photovoltaic.string.0.power"),
     ],
 )
 @pytest.mark.asyncio

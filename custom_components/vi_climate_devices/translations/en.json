@@ -689,6 +689,36 @@
             },
             "dhw_minimum_comfort_temperature": {
                 "name": "DHW Minimum Comfort Temperature"
+            },
+            "battery_state_of_charge": {
+                "name": "Battery State of Charge"
+            },
+            "battery_power": {
+                "name": "Battery Power"
+            },
+            "battery_ambient_temperature": {
+                "name": "Battery Ambient Temperature"
+            },
+            "battery_charge_total": {
+                "name": "Battery Charge Total"
+            },
+            "battery_discharge_total": {
+                "name": "Battery Discharge Total"
+            },
+            "grid_import_total": {
+                "name": "Grid Import Total"
+            },
+            "grid_export_total": {
+                "name": "Grid Export Total"
+            },
+            "grid_power": {
+                "name": "Grid Power"
+            },
+            "pv_production_total": {
+                "name": "PV Production Total"
+            },
+            "pv_power": {
+                "name": "PV Power"
             }
         },
         "switch": {
