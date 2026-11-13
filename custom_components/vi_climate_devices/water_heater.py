@@ -68,6 +68,15 @@ DEVICE_FAMILY_MODE_MAPPINGS = {
     "vitodens": {"balanced": STATE_GAS},
 }
 
+# Device roles that identify a family. Legacy heat pumps such as the
+# Vitocal 300-G (model ID CU401B_G) report no product family role.
+DEVICE_FAMILY_ROLES = {
+    "vitocal": frozenset(
+        {"type:dhwHeatpump", "type:heatpump", "type:productFamily;Vitocal"}
+    ),
+    "vitodens": frozenset({"type:productFamily;Vitodens"}),
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -147,13 +156,22 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):  # pyright: igno
                 self._attr_target_temperature_step = feature.constraints.step
 
     def _get_device_family_mode_mapping(self) -> dict[str, str] | None:
-        """Return the current device family's API-to-HA mode mapping."""
+        """Return the current device family's API-to-HA mode mapping.
+
+        The device roles decide first. Devices without a family role fall
+        back to the family name inside the model ID, such as
+        ``E3_Vitodens_300_0419``.
+        """
         device = self.coordinator.data.get(self._map_key)
-        if device:
-            model_id = device.model_id.lower()
-            for family, family_modes in DEVICE_FAMILY_MODE_MAPPINGS.items():
-                if model_id.startswith(family):
-                    return family_modes
+        if not device:
+            return None
+        for family, family_modes in DEVICE_FAMILY_MODE_MAPPINGS.items():
+            if DEVICE_FAMILY_ROLES[family].intersection(device.roles):
+                return family_modes
+        model_id = device.model_id.lower()
+        for family, family_modes in DEVICE_FAMILY_MODE_MAPPINGS.items():
+            if family in model_id:
+                return family_modes
         return None
 
     def _map_api_mode_to_ha_mode(self, api_mode: str) -> str | None:

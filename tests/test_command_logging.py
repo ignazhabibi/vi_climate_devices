@@ -27,7 +27,7 @@ _FIXTURE_BY_DOMAIN = {"select": "Vitopure350"}
             "number",
             "set_value",
             {
-                "entity_id": "number.vitocal250a_heating_curve_slope",
+                "entity_id": "number.e3_vitocal_16_heating_curve_slope",
                 "value": 1.6,
             },
             "heating.circuits.0.heating.curve.slope",
@@ -36,7 +36,7 @@ _FIXTURE_BY_DOMAIN = {"select": "Vitopure350"}
             "select",
             "select_option",
             {
-                "entity_id": "select.vitopure350_ventilation_operating_modes_active",
+                "entity_id": "select.e3_vitopure_ventilation_operating_modes_active",
                 "option": "permanent",
             },
             "ventilation.operating.modes.active",
@@ -44,20 +44,20 @@ _FIXTURE_BY_DOMAIN = {"select": "Vitopure350"}
         (
             "switch",
             "turn_on",
-            {"entity_id": "switch.vitocal250a_one_time_dhw_charge"},
+            {"entity_id": "switch.e3_vitocal_16_one_time_dhw_charge"},
             "heating.dhw.oneTimeCharge.active",
         ),
         (
             "climate",
             "set_temperature",
-            {"entity_id": "climate.vitocal250a_heating_circuit", "temperature": 21.0},
+            {"entity_id": "climate.e3_vitocal_16_heating_circuit", "temperature": 21.0},
             "heating.circuits.0.operating.programs.normalHeating.temperature",
         ),
         (
             "water_heater",
             "set_temperature",
             {
-                "entity_id": "water_heater.vitocal250a_dhw_water_heater",
+                "entity_id": "water_heater.e3_vitocal_16_dhw_water_heater",
                 "temperature": 45.0,
             },
             "heating.dhw.temperature.main",

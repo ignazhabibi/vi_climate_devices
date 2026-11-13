@@ -30,7 +30,7 @@ from custom_components.vi_climate_devices.select import ViClimateSelect
 # Vitopure 350 is an auto-discovered select.
 VENTILATION_FIXTURE = "Vitopure350"
 VENTILATION_MODE_FEATURE = "ventilation.operating.modes.active"
-VENTILATION_MODE_ENTITY = "select.vitopure350_ventilation_operating_modes_active"
+VENTILATION_MODE_ENTITY = "select.e3_vitopure_ventilation_operating_modes_active"
 
 
 async def _setup_integration(hass: HomeAssistant, client: FixtureViClient) -> None:
@@ -111,8 +111,8 @@ async def test_heating_and_dhw_modes_have_no_select(hass: HomeAssistant, mock_cl
 
     # Assert: No select exists, the climate and water heater entities do.
     assert hass.states.async_entity_ids("select") == []
-    assert hass.states.get("climate.vitocal250a_heating_circuit") is not None
-    assert hass.states.get("water_heater.vitocal250a_dhw_water_heater") is not None
+    assert hass.states.get("climate.e3_vitocal_16_heating_circuit") is not None
+    assert hass.states.get("water_heater.e3_vitocal_16_dhw_water_heater") is not None
 
 
 @pytest.mark.asyncio

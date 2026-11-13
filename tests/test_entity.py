@@ -170,23 +170,23 @@ def test_water_heater_is_unavailable_when_its_mode_feature_disappears(
         pytest.param(
             "Vitocal250A",
             {
-                ("climate", "heating_circuit_0"): "Vitocal250A Heating Circuit",
+                ("climate", "heating_circuit_0"): "E3_Vitocal_16 Heating Circuit",
                 (
                     "number",
                     "heating.circuits.0.heating.curve.slope",
-                ): "Vitocal250A Heating Curve Slope",
+                ): "E3_Vitocal_16 Heating Curve Slope",
                 (
                     "sensor",
                     "heating.compressors.0.statistics.starts",
-                ): "Vitocal250A Compressor Starts",
+                ): "E3_Vitocal_16 Compressor Starts",
                 (
                     "sensor",
                     "heating.primaryCircuit.fans.0.current",
-                ): "Vitocal250A Fan 1 Speed",
+                ): "E3_Vitocal_16 Fan 1 Speed",
                 (
                     "sensor",
                     "heating.primaryCircuit.fans.1.current",
-                ): "Vitocal250A Fan 2 Speed",
+                ): "E3_Vitocal_16 Fan 2 Speed",
             },
             id="single-circuit-two-fans",
         ),

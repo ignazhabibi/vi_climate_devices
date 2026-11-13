@@ -337,6 +337,7 @@ async def test_device_diagnostics_return_anonymized_fixture_export(
     assert device_block == {
         "modelId": device.model_id,
         "deviceType": device.device_type,
+        "roles": list(device.roles),
     }
     assert diagnostics["data"] == bundled_fixture["data"]
 
