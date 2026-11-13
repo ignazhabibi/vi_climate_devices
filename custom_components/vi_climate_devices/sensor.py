@@ -15,15 +15,20 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    REVOLUTIONS_PER_MINUTE,
     EntityCategory,
     Platform,
+    UnitOfDensity,
     UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfLength,
     UnitOfPower,
     UnitOfPressure,
     UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
+    UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
@@ -165,6 +170,74 @@ STATUS_SENSOR_TYPES: tuple[ViClimateStatusSensorEntityDescription, ...] = (
         value_fn=get_heating_rod_state,
         attributes_fn=_active_stages_attributes,
     ),
+)
+
+# The API reports clock times of these features in hours and minutes; they
+# are a time of day, not a duration.
+AUTO_DISCOVERED_CLOCK_TIME_FEATURES = frozenset(
+    {
+        "heating.dhw.hygiene.trigger.startHour",
+        "heating.dhw.hygiene.trigger.startMinute",
+    }
+)
+
+# Home Assistant device class, unit, and whether the value is a measurement,
+# by API unit. Energy and gas values are counters, not measurements.
+AUTO_DISCOVERED_UNITS: dict[str, tuple[SensorDeviceClass | None, str, bool]] = {
+    "ampere": (SensorDeviceClass.CURRENT, UnitOfElectricCurrent.AMPERE, True),
+    "bar": (SensorDeviceClass.PRESSURE, UnitOfPressure.BAR, True),
+    "celsius": (SensorDeviceClass.TEMPERATURE, UnitOfTemperature.CELSIUS, True),
+    "cubicMeter": (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_METERS, False),
+    "cubicMeter/hour": (
+        SensorDeviceClass.VOLUME_FLOW_RATE,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        True,
+    ),
+    "day": (SensorDeviceClass.DURATION, UnitOfTime.DAYS, True),
+    "hour": (SensorDeviceClass.DURATION, UnitOfTime.HOURS, True),
+    "hours": (SensorDeviceClass.DURATION, UnitOfTime.HOURS, True),
+    # A temperature difference: the temperature device class would convert it
+    # as an absolute temperature.
+    "kelvin": (None, UnitOfTemperature.KELVIN, True),
+    "kilowatt": (SensorDeviceClass.POWER, UnitOfPower.KILO_WATT, True),
+    "kilowattHour": (SensorDeviceClass.ENERGY, UnitOfEnergy.KILO_WATT_HOUR, False),
+    "liter/hour": (
+        SensorDeviceClass.VOLUME_FLOW_RATE,
+        UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+        True,
+    ),
+    "meter": (SensorDeviceClass.DISTANCE, UnitOfLength.METERS, True),
+    "milliAmpere": (
+        SensorDeviceClass.CURRENT,
+        UnitOfElectricCurrent.MILLIAMPERE,
+        True,
+    ),
+    "minute": (SensorDeviceClass.DURATION, UnitOfTime.MINUTES, True),
+    "percent": (None, UnitOfRatio.PERCENTAGE, True),
+    "rotationPerMinute": (None, REVOLUTIONS_PER_MINUTE, True),
+    "seconds": (SensorDeviceClass.DURATION, UnitOfTime.SECONDS, True),
+    "volt": (SensorDeviceClass.VOLTAGE, UnitOfElectricPotential.VOLT, True),
+    "volumetricFlow": (
+        SensorDeviceClass.VOLUME_FLOW_RATE,
+        UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+        True,
+    ),
+    "watt": (SensorDeviceClass.POWER, UnitOfPower.WATT, True),
+    "wattHour": (SensorDeviceClass.ENERGY, UnitOfEnergy.WATT_HOUR, False),
+}
+
+# Particulate matter device classes by the size suffix of the feature name.
+AUTO_DISCOVERED_PARTICULATE_MATTER_CLASSES = {
+    "pm1": SensorDeviceClass.PM1,
+    "pm2d5": SensorDeviceClass.PM25,
+    "pm4": SensorDeviceClass.PM4,
+    "pm10": SensorDeviceClass.PM10,
+}
+
+# Device classes that stay diagnostic: they describe the device, not the
+# heating or ventilation process.
+AUTO_DISCOVERED_DIAGNOSTIC_DEVICE_CLASSES = frozenset(
+    {SensorDeviceClass.DISTANCE, SensorDeviceClass.DURATION}
 )
 
 AUTO_DISCOVERED_TOTAL_INCREASING_ENERGY_FEATURES = frozenset(
@@ -896,50 +969,33 @@ def _get_sensor_entity_description(
     return None
 
 
+def _get_auto_discovery_unit(
+    feature: Feature,
+) -> tuple[SensorDeviceClass | None, str | None, SensorStateClass | None]:
+    """Return the device class, unit, and state class for a feature's API unit."""
+    if feature.unit is None or feature.name in AUTO_DISCOVERED_CLOCK_TIME_FEATURES:
+        return None, None, None
+    if feature.unit == "microgrammsPerCubicMeter":
+        return (
+            AUTO_DISCOVERED_PARTICULATE_MATTER_CLASSES.get(
+                feature.name.rsplit(".", 1)[-1]
+            ),
+            UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            SensorStateClass.MEASUREMENT,
+        )
+    if (mapping := AUTO_DISCOVERED_UNITS.get(feature.unit)) is None:
+        return None, None, None
+    device_class, native_unit, is_measurement = mapping
+    return (
+        device_class,
+        native_unit,
+        SensorStateClass.MEASUREMENT if is_measurement else None,
+    )
+
+
 def _get_auto_discovery_description(feature: Feature) -> SensorEntityDescription:
     """Create a sensor description based on feature unit/type."""
-    unit = feature.unit
-
-    device_class = None
-    state_class = None
-    native_unit = None
-
-    match unit:
-        case "celsius":
-            device_class = SensorDeviceClass.TEMPERATURE
-            native_unit = UnitOfTemperature.CELSIUS
-            state_class = SensorStateClass.MEASUREMENT
-        case "bar":
-            device_class = SensorDeviceClass.PRESSURE
-            native_unit = UnitOfPressure.BAR
-            state_class = SensorStateClass.MEASUREMENT
-        case "percent":
-            native_unit = UnitOfRatio.PERCENTAGE
-            state_class = SensorStateClass.MEASUREMENT
-        case "kilowattHour":
-            device_class = SensorDeviceClass.ENERGY
-            native_unit = UnitOfEnergy.KILO_WATT_HOUR
-        case "watt":
-            device_class = SensorDeviceClass.POWER
-            native_unit = UnitOfPower.WATT
-            state_class = SensorStateClass.MEASUREMENT
-        case "kilowatt":
-            device_class = SensorDeviceClass.POWER
-            native_unit = UnitOfPower.KILO_WATT
-            state_class = SensorStateClass.MEASUREMENT
-        case "wattHour":
-            device_class = SensorDeviceClass.ENERGY
-            native_unit = UnitOfEnergy.WATT_HOUR
-        case "ampere":
-            device_class = SensorDeviceClass.CURRENT
-            native_unit = UnitOfElectricCurrent.AMPERE
-            state_class = SensorStateClass.MEASUREMENT
-        case "volumetricFlow" | "liter/hour":
-            device_class = SensorDeviceClass.VOLUME_FLOW_RATE
-            native_unit = UnitOfVolumeFlowRate.LITERS_PER_HOUR
-            state_class = SensorStateClass.MEASUREMENT
-        case _:
-            pass
+    device_class, native_unit, state_class = _get_auto_discovery_unit(feature)
 
     if (
         device_class is SensorDeviceClass.ENERGY
@@ -961,7 +1017,12 @@ def _get_auto_discovery_description(feature: Feature) -> SensorEntityDescription
         native_unit_of_measurement=native_unit,
         device_class=device_class,
         state_class=state_class,
-        entity_category=EntityCategory.DIAGNOSTIC if not device_class else None,
+        entity_category=(
+            EntityCategory.DIAGNOSTIC
+            if device_class is None
+            or device_class in AUTO_DISCOVERED_DIAGNOSTIC_DEVICE_CLASSES
+            else None
+        ),
     )
 
 
