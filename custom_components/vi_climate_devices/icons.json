@@ -303,6 +303,9 @@
             "ventilation_reason": {
                 "default": "mdi:information-outline"
             },
+            "ventilation_level": {
+                "default": "mdi:fan"
+            },
             "air_quality_index": {
                 "default": "mdi:air-filter"
             },

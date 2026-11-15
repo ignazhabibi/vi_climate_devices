@@ -269,8 +269,9 @@ IGNORED_FEATURES = [
     "ventilation.operating.modes.active",
     re.compile(r"^ventilation\.operating\.modes\.[^.]+\.active$"),
     "ventilation.quickmodes.standby.active",
-    # The fan entity shows the level as its speed and whether it ventilates.
+    # The fan entity shows the active level as its speed. The defined
+    # ventilation level sensor reports the level of devices without a fan
+    # entity; what the demand reports beyond "ventilation" is not documented.
     "ventilation.operating.programs.active",
     "ventilation.operating.state.demand",
-    "ventilation.operating.state.level",
 ]

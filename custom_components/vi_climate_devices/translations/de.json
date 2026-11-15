@@ -792,6 +792,15 @@
                     "standby": "Standby"
                 }
             },
+            "ventilation_level": {
+                "name": "Lüftungsstufe",
+                "state": {
+                    "level_one": "Stufe 1",
+                    "level_two": "Stufe 2",
+                    "level_three": "Stufe 3",
+                    "level_four": "Stufe 4"
+                }
+            },
             "pm1": {
                 "name": "PM1"
             },

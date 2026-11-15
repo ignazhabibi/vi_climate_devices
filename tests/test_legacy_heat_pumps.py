@@ -227,3 +227,34 @@ async def test_writable_hysteresis_switch_off_creates_no_sensor(
     # Assert: Only the number exposes the hysteresis.
     assert feature_name in number_keys
     assert feature_name not in sensor_keys
+
+
+@pytest.mark.parametrize(
+    ("device_name", "level"),
+    [
+        pytest.param("Vitocal200S", "level_one", id="vitocal-200s"),
+        pytest.param("Vitocal300G-CU401B", "level_one", id="vitocal-300g"),
+        pytest.param("Vitopure350", None, id="placeholder"),
+    ],
+)
+@pytest.mark.asyncio
+async def test_ventilation_level_is_a_translated_enum(
+    device_name: str, level: str | None
+) -> None:
+    """Report the ventilation level also on devices without a fan entity."""
+    # Arrange: Load a fixture that reports the ventilation state.
+    device = (await FixtureViClient(device_name).get_full_installation_status("99999"))[
+        0
+    ]
+
+    # Act: Discover the fixture's sensors.
+    entities = {
+        entity.entity_description.key: entity
+        for entity in _discover_realtime_sensors(MagicMock(data={"device": device}))
+    }
+
+    # Assert: The level is a diagnostic enum; a placeholder is unknown.
+    sensor = entities["ventilation.operating.state.level"]
+    assert sensor.entity_description.translation_key == "ventilation_level"
+    assert sensor.entity_description.entity_category == "diagnostic"
+    assert sensor.native_value == level
