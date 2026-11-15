@@ -279,6 +279,9 @@
             },
             "dhw_circulation_pump_parallel_hygiene": {
                 "name": "Circulation Pump During Hygiene"
+            },
+            "filter_change": {
+                "name": "Filter Change"
             }
         },
         "climate": {
@@ -731,6 +734,54 @@
             },
             "pv_power": {
                 "name": "PV Power"
+            },
+            "supply_fan_speed": {
+                "name": "Supply Fan Speed"
+            },
+            "supply_fan_runtime": {
+                "name": "Supply Fan Runtime"
+            },
+            "supply_fan_target_speed": {
+                "name": "Supply Fan Target Speed"
+            },
+            "filter_pollution": {
+                "name": "Filter Pollution"
+            },
+            "filter_operating_hours": {
+                "name": "Filter Operating Hours"
+            },
+            "filter_overdue_hours": {
+                "name": "Filter Overdue Hours"
+            },
+            "filter_remaining_hours": {
+                "name": "Filter Remaining Hours"
+            },
+            "ventilation_reason": {
+                "name": "Ventilation Reason"
+            },
+            "pm1": {
+                "name": "PM1"
+            },
+            "pm10": {
+                "name": "PM10"
+            },
+            "pm25": {
+                "name": "PM2.5"
+            },
+            "pm4": {
+                "name": "PM4"
+            },
+            "air_quality_index": {
+                "name": "Air Quality Index"
+            },
+            "voc_index": {
+                "name": "VOC Index"
+            },
+            "supply_air_humidity": {
+                "name": "Supply Air Humidity"
+            },
+            "supply_air_temperature": {
+                "name": "Supply Air Temperature"
             }
         },
         "switch": {

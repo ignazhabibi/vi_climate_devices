@@ -266,6 +266,36 @@
             },
             "pv_power": {
                 "default": "mdi:solar-power"
+            },
+            "supply_fan_speed": {
+                "default": "mdi:fan"
+            },
+            "supply_fan_runtime": {
+                "default": "mdi:fan-clock"
+            },
+            "supply_fan_target_speed": {
+                "default": "mdi:fan"
+            },
+            "filter_pollution": {
+                "default": "mdi:air-filter"
+            },
+            "filter_operating_hours": {
+                "default": "mdi:air-filter"
+            },
+            "filter_overdue_hours": {
+                "default": "mdi:air-filter"
+            },
+            "filter_remaining_hours": {
+                "default": "mdi:air-filter"
+            },
+            "ventilation_reason": {
+                "default": "mdi:information-outline"
+            },
+            "air_quality_index": {
+                "default": "mdi:air-filter"
+            },
+            "voc_index": {
+                "default": "mdi:molecule"
             }
         },
         "switch": {
@@ -300,6 +330,9 @@
             },
             "dhw_circulation_pump_parallel_hygiene": {
                 "default": "mdi:pump"
+            },
+            "filter_change": {
+                "default": "mdi:air-filter"
             }
         },
         "fan": {

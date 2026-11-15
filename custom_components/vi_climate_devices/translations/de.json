@@ -279,6 +279,9 @@
             },
             "dhw_circulation_pump_parallel_hygiene": {
                 "name": "Zirkulationspumpe während Hygienefunktion"
+            },
+            "filter_change": {
+                "name": "Filterwechsel"
             }
         },
         "climate": {
@@ -731,6 +734,54 @@
             },
             "pv_power": {
                 "name": "PV Leistung"
+            },
+            "supply_fan_speed": {
+                "name": "Zuluftventilator Drehzahl"
+            },
+            "supply_fan_runtime": {
+                "name": "Zuluftventilator Laufzeit"
+            },
+            "supply_fan_target_speed": {
+                "name": "Zuluftventilator Solldrehzahl"
+            },
+            "filter_pollution": {
+                "name": "Filterverschmutzung"
+            },
+            "filter_operating_hours": {
+                "name": "Filter Betriebsstunden"
+            },
+            "filter_overdue_hours": {
+                "name": "Filter überfällige Stunden"
+            },
+            "filter_remaining_hours": {
+                "name": "Filter Reststunden"
+            },
+            "ventilation_reason": {
+                "name": "Lüftungsgrund"
+            },
+            "pm1": {
+                "name": "PM1"
+            },
+            "pm10": {
+                "name": "PM10"
+            },
+            "pm25": {
+                "name": "PM2.5"
+            },
+            "pm4": {
+                "name": "PM4"
+            },
+            "air_quality_index": {
+                "name": "Luftqualitätsindex"
+            },
+            "voc_index": {
+                "name": "VOC-Index"
+            },
+            "supply_air_humidity": {
+                "name": "Zuluftfeuchte"
+            },
+            "supply_air_temperature": {
+                "name": "Zulufttemperatur"
             }
         },
         "switch": {

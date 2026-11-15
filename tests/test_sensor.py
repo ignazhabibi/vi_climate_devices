@@ -20,6 +20,7 @@ from custom_components.vi_climate_devices.sensor import (
     SENSOR_TYPES,
     ViClimateSensor,
     _discover_realtime_sensors,
+    _get_auto_discovery_description,
 )
 from custom_components.vi_climate_devices.utils import is_feature_ignored
 
@@ -1165,24 +1166,6 @@ async def test_successor_entry_of_another_config_entry_is_kept(
             id="air-volume-flow",
         ),
         pytest.param(
-            "Vitopure350",
-            "ventilation.sensors.airBorneDust.pm2d5",
-            "μg/m³",
-            "pm25",
-            SensorStateClass.MEASUREMENT,
-            False,
-            id="particulate-matter",
-        ),
-        pytest.param(
-            "VitoairFs300E",
-            "ventilation.fan.supply.current",
-            "rpm",
-            None,
-            SensorStateClass.MEASUREMENT,
-            True,
-            id="fan-speed",
-        ),
-        pytest.param(
             "Vitocal252A",
             "heating.circuits.0.heating.hysteresis.switch.switchOnValue",
             "K",
@@ -1199,15 +1182,6 @@ async def test_successor_entry_of_another_config_entry_is_kept(
             SensorStateClass.MEASUREMENT,
             False,
             id="voltage",
-        ),
-        pytest.param(
-            "VitoairFs300E",
-            "ventilation.filter.runtime.remainingHours",
-            "h",
-            "duration",
-            SensorStateClass.MEASUREMENT,
-            True,
-            id="duration",
         ),
         pytest.param(
             "Vitocal250A-TwoCircuits",
@@ -1247,6 +1221,59 @@ async def test_auto_discovered_units_follow_the_api_unit(  # noqa: PLR0913, PLR0
     assert description.native_unit_of_measurement == expected_unit
     assert description.device_class == expected_device_class
     assert description.state_class == expected_state_class
+    assert (description.entity_category == "diagnostic") is is_diagnostic
+
+
+@pytest.mark.parametrize(
+    (
+        "feature_name",
+        "api_unit",
+        "expected_unit",
+        "expected_device_class",
+        "is_diagnostic",
+    ),
+    [
+        pytest.param(
+            "custom.sensors.dust.pm2d5",
+            "microgrammsPerCubicMeter",
+            "μg/m³",
+            "pm25",
+            False,
+            id="particulate-matter",
+        ),
+        pytest.param(
+            "custom.fan.current", "rotationPerMinute", "rpm", None, True, id="fan-speed"
+        ),
+        pytest.param(
+            "custom.runtime.remainingHours",
+            "hours",
+            "h",
+            "duration",
+            True,
+            id="duration",
+        ),
+    ],
+)
+def test_unknown_features_get_the_unit_of_their_api_unit(
+    feature_name: str,
+    api_unit: str,
+    expected_unit: str,
+    expected_device_class: str | None,
+    is_diagnostic: bool,
+) -> None:
+    """Map the API unit of a feature without a defined entity."""
+    # Arrange: Build a measurement feature without a defined entity.
+    feature = Feature(
+        name=feature_name, value=5, unit=api_unit, is_enabled=True, is_ready=True
+    )
+
+    # Act: Describe the fallback sensor.
+    description = _get_auto_discovery_description(feature)
+
+    # Assert: The mapped unit and classes describe a measurement.
+    assert description.native_unit_of_measurement == expected_unit
+    assert description.device_class == expected_device_class
+    assert description.state_class == SensorStateClass.MEASUREMENT
     assert (description.entity_category == "diagnostic") is is_diagnostic
 
 

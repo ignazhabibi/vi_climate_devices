@@ -181,6 +181,12 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
         translation_key="solar_pump",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
+    # Ventilation filter change due (ventilation.control.filterChange.active)
+    "ventilation.control.filterChange.active": BinarySensorEntityDescription(
+        key="ventilation.control.filterChange.active",
+        translation_key="filter_change",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
 }
 
 

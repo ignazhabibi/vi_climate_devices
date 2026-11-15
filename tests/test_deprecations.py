@@ -49,6 +49,10 @@ DEPRECATED_WITHOUT_MAPPED_SUCCESSOR = {
         "The successor heating.heatGeneration.0.secondaryCircuit.sensors."
         "volumetricFlow has no verified feature name or unit."
     ),
+    "ventilation.sensors.airQuality": (
+        "No fixture reports the successor ventilation.airQuality.abstract, so "
+        "its feature name and value scale are not verified."
+    ),
 }
 
 DEFINED_FEATURE_NAMES = frozenset(
