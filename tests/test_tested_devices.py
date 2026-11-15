@@ -29,6 +29,23 @@ ACCEPTED_AUTO_DISCOVERED_FEATURES: dict[str, str] = {
     "ess.systemInterface.mode.active": (
         "The keepalive modes of the external system interface are not documented."
     ),
+    "heating.cop.green": (
+        "The API does not document what the green coefficient of performance "
+        "measures, and every fixture reports 0."
+    ),
+    "heating.dhw.hygiene.active": (
+        "Starting a hygiene run on demand is not verified on a real device; "
+        "the defined switch enables the program."
+    ),
+    "heating.dhw.hygiene.trigger.startHour": (
+        "Read-only schedule detail of the hygiene program."
+    ),
+    "heating.dhw.hygiene.trigger.startMinute": (
+        "Read-only schedule detail of the hygiene program."
+    ),
+    "heating.dhw.hygiene.trigger.weekdays": (
+        "Read-only schedule detail of the hygiene program."
+    ),
     "photovoltaic.string.current.stringOne": (
         "Duplicates an indexed PV string reading, but its numbering does not "
         "match the string indices."
@@ -53,22 +70,12 @@ ACCEPTED_AUTO_DISCOVERED_FEATURES: dict[str, str] = {
         "Duplicates an indexed PV string reading, but its numbering does not "
         "match the string indices."
     ),
-    "heating.cop.green": (
-        "The API does not document what the green coefficient of performance "
-        "measures, and every fixture reports 0."
+    "ventilation.bypass.active": (
+        "The device reports the bypass active while its position is 0 %; what "
+        "the flag means is not documented."
     ),
-    "heating.dhw.hygiene.active": (
-        "Starting a hygiene run on demand is not verified on a real device; "
-        "the defined switch enables the program."
-    ),
-    "heating.dhw.hygiene.trigger.startHour": (
-        "Read-only schedule detail of the hygiene program."
-    ),
-    "heating.dhw.hygiene.trigger.startMinute": (
-        "Read-only schedule detail of the hygiene program."
-    ),
-    "heating.dhw.hygiene.trigger.weekdays": (
-        "Read-only schedule detail of the hygiene program."
+    "ventilation.switchActivation.active": (
+        "The API does not document which switch the flag activates."
     ),
 }
 

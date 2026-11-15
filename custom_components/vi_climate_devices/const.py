@@ -19,6 +19,7 @@ TESTED_DEVICES = [
     "E3_VitoPure",
     "CU401B_G",
     "E3_VitoCharge_Evolution_08",
+    "E3_ViAir_300F_13",
 ]
 
 # Successors Viessmann announces for deprecated features that back defined
@@ -246,6 +247,24 @@ IGNORED_FEATURES = [
     re.compile(r"^photovoltaic\.string\.\d+\.name$"),
     # Command availability flags of the quick mode switches.
     re.compile(r"^ventilation\.quickmodes\.[^.]+\.isCommandExecutable$"),
+    # Installation details of ventilation units: commissioning, capability
+    # flags, filter articles, air balance, configured level volume flows and
+    # bypass thresholds, the fan assignment, and the actuator self-test.
+    re.compile(r"^device\.commissioning\.information\.[^.]+$"),
+    re.compile(r"^ventilation\.air\.balance\.offset\.[^.]+$"),
+    re.compile(r"^ventilation\.bypass\.configuration\.temperature\..+$"),
+    re.compile(r"^ventilation\.features\.[^.]+\.active$"),
+    re.compile(r"^ventilation\.filter\.information\.[^.]+$"),
+    re.compile(r"^ventilation\.levels\.[^.]+\.volumeFlow$"),
+    re.compile(r"^ventilation\.sensors\.actuator\.selftest\.[^.]+$"),
+    "ventilation.bypass.operating.modes.active.level",
+    "ventilation.fan.assignmentSwitch.active",
+    # The bypass mode sensor shows the active mode.
+    re.compile(r"^ventilation\.bypass\.operating\.modes\.[^.]+\.active$"),
+    "ventilation.bypass.operating.modes.active.state",
+    # External locks, like heating.external.lock.active.
+    "ventilation.external.lock.active",
+    re.compile(r"^ventilation\.lockExternal\.[^.]+$"),
     # Set through the fan entity only.
     "ventilation.operating.modes.active",
     re.compile(r"^ventilation\.operating\.modes\.[^.]+\.active$"),

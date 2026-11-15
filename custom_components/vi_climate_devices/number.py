@@ -173,6 +173,14 @@ NUMBER_TYPES: dict[str, NumberEntityDescription] = {
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=NumberDeviceClass.DURATION,
     ),
+    "ventilation.quickmodes.temporaryShutdown.defaultRuntime": NumberEntityDescription(
+        key="ventilation.quickmodes.temporaryShutdown.defaultRuntime",
+        translation_key="ventilation_quick_mode_temporary_shutdown_runtime",
+        mode=NumberMode.BOX,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=NumberDeviceClass.DURATION,
+    ),
 }
 
 

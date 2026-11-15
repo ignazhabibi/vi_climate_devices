@@ -19,7 +19,10 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from vi_api_client import FeatureValue, FixtureViClient, ViCommandRejectedError
 
 from custom_components.vi_climate_devices.const import DOMAIN
-from custom_components.vi_climate_devices.number import ViClimateNumber
+from custom_components.vi_climate_devices.number import (
+    ViClimateNumber,
+    _discover_numbers,
+)
 
 
 @pytest.mark.asyncio
@@ -662,3 +665,42 @@ async def test_dhw_hygiene_temperature_is_a_defined_number(hass: HomeAssistant):
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("model_id", "is_enabled"),
+    [
+        pytest.param("E3_ViAir_300F_13", False, id="tested-device"),
+        pytest.param("Unknown_Model", True, id="untested-device"),
+    ],
+)
+@pytest.mark.asyncio
+async def test_unknown_writable_number_becomes_a_fallback(
+    model_id: str, is_enabled: bool
+) -> None:
+    """Expose an unmapped bounded control as a named configuration number."""
+    # Arrange: Report the Vitoair runtime control under an unmapped name.
+    device = (
+        await FixtureViClient("VitoairFs300E").get_full_installation_status("99999")
+    )[0]
+    unmapped_name = "ventilation.quickmodes.custom.defaultRuntime"
+    features = [
+        dataclasses.replace(feature, name=unmapped_name)
+        if feature.name == "ventilation.quickmodes.temporaryShutdown.defaultRuntime"
+        else feature
+        for feature in device.features
+    ]
+    device = dataclasses.replace(device, features=features, model_id=model_id)
+
+    # Act: Discover the device's numbers.
+    numbers = {
+        entity.entity_description.key: entity
+        for entity in _discover_numbers(MagicMock(data={"device": device}))
+    }
+
+    # Assert: The fallback is a configuration number, hidden on tested devices.
+    fallback = numbers[unmapped_name]
+    assert fallback.entity_description.translation_key is None
+    assert fallback.entity_description.entity_category == "config"
+    assert fallback.entity_registry_enabled_default is is_enabled
+    assert (fallback.native_min_value, fallback.native_max_value) == (1, 1440)

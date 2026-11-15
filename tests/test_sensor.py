@@ -1104,15 +1104,6 @@ async def test_successor_entry_of_another_config_entry_is_kept(
     ),
     [
         pytest.param(
-            "VitoairFs300E",
-            "ventilation.volumeFlow.current.input",
-            "m³/h",
-            "volume_flow_rate",
-            SensorStateClass.MEASUREMENT,
-            False,
-            id="air-volume-flow",
-        ),
-        pytest.param(
             "Vitocal252A",
             "heating.circuits.0.heating.hysteresis.switch.switchOnValue",
             "K",
@@ -1184,6 +1175,14 @@ async def test_auto_discovered_units_follow_the_api_unit(  # noqa: PLR0913, PLR0
         ),
         pytest.param(
             "custom.string.voltage", "volt", "V", "voltage", False, id="voltage"
+        ),
+        pytest.param(
+            "custom.volumeFlow.current",
+            "cubicMeter/hour",
+            "m³/h",
+            "volume_flow_rate",
+            False,
+            id="air-volume-flow",
         ),
         pytest.param(
             "custom.runtime.remainingHours",

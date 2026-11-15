@@ -54,6 +54,9 @@
             },
             "dhw_target_temperature_2": {
                 "default": "mdi:thermometer"
+            },
+            "ventilation_quick_mode_temporary_shutdown_runtime": {
+                "default": "mdi:timer-cog-outline"
             }
         },
         "sensor": {
@@ -434,6 +437,30 @@
             },
             "grid_reactive_power_phase_3": {
                 "default": "mdi:sine-wave"
+            },
+            "exhaust_fan_speed": {
+                "default": "mdi:fan"
+            },
+            "exhaust_fan_runtime": {
+                "default": "mdi:fan-clock"
+            },
+            "exhaust_fan_target_speed": {
+                "default": "mdi:fan"
+            },
+            "heat_recovery": {
+                "default": "mdi:heat-wave"
+            },
+            "bypass_position": {
+                "default": "mdi:valve"
+            },
+            "bypass_mode": {
+                "default": "mdi:valve"
+            },
+            "supply_air_volume_flow": {
+                "default": "mdi:weather-windy"
+            },
+            "extract_air_volume_flow": {
+                "default": "mdi:weather-windy"
             }
         },
         "switch": {
@@ -442,6 +469,9 @@
             },
             "dhw_hygiene": {
                 "default": "mdi:shield-check"
+            },
+            "ventilation_quick_mode_temporary_shutdown": {
+                "default": "mdi:fan-off"
             }
         },
         "binary_sensor": {
@@ -477,6 +507,9 @@
             },
             "active_cooling_numbered": {
                 "default": "mdi:snowflake"
+            },
+            "heat_exchanger_frost_protection": {
+                "default": "mdi:snowflake-thermometer"
             }
         },
         "fan": {
