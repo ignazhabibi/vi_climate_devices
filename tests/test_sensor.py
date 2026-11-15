@@ -101,75 +101,6 @@ async def _setup_integration(
 
 
 @pytest.mark.asyncio
-async def test_sensor_values(hass: HomeAssistant, mock_client):
-    """Test that sensors are created correctly from the fixture data."""
-    # Act: Setup the integration with the global mock_client (Vitocal250A).
-    await _setup_integration(hass, mock_client)
-
-    # Assert: Verify a Standard Sensor (Outside Temperature).
-    # Fixture value is 3.1 -> State '3.1'.
-    outside_temp = hass.states.get("sensor.e3_vitocal_16_outside_temperature")
-    assert outside_temp is not None
-    assert outside_temp.state == "3.1"
-    assert outside_temp.attributes["unit_of_measurement"] == "°C"
-
-    # Assert: Verify a Template/Regex Sensor (Compressor Speed).
-    # Checks if regex matches 'heating.compressors.0.speed.current' correctly.
-    compressor_speed = hass.states.get("sensor.e3_vitocal_16_compressor_speed")
-    assert compressor_speed is not None
-    assert compressor_speed.state == "41"
-    assert (
-        compressor_speed.attributes["friendly_name"] == "E3_Vitocal_16 Compressor Speed"
-    )
-
-    # Cleanup: Unload the integration to prevent thread leaks.
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-
-@pytest.mark.asyncio
-async def test_current_power_and_heat_sensors(hass: HomeAssistant, mock_client):
-    """Expose current power consumption and heat production as kW power sensors."""
-    # Act: Set up the integration with the Vitocal250A fixture.
-    await _setup_integration(hass, mock_client)
-
-    # Assert: Both features are defined power sensors with a kW unit.
-    for entity_id, friendly_name, expected_state in (
-        (
-            "sensor.e3_vitocal_16_current_power_consumption",
-            "E3_Vitocal_16 Current Power Consumption",
-            "1.69",
-        ),
-        (
-            "sensor.e3_vitocal_16_current_heat_production",
-            "E3_Vitocal_16 Current Heat Production",
-            "6.689",
-        ),
-    ):
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == expected_state
-        assert state.attributes["friendly_name"] == friendly_name
-        assert state.attributes["unit_of_measurement"] == "kW"
-        assert state.attributes["device_class"] == "power"
-        assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
-
-    # Assert: Their status sub-features do not create diagnostic sensors.
-    sensor_feature_names = {
-        state.attributes.get("viessmann_feature_name")
-        for state in hass.states.async_all("sensor")
-    }
-    assert "heating.power.consumption.current.status" not in sensor_feature_names
-    assert "heating.heat.production.current.status" not in sensor_feature_names
-
-    # Cleanup: Unload the integration to prevent thread leaks.
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-
-@pytest.mark.asyncio
 async def test_no_duplicate_entity_creation(hass: HomeAssistant, mock_client):
     """Ensure entities defined in SENSOR_TYPES or SENSOR_TEMPLATES are not also created as generic fallback sensors."""
     await _setup_integration(hass, mock_client)
@@ -232,98 +163,6 @@ async def test_sensor_feature_discovered_after_setup_is_added_once(
     assert entries[0].disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Cleanup: Unload the integration to stop the coordinator listener.
-    await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-
-DAILY_ENERGY_FEATURES = (
-    "heating.heat.production.summary.cooling.currentDay",
-    "heating.heat.production.summary.dhw.currentDay",
-    "heating.heat.production.summary.heating.currentDay",
-    "heating.power.consumption.dhw.currentDay",
-    "heating.power.consumption.heating.currentDay",
-)
-
-
-@pytest.mark.parametrize(
-    ("device_name", "expected_values"),
-    [
-        pytest.param(
-            "Vitocal250A",
-            {
-                "heating.heat.production.summary.cooling.currentDay": 0.0,
-                "heating.heat.production.summary.dhw.currentDay": 9.6,
-                "heating.heat.production.summary.heating.currentDay": 47.1,
-                "heating.power.consumption.dhw.currentDay": 3.3,
-                "heating.power.consumption.heating.currentDay": 0.0,
-            },
-            id="e3-heat-pump",
-        ),
-        pytest.param(
-            "Vitocal222S",
-            {
-                "heating.heat.production.summary.cooling.currentDay": 0.0,
-                "heating.heat.production.summary.dhw.currentDay": 6.8,
-                "heating.heat.production.summary.heating.currentDay": 13.1,
-                "heating.power.consumption.dhw.currentDay": 0.0,
-                "heating.power.consumption.heating.currentDay": 0.0,
-            },
-            id="e3-split-heat-pump",
-        ),
-        pytest.param(
-            "Vitodens200W",
-            {
-                "heating.heat.production.summary.dhw.currentDay": 1.0,
-                "heating.heat.production.summary.heating.currentDay": 26.0,
-                "heating.power.consumption.dhw.currentDay": 0.0,
-                "heating.power.consumption.heating.currentDay": 0.4,
-            },
-            id="gas-boiler",
-        ),
-    ],
-)
-@pytest.mark.asyncio
-async def test_daily_energy_sensors(
-    hass: HomeAssistant, device_name: str, expected_values: dict[str, float]
-):
-    """Expose daily energy counters next to the yearly counters."""
-    # Arrange: Load the real device fixture.
-    mock_client = FixtureViClient(device_name)
-    installations = await mock_client.get_installations()
-    device = (await mock_client.get_full_installation_status(installations[0].id))[0]
-
-    # Act: Discover the fixture through the Home Assistant integration.
-    await _setup_integration(hass, mock_client)
-    registry = er.async_get(hass)
-
-    # Assert: Every daily feature the device reports is a resetting kWh counter.
-    for feature_name in DAILY_ENERGY_FEATURES:
-        unique_id = f"{device.gateway_serial}-{device.id}-{feature_name}"
-        entity_id = registry.async_get_entity_id("sensor", DOMAIN, unique_id)
-        if feature_name not in expected_values:
-            assert entity_id is None
-            continue
-        assert entity_id is not None
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert float(state.state) == expected_values[feature_name]
-        assert state.attributes["unit_of_measurement"] == "kWh"
-        assert state.attributes["device_class"] == "energy"
-        assert state.attributes["state_class"] == SensorStateClass.TOTAL_INCREASING
-
-    # Assert: Lagging daily values stay hidden.
-    sensor_feature_names = {
-        state.attributes.get("viessmann_feature_name")
-        for state in hass.states.async_all("sensor")
-    }
-    assert "heating.power.consumption.total.currentDay" not in sensor_feature_names
-    assert not {
-        name
-        for name in sensor_feature_names
-        if name and name.startswith("heating.power.consumption.summary.")
-    }
-
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -1185,6 +1024,14 @@ async def test_auto_discovered_units_follow_the_api_unit(  # noqa: PLR0913, PLR0
             id="air-volume-flow",
         ),
         pytest.param(
+            "custom.anode.current",
+            "milliAmpere",
+            "mA",
+            "current",
+            False,
+            id="milliampere",
+        ),
+        pytest.param(
             "custom.runtime.remainingHours",
             "hours",
             "h",
@@ -1215,6 +1062,26 @@ def test_unknown_features_get_the_unit_of_their_api_unit(
     assert description.device_class == expected_device_class
     assert description.state_class == SensorStateClass.MEASUREMENT
     assert (description.entity_category == "diagnostic") is is_diagnostic
+
+
+def test_unknown_gas_volume_feature_gets_the_gas_unit() -> None:
+    """Map an auto-discovered gas volume to m³ without a state class."""
+    # Arrange: Build a gas volume feature without a defined entity.
+    feature = Feature(
+        name="heating.gas.consumption.custom",
+        value=1.5,
+        unit="cubicMeter",
+        is_enabled=True,
+        is_ready=True,
+    )
+
+    # Act: Describe the fallback sensor.
+    description = _get_auto_discovery_description(feature)
+
+    # Assert: The gas unit is kept without counter semantics.
+    assert description.native_unit_of_measurement == "m³"
+    assert description.device_class == "gas"
+    assert description.state_class is None
 
 
 @pytest.mark.parametrize(

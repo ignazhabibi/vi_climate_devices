@@ -54,5 +54,17 @@
 
 - Use snapshots for discovery and diagnostics coverage; inspect every `.ambr`
   diff rather than accepting it blindly.
+- `tests/test_entity_inventory.py` records one line per entity for every
+  bundled fixture: its entity ID, translation key or auto-discovery, default
+  enablement, category, device class, unit, and capabilities, but no state.
+  It replaces tests that only list the entities of one device; test values
+  and conversions with synthetic features instead. The full
+  `test_discovery_snapshot.py` snapshot keeps the states of the Vitocal 250-A.
+- A `vi_api_client` update can change the bundled fixtures. When its
+  Renovate pull request fails, check out the branch and run
+  `pytest --snapshot-update`. Then read the inventory diff per device. New
+  auto-discovered features on a device in `TESTED_DEVICES` fail
+  `tests/test_tested_devices.py`; define, ignore, or accept each of them before
+  committing.
 - When snapshots or `pytest-homeassistant-custom-component` change, a green
   Linux CI run is required in addition to local validation.
