@@ -475,6 +475,9 @@
             "boiler_temperature": {
                 "name": "Kesseltemperatur"
             },
+            "boiler_target_temperature": {
+                "name": "Kesselsolltemperatur"
+            },
             "primary_return_temperature": {
                 "name": "Rücklauf Primärkreis"
             },

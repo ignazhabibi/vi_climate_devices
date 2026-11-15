@@ -15,6 +15,7 @@ TESTED_DEVICES = [
     "E3_Vitocal_16",
     "E3_Vitocal_17",
     "E3_Vitocal_262_02",
+    "E3_Vitodens_300_0419",
 ]
 
 # Successors Viessmann announces for deprecated features that back defined
@@ -53,6 +54,7 @@ IGNORED_FEATURES = [
     "device.actorSensorTest.active",
     "device.actorSensorTest.status",
     "device.brand",
+    "device.etn",
     "device.configuration.houseLocation.altitude",
     "device.lock.external.active",
     "device.lock.malfunction.active",
@@ -75,12 +77,14 @@ IGNORED_FEATURES = [
     "device.zigbee.active.active",
     "device.zigbee.status.status",
     "heating.boiler.serial",
+    "heating.burners.enabled",
     "heating.circuits.enabled",
     "heating.circuits.internal",
     "heating.compressors.enabled",
     "heating.configuration.bufferCylinderSize",
     "heating.configuration.centralHeatingCylinderSize",
     "heating.configuration.dhwCylinderSize",
+    "heating.configuration.gasType",
     "heating.configuration.heatingRod.dhw.useApproved",
     "heating.configuration.heatingRod.heating.useApproved",
     "heating.configuration.houseHeatingLoad",
@@ -91,10 +95,12 @@ IGNORED_FEATURES = [
     "heating.device.variant",
     # Set through the water heater entity only.
     "heating.dhw.operating.modes.active",
+    "heating.dhw.operating.modes.balanced.active",
     "heating.dhw.operating.modes.efficient.active",
     "heating.dhw.operating.modes.efficientWithMinComfort.active",
     "heating.dhw.operating.modes.off.active",
     "heating.external.lock.active",
+    "heating.gas.configuration.type",
     "heating.gas.consumption.dhw",
     "heating.gas.consumption.heating",
     "heating.gas.consumption.summary.dhw.currentMonth",
@@ -174,6 +180,15 @@ IGNORED_FEATURES = [
     # Set through the climate entity only.
     re.compile(r"^heating\.circuits\.\d+\.operating\.modes\.active$"),
     re.compile(r"^heating\.circuits\.\d+\.operating\.modes\..*\.active$"),
+    # The climate entity shows the active program as its preset and derives
+    # its current action from the program demand.
+    re.compile(
+        r"^heating\.circuits\.\d+\.operating\.programs\.(normal|reduced)\.active$"
+    ),
+    re.compile(
+        r"^heating\.circuits\.\d+\.operating\.programs\."
+        r"(comfort|normal|reduced)\.demand$"
+    ),
     re.compile(r"^heating\.circuits\.\d+\.sensors\.temperature\..*\.status$"),
     re.compile(r"^heating\.compressors\.\d+\.sensors\.pressure\..*\.status$"),
     re.compile(r"^heating\.compressors\.\d+\.sensors\.temperature\..*\.status$"),

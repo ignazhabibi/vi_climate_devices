@@ -95,6 +95,54 @@ async def test_burner_and_hydraulic_separator_are_defined() -> None:
     assert separator.native_unit_of_measurement == "°C"
 
 
+@pytest.mark.asyncio
+async def test_vitodens_300w_defines_boiler_target_and_hides_duplicates() -> None:
+    """Name the boiler setpoint and create no fallback for covered features."""
+    # Arrange: Load the Vitodens 300-W boiler fixture.
+    device = (
+        await FixtureViClient("Vitodens300W-B3HF-19").get_full_installation_status(
+            "99999"
+        )
+    )[0]
+    coordinator = MagicMock(data={"device": device})
+
+    # Act: Discover the fixture's sensors and binary sensors.
+    entities = {
+        entity.entity_description.key: entity
+        for entity in [
+            *_discover_realtime_sensors(coordinator),
+            *_discover_binary_sensors(coordinator),
+        ]
+    }
+
+    # Assert: The boiler setpoint is a defined temperature sensor.
+    target = entities["heating.boiler.temperature"]
+    assert target.entity_description.translation_key == "boiler_target_temperature"
+    assert target.entity_description.native_unit_of_measurement == "°C"
+    assert target.entity_description.device_class == "temperature"
+    assert target.native_value == 20
+
+    # Assert: Identifiers, static details, and climate or water heater
+    # duplicates create no entity.
+    hidden_features = {
+        "device.etn",
+        "heating.burners.enabled",
+        "heating.configuration.gasType",
+        "heating.dhw.operating.modes.balanced.active",
+        *(
+            f"heating.circuits.{circuit}.operating.programs.{program}.active"
+            for circuit in (0, 1)
+            for program in ("normal", "reduced")
+        ),
+        *(
+            f"heating.circuits.{circuit}.operating.programs.{program}.demand"
+            for circuit in (0, 1)
+            for program in ("comfort", "normal", "reduced")
+        ),
+    }
+    assert not hidden_features & set(entities)
+
+
 def test_unknown_gas_volume_feature_gets_the_gas_unit() -> None:
     """Map an auto-discovered gas volume to m³ without a state class."""
     # Arrange: Build a gas volume feature without a defined entity.
