@@ -52,37 +52,31 @@ FEATURE_SUCCESSORS = {
     "heating.scop.total": "heating.spf.total",
 }
 
-# Features to ignore during auto-discovery
-# List feature names (dot-notation) or regex patterns (compiled) to exclude them
+# Features that create no entity on any platform. A string matches one feature
+# name; a compiled pattern matches a family, such as numbered components. An
+# ignored feature also hides a defined entity, so keep patterns narrow.
+# Sensor connection statuses such as `connected` need no entry; the discovery
+# skips them next to their reading. Sort the entries of each group.
 IGNORED_FEATURES = [
-    "device.actorSensorTest.active",
-    "device.actorSensorTest.status",
+    # Identifiers and serial numbers.
     "device.brand",
     "device.etn",
-    "device.configuration.houseLocation.altitude",
-    "device.lock.external.active",
-    "device.lock.malfunction.active",
-    "device.messages.info.raw",
-    "device.messages.logbook",
-    "device.messages.service.raw",
     "device.parameterIdentification.version",
-    "device.power.consumption.limitation",
-    "device.power.statusReport.consumption.limit",
-    "device.power.statusReport.consumption.status",
-    "device.power.statusReport.production.limit",
-    "device.power.statusReport.production.status",
     "device.productIdentification.product",
     "device.productMatrix.product",
     "device.serial",
     "device.serial.internalComponents.vinList",
-    "device.time.daylightSaving.active",
-    "device.time.daylightSaving.begin",
-    "device.time.daylightSaving.end",
     "device.type",
     "device.variant",
-    "device.zigbee.active.active",
-    "device.zigbee.status.status",
     "heating.boiler.serial",
+    "heating.controller.serial",
+    "heating.device.variant",
+    re.compile(r"^ess\.version\.hardware\.[^.]+$"),
+    re.compile(r"^ventilation\.filter\.information\.[^.]+$"),
+    # Static installation details and capability flags.
+    "device.configuration.houseLocation.altitude",
+    "ess.configuration.systemType",
+    "ess.power.nominal.inverter",
     "heating.burners.enabled",
     "heating.circuits.enabled",
     "heating.circuits.internal",
@@ -100,111 +94,105 @@ IGNORED_FEATURES = [
     "heating.configuration.houseLocation.longitude",
     "heating.configuration.houseOrientation.horizontal",
     "heating.configuration.houseOrientation.vertical",
-    "heating.controller.serial",
-    "heating.device.variant",
-    # Set through the water heater entity only.
-    "heating.dhw.operating.modes.active",
-    "heating.dhw.operating.modes.balanced.active",
-    "heating.dhw.operating.modes.efficient.active",
-    "heating.dhw.operating.modes.efficientWithMinComfort.active",
-    "heating.dhw.operating.modes.off.active",
-    "heating.external.lock.active",
+    "heating.secondaryHeatGenerator.connectionType",
+    "pcc.state.gridCode",
+    "photovoltaic.installedPeakPower",
+    "photovoltaic.string.enabled",
+    # Successors that no device reports yet: the inverter country code
+    # replaces pcc.state.gridCode, the gas type heating.configuration.gasType.
+    "ess.inverter.configuration.countryCode",
     "heating.gas.configuration.type",
+    # A capability flag: True on ventilation devices, whose fan entity shows
+    # whether they ventilate, and False on devices without ventilation.
+    "ventilation.active",
+    # The rated power of the compressor.
+    re.compile(r"^heating\.compressors\.\d+\.power$"),
+    re.compile(r"^heating\.coolingCircuits\.\d+\.type$"),
+    re.compile(
+        r"^heating\.circuits\.\d+\.operating\.programs\.screedDrying\."
+        r"heatpump\.useApproved$"
+    ),
+    # Installation details of ventilation units: commissioning, capability
+    # flags, air balance, configured level volume flows and bypass thresholds,
+    # the fan assignment, and the actuator self-test.
+    "ventilation.fan.assignmentSwitch.active",
+    re.compile(r"^device\.commissioning\.information\.[^.]+$"),
+    re.compile(r"^ventilation\.air\.balance\.offset\.[^.]+$"),
+    re.compile(r"^ventilation\.bypass\.configuration\.temperature\..+$"),
+    re.compile(r"^ventilation\.features\.[^.]+\.active$"),
+    re.compile(r"^ventilation\.levels\.[^.]+\.volumeFlow$"),
+    re.compile(r"^ventilation\.sensors\.actuator\.selftest\.[^.]+$"),
+    # Feature flags and network settings of energy storage systems.
+    re.compile(r"^ess\.features\.[^.]+\.active$"),
+    re.compile(r"^tcu\.ethernet\.\d+\.config\.mode$"),
+    # Device internals: service tests, clock settings, radio status, locks,
+    # power limits, and raw message logs.
+    "device.actorSensorTest.active",
+    "device.actorSensorTest.status",
+    "device.lock.external.active",
+    "device.lock.malfunction.active",
+    "device.messages.info.raw",
+    "device.messages.logbook",
+    "device.messages.service.raw",
+    "device.power.consumption.limitation",
+    "device.power.statusReport.consumption.limit",
+    "device.power.statusReport.consumption.status",
+    "device.power.statusReport.production.limit",
+    "device.power.statusReport.production.status",
+    "device.time.daylightSaving.active",
+    "device.time.daylightSaving.begin",
+    "device.time.daylightSaving.end",
+    "device.zigbee.active.active",
+    "device.zigbee.status.status",
+    "heating.external.lock.active",
+    "heating.primaryCircuit.valves.fourThreeWay.active",
+    "ventilation.external.lock.active",
+    re.compile(r"^ventilation\.lockExternal\.[^.]+$"),
+    # Raw history arrays and summary periods of the energy and gas counters.
+    # The defined sensors report the day, the year, and the lifetime totals.
     "heating.gas.consumption.dhw",
     "heating.gas.consumption.heating",
-    "heating.gas.consumption.summary.dhw.currentMonth",
-    "heating.gas.consumption.summary.dhw.lastMonth",
-    "heating.gas.consumption.summary.dhw.lastSevenDays",
-    "heating.gas.consumption.summary.dhw.lastYear",
-    "heating.gas.consumption.summary.heating.currentMonth",
-    "heating.gas.consumption.summary.heating.lastMonth",
-    "heating.gas.consumption.summary.heating.lastSevenDays",
-    "heating.gas.consumption.summary.heating.lastYear",
     "heating.gas.consumption.total",
-    "heating.heat.production.current.status",
-    "heating.heat.production.summary.cooling.currentMonth",
-    "heating.heat.production.summary.cooling.lastMonth",
-    "heating.heat.production.summary.cooling.lastSevenDays",
-    "heating.heat.production.summary.cooling.lastYear",
-    "heating.heat.production.summary.dhw.currentMonth",
-    "heating.heat.production.summary.dhw.lastMonth",
-    "heating.heat.production.summary.dhw.lastSevenDays",
-    "heating.heat.production.summary.dhw.lastYear",
-    "heating.heat.production.summary.heating.currentMonth",
-    "heating.heat.production.summary.heating.lastMonth",
-    "heating.heat.production.summary.heating.lastSevenDays",
-    "heating.heat.production.summary.heating.lastYear",
-    "heating.heatingRod.power.consumption.summary.dhw.currentDay",
-    "heating.heatingRod.power.consumption.summary.dhw.currentMonth",
-    "heating.heatingRod.power.consumption.summary.dhw.lastMonth",
-    "heating.heatingRod.power.consumption.summary.dhw.lastSevenDays",
-    "heating.heatingRod.power.consumption.summary.dhw.lastYear",
-    "heating.heatingRod.power.consumption.summary.heating.currentDay",
-    "heating.heatingRod.power.consumption.summary.heating.currentMonth",
-    "heating.heatingRod.power.consumption.summary.heating.lastMonth",
-    "heating.heatingRod.power.consumption.summary.heating.lastSevenDays",
-    "heating.heatingRod.power.consumption.summary.heating.lastYear",
-    "heating.power.consumption.current.status",
     "heating.power.consumption.dhw",
     "heating.power.consumption.heating",
-    "heating.power.consumption.summary.cooling.currentDay",
-    "heating.power.consumption.summary.cooling.currentMonth",
-    "heating.power.consumption.summary.cooling.currentYear",
-    "heating.power.consumption.summary.cooling.lastMonth",
-    "heating.power.consumption.summary.cooling.lastSevenDays",
-    "heating.power.consumption.summary.cooling.lastYear",
-    "heating.power.consumption.summary.dhw.currentDay",
-    "heating.power.consumption.summary.dhw.currentMonth",
-    "heating.power.consumption.summary.dhw.currentYear",
-    "heating.power.consumption.summary.dhw.lastMonth",
-    "heating.power.consumption.summary.dhw.lastSevenDays",
-    "heating.power.consumption.summary.dhw.lastYear",
-    "heating.power.consumption.summary.heating.currentDay",
-    "heating.power.consumption.summary.heating.currentMonth",
-    "heating.power.consumption.summary.heating.currentYear",
-    "heating.power.consumption.summary.heating.lastMonth",
-    "heating.power.consumption.summary.heating.lastSevenDays",
-    "heating.power.consumption.summary.heating.lastYear",
     "heating.power.consumption.total",
     "heating.power.consumption.total.currentDay",
-    "heating.primaryCircuit.fans.0.current.status",
-    "heating.primaryCircuit.fans.1.current.status",
-    "heating.primaryCircuit.valves.fourThreeWay.active",
-    "heating.secondaryCircuit.sensors.temperature.supply.status",
+    re.compile(
+        r"^heating\.(gas\.consumption|heat\.production)\.summary\.[^.]+\."
+        r"(currentMonth|lastMonth|lastSevenDays|lastYear)$"
+    ),
+    re.compile(
+        r"^heating\.heatingRod\.power\.consumption\.summary\.[^.]+\."
+        r"(currentDay|currentMonth|lastMonth|lastSevenDays|lastYear)$"
+    ),
+    re.compile(r"^heating\.power\.consumption\.summary\.[^.]+\.[^.]+$"),
+    re.compile(r"^ess\.transfer\.(charge|discharge)\.cumulated\.current(Week|Month)$"),
+    re.compile(r"^photovoltaic\.production\.cumulated\.current(Week|Month)$"),
+    # Values that a defined entity already reports.
+    # Absent battery modules report 0; the usable system energy covers them.
+    re.compile(r"^ess\.battery\.usedAverage\.usableEnergyModule[A-Za-z]+$"),
+    # Deprecated copies of the defined heating.bufferCylinder sensors.
+    re.compile(r"^heating\.buffer\.sensors\.temperature\.[^.]+$"),
     # Legacy heat pumps such as the CU401B report these refrigerant values a
     # second time next to the defined compressor and evaporator sensors.
     "heating.sensors.pressure.suctionGas",
     "heating.sensors.temperature.hotGas",
     "heating.sensors.temperature.liquidGas",
     "heating.sensors.temperature.suctionGas",
-    "heating.secondaryHeatGenerator.connectionType",
-    # Static details of energy storage systems such as the Vitocharge. The
-    # grid code is deprecated in favor of the inverter country code.
-    "ess.configuration.systemType",
-    "ess.inverter.configuration.countryCode",
-    "ess.power.nominal.inverter",
-    "pcc.state.gridCode",
-    "photovoltaic.installedPeakPower",
-    "photovoltaic.string.enabled",
-    re.compile(r"^.*\.schedule\.active$"),
-    re.compile(r"^device\.zigbee\.status\.status$"),
-    re.compile(r"^heating\..*\.schedule$"),
-    re.compile(r"^heating\.boiler\.sensors\.temperature\..*\.status$"),
-    re.compile(r"^heating\.buffer\..*\.status$"),
-    # Deprecated duplicates of the defined heating.bufferCylinder sensors.
-    re.compile(r"^heating\.buffer\.sensors\.temperature\.[^.]+$"),
-    re.compile(r"^heating\.bufferCylinder\..*\.status$"),
+    # The string name labels the PV string readings.
+    re.compile(r"^photovoltaic\.string\.\d+\.name$"),
+    # The bypass mode sensor shows the active mode.
+    "ventilation.bypass.operating.modes.active.level",
+    "ventilation.bypass.operating.modes.active.state",
+    re.compile(r"^ventilation\.bypass\.operating\.modes\.[^.]+\.active$"),
+    # Command availability flags of the quick mode switches.
+    re.compile(r"^ventilation\.quickmodes\.[^.]+\.isCommandExecutable$"),
+    # Set or shown through the climate entity: the operating mode, the active
+    # program as its preset, and the program demand as its current action.
     re.compile(r"^heating\.circuits\.\d+\.active$"),
     re.compile(r"^heating\.circuits\.\d+\.name$"),
-    re.compile(
-        r"^heating\.circuits\.\d+\.operating\.programs\.screedDrying\."
-        r"heatpump\.useApproved$"
-    ),
-    # Set through the climate entity only.
     re.compile(r"^heating\.circuits\.\d+\.operating\.modes\.active$"),
     re.compile(r"^heating\.circuits\.\d+\.operating\.modes\..*\.active$"),
-    # The climate entity shows the active program as its preset and derives
-    # its current action from the program demand.
     re.compile(
         r"^heating\.circuits\.\d+\.operating\.programs\.(normal|reduced)\.active$"
     ),
@@ -212,66 +200,26 @@ IGNORED_FEATURES = [
         r"^heating\.circuits\.\d+\.operating\.programs\."
         r"(comfort|normal|reduced)\.demand$"
     ),
-    re.compile(r"^heating\.circuits\.\d+\.sensors\.temperature\..*\.status$"),
-    # The rated power of the compressor is a static installation detail.
-    re.compile(r"^heating\.compressors\.\d+\.power$"),
-    re.compile(r"^heating\.compressors\.\d+\.sensors\.pressure\..*\.status$"),
-    re.compile(r"^heating\.compressors\.\d+\.sensors\.temperature\..*\.status$"),
-    re.compile(r"^heating\.condensors\.\d+\.sensors\.temperature\..*\.status$"),
-    re.compile(r"^heating\.coolingCircuits\.\d+\.type$"),
-    re.compile(r"^heating\.dhw\.sensors\.temperature\..*\.status$"),
-    re.compile(r"^heating\.economizers\.\d+\.sensors\.temperature\..*\.status$"),
-    re.compile(r"^heating\.evaporators\.\d+\.sensors\.temperature\..*\.status$"),
-    re.compile(r"^heating\.inverters\.\d+\.sensors\..*\.status$"),
+    # Set through the water heater entity.
+    "heating.dhw.operating.modes.active",
+    "heating.dhw.operating.modes.balanced.active",
+    "heating.dhw.operating.modes.efficient.active",
+    "heating.dhw.operating.modes.efficientWithMinComfort.active",
+    "heating.dhw.operating.modes.off.active",
+    # Set or shown through the fan entity: the operating mode, standby, and
+    # the active level as its speed. What the demand reports beyond
+    # "ventilation" is not documented.
+    "ventilation.operating.modes.active",
+    "ventilation.operating.programs.active",
+    "ventilation.operating.state.demand",
+    "ventilation.quickmodes.standby.active",
+    re.compile(r"^ventilation\.operating\.modes\.[^.]+\.active$"),
+    # Schedules are structured data; the switches and the climate entity cover
+    # their effect.
+    re.compile(r"^.*\.schedule\.active$"),
+    re.compile(r"^heating\..*\.schedule$"),
     # Holiday dates are read-only and report placeholders such as "" or
     # 2000-01-01 when no holiday is planned; the active state is a binary sensor.
     re.compile(r"^heating\.operating\.programs\.holiday(AtHome)?\.(start|end)$"),
-    re.compile(r"^heating\.primaryCircuit\.sensors\.temperature\..*\.status$"),
-    re.compile(r"^heating\.sensors\..*\.status$"),
-    # Static capability flag: True on ventilation devices, whose fan entity
-    # shows whether they ventilate, and False on devices without ventilation.
-    "ventilation.active",
     re.compile(r"^ventilation\.quickmodes\.holiday\.(start|end)$"),
-    # Feature flags, hardware versions, and network settings of energy storage
-    # systems.
-    re.compile(r"^ess\.features\.[^.]+\.active$"),
-    re.compile(r"^ess\.version\.hardware\.[^.]+$"),
-    re.compile(r"^tcu\.ethernet\.\d+\.config\.mode$"),
-    # Absent battery modules report 0; the usable system energy covers them.
-    re.compile(r"^ess\.battery\.usedAverage\.usableEnergyModule[A-Za-z]+$"),
-    # Only the day and year of the battery and PV energy are defined, like the
-    # gas consumption; the lifetime totals cover the other periods.
-    re.compile(r"^ess\.transfer\.(charge|discharge)\.cumulated\.current(Week|Month)$"),
-    re.compile(r"^photovoltaic\.production\.cumulated\.current(Week|Month)$"),
-    # The string name labels the string readings.
-    re.compile(r"^photovoltaic\.string\.\d+\.name$"),
-    # Command availability flags of the quick mode switches.
-    re.compile(r"^ventilation\.quickmodes\.[^.]+\.isCommandExecutable$"),
-    # Installation details of ventilation units: commissioning, capability
-    # flags, filter articles, air balance, configured level volume flows and
-    # bypass thresholds, the fan assignment, and the actuator self-test.
-    re.compile(r"^device\.commissioning\.information\.[^.]+$"),
-    re.compile(r"^ventilation\.air\.balance\.offset\.[^.]+$"),
-    re.compile(r"^ventilation\.bypass\.configuration\.temperature\..+$"),
-    re.compile(r"^ventilation\.features\.[^.]+\.active$"),
-    re.compile(r"^ventilation\.filter\.information\.[^.]+$"),
-    re.compile(r"^ventilation\.levels\.[^.]+\.volumeFlow$"),
-    re.compile(r"^ventilation\.sensors\.actuator\.selftest\.[^.]+$"),
-    "ventilation.bypass.operating.modes.active.level",
-    "ventilation.fan.assignmentSwitch.active",
-    # The bypass mode sensor shows the active mode.
-    re.compile(r"^ventilation\.bypass\.operating\.modes\.[^.]+\.active$"),
-    "ventilation.bypass.operating.modes.active.state",
-    # External locks, like heating.external.lock.active.
-    "ventilation.external.lock.active",
-    re.compile(r"^ventilation\.lockExternal\.[^.]+$"),
-    # Set through the fan entity only.
-    "ventilation.operating.modes.active",
-    re.compile(r"^ventilation\.operating\.modes\.[^.]+\.active$"),
-    "ventilation.quickmodes.standby.active",
-    # The fan entity shows the active level as its speed. The defined
-    # ventilation level sensor reports the level of devices without a fan
-    # entity; what the demand reports beyond "ventilation" is not documented.
-    "ventilation.operating.programs.active",
-    "ventilation.operating.state.demand",
 ]
