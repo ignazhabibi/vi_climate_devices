@@ -23,6 +23,36 @@ REFERENCE_FIXTURE = "Vitocal250A"
 # Auto-discovered features of other tested devices that are accepted although
 # the reference device does not report them, with the reason. Sort the keys.
 ACCEPTED_AUTO_DISCOVERED_FEATURES: dict[str, str] = {
+    "ess.configuration.backupBox": (
+        "The API does not document what the backup box percentage configures."
+    ),
+    "ess.systemInterface.mode.active": (
+        "The keepalive modes of the external system interface are not documented."
+    ),
+    "photovoltaic.string.current.stringOne": (
+        "Duplicates an indexed PV string reading, but its numbering does not "
+        "match the string indices."
+    ),
+    "photovoltaic.string.current.stringThree": (
+        "Duplicates an indexed PV string reading, but its numbering does not "
+        "match the string indices."
+    ),
+    "photovoltaic.string.current.stringTwo": (
+        "Duplicates an indexed PV string reading, but its numbering does not "
+        "match the string indices."
+    ),
+    "photovoltaic.string.voltage.stringOne": (
+        "Duplicates an indexed PV string reading, but its numbering does not "
+        "match the string indices."
+    ),
+    "photovoltaic.string.voltage.stringThree": (
+        "Duplicates an indexed PV string reading, but its numbering does not "
+        "match the string indices."
+    ),
+    "photovoltaic.string.voltage.stringTwo": (
+        "Duplicates an indexed PV string reading, but its numbering does not "
+        "match the string indices."
+    ),
     "heating.cop.green": (
         "The API does not document what the green coefficient of performance "
         "measures, and every fixture reports 0."

@@ -19,9 +19,21 @@ from .exceptions import (
     ExceptionTranslationKey,
     home_assistant_error,
 )
-from .utils import beautify_name, is_feature_ignored
+from .utils import api_value_to_option_key, beautify_name, is_feature_ignored
 
 PARALLEL_UPDATES = 0
+
+# Defined selects translate their options: the option keys are the lowercase
+# keys of the API values (see api_value_to_option_key).
+SELECT_TYPES: dict[str, SelectEntityDescription] = {
+    # Whether the system controls the battery itself ("nothing") or follows
+    # power or grid connection point setpoints of an external energy manager.
+    "ess.battery.control.mode.active": SelectEntityDescription(
+        key="ess.battery.control.mode.active",
+        translation_key="battery_control_mode",
+        entity_category=EntityCategory.CONFIG,
+    ),
+}
 
 
 async def async_setup_entry(
@@ -54,6 +66,17 @@ def _discover_selects(
                     continue
 
                 if not feature.is_writable:
+                    continue
+
+                if feature.name in SELECT_TYPES:
+                    entities.append(
+                        ViClimateSelect(
+                            coordinator,
+                            map_key,
+                            feature.name,
+                            SELECT_TYPES[feature.name],
+                        )
+                    )
                     continue
 
                 # Automatic Discovery. Heating circuit and DHW modes are set
@@ -104,11 +127,19 @@ class ViClimateSelect(ViClimateFeatureEntity, SelectEntity):  # pyright: ignore[
         )
         self.entity_description = description
         self._optimistic_option: str | None = None
+        self._api_values_by_option: dict[str, str] = {}
         self._update_options(self.feature_data)
+
+    def _to_option(self, api_value: str) -> str:
+        """Return the option for an API value; only defined selects translate."""
+        if self.entity_description.translation_key is None:
+            return api_value
+        return api_value_to_option_key(api_value)
 
     def _update_options(self, feature: Feature | None) -> None:
         """Extract available options from the feature constraints."""
         self._attr_options = []
+        self._api_values_by_option = {}
         if feature and feature.constraints and feature.constraints.options:
             # Options can be Dict[value, label] or List[value]
             # We normalize to list of strings
@@ -122,7 +153,10 @@ class ViClimateSelect(ViClimateFeatureEntity, SelectEntity):  # pyright: ignore[
                 elif isinstance(opt, str):
                     # Case A: String value
                     normalized_opts.append(opt)
-            self._attr_options = normalized_opts
+            self._api_values_by_option = {
+                self._to_option(api_value): api_value for api_value in normalized_opts
+            }
+            self._attr_options = list(self._api_values_by_option)
 
     @property
     def current_option(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
@@ -136,8 +170,10 @@ class ViClimateSelect(ViClimateFeatureEntity, SelectEntity):  # pyright: ignore[
             return None
 
         # Check if value is valid option
-        if isinstance(feat.value, str) and feat.value in self.options:
-            return feat.value
+        if isinstance(feat.value, str):
+            option = self._to_option(feat.value)
+            if option in self.options:
+                return option
 
         return None
 
@@ -151,7 +187,7 @@ class ViClimateSelect(ViClimateFeatureEntity, SelectEntity):  # pyright: ignore[
         self.async_write_ha_state()
         await self._async_write_feature(
             feat.name,
-            option,
+            self._api_values_by_option.get(option, option),
             ExceptionTranslationKey.SELECTION_FAILED,
             self._clear_optimistic_option,
         )

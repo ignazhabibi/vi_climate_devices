@@ -36,10 +36,8 @@ _FIXTURE_BY_DOMAIN = {"select": "VitochargeEvolution08"}
             "select",
             "select_option",
             {
-                "entity_id": (
-                    "select.e3_vitocharge_evolution_08_ess_battery_control_mode_active"
-                ),
-                "option": "powerControlMode",
+                "entity_id": "select.e3_vitocharge_evolution_08_battery_control_mode",
+                "option": "power_control_mode",
             },
             "ess.battery.control.mode.active",
         ),
