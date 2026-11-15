@@ -630,6 +630,14 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Boiler Target Temperature, the setpoint the burner heats the boiler to
+    "heating.boiler.temperature": SensorEntityDescription(
+        key="heating.boiler.temperature",
+        translation_key="boiler_target_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     # Boiler Main Temperature
     "heating.boiler.sensors.temperature.main": SensorEntityDescription(
         key="heating.boiler.sensors.temperature.main",

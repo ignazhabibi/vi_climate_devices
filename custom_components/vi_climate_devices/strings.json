@@ -475,6 +475,9 @@
             "boiler_temperature": {
                 "name": "Boiler Temperature"
             },
+            "boiler_target_temperature": {
+                "name": "Boiler Target Temperature"
+            },
             "primary_return_temperature": {
                 "name": "Primary Circuit Return Temperature"
             },
