@@ -156,6 +156,13 @@ VENTILATION_REASON_OPTIONS = [
     "standby",
 ]
 
+# Bypass modes of ventilation units; the device reports a flag per mode.
+# Sort the values alphabetically.
+BYPASS_MODE_OPTIONS = [
+    "automatic",
+    "open",
+]
+
 # Placeholders the API reports instead of a state; they show as unknown.
 ENUM_PLACEHOLDER_VALUES = frozenset({"nothing", "unknown"})
 
@@ -1472,6 +1479,29 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    # Ventilation exhaust fan
+    "ventilation.fan.exhaust.current": SensorEntityDescription(
+        key="ventilation.fan.exhaust.current",
+        translation_key="exhaust_fan_speed",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "ventilation.fan.exhaust.runtime": SensorEntityDescription(
+        key="ventilation.fan.exhaust.runtime",
+        translation_key="exhaust_fan_runtime",
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "ventilation.fan.exhaust.target": SensorEntityDescription(
+        key="ventilation.fan.exhaust.target",
+        translation_key="exhaust_fan_target_speed",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     # Ventilation filter maintenance. The operating hours restart at zero after
     # a filter change.
     "ventilation.filter.pollution.blocked": SensorEntityDescription(
@@ -1555,6 +1585,30 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         translation_key="voc_index",
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Air streams of ventilation units with heat recovery: outdoor air comes
+    # in, supply air goes to the rooms, extract air leaves them, and exhaust air
+    # goes out.
+    "ventilation.sensors.humidity.exhaust": SensorEntityDescription(
+        key="ventilation.sensors.humidity.exhaust",
+        translation_key="exhaust_air_humidity",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "ventilation.sensors.humidity.extract": SensorEntityDescription(
+        key="ventilation.sensors.humidity.extract",
+        translation_key="extract_air_humidity",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "ventilation.sensors.humidity.outdoor": SensorEntityDescription(
+        key="ventilation.sensors.humidity.outdoor",
+        translation_key="outdoor_air_humidity",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     "ventilation.sensors.humidity.supply": SensorEntityDescription(
         key="ventilation.sensors.humidity.supply",
         translation_key="supply_air_humidity",
@@ -1562,11 +1616,65 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    "ventilation.sensors.temperature.exhaust": SensorEntityDescription(
+        key="ventilation.sensors.temperature.exhaust",
+        translation_key="exhaust_air_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "ventilation.sensors.temperature.extract": SensorEntityDescription(
+        key="ventilation.sensors.temperature.extract",
+        translation_key="extract_air_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "ventilation.sensors.temperature.outside": SensorEntityDescription(
+        key="ventilation.sensors.temperature.outside",
+        translation_key="outdoor_air_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     "ventilation.sensors.temperature.supply": SensorEntityDescription(
         key="ventilation.sensors.temperature.supply",
         translation_key="supply_air_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Heat recovery, bypass, and air volume flows of ventilation units
+    "ventilation.heating.recovery": SensorEntityDescription(
+        key="ventilation.heating.recovery",
+        translation_key="heat_recovery",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "ventilation.bypass.position": SensorEntityDescription(
+        key="ventilation.bypass.position",
+        translation_key="bypass_position",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "ventilation.bypass.operating.modes.active": SensorEntityDescription(
+        key="ventilation.bypass.operating.modes.active",
+        translation_key="bypass_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=BYPASS_MODE_OPTIONS,
+    ),
+    "ventilation.volumeFlow.current.input": SensorEntityDescription(
+        key="ventilation.volumeFlow.current.input",
+        translation_key="supply_air_volume_flow",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "ventilation.volumeFlow.current.output": SensorEntityDescription(
+        key="ventilation.volumeFlow.current.output",
+        translation_key="extract_air_volume_flow",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }

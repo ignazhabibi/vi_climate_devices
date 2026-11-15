@@ -72,6 +72,11 @@ SWITCH_TYPES: dict[str, SwitchEntityDescription] = {
         translation_key="ventilation_quick_mode_silent",
         device_class=SwitchDeviceClass.SWITCH,
     ),
+    "ventilation.quickmodes.temporaryShutdown.active": SwitchEntityDescription(
+        key="ventilation.quickmodes.temporaryShutdown.active",
+        translation_key="ventilation_quick_mode_temporary_shutdown",
+        device_class=SwitchDeviceClass.SWITCH,
+    ),
 }
 
 VENTILATION_QUICK_MODE_PATTERN = re.compile(r"^ventilation\.quickmodes\.[^.]+\.active$")

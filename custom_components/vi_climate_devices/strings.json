@@ -208,6 +208,9 @@
             },
             "dhw_target_temperature_2": {
                 "name": "DHW Target Temperature 2"
+            },
+            "ventilation_quick_mode_temporary_shutdown_runtime": {
+                "name": "Ventilation Quick Mode Temporary Shutdown Runtime"
             }
         },
         "binary_sensor": {
@@ -300,6 +303,9 @@
             },
             "active_cooling_numbered": {
                 "name": "Active Cooling Circuit {number}"
+            },
+            "heat_exchanger_frost_protection": {
+                "name": "Heat Exchanger Frost Protection"
             }
         },
         "climate": {
@@ -953,6 +959,52 @@
             },
             "grid_reactive_power_phase_3": {
                 "name": "Grid Reactive Power Phase 3"
+            },
+            "exhaust_fan_speed": {
+                "name": "Exhaust Fan Speed"
+            },
+            "exhaust_fan_runtime": {
+                "name": "Exhaust Fan Runtime"
+            },
+            "exhaust_fan_target_speed": {
+                "name": "Exhaust Fan Target Speed"
+            },
+            "exhaust_air_humidity": {
+                "name": "Exhaust Air Humidity"
+            },
+            "extract_air_humidity": {
+                "name": "Extract Air Humidity"
+            },
+            "outdoor_air_humidity": {
+                "name": "Outdoor Air Humidity"
+            },
+            "exhaust_air_temperature": {
+                "name": "Exhaust Air Temperature"
+            },
+            "extract_air_temperature": {
+                "name": "Extract Air Temperature"
+            },
+            "outdoor_air_temperature": {
+                "name": "Outdoor Air Temperature"
+            },
+            "heat_recovery": {
+                "name": "Heat Recovery"
+            },
+            "bypass_position": {
+                "name": "Bypass Position"
+            },
+            "bypass_mode": {
+                "name": "Bypass Mode",
+                "state": {
+                    "automatic": "Automatic",
+                    "open": "Open"
+                }
+            },
+            "supply_air_volume_flow": {
+                "name": "Supply Air Volume Flow"
+            },
+            "extract_air_volume_flow": {
+                "name": "Extract Air Volume Flow"
             }
         },
         "switch": {
@@ -991,6 +1043,9 @@
             },
             "ventilation_quick_mode_silent": {
                 "name": "Ventilation Quick Mode Silent"
+            },
+            "ventilation_quick_mode_temporary_shutdown": {
+                "name": "Ventilation Quick Mode Temporary Shutdown"
             }
         },
         "water_heater": {

@@ -208,6 +208,9 @@
             },
             "dhw_target_temperature_2": {
                 "name": "Warmwasser Solltemperatur 2"
+            },
+            "ventilation_quick_mode_temporary_shutdown_runtime": {
+                "name": "Lüftung Schnellmodus Vorübergehend aus Laufzeit"
             }
         },
         "binary_sensor": {
@@ -300,6 +303,9 @@
             },
             "active_cooling_numbered": {
                 "name": "Aktive Kühlung Kühlkreis {number}"
+            },
+            "heat_exchanger_frost_protection": {
+                "name": "Wärmetauscher Frostschutz"
             }
         },
         "climate": {
@@ -953,6 +959,52 @@
             },
             "grid_reactive_power_phase_3": {
                 "name": "Netz Blindleistung Phase 3"
+            },
+            "exhaust_fan_speed": {
+                "name": "Abluftventilator Drehzahl"
+            },
+            "exhaust_fan_runtime": {
+                "name": "Abluftventilator Laufzeit"
+            },
+            "exhaust_fan_target_speed": {
+                "name": "Abluftventilator Solldrehzahl"
+            },
+            "exhaust_air_humidity": {
+                "name": "Fortluftfeuchte"
+            },
+            "extract_air_humidity": {
+                "name": "Abluftfeuchte"
+            },
+            "outdoor_air_humidity": {
+                "name": "Außenluftfeuchte"
+            },
+            "exhaust_air_temperature": {
+                "name": "Fortlufttemperatur"
+            },
+            "extract_air_temperature": {
+                "name": "Ablufttemperatur"
+            },
+            "outdoor_air_temperature": {
+                "name": "Außenlufttemperatur"
+            },
+            "heat_recovery": {
+                "name": "Wärmerückgewinnung"
+            },
+            "bypass_position": {
+                "name": "Bypass Stellung"
+            },
+            "bypass_mode": {
+                "name": "Bypass Modus",
+                "state": {
+                    "automatic": "Automatisch",
+                    "open": "Offen"
+                }
+            },
+            "supply_air_volume_flow": {
+                "name": "Zuluft Volumenstrom"
+            },
+            "extract_air_volume_flow": {
+                "name": "Abluft Volumenstrom"
             }
         },
         "switch": {
@@ -991,6 +1043,9 @@
             },
             "ventilation_quick_mode_silent": {
                 "name": "Lüftung Schnellmodus Leise"
+            },
+            "ventilation_quick_mode_temporary_shutdown": {
+                "name": "Lüftung Schnellmodus Vorübergehend aus"
             }
         },
         "water_heater": {

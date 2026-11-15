@@ -197,6 +197,15 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
         translation_key="solar_pump",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
+    # Frost protection of the ventilation heat exchanger
+    # (ventilation.heatExchanger.frostprotection.status)
+    "ventilation.heatExchanger.frostprotection.status": (
+        BinarySensorEntityDescription(
+            key="ventilation.heatExchanger.frostprotection.status",
+            translation_key="heat_exchanger_frost_protection",
+            device_class=BinarySensorDeviceClass.RUNNING,
+        )
+    ),
     # Ventilation filter change due (ventilation.control.filterChange.active)
     "ventilation.control.filterChange.active": BinarySensorEntityDescription(
         key="ventilation.control.filterChange.active",
