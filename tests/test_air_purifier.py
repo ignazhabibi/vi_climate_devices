@@ -9,6 +9,7 @@ from vi_api_client import FixtureViClient
 from custom_components.vi_climate_devices.binary_sensor import (
     _discover_binary_sensors,
 )
+from custom_components.vi_climate_devices.number import _discover_numbers
 from custom_components.vi_climate_devices.sensor import _discover_realtime_sensors
 from custom_components.vi_climate_devices.switch import _discover_switches
 
@@ -41,6 +42,18 @@ MAINTENANCE_READINGS = (
     ("ventilation.operating.state.reason", "ventilation_reason", "standby"),
 )
 
+# Feature and translation key of the quick mode runtimes.
+QUICK_MODE_RUNTIMES = (
+    (
+        "ventilation.quickmodes.forcedLevelFour.defaultRuntime",
+        "ventilation_quick_mode_forced_level_four_runtime",
+    ),
+    (
+        "ventilation.quickmodes.silent.defaultRuntime",
+        "ventilation_quick_mode_silent_runtime",
+    ),
+)
+
 # Features the fan entity covers, or command availability flags.
 HIDDEN_FEATURES = frozenset(
     {
@@ -60,14 +73,14 @@ HIDDEN_FEATURES = frozenset(
 
 @pytest.mark.asyncio
 async def test_vitopure_350_defines_air_fan_and_filter_entities() -> None:
-    """Name the air readings, the fan and filter details, and the filter change."""
+    """Name the air, fan, and filter readings and the quick mode runtimes."""
     # Arrange: Load the Vitopure 350 air purifier fixture.
     device = (
         await FixtureViClient("Vitopure350").get_full_installation_status("99999")
     )[0]
     coordinator = MagicMock(data={"device": device})
 
-    # Act: Discover the fixture's sensors, binary sensors, and switches.
+    # Act: Discover the fixture's sensors, binary sensors, switches, and numbers.
     entities = {
         entity.entity_description.key: entity
         for entity in [
@@ -75,6 +88,10 @@ async def test_vitopure_350_defines_air_fan_and_filter_entities() -> None:
             *_discover_binary_sensors(coordinator),
             *_discover_switches(coordinator),
         ]
+    }
+    numbers = {
+        entity.entity_description.key: entity
+        for entity in _discover_numbers(coordinator)
     }
 
     # Assert: The air readings are measurements with their device classes.
@@ -98,6 +115,19 @@ async def test_vitopure_350_defines_air_fan_and_filter_entities() -> None:
     assert filter_change.entity_description.translation_key == "filter_change"
     assert filter_change.entity_description.device_class == "problem"
     assert filter_change.is_on is False
+
+    # Assert: The quick mode runtimes are disabled minute controls within the
+    # constraints the API reports.
+    for feature_name, translation_key in QUICK_MODE_RUNTIMES:
+        runtime = numbers[feature_name]
+        assert runtime.entity_description.translation_key == translation_key
+        assert runtime.entity_description.native_unit_of_measurement == "min"
+        assert runtime.entity_description.device_class == "duration"
+        assert runtime.entity_description.entity_category == "config"
+        assert runtime.entity_registry_enabled_default is False
+        assert (runtime.native_min_value, runtime.native_max_value) == (1, 1440)
+        assert runtime.native_step == 1
+        assert runtime.native_value == 30
 
     # Assert: Fan duplicates and command availability flags create no entity.
     assert not HIDDEN_FEATURES & set(entities)

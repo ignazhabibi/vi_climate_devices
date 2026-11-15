@@ -196,6 +196,12 @@
             },
             "heating_circuit_temperature_limit_max_numbered": {
                 "name": "Heating Circuit {number} Temperature Limit Max"
+            },
+            "ventilation_quick_mode_forced_level_four_runtime": {
+                "name": "Ventilation Quick Mode Forced Level Four Runtime"
+            },
+            "ventilation_quick_mode_silent_runtime": {
+                "name": "Ventilation Quick Mode Silent Runtime"
             }
         },
         "binary_sensor": {

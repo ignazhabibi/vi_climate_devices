@@ -36,14 +36,6 @@ ACCEPTED_AUTO_DISCOVERED_FEATURES: dict[str, str] = {
     "heating.dhw.hygiene.trigger.weekdays": (
         "Read-only schedule detail of the hygiene program."
     ),
-    "ventilation.quickmodes.forcedLevelFour.defaultRuntime": (
-        "Writing the quick mode runtime is not verified on a real device; "
-        "the defined switch starts the quick mode."
-    ),
-    "ventilation.quickmodes.silent.defaultRuntime": (
-        "Writing the quick mode runtime is not verified on a real device; "
-        "the defined switch starts the quick mode."
-    ),
 }
 
 DISCOVERERS: tuple[Callable[[MagicMock], Sequence[Entity]], ...] = (

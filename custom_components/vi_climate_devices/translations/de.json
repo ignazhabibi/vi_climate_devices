@@ -196,6 +196,12 @@
             },
             "heating_circuit_temperature_limit_max_numbered": {
                 "name": "Heizkreis {number} Begrenzung Max"
+            },
+            "ventilation_quick_mode_forced_level_four_runtime": {
+                "name": "Lüftung Schnellmodus Stufe 4 erzwungen Laufzeit"
+            },
+            "ventilation_quick_mode_silent_runtime": {
+                "name": "Lüftung Schnellmodus Leise Laufzeit"
             }
         },
         "binary_sensor": {

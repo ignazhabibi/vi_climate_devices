@@ -45,6 +45,12 @@
             },
             "heating_circuit_temperature_limit_max_numbered": {
                 "default": "mdi:thermometer-high"
+            },
+            "ventilation_quick_mode_forced_level_four_runtime": {
+                "default": "mdi:timer-cog-outline"
+            },
+            "ventilation_quick_mode_silent_runtime": {
+                "default": "mdi:timer-cog-outline"
             }
         },
         "sensor": {
