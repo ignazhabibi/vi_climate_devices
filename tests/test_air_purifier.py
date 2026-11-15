@@ -73,7 +73,7 @@ HIDDEN_FEATURES = frozenset(
 
 @pytest.mark.asyncio
 async def test_vitopure_350_defines_air_fan_and_filter_entities() -> None:
-    """Name the air, fan, and filter readings and the quick mode runtimes."""
+    """Name the air, fan, and filter readings and the quick mode controls."""
     # Arrange: Load the Vitopure 350 air purifier fixture.
     device = (
         await FixtureViClient("Vitopure350").get_full_installation_status("99999")
@@ -128,6 +128,19 @@ async def test_vitopure_350_defines_air_fan_and_filter_entities() -> None:
         assert (runtime.native_min_value, runtime.native_max_value) == (1, 1440)
         assert runtime.native_step == 1
         assert runtime.native_value == 30
+
+    # Assert: The quick mode switches are enabled.
+    for feature_name, translation_key in (
+        (
+            "ventilation.quickmodes.forcedLevelFour.active",
+            "ventilation_quick_mode_forced_level_four",
+        ),
+        ("ventilation.quickmodes.silent.active", "ventilation_quick_mode_silent"),
+    ):
+        quick_mode = entities[feature_name]
+        assert quick_mode.entity_description.translation_key == translation_key
+        assert quick_mode.entity_registry_enabled_default is True
+        assert quick_mode.is_on is False
 
     # Assert: Fan duplicates and command availability flags create no entity.
     assert not HIDDEN_FEATURES & set(entities)

@@ -23,54 +23,64 @@ ALL_FIXTURES = (
 )
 
 # Boolean features written through an on/off command pair since 7.0.0, with
-# the switch name they get on the fixture that reports them.
+# the switch name they get on the fixture that reports them and whether the
+# switch starts enabled. Heating circuit programs start disabled because a
+# device can report a pair it never allows.
 COMMAND_PAIR_SWITCHES = (
     pytest.param(
         "Vitocal250A",
         "heating.circuits.0.operating.programs.forcedLastFromSchedule.active",
         "Last Schedule Phase Forced",
+        False,
         id="forced-last-from-schedule",
     ),
     pytest.param(
         "Vitocal200S",
         "heating.circuits.1.operating.programs.comfort.active",
         "Comfort Program Heating Circuit 2",
+        False,
         id="comfort-numbered",
     ),
     pytest.param(
         "Vitocal333G-with-Vitovent300F",
         "heating.circuits.0.operating.programs.eco.active",
         "Eco Program Heating Circuit 1",
+        False,
         id="eco-numbered",
     ),
     pytest.param(
         "Vitodens200W",
         "heating.circuits.0.operating.programs.comfort.active",
         "Comfort Program",
+        False,
         id="comfort-never-executable",
     ),
     pytest.param(
         "Vitocal333G-with-Vitovent300F",
         "ventilation.quickmodes.comfort.active",
         "Ventilation Quick Mode Comfort",
+        True,
         id="quick-mode-comfort",
     ),
     pytest.param(
         "Vitocal333G-with-Vitovent300F",
         "ventilation.quickmodes.eco.active",
         "Ventilation Quick Mode Eco",
+        True,
         id="quick-mode-eco",
     ),
     pytest.param(
         "Vitopure350",
         "ventilation.quickmodes.forcedLevelFour.active",
         "Ventilation Quick Mode Forced Level Four",
+        True,
         id="quick-mode-forced-level-four",
     ),
     pytest.param(
         "Vitopure350",
         "ventilation.quickmodes.silent.active",
         "Ventilation Quick Mode Silent",
+        True,
         id="quick-mode-silent",
     ),
 )
@@ -155,12 +165,16 @@ def _other_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    ("fixture_name", "feature_name", "name"), COMMAND_PAIR_SWITCHES
+    ("fixture_name", "feature_name", "name", "is_enabled"), COMMAND_PAIR_SWITCHES
 )
-async def test_command_pair_feature_becomes_disabled_switch(
-    hass: HomeAssistant, fixture_name: str, feature_name: str, name: str
+async def test_command_pair_feature_becomes_switch(
+    hass: HomeAssistant,
+    fixture_name: str,
+    feature_name: str,
+    name: str,
+    is_enabled: bool,
 ) -> None:
-    """Create a named, disabled switch instead of a binary sensor."""
+    """Create a named switch instead of a binary sensor."""
     # Arrange: Read the fixture device the feature belongs to.
     device = await _fixture_device(fixture_name)
     unique_id = _unique_id(device, feature_name)
@@ -169,13 +183,15 @@ async def test_command_pair_feature_becomes_disabled_switch(
     # Act: Set up the integration for the fixture.
     await _setup_integration(hass, entry, fixture_name)
 
-    # Assert: Only a switch is registered, disabled until the user enables it.
+    # Assert: Only a switch is registered, enabled or disabled as defined.
     registry = er.async_get(hass)
     switch_id = registry.async_get_entity_id(Platform.SWITCH, DOMAIN, unique_id)
     assert switch_id is not None
     switch_entry = registry.async_get(switch_id)
     assert switch_entry is not None
-    assert switch_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert switch_entry.disabled_by is (
+        None if is_enabled else er.RegistryEntryDisabler.INTEGRATION
+    )
     assert switch_entry.original_name == name
     assert (
         registry.async_get_entity_id(Platform.BINARY_SENSOR, DOMAIN, unique_id) is None
