@@ -624,7 +624,6 @@ async def test_fixture_auto_discovered_energy_state_classes(
 @pytest.mark.parametrize(
     ("device_name", "feature_name"),
     [
-        ("Vitocal200S", "heating.compressors.0.power"),
         (
             "Vitocal333G-with-Vitovent300F",
             "heating.compressors.0.power.consumption.current",

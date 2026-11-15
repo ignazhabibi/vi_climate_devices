@@ -431,6 +431,97 @@ SENSOR_TEMPLATES: tuple[EntityTemplate[SensorEntityDescription], ...] = (
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
+    # Compressor load: share of its maximum power
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.compressors\.(\d+)\.sensors\.power$"),
+        description=SensorEntityDescription(
+            key="placeholder",
+            translation_key="compressor_load",
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    # Compressor Overheat Temperature
+    EntityTemplate(
+        pattern=re.compile(
+            r"^heating\.compressors\.(\d+)\.sensors\.temperature\.overheat$"
+        ),
+        description=SensorEntityDescription(
+            key="placeholder",
+            translation_key="compressor_overheat_temperature",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    # Compressor operating hours per load class, from lowest to highest load
+    EntityTemplate(
+        pattern=re.compile(
+            r"^heating\.compressors\.(\d+)\.statistics\.load\.hoursLoadClassOne$"
+        ),
+        description=SensorEntityDescription(
+            key="placeholder",
+            translation_key="compressor_hours_load_class_1",
+            native_unit_of_measurement=UnitOfTime.HOURS,
+            device_class=SensorDeviceClass.DURATION,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    EntityTemplate(
+        pattern=re.compile(
+            r"^heating\.compressors\.(\d+)\.statistics\.load\.hoursLoadClassTwo$"
+        ),
+        description=SensorEntityDescription(
+            key="placeholder",
+            translation_key="compressor_hours_load_class_2",
+            native_unit_of_measurement=UnitOfTime.HOURS,
+            device_class=SensorDeviceClass.DURATION,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    EntityTemplate(
+        pattern=re.compile(
+            r"^heating\.compressors\.(\d+)\.statistics\.load\.hoursLoadClassThree$"
+        ),
+        description=SensorEntityDescription(
+            key="placeholder",
+            translation_key="compressor_hours_load_class_3",
+            native_unit_of_measurement=UnitOfTime.HOURS,
+            device_class=SensorDeviceClass.DURATION,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    EntityTemplate(
+        pattern=re.compile(
+            r"^heating\.compressors\.(\d+)\.statistics\.load\.hoursLoadClassFour$"
+        ),
+        description=SensorEntityDescription(
+            key="placeholder",
+            translation_key="compressor_hours_load_class_4",
+            native_unit_of_measurement=UnitOfTime.HOURS,
+            device_class=SensorDeviceClass.DURATION,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    EntityTemplate(
+        pattern=re.compile(
+            r"^heating\.compressors\.(\d+)\.statistics\.load\.hoursLoadClassFive$"
+        ),
+        description=SensorEntityDescription(
+            key="placeholder",
+            translation_key="compressor_hours_load_class_5",
+            native_unit_of_measurement=UnitOfTime.HOURS,
+            device_class=SensorDeviceClass.DURATION,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
     # Fans (primary circuit)
     EntityTemplate(
         pattern=re.compile(r"^heating\.primaryCircuit\.fans\.(\d+)\.current$"),
@@ -919,6 +1010,35 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         )
     ),
     # Heating Rod (Diagnostic) - Hours
+    # Runtime of the main control unit
+    "heating.device.mainECU.runtime": SensorEntityDescription(
+        key="heating.device.mainECU.runtime",
+        translation_key="main_ecu_runtime",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    # Heating rod runtime per power level
+    "heating.heatingRod.runtime.levelOne": SensorEntityDescription(
+        key="heating.heatingRod.runtime.levelOne",
+        translation_key="heating_rod_runtime_level_1",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "heating.heatingRod.runtime.levelTwo": SensorEntityDescription(
+        key="heating.heatingRod.runtime.levelTwo",
+        translation_key="heating_rod_runtime_level_2",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     "heating.heatingRod.statistics.hours": SensorEntityDescription(
         key="heating.heatingRod.statistics.hours",
         translation_key="heating_rod_hours",
@@ -1136,6 +1256,14 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         options=VALVE_POSITION_OPTIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    # Primary circuit pump speed of brine heat pumps
+    "heating.primaryCircuit.sensors.rotation": SensorEntityDescription(
+        key="heating.primaryCircuit.sensors.rotation",
+        translation_key="primary_pump_speed",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     # Ventilation supply fan
     "ventilation.fan.supply.current": SensorEntityDescription(
         key="ventilation.fan.supply.current",
@@ -1255,6 +1383,25 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
+
+# Features that other platforms control where the device allows writing. Only
+# a device that reports them read-only, such as the CU401B, gets a sensor.
+READ_ONLY_SENSOR_TYPES: dict[str, SensorEntityDescription] = {
+    "heating.dhw.temperature.hysteresis.switchOffValue": SensorEntityDescription(
+        key="heating.dhw.temperature.hysteresis.switchOffValue",
+        translation_key="dhw_hysteresis_off",
+        native_unit_of_measurement=UnitOfTemperature.KELVIN,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+}
+
+# Read-only features that create no fallback sensor. A writable one is still a
+# number. The read-only eco temperature mirrors the normal program
+# temperature, which the climate entity and its number already show.
+READ_ONLY_FALLBACK_EXCLUSIONS: tuple[re.Pattern[str], ...] = (
+    re.compile(r"^heating\.circuits\.\d+\.operating\.programs\.eco\.temperature$"),
+)
 
 
 def _get_sensor_entity_description(
@@ -1406,12 +1553,26 @@ def _discover_realtime_sensors(
                 )
                 continue
 
+            if not feature.is_writable and (
+                read_only_description := READ_ONLY_SENSOR_TYPES.get(feature.name)
+            ):
+                entities.append(
+                    ViClimateSensor(
+                        coordinator, map_key, feature.name, read_only_description
+                    )
+                )
+                continue
+
             # 2. Automatic Discovery (Fallback)
             if is_sensor_status_companion(feature, feature_names):
                 continue
             # If not writable (Sensors) and not boolean-like
             # (Binary Sensor platform handles all boolean-like values)
-            if not feature.is_writable and not is_feature_boolean_like(feature.value):
+            if (
+                not feature.is_writable
+                and not is_feature_boolean_like(feature.value)
+                and not is_feature_ignored(feature.name, READ_ONLY_FALLBACK_EXCLUSIONS)
+            ):
                 description = _get_auto_discovery_description(feature)
                 # Only disable entities by default for thoroughly tested devices
                 is_tested = device.model_id in TESTED_DEVICES

@@ -202,6 +202,9 @@
             },
             "ventilation_quick_mode_silent_runtime": {
                 "name": "Lüftung Schnellmodus Leise Laufzeit"
+            },
+            "dhw_target_temperature_2": {
+                "name": "Warmwasser Solltemperatur 2"
             }
         },
         "binary_sensor": {
@@ -288,6 +291,12 @@
             },
             "filter_change": {
                 "name": "Filterwechsel"
+            },
+            "active_cooling": {
+                "name": "Aktive Kühlung"
+            },
+            "active_cooling_numbered": {
+                "name": "Aktive Kühlung Kühlkreis {number}"
             }
         },
         "climate": {
@@ -788,6 +797,63 @@
             },
             "supply_air_temperature": {
                 "name": "Zulufttemperatur"
+            },
+            "compressor_load": {
+                "name": "Verdichter Auslastung"
+            },
+            "compressor_load_numbered": {
+                "name": "Verdichter {number} Auslastung"
+            },
+            "compressor_overheat_temperature": {
+                "name": "Verdichter Überhitzung"
+            },
+            "compressor_overheat_temperature_numbered": {
+                "name": "Verdichter {number} Überhitzung"
+            },
+            "compressor_hours_load_class_1": {
+                "name": "Verdichter Betriebsstunden Lastklasse 1"
+            },
+            "compressor_hours_load_class_1_numbered": {
+                "name": "Verdichter {number} Betriebsstunden Lastklasse 1"
+            },
+            "compressor_hours_load_class_2": {
+                "name": "Verdichter Betriebsstunden Lastklasse 2"
+            },
+            "compressor_hours_load_class_2_numbered": {
+                "name": "Verdichter {number} Betriebsstunden Lastklasse 2"
+            },
+            "compressor_hours_load_class_3": {
+                "name": "Verdichter Betriebsstunden Lastklasse 3"
+            },
+            "compressor_hours_load_class_3_numbered": {
+                "name": "Verdichter {number} Betriebsstunden Lastklasse 3"
+            },
+            "compressor_hours_load_class_4": {
+                "name": "Verdichter Betriebsstunden Lastklasse 4"
+            },
+            "compressor_hours_load_class_4_numbered": {
+                "name": "Verdichter {number} Betriebsstunden Lastklasse 4"
+            },
+            "compressor_hours_load_class_5": {
+                "name": "Verdichter Betriebsstunden Lastklasse 5"
+            },
+            "compressor_hours_load_class_5_numbered": {
+                "name": "Verdichter {number} Betriebsstunden Lastklasse 5"
+            },
+            "main_ecu_runtime": {
+                "name": "Hauptsteuergerät Laufzeit"
+            },
+            "heating_rod_runtime_level_1": {
+                "name": "Heizstab Laufzeit Stufe 1"
+            },
+            "heating_rod_runtime_level_2": {
+                "name": "Heizstab Laufzeit Stufe 2"
+            },
+            "primary_pump_speed": {
+                "name": "Primärpumpe Drehzahl"
+            },
+            "dhw_hysteresis_off": {
+                "name": "Warmwasser Hysterese Aus"
             }
         },
         "switch": {

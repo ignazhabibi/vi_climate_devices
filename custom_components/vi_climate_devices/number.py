@@ -147,6 +147,15 @@ NUMBER_TYPES: dict[str, NumberEntityDescription] = {
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=NumberDeviceClass.TEMPERATURE,
     ),
+    # Second DHW setpoint of controllers such as the CU401B
+    "heating.dhw.temperature.temp2": NumberEntityDescription(
+        key="heating.dhw.temperature.temp2",
+        translation_key="dhw_target_temperature_2",
+        mode=NumberMode.BOX,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=NumberDeviceClass.TEMPERATURE,
+    ),
     # How long a ventilation quick mode runs once started.
     "ventilation.quickmodes.forcedLevelFour.defaultRuntime": NumberEntityDescription(
         key="ventilation.quickmodes.forcedLevelFour.defaultRuntime",

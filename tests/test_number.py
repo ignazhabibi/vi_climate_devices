@@ -71,8 +71,7 @@ async def test_read_only_known_number_is_exposed_as_sensor(
 
         # Assert: The value remains exposed through sensor discovery.
         sensor = hass.states.get(
-            "sensor.vitocal333g_with_vitovent300f_dhw_temperature_hysteresis_"
-            "switch_off_value"
+            "sensor.vitocal333g_with_vitovent300f_dhw_hysteresis_switch_off"
         )
         assert sensor is not None
         assert sensor.state == "5"
