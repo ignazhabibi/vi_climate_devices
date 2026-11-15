@@ -123,6 +123,28 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
         translation_key="dhw_charging",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
+    # Circulation pump runs while the DHW cylinder heats up
+    "heating.dhw.configuration.pumps.circulation.parallelDhwHeating.active": (
+        BinarySensorEntityDescription(
+            key="heating.dhw.configuration.pumps.circulation.parallelDhwHeating.active",
+            translation_key="dhw_circulation_pump_parallel_dhw_heating",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        )
+    ),
+    # Circulation pump runs during the hygiene program
+    "heating.dhw.configuration.pumps.circulation.parallelHygiene.active": (
+        BinarySensorEntityDescription(
+            key="heating.dhw.configuration.pumps.circulation.parallelHygiene.active",
+            translation_key="dhw_circulation_pump_parallel_hygiene",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        )
+    ),
+    # DHW Cylinder Frost Protection (heating.dhw.dhwCylinder.frostprotection.status)
+    "heating.dhw.dhwCylinder.frostprotection.status": BinarySensorEntityDescription(
+        key="heating.dhw.dhwCylinder.frostprotection.status",
+        translation_key="dhw_frost_protection",
+        device_class=BinarySensorDeviceClass.RUNNING,
+    ),
     # DHW Circulation Pump (heating.dhw.pumps.circulation.status)
     "heating.dhw.pumps.circulation.status": BinarySensorEntityDescription(
         key="heating.dhw.pumps.circulation.status",
@@ -160,6 +182,13 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
 }
+
+
+# Features the sensor platform defines although some of their values, such as
+# a compressor phase of "off", look boolean. They create no fallback here.
+SENSOR_DEFINED_FEATURE_PATTERNS: tuple[re.Pattern[str], ...] = (
+    re.compile(r"^heating\.compressors\.\d+\.phase$"),
+)
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -278,6 +307,9 @@ def _discover_binary_sensors(
                             translation_placeholders=placeholders,
                         )
                     )
+                    continue
+
+                if is_feature_ignored(feature.name, SENSOR_DEFINED_FEATURE_PATTERNS):
                     continue
 
                 # Automatic Discovery

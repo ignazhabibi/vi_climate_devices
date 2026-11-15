@@ -270,6 +270,15 @@
             },
             "burner_active_numbered": {
                 "name": "Brenner {number}"
+            },
+            "dhw_frost_protection": {
+                "name": "Warmwasser Frostschutz"
+            },
+            "dhw_circulation_pump_parallel_dhw_heating": {
+                "name": "Zirkulationspumpe während Warmwasserbereitung"
+            },
+            "dhw_circulation_pump_parallel_hygiene": {
+                "name": "Zirkulationspumpe während Hygienefunktion"
             }
         },
         "climate": {

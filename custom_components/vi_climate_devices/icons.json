@@ -291,6 +291,15 @@
             },
             "burner_active_numbered": {
                 "default": "mdi:fire"
+            },
+            "dhw_frost_protection": {
+                "default": "mdi:snowflake-thermometer"
+            },
+            "dhw_circulation_pump_parallel_dhw_heating": {
+                "default": "mdi:pump"
+            },
+            "dhw_circulation_pump_parallel_hygiene": {
+                "default": "mdi:pump"
             }
         },
         "fan": {
