@@ -51,30 +51,26 @@ SWITCH_TYPES: dict[str, SwitchEntityDescription] = {
         device_class=SwitchDeviceClass.SWITCH,
     ),
     # Ventilation quick modes are written through an on/off command pair. The
-    # API may allow only one direction at a time, so they start disabled.
+    # device may reject one direction while it is in a state that forbids it.
     "ventilation.quickmodes.comfort.active": SwitchEntityDescription(
         key="ventilation.quickmodes.comfort.active",
         translation_key="ventilation_quick_mode_comfort",
         device_class=SwitchDeviceClass.SWITCH,
-        entity_registry_enabled_default=False,
     ),
     "ventilation.quickmodes.eco.active": SwitchEntityDescription(
         key="ventilation.quickmodes.eco.active",
         translation_key="ventilation_quick_mode_eco",
         device_class=SwitchDeviceClass.SWITCH,
-        entity_registry_enabled_default=False,
     ),
     "ventilation.quickmodes.forcedLevelFour.active": SwitchEntityDescription(
         key="ventilation.quickmodes.forcedLevelFour.active",
         translation_key="ventilation_quick_mode_forced_level_four",
         device_class=SwitchDeviceClass.SWITCH,
-        entity_registry_enabled_default=False,
     ),
     "ventilation.quickmodes.silent.active": SwitchEntityDescription(
         key="ventilation.quickmodes.silent.active",
         translation_key="ventilation_quick_mode_silent",
         device_class=SwitchDeviceClass.SWITCH,
-        entity_registry_enabled_default=False,
     ),
 }
 

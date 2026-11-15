@@ -11,7 +11,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.const import EntityCategory, UnitOfTemperature
+from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from vi_api_client import Device, Feature
@@ -146,6 +146,23 @@ NUMBER_TYPES: dict[str, NumberEntityDescription] = {
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=NumberDeviceClass.TEMPERATURE,
+    ),
+    # How long a ventilation quick mode runs once started.
+    "ventilation.quickmodes.forcedLevelFour.defaultRuntime": NumberEntityDescription(
+        key="ventilation.quickmodes.forcedLevelFour.defaultRuntime",
+        translation_key="ventilation_quick_mode_forced_level_four_runtime",
+        mode=NumberMode.BOX,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=NumberDeviceClass.DURATION,
+    ),
+    "ventilation.quickmodes.silent.defaultRuntime": NumberEntityDescription(
+        key="ventilation.quickmodes.silent.defaultRuntime",
+        translation_key="ventilation_quick_mode_silent_runtime",
+        mode=NumberMode.BOX,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=NumberDeviceClass.DURATION,
     ),
 }
 

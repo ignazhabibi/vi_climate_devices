@@ -16,6 +16,7 @@ TESTED_DEVICES = [
     "E3_Vitocal_17",
     "E3_Vitocal_262_02",
     "E3_Vitodens_300_0419",
+    "E3_VitoPure",
 ]
 
 # Successors Viessmann announces for deprecated features that back defined
@@ -206,6 +207,14 @@ IGNORED_FEATURES = [
     # shows whether they ventilate, and False on devices without ventilation.
     "ventilation.active",
     re.compile(r"^ventilation\.quickmodes\.holiday\.(start|end)$"),
+    # Command availability flags of the quick mode switches.
+    re.compile(r"^ventilation\.quickmodes\.[^.]+\.isCommandExecutable$"),
     # Set through the fan entity only.
     "ventilation.operating.modes.active",
+    re.compile(r"^ventilation\.operating\.modes\.[^.]+\.active$"),
+    "ventilation.quickmodes.standby.active",
+    # The fan entity shows the level as its speed and whether it ventilates.
+    "ventilation.operating.programs.active",
+    "ventilation.operating.state.demand",
+    "ventilation.operating.state.level",
 ]

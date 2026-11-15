@@ -1136,6 +1136,124 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         options=VALVE_POSITION_OPTIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    # Ventilation supply fan
+    "ventilation.fan.supply.current": SensorEntityDescription(
+        key="ventilation.fan.supply.current",
+        translation_key="supply_fan_speed",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "ventilation.fan.supply.runtime": SensorEntityDescription(
+        key="ventilation.fan.supply.runtime",
+        translation_key="supply_fan_runtime",
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "ventilation.fan.supply.target": SensorEntityDescription(
+        key="ventilation.fan.supply.target",
+        translation_key="supply_fan_target_speed",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    # Ventilation filter maintenance. The operating hours restart at zero after
+    # a filter change.
+    "ventilation.filter.pollution.blocked": SensorEntityDescription(
+        key="ventilation.filter.pollution.blocked",
+        translation_key="filter_pollution",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "ventilation.filter.runtime.operatingHours": SensorEntityDescription(
+        key="ventilation.filter.runtime.operatingHours",
+        translation_key="filter_operating_hours",
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "ventilation.filter.runtime.overdueHours": SensorEntityDescription(
+        key="ventilation.filter.runtime.overdueHours",
+        translation_key="filter_overdue_hours",
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "ventilation.filter.runtime.remainingHours": SensorEntityDescription(
+        key="ventilation.filter.runtime.remainingHours",
+        translation_key="filter_remaining_hours",
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    # Why the ventilation runs at its current level, such as a schedule or a
+    # sensor. The API documents no closed set of reasons.
+    "ventilation.operating.state.reason": SensorEntityDescription(
+        key="ventilation.operating.state.reason",
+        translation_key="ventilation_reason",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    # Ventilation air quality
+    "ventilation.sensors.airBorneDust.pm1": SensorEntityDescription(
+        key="ventilation.sensors.airBorneDust.pm1",
+        translation_key="pm1",
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM1,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "ventilation.sensors.airBorneDust.pm10": SensorEntityDescription(
+        key="ventilation.sensors.airBorneDust.pm10",
+        translation_key="pm10",
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM10,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "ventilation.sensors.airBorneDust.pm2d5": SensorEntityDescription(
+        key="ventilation.sensors.airBorneDust.pm2d5",
+        translation_key="pm25",
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM25,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "ventilation.sensors.airBorneDust.pm4": SensorEntityDescription(
+        key="ventilation.sensors.airBorneDust.pm4",
+        translation_key="pm4",
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM4,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Unitless indices of the device itself, not a standardized air quality
+    # index or a VOC concentration, so they carry no device class.
+    "ventilation.sensors.airQuality": SensorEntityDescription(
+        key="ventilation.sensors.airQuality",
+        translation_key="air_quality_index",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "ventilation.sensors.volatileOrganicCompounds": SensorEntityDescription(
+        key="ventilation.sensors.volatileOrganicCompounds",
+        translation_key="voc_index",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "ventilation.sensors.humidity.supply": SensorEntityDescription(
+        key="ventilation.sensors.humidity.supply",
+        translation_key="supply_air_humidity",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "ventilation.sensors.temperature.supply": SensorEntityDescription(
+        key="ventilation.sensors.temperature.supply",
+        translation_key="supply_air_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 }
 
 
