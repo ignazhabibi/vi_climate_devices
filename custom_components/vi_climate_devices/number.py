@@ -147,8 +147,7 @@ NUMBER_TYPES: dict[str, NumberEntityDescription] = {
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=NumberDeviceClass.TEMPERATURE,
     ),
-    # How long a ventilation quick mode runs once started. Like the quick mode
-    # switches, they start disabled until a real device verifies the write.
+    # How long a ventilation quick mode runs once started.
     "ventilation.quickmodes.forcedLevelFour.defaultRuntime": NumberEntityDescription(
         key="ventilation.quickmodes.forcedLevelFour.defaultRuntime",
         translation_key="ventilation_quick_mode_forced_level_four_runtime",
@@ -156,7 +155,6 @@ NUMBER_TYPES: dict[str, NumberEntityDescription] = {
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=NumberDeviceClass.DURATION,
-        entity_registry_enabled_default=False,
     ),
     "ventilation.quickmodes.silent.defaultRuntime": NumberEntityDescription(
         key="ventilation.quickmodes.silent.defaultRuntime",
@@ -165,7 +163,6 @@ NUMBER_TYPES: dict[str, NumberEntityDescription] = {
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=NumberDeviceClass.DURATION,
-        entity_registry_enabled_default=False,
     ),
 }
 

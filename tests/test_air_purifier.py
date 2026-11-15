@@ -116,7 +116,7 @@ async def test_vitopure_350_defines_air_fan_and_filter_entities() -> None:
     assert filter_change.entity_description.device_class == "problem"
     assert filter_change.is_on is False
 
-    # Assert: The quick mode runtimes are disabled minute controls within the
+    # Assert: The quick mode runtimes are enabled minute controls within the
     # constraints the API reports.
     for feature_name, translation_key in QUICK_MODE_RUNTIMES:
         runtime = numbers[feature_name]
@@ -124,7 +124,7 @@ async def test_vitopure_350_defines_air_fan_and_filter_entities() -> None:
         assert runtime.entity_description.native_unit_of_measurement == "min"
         assert runtime.entity_description.device_class == "duration"
         assert runtime.entity_description.entity_category == "config"
-        assert runtime.entity_registry_enabled_default is False
+        assert runtime.entity_registry_enabled_default is True
         assert (runtime.native_min_value, runtime.native_max_value) == (1, 1440)
         assert runtime.native_step == 1
         assert runtime.native_value == 30
