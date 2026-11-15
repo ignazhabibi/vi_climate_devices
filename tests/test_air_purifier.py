@@ -144,3 +144,32 @@ async def test_vitopure_350_defines_air_fan_and_filter_entities() -> None:
 
     # Assert: Fan duplicates and command availability flags create no entity.
     assert not HIDDEN_FEATURES & set(entities)
+
+
+@pytest.mark.parametrize(
+    ("device_name", "reason"),
+    [
+        pytest.param("Vitopure350", "standby", id="standby"),
+        pytest.param("VitoairFs300E", "sensor_override", id="camel-case"),
+    ],
+)
+@pytest.mark.asyncio
+async def test_ventilation_reason_is_a_translated_enum(
+    device_name: str, reason: str
+) -> None:
+    """Report the ventilation reason as an option key of its API value."""
+    # Arrange: Load a ventilation fixture.
+    device = (await FixtureViClient(device_name).get_full_installation_status("99999"))[
+        0
+    ]
+
+    # Act: Discover the fixture's ventilation reason sensor.
+    entity = next(
+        entity
+        for entity in _discover_realtime_sensors(MagicMock(data={"device": device}))
+        if entity.entity_description.key == "ventilation.operating.state.reason"
+    )
+
+    # Assert: The reason is a translated enum state.
+    assert entity.entity_description.device_class == "enum"
+    assert entity.native_value == reason

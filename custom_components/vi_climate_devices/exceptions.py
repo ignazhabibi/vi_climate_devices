@@ -21,6 +21,7 @@ class ExceptionTranslationKey(StrEnum):
     FEATURE_UNAVAILABLE = "feature_unavailable"
     UNSUPPORTED_MODE = "unsupported_mode"
     COMMAND_REJECTED = "command_rejected"
+    QUICK_MODE_REJECTED = "quick_mode_rejected"
     TEMPERATURE_CHANGE_FAILED = "temperature_change_failed"
     MODE_CHANGE_FAILED = "mode_change_failed"
     SELECTION_FAILED = "selection_failed"

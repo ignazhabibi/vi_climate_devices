@@ -232,11 +232,17 @@ class ViClimateEntity(CoordinatorEntity[ViClimateDataUpdateCoordinator]):
         value: FeatureValue,
         failure_key: ExceptionTranslationKey,
         clear_optimistic_state: Callable[[], None],
+        *,
+        rejection_key: ExceptionTranslationKey = (
+            ExceptionTranslationKey.COMMAND_REJECTED
+        ),
     ) -> None:
         """Write a feature value and translate failures for the action caller.
 
         The optimistic state is cleared after every outcome, including a
         reauthentication failure, so an unconfirmed value never stays visible.
+        A rejection is reported with `rejection_key`, so an entity can name its
+        most likely cause.
 
         Raises:
             ServiceValidationError: If Viessmann or the client rejects the value.
@@ -247,6 +253,7 @@ class ViClimateEntity(CoordinatorEntity[ViClimateDataUpdateCoordinator]):
             self.coordinator.async_set_feature(self._map_key, feature_name, value),
             failure_key,
             clear_optimistic_state,
+            rejection_key=rejection_key,
         )
 
     async def _async_run_command(
@@ -279,6 +286,10 @@ class ViClimateEntity(CoordinatorEntity[ViClimateDataUpdateCoordinator]):
         send: Coroutine[Any, Any, None],
         failure_key: ExceptionTranslationKey,
         clear_optimistic_state: Callable[[], None],
+        *,
+        rejection_key: ExceptionTranslationKey = (
+            ExceptionTranslationKey.COMMAND_REJECTED
+        ),
     ) -> None:
         """Await a write and translate its failures for the action caller.
 
@@ -298,9 +309,7 @@ class ViClimateEntity(CoordinatorEntity[ViClimateDataUpdateCoordinator]):
                 "Viessmann rejected a feature command: %s",
                 describe_write_rejection(err),
             )
-            raise service_validation_error(
-                ExceptionTranslationKey.COMMAND_REJECTED
-            ) from err
+            raise service_validation_error(rejection_key) from err
         except (HomeAssistantError, ViError) as err:
             _LOGGER.debug("Unable to write a Viessmann feature: %s", err)
             raise home_assistant_error(failure_key) from err

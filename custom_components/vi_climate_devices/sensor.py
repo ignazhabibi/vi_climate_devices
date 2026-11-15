@@ -143,6 +143,19 @@ PV_STATUS_OPTIONS = [
     "ready",
 ]
 
+# Why the ventilation runs at its current level. The API reports camelCase
+# values such as "sensorOverride" and "forcedLevelFour".
+# Sort the values alphabetically.
+VENTILATION_REASON_OPTIONS = [
+    "forced_level_four",
+    "permanent",
+    "schedule",
+    "sensor_driven",
+    "sensor_override",
+    "silent",
+    "standby",
+]
+
 # Placeholders the API reports instead of a state; they show as unknown.
 ENUM_PLACEHOLDER_VALUES = frozenset({"nothing", "unknown"})
 
@@ -438,15 +451,15 @@ SENSOR_TEMPLATES: tuple[EntityTemplate[SensorEntityDescription], ...] = (
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
-    # Compressor load: share of its maximum power
+    # Compressor modulation: share of its maximum power, like the burner
+    # modulation
     EntityTemplate(
         pattern=re.compile(r"^heating\.compressors\.(\d+)\.sensors\.power$"),
         description=SensorEntityDescription(
             key="placeholder",
-            translation_key="compressor_load",
+            translation_key="compressor_modulation",
             native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
     # Compressor Overheat Temperature
@@ -1493,10 +1506,12 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # Why the ventilation runs at its current level, such as a schedule or a
-    # sensor. The API documents no closed set of reasons.
+    # sensor.
     "ventilation.operating.state.reason": SensorEntityDescription(
         key="ventilation.operating.state.reason",
         translation_key="ventilation_reason",
+        device_class=SensorDeviceClass.ENUM,
+        options=VENTILATION_REASON_OPTIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # Ventilation air quality

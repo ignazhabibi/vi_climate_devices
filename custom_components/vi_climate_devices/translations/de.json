@@ -38,6 +38,9 @@
         "command_rejected": {
             "message": "Viessmann hat den angeforderten Befehl abgelehnt."
         },
+        "quick_mode_rejected": {
+            "message": "Viessmann hat den Schnellmodus abgelehnt. Das Gerät führt nur einen Schnellmodus gleichzeitig aus; möglicherweise ist bereits ein anderer aktiv."
+        },
         "temperature_change_failed": {
             "message": "Die Temperatur konnte nicht geändert werden."
         },
@@ -772,7 +775,16 @@
                 "name": "Filter Reststunden"
             },
             "ventilation_reason": {
-                "name": "Lüftungsgrund"
+                "name": "Lüftungsgrund",
+                "state": {
+                    "forced_level_four": "Stufe 4 erzwungen",
+                    "permanent": "Dauerbetrieb",
+                    "schedule": "Zeitprogramm",
+                    "sensor_driven": "Sensorgesteuert",
+                    "sensor_override": "Sensorvorrang",
+                    "silent": "Leise",
+                    "standby": "Standby"
+                }
             },
             "pm1": {
                 "name": "PM1"
@@ -798,11 +810,11 @@
             "supply_air_temperature": {
                 "name": "Zulufttemperatur"
             },
-            "compressor_load": {
-                "name": "Verdichter Auslastung"
+            "compressor_modulation": {
+                "name": "Verdichter Modulation"
             },
-            "compressor_load_numbered": {
-                "name": "Verdichter {number} Auslastung"
+            "compressor_modulation_numbered": {
+                "name": "Verdichter {number} Modulation"
             },
             "compressor_overheat_temperature": {
                 "name": "Verdichter Überhitzung"
