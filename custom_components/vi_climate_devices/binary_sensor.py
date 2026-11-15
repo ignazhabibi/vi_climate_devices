@@ -85,6 +85,16 @@ BINARY_SENSOR_TEMPLATES: tuple[EntityTemplate[BinarySensorEntityDescription], ..
             device_class=BinarySensorDeviceClass.RUNNING,
         ),
     ),
+    # Active cooling by reversing the refrigerant circuit
+    # (heating.coolingCircuits.N.reverse.active)
+    EntityTemplate(
+        pattern=re.compile(r"^heating\.coolingCircuits\.(\d+)\.reverse\.active$"),
+        description=BinarySensorEntityDescription(
+            key="placeholder",
+            translation_key="active_cooling",
+            device_class=BinarySensorDeviceClass.RUNNING,
+        ),
+    ),
     # Burner flame (heating.burners.N.active)
     EntityTemplate(
         pattern=re.compile(r"^heating\.burners\.(\d+)\.active$"),
@@ -143,6 +153,12 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     "heating.dhw.dhwCylinder.frostprotection.status": BinarySensorEntityDescription(
         key="heating.dhw.dhwCylinder.frostprotection.status",
         translation_key="dhw_frost_protection",
+        device_class=BinarySensorDeviceClass.RUNNING,
+    ),
+    # DHW Charging of controllers such as the CU401B (heating.dhw.charging.active)
+    "heating.dhw.charging.active": BinarySensorEntityDescription(
+        key="heating.dhw.charging.active",
+        translation_key="dhw_charging",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
     # DHW Circulation Pump (heating.dhw.pumps.circulation.status)

@@ -23,6 +23,10 @@ REFERENCE_FIXTURE = "Vitocal250A"
 # Auto-discovered features of other tested devices that are accepted although
 # the reference device does not report them, with the reason. Sort the keys.
 ACCEPTED_AUTO_DISCOVERED_FEATURES: dict[str, str] = {
+    "heating.cop.green": (
+        "The API does not document what the green coefficient of performance "
+        "measures, and every fixture reports 0."
+    ),
     "heating.dhw.hygiene.active": (
         "Starting a hygiene run on demand is not verified on a real device; "
         "the defined switch enables the program."

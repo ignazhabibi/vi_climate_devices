@@ -17,6 +17,7 @@ TESTED_DEVICES = [
     "E3_Vitocal_262_02",
     "E3_Vitodens_300_0419",
     "E3_VitoPure",
+    "CU401B_G",
 ]
 
 # Successors Viessmann announces for deprecated features that back defined
@@ -60,6 +61,7 @@ IGNORED_FEATURES = [
     "device.lock.external.active",
     "device.lock.malfunction.active",
     "device.messages.info.raw",
+    "device.messages.logbook",
     "device.messages.service.raw",
     "device.parameterIdentification.version",
     "device.power.consumption.limitation",
@@ -82,9 +84,11 @@ IGNORED_FEATURES = [
     "heating.circuits.enabled",
     "heating.circuits.internal",
     "heating.compressors.enabled",
+    "heating.configuration.buffer.temperature.max",
     "heating.configuration.bufferCylinderSize",
     "heating.configuration.centralHeatingCylinderSize",
     "heating.configuration.dhwCylinderSize",
+    "heating.configuration.dhwHeater.useApproved",
     "heating.configuration.gasType",
     "heating.configuration.heatingRod.dhw.useApproved",
     "heating.configuration.heatingRod.heating.useApproved",
@@ -93,6 +97,7 @@ IGNORED_FEATURES = [
     "heating.configuration.houseLocation.longitude",
     "heating.configuration.houseOrientation.horizontal",
     "heating.configuration.houseOrientation.vertical",
+    "heating.controller.serial",
     "heating.device.variant",
     # Set through the water heater entity only.
     "heating.dhw.operating.modes.active",
@@ -175,9 +180,15 @@ IGNORED_FEATURES = [
     re.compile(r"^heating\..*\.schedule$"),
     re.compile(r"^heating\.boiler\.sensors\.temperature\..*\.status$"),
     re.compile(r"^heating\.buffer\..*\.status$"),
+    # Deprecated duplicates of the defined heating.bufferCylinder sensors.
+    re.compile(r"^heating\.buffer\.sensors\.temperature\.[^.]+$"),
     re.compile(r"^heating\.bufferCylinder\..*\.status$"),
     re.compile(r"^heating\.circuits\.\d+\.active$"),
     re.compile(r"^heating\.circuits\.\d+\.name$"),
+    re.compile(
+        r"^heating\.circuits\.\d+\.operating\.programs\.screedDrying\."
+        r"heatpump\.useApproved$"
+    ),
     # Set through the climate entity only.
     re.compile(r"^heating\.circuits\.\d+\.operating\.modes\.active$"),
     re.compile(r"^heating\.circuits\.\d+\.operating\.modes\..*\.active$"),
@@ -191,9 +202,12 @@ IGNORED_FEATURES = [
         r"(comfort|normal|reduced)\.demand$"
     ),
     re.compile(r"^heating\.circuits\.\d+\.sensors\.temperature\..*\.status$"),
+    # The rated power of the compressor is a static installation detail.
+    re.compile(r"^heating\.compressors\.\d+\.power$"),
     re.compile(r"^heating\.compressors\.\d+\.sensors\.pressure\..*\.status$"),
     re.compile(r"^heating\.compressors\.\d+\.sensors\.temperature\..*\.status$"),
     re.compile(r"^heating\.condensors\.\d+\.sensors\.temperature\..*\.status$"),
+    re.compile(r"^heating\.coolingCircuits\.\d+\.type$"),
     re.compile(r"^heating\.dhw\.sensors\.temperature\..*\.status$"),
     re.compile(r"^heating\.economizers\.\d+\.sensors\.temperature\..*\.status$"),
     re.compile(r"^heating\.evaporators\.\d+\.sensors\.temperature\..*\.status$"),

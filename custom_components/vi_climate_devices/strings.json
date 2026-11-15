@@ -202,6 +202,9 @@
             },
             "ventilation_quick_mode_silent_runtime": {
                 "name": "Ventilation Quick Mode Silent Runtime"
+            },
+            "dhw_target_temperature_2": {
+                "name": "DHW Target Temperature 2"
             }
         },
         "binary_sensor": {
@@ -288,6 +291,12 @@
             },
             "filter_change": {
                 "name": "Filter Change"
+            },
+            "active_cooling": {
+                "name": "Active Cooling"
+            },
+            "active_cooling_numbered": {
+                "name": "Active Cooling Circuit {number}"
             }
         },
         "climate": {
@@ -788,6 +797,63 @@
             },
             "supply_air_temperature": {
                 "name": "Supply Air Temperature"
+            },
+            "compressor_load": {
+                "name": "Compressor Load"
+            },
+            "compressor_load_numbered": {
+                "name": "Compressor {number} Load"
+            },
+            "compressor_overheat_temperature": {
+                "name": "Compressor Overheat Temperature"
+            },
+            "compressor_overheat_temperature_numbered": {
+                "name": "Compressor {number} Overheat Temperature"
+            },
+            "compressor_hours_load_class_1": {
+                "name": "Compressor Hours Load Class 1"
+            },
+            "compressor_hours_load_class_1_numbered": {
+                "name": "Compressor {number} Hours Load Class 1"
+            },
+            "compressor_hours_load_class_2": {
+                "name": "Compressor Hours Load Class 2"
+            },
+            "compressor_hours_load_class_2_numbered": {
+                "name": "Compressor {number} Hours Load Class 2"
+            },
+            "compressor_hours_load_class_3": {
+                "name": "Compressor Hours Load Class 3"
+            },
+            "compressor_hours_load_class_3_numbered": {
+                "name": "Compressor {number} Hours Load Class 3"
+            },
+            "compressor_hours_load_class_4": {
+                "name": "Compressor Hours Load Class 4"
+            },
+            "compressor_hours_load_class_4_numbered": {
+                "name": "Compressor {number} Hours Load Class 4"
+            },
+            "compressor_hours_load_class_5": {
+                "name": "Compressor Hours Load Class 5"
+            },
+            "compressor_hours_load_class_5_numbered": {
+                "name": "Compressor {number} Hours Load Class 5"
+            },
+            "main_ecu_runtime": {
+                "name": "Main Control Unit Runtime"
+            },
+            "heating_rod_runtime_level_1": {
+                "name": "Heating Rod Runtime Level 1"
+            },
+            "heating_rod_runtime_level_2": {
+                "name": "Heating Rod Runtime Level 2"
+            },
+            "primary_pump_speed": {
+                "name": "Primary Pump Speed"
+            },
+            "dhw_hysteresis_off": {
+                "name": "DHW Hysteresis Switch Off"
             }
         },
         "switch": {

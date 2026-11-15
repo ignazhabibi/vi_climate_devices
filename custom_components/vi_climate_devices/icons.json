@@ -51,6 +51,9 @@
             },
             "ventilation_quick_mode_silent_runtime": {
                 "default": "mdi:timer-cog-outline"
+            },
+            "dhw_target_temperature_2": {
+                "default": "mdi:thermometer"
             }
         },
         "sensor": {
@@ -302,6 +305,63 @@
             },
             "voc_index": {
                 "default": "mdi:molecule"
+            },
+            "compressor_load": {
+                "default": "mdi:gauge"
+            },
+            "compressor_load_numbered": {
+                "default": "mdi:gauge"
+            },
+            "compressor_overheat_temperature": {
+                "default": "mdi:thermometer"
+            },
+            "compressor_overheat_temperature_numbered": {
+                "default": "mdi:thermometer"
+            },
+            "compressor_hours_load_class_1": {
+                "default": "mdi:counter"
+            },
+            "compressor_hours_load_class_1_numbered": {
+                "default": "mdi:counter"
+            },
+            "compressor_hours_load_class_2": {
+                "default": "mdi:counter"
+            },
+            "compressor_hours_load_class_2_numbered": {
+                "default": "mdi:counter"
+            },
+            "compressor_hours_load_class_3": {
+                "default": "mdi:counter"
+            },
+            "compressor_hours_load_class_3_numbered": {
+                "default": "mdi:counter"
+            },
+            "compressor_hours_load_class_4": {
+                "default": "mdi:counter"
+            },
+            "compressor_hours_load_class_4_numbered": {
+                "default": "mdi:counter"
+            },
+            "compressor_hours_load_class_5": {
+                "default": "mdi:counter"
+            },
+            "compressor_hours_load_class_5_numbered": {
+                "default": "mdi:counter"
+            },
+            "main_ecu_runtime": {
+                "default": "mdi:chip"
+            },
+            "heating_rod_runtime_level_1": {
+                "default": "mdi:counter"
+            },
+            "heating_rod_runtime_level_2": {
+                "default": "mdi:counter"
+            },
+            "primary_pump_speed": {
+                "default": "mdi:pump"
+            },
+            "dhw_hysteresis_off": {
+                "default": "mdi:thermometer-minus"
             }
         },
         "switch": {
@@ -339,6 +399,12 @@
             },
             "filter_change": {
                 "default": "mdi:air-filter"
+            },
+            "active_cooling": {
+                "default": "mdi:snowflake"
+            },
+            "active_cooling_numbered": {
+                "default": "mdi:snowflake"
             }
         },
         "fan": {
