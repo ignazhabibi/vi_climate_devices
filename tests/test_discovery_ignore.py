@@ -1,13 +1,33 @@
 """Test discovery ignore list functionality."""
 
+from collections.abc import Callable, Sequence
+from contextlib import ExitStack
 from unittest.mock import MagicMock, patch
 
 import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import Entity
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+from vi_api_client import FixtureViClient
 
-from custom_components.vi_climate_devices.const import DOMAIN
+from custom_components.vi_climate_devices import (
+    binary_sensor,
+    number,
+    select,
+    sensor,
+    switch,
+)
+from custom_components.vi_climate_devices.const import DOMAIN, IGNORED_FEATURES
+from custom_components.vi_climate_devices.utils import is_feature_ignored
+
+DISCOVERERS: tuple[Callable[[MagicMock], Sequence[Entity]], ...] = (
+    binary_sensor._discover_binary_sensors,
+    number._discover_numbers,
+    select._discover_selects,
+    sensor._discover_realtime_sensors,
+    switch._discover_switches,
+)
 
 
 async def _setup_integration(hass: HomeAssistant, mock_client):
@@ -113,3 +133,33 @@ async def test_schedule_active_features_are_not_created_as_entities(
             unique_id.endswith(f"-{feature_name}")
             for unique_id in registered_unique_ids
         )
+
+
+@pytest.mark.asyncio
+async def test_ignored_features_hide_no_defined_entity() -> None:
+    """Keep every ignore entry clear of the features of defined entities."""
+    # Arrange: Discover every fixture without the ignore list.
+    hidden: set[str] = set()
+    with ExitStack() as stack:
+        for module in (binary_sensor, number, select, sensor, switch):
+            stack.enter_context(patch.object(module, "IGNORED_FEATURES", []))
+        for fixture_name in FixtureViClient.get_available_fixture_devices():
+            devices = await FixtureViClient(fixture_name).get_full_installation_status(
+                "99999"
+            )
+            for device in devices:
+                coordinator = MagicMock(data={"device": device})
+                for discover in DISCOVERERS:
+                    # Act: Collect the defined entities that the list would hide.
+                    hidden.update(
+                        f"{fixture_name}: {entity._feature_name}"  # pyright: ignore[reportAttributeAccessIssue]
+                        for entity in discover(coordinator)
+                        if entity.entity_description.translation_key
+                        and is_feature_ignored(
+                            entity._feature_name,  # pyright: ignore[reportAttributeAccessIssue]
+                            IGNORED_FEATURES,
+                        )
+                    )
+
+    # Assert: No ignore entry hides a defined entity.
+    assert not hidden, sorted(hidden)
