@@ -74,6 +74,8 @@ SWITCH_TYPES: dict[str, SwitchEntityDescription] = {
     ),
 }
 
+VENTILATION_QUICK_MODE_PATTERN = re.compile(r"^ventilation\.quickmodes\.[^.]+\.active$")
+
 # Heating circuit programs written through an on/off command pair. A device can
 # report a pair it never allows (comfort on Vitodens 200-W), so they start
 # disabled instead of failing on every write.
@@ -249,11 +251,21 @@ class ViClimateSwitch(ViClimateFeatureEntity, SwitchEntity):  # pyright: ignore[
 
         self._optimistic_state = target_state
         self.async_write_ha_state()
+        # A ventilation device runs only one quick mode at a time and rejects
+        # starting another one while it is active.
+        is_quick_mode_start = target_state and VENTILATION_QUICK_MODE_PATTERN.match(
+            feat.name
+        )
         await self._async_write_feature(
             feat.name,
             target_state,
             ExceptionTranslationKey.SWITCH_OPERATION_FAILED,
             self._clear_optimistic_state,
+            rejection_key=(
+                ExceptionTranslationKey.QUICK_MODE_REJECTED
+                if is_quick_mode_start
+                else ExceptionTranslationKey.COMMAND_REJECTED
+            ),
         )
 
     def _clear_optimistic_state(self) -> None:

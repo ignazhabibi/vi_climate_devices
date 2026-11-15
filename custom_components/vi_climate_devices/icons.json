@@ -306,10 +306,10 @@
             "voc_index": {
                 "default": "mdi:molecule"
             },
-            "compressor_load": {
+            "compressor_modulation": {
                 "default": "mdi:gauge"
             },
-            "compressor_load_numbered": {
+            "compressor_modulation_numbered": {
                 "default": "mdi:gauge"
             },
             "compressor_overheat_temperature": {

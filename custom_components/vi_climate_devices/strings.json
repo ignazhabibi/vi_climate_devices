@@ -38,6 +38,9 @@
         "command_rejected": {
             "message": "Viessmann rejected the requested command."
         },
+        "quick_mode_rejected": {
+            "message": "Viessmann rejected the quick mode. The device runs only one quick mode at a time; another one may already be active."
+        },
         "temperature_change_failed": {
             "message": "Unable to change the temperature."
         },
@@ -772,7 +775,16 @@
                 "name": "Filter Remaining Hours"
             },
             "ventilation_reason": {
-                "name": "Ventilation Reason"
+                "name": "Ventilation Reason",
+                "state": {
+                    "forced_level_four": "Forced level four",
+                    "permanent": "Permanent",
+                    "schedule": "Schedule",
+                    "sensor_driven": "Sensor-driven",
+                    "sensor_override": "Sensor override",
+                    "silent": "Silent",
+                    "standby": "Standby"
+                }
             },
             "pm1": {
                 "name": "PM1"
@@ -798,11 +810,11 @@
             "supply_air_temperature": {
                 "name": "Supply Air Temperature"
             },
-            "compressor_load": {
-                "name": "Compressor Load"
+            "compressor_modulation": {
+                "name": "Compressor Modulation"
             },
-            "compressor_load_numbered": {
-                "name": "Compressor {number} Load"
+            "compressor_modulation_numbered": {
+                "name": "Compressor {number} Modulation"
             },
             "compressor_overheat_temperature": {
                 "name": "Compressor Overheat Temperature"

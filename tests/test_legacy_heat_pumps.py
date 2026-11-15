@@ -80,7 +80,6 @@ async def test_duplicate_refrigerant_values_create_no_sensors(device_name: str) 
 
 # Feature, translation key, and value of the CU401B diagnostic sensors.
 CU401B_DIAGNOSTIC_SENSORS = (
-    ("heating.compressors.0.sensors.power", "compressor_load", 100),
     (
         "heating.compressors.0.sensors.temperature.overheat",
         "compressor_overheat_temperature",
@@ -170,6 +169,12 @@ async def test_vitocal_300g_defines_compressor_runtime_and_dhw_entities() -> Non
         assert entity.entity_description.translation_key == translation_key
         assert entity.entity_description.entity_category == "diagnostic"
         assert entity.native_value == value
+
+    # Assert: The compressor modulation is a main reading like the burner's.
+    modulation = entities["heating.compressors.0.sensors.power"]
+    assert modulation.entity_description.translation_key == "compressor_modulation"
+    assert modulation.entity_description.entity_category is None
+    assert modulation.native_value == 100
 
     # Assert: Runtimes in seconds are durations shown in hours.
     runtime = entities["heating.device.mainECU.runtime"].entity_description

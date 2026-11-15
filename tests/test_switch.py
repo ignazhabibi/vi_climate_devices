@@ -438,3 +438,44 @@ async def test_switch_translates_client_validation_error(mock_client) -> None:
 
     assert error.value.translation_key == "command_rejected"
     assert isinstance(error.value.__cause__, ValueError)
+
+
+@pytest.mark.parametrize(
+    ("is_turning_on", "translation_key"),
+    [
+        pytest.param(True, "quick_mode_rejected", id="start"),
+        pytest.param(False, "command_rejected", id="stop"),
+    ],
+)
+@pytest.mark.asyncio
+async def test_quick_mode_rejection_names_the_active_quick_mode_cause(
+    is_turning_on: bool, translation_key: str
+) -> None:
+    """Explain a rejected quick mode start by the one-at-a-time rule."""
+    # Arrange: Reject every write of the Vitopure 350 forced level four mode.
+    device = (
+        await FixtureViClient("Vitopure350").get_full_installation_status("99999")
+    )[0]
+    feature_name = "ventilation.quickmodes.forcedLevelFour.active"
+    coordinator = MagicMock(data={"device": device})
+    coordinator.async_set_feature = AsyncMock(
+        side_effect=ViCommandRejectedError("Rejected", reason="COMMAND_NOT_EXECUTABLE")
+    )
+    entity = ViClimateSwitch(
+        coordinator,
+        "device",
+        feature_name,
+        SwitchEntityDescription(key=feature_name, name="Quick mode"),
+    )
+
+    switch_action = entity.async_turn_on if is_turning_on else entity.async_turn_off
+
+    # Act and assert: Only a rejected start names the active quick mode cause.
+    with (
+        patch.object(entity, "async_write_ha_state"),
+        pytest.raises(ServiceValidationError) as error,
+    ):
+        await switch_action()
+
+    assert error.value.translation_key == translation_key
+    assert entity.is_on is False
