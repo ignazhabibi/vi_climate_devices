@@ -63,7 +63,6 @@ HIDDEN_FEATURES = frozenset(
         "ventilation.operating.modes.ventilation.active",
         "ventilation.operating.programs.active",
         "ventilation.operating.state.demand",
-        "ventilation.operating.state.level",
         "ventilation.quickmodes.forcedLevelFour.isCommandExecutable",
         "ventilation.quickmodes.silent.isCommandExecutable",
         "ventilation.quickmodes.standby.active",

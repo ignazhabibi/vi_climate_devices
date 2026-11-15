@@ -163,6 +163,14 @@ BYPASS_MODE_OPTIONS = [
     "open",
 ]
 
+# Fixed ventilation levels, slowest first.
+VENTILATION_LEVEL_OPTIONS = [
+    "level_one",
+    "level_two",
+    "level_three",
+    "level_four",
+]
+
 # Placeholders the API reports instead of a state; they show as unknown.
 ENUM_PLACEHOLDER_VALUES = frozenset({"nothing", "unknown"})
 
@@ -1542,6 +1550,14 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         translation_key="ventilation_reason",
         device_class=SensorDeviceClass.ENUM,
         options=VENTILATION_REASON_OPTIONS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    # The level the ventilation runs at, also on devices without a fan entity.
+    "ventilation.operating.state.level": SensorEntityDescription(
+        key="ventilation.operating.state.level",
+        translation_key="ventilation_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=VENTILATION_LEVEL_OPTIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # Ventilation air quality
