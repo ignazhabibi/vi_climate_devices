@@ -16,7 +16,7 @@
     "vi_api_client"
   ],
   "requirements": [
-    "vi_api_client==7.1.0"
+    "vi_api_client==7.2.0"
   ],
   "single_config_entry": true,
   "version": "6.0.0"
