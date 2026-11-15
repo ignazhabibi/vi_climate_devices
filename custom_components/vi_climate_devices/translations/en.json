@@ -854,6 +854,93 @@
             },
             "dhw_hysteresis_off": {
                 "name": "DHW Hysteresis Switch Off"
+            },
+            "battery_usable_energy": {
+                "name": "Battery Usable Energy"
+            },
+            "ess_inverter_power": {
+                "name": "Inverter AC Power"
+            },
+            "ess_inverter_reactive_power": {
+                "name": "Inverter Reactive Power"
+            },
+            "battery_operation_state": {
+                "name": "Battery Operation State",
+                "state": {
+                    "charge": "Charging",
+                    "discharge": "Discharging",
+                    "initialization": "Initializing",
+                    "off": "Off",
+                    "precharge": "Precharging",
+                    "ready": "Ready",
+                    "safety_check": "Safety check",
+                    "shut_down": "Shutting down",
+                    "standby": "Standby"
+                }
+            },
+            "battery_charge_current_day": {
+                "name": "Battery Charge Today"
+            },
+            "battery_charge_current_year": {
+                "name": "Battery Charge This Year"
+            },
+            "battery_discharge_current_day": {
+                "name": "Battery Discharge Today"
+            },
+            "battery_discharge_current_year": {
+                "name": "Battery Discharge This Year"
+            },
+            "pv_production_current_day": {
+                "name": "PV Production Today"
+            },
+            "pv_production_current_year": {
+                "name": "PV Production This Year"
+            },
+            "grid_current": {
+                "name": "Grid Current"
+            },
+            "pv_status": {
+                "name": "PV Status",
+                "state": {
+                    "production": "Producing",
+                    "ready": "Standby"
+                }
+            },
+            "pv_string_current": {
+                "name": "PV String {name} Current"
+            },
+            "pv_string_power": {
+                "name": "PV String {name} Power"
+            },
+            "pv_string_voltage": {
+                "name": "PV String {name} Voltage"
+            },
+            "grid_current_phase_1": {
+                "name": "Grid Current Phase 1"
+            },
+            "grid_power_phase_1": {
+                "name": "Grid Power Phase 1"
+            },
+            "grid_reactive_power_phase_1": {
+                "name": "Grid Reactive Power Phase 1"
+            },
+            "grid_current_phase_2": {
+                "name": "Grid Current Phase 2"
+            },
+            "grid_power_phase_2": {
+                "name": "Grid Power Phase 2"
+            },
+            "grid_reactive_power_phase_2": {
+                "name": "Grid Reactive Power Phase 2"
+            },
+            "grid_current_phase_3": {
+                "name": "Grid Current Phase 3"
+            },
+            "grid_power_phase_3": {
+                "name": "Grid Power Phase 3"
+            },
+            "grid_reactive_power_phase_3": {
+                "name": "Grid Reactive Power Phase 3"
             }
         },
         "switch": {
@@ -916,6 +1003,16 @@
                             "standard": "Standard"
                         }
                     }
+                }
+            }
+        },
+        "select": {
+            "battery_control_mode": {
+                "name": "Battery Control Mode",
+                "state": {
+                    "nothing": "Internal",
+                    "pcc_control_mode": "Grid connection point setpoint",
+                    "power_control_mode": "Power setpoint"
                 }
             }
         }

@@ -18,6 +18,7 @@ TESTED_DEVICES = [
     "E3_Vitodens_300_0419",
     "E3_VitoPure",
     "CU401B_G",
+    "E3_VitoCharge_Evolution_08",
 ]
 
 # Successors Viessmann announces for deprecated features that back defined
@@ -72,6 +73,7 @@ IGNORED_FEATURES = [
     "device.productIdentification.product",
     "device.productMatrix.product",
     "device.serial",
+    "device.serial.internalComponents.vinList",
     "device.time.daylightSaving.active",
     "device.time.daylightSaving.begin",
     "device.time.daylightSaving.end",
@@ -175,6 +177,14 @@ IGNORED_FEATURES = [
     "heating.sensors.temperature.liquidGas",
     "heating.sensors.temperature.suctionGas",
     "heating.secondaryHeatGenerator.connectionType",
+    # Static details of energy storage systems such as the Vitocharge. The
+    # grid code is deprecated in favor of the inverter country code.
+    "ess.configuration.systemType",
+    "ess.inverter.configuration.countryCode",
+    "ess.power.nominal.inverter",
+    "pcc.state.gridCode",
+    "photovoltaic.installedPeakPower",
+    "photovoltaic.string.enabled",
     re.compile(r"^.*\.schedule\.active$"),
     re.compile(r"^device\.zigbee\.status\.status$"),
     re.compile(r"^heating\..*\.schedule$"),
@@ -221,6 +231,19 @@ IGNORED_FEATURES = [
     # shows whether they ventilate, and False on devices without ventilation.
     "ventilation.active",
     re.compile(r"^ventilation\.quickmodes\.holiday\.(start|end)$"),
+    # Feature flags, hardware versions, and network settings of energy storage
+    # systems.
+    re.compile(r"^ess\.features\.[^.]+\.active$"),
+    re.compile(r"^ess\.version\.hardware\.[^.]+$"),
+    re.compile(r"^tcu\.ethernet\.\d+\.config\.mode$"),
+    # Absent battery modules report 0; the usable system energy covers them.
+    re.compile(r"^ess\.battery\.usedAverage\.usableEnergyModule[A-Za-z]+$"),
+    # Only the day and year of the battery and PV energy are defined, like the
+    # gas consumption; the lifetime totals cover the other periods.
+    re.compile(r"^ess\.transfer\.(charge|discharge)\.cumulated\.current(Week|Month)$"),
+    re.compile(r"^photovoltaic\.production\.cumulated\.current(Week|Month)$"),
+    # The string name labels the string readings.
+    re.compile(r"^photovoltaic\.string\.\d+\.name$"),
     # Command availability flags of the quick mode switches.
     re.compile(r"^ventilation\.quickmodes\.[^.]+\.isCommandExecutable$"),
     # Set through the fan entity only.

@@ -26,6 +26,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfRatio,
+    UnitOfReactivePower,
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
@@ -120,6 +121,30 @@ VALVE_POSITION_OPTIONS = [
     "climate_circuit_one",
     "domestic_hot_water",
 ]
+
+# Battery states of energy storage systems such as the Vitocharge. The API
+# reports camelCase values such as "safetyCheck" and "shutDown".
+# Sort the values alphabetically.
+BATTERY_OPERATION_STATE_OPTIONS = [
+    "charge",
+    "discharge",
+    "initialization",
+    "off",
+    "precharge",
+    "ready",
+    "safety_check",
+    "shut_down",
+    "standby",
+]
+
+# Sort the values alphabetically.
+PV_STATUS_OPTIONS = [
+    "production",
+    "ready",
+]
+
+# Placeholders the API reports instead of a state; they show as unknown.
+ENUM_PLACEHOLDER_VALUES = frozenset({"nothing", "unknown"})
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -240,24 +265,6 @@ AUTO_DISCOVERED_PARTICULATE_MATTER_CLASSES = {
 AUTO_DISCOVERED_DIAGNOSTIC_DEVICE_CLASSES = frozenset(
     {SensorDeviceClass.DISTANCE, SensorDeviceClass.DURATION}
 )
-
-AUTO_DISCOVERED_TOTAL_INCREASING_ENERGY_FEATURES = frozenset(
-    {
-        "ess.transfer.charge.cumulated.currentDay",
-        "ess.transfer.charge.cumulated.currentWeek",
-        "ess.transfer.charge.cumulated.currentMonth",
-        "ess.transfer.charge.cumulated.currentYear",
-        "ess.transfer.discharge.cumulated.currentDay",
-        "ess.transfer.discharge.cumulated.currentWeek",
-        "ess.transfer.discharge.cumulated.currentMonth",
-        "ess.transfer.discharge.cumulated.currentYear",
-        "photovoltaic.production.cumulated.currentDay",
-        "photovoltaic.production.cumulated.currentWeek",
-        "photovoltaic.production.cumulated.currentMonth",
-        "photovoltaic.production.cumulated.currentYear",
-    }
-)
-
 
 # Templates with regex patterns for dynamic feature names
 SENSOR_TEMPLATES: tuple[EntityTemplate[SensorEntityDescription], ...] = (
@@ -698,6 +705,171 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Usable battery capacity the system reports as its average.
+    "ess.battery.usedAverage.averageUsableSystemEnergy": SensorEntityDescription(
+        key="ess.battery.usedAverage.averageUsableSystemEnergy",
+        translation_key="battery_usable_energy",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY_STORAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "ess.inverter.ac.power.activePower": SensorEntityDescription(
+        key="ess.inverter.ac.power.activePower",
+        translation_key="ess_inverter_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # The API reports reactive power in watts; its unit is volt-ampere reactive.
+    "ess.inverter.ac.power.reactivePower": SensorEntityDescription(
+        key="ess.inverter.ac.power.reactivePower",
+        translation_key="ess_inverter_reactive_power",
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        device_class=SensorDeviceClass.REACTIVE_POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "ess.operationState": SensorEntityDescription(
+        key="ess.operationState",
+        translation_key="battery_operation_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=BATTERY_OPERATION_STATE_OPTIONS,
+    ),
+    # Battery and PV energy of the current day and year. They reset, so they
+    # count up like the gas consumption of the same periods.
+    "ess.transfer.charge.cumulated.currentDay": SensorEntityDescription(
+        key="ess.transfer.charge.cumulated.currentDay",
+        translation_key="battery_charge_current_day",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "ess.transfer.charge.cumulated.currentYear": SensorEntityDescription(
+        key="ess.transfer.charge.cumulated.currentYear",
+        translation_key="battery_charge_current_year",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "ess.transfer.discharge.cumulated.currentDay": SensorEntityDescription(
+        key="ess.transfer.discharge.cumulated.currentDay",
+        translation_key="battery_discharge_current_day",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "ess.transfer.discharge.cumulated.currentYear": SensorEntityDescription(
+        key="ess.transfer.discharge.cumulated.currentYear",
+        translation_key="battery_discharge_current_year",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "photovoltaic.production.cumulated.currentDay": SensorEntityDescription(
+        key="photovoltaic.production.cumulated.currentDay",
+        translation_key="pv_production_current_day",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "photovoltaic.production.cumulated.currentYear": SensorEntityDescription(
+        key="photovoltaic.production.cumulated.currentYear",
+        translation_key="pv_production_current_year",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    # Grid connection point per phase
+    "pcc.ac.active.current.total": SensorEntityDescription(
+        key="pcc.ac.active.current.total",
+        translation_key="grid_current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "pcc.ac.active.current.phaseOne": SensorEntityDescription(
+        key="pcc.ac.active.current.phaseOne",
+        translation_key="grid_current_phase_1",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "pcc.ac.active.current.phaseTwo": SensorEntityDescription(
+        key="pcc.ac.active.current.phaseTwo",
+        translation_key="grid_current_phase_2",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "pcc.ac.active.current.phaseThree": SensorEntityDescription(
+        key="pcc.ac.active.current.phaseThree",
+        translation_key="grid_current_phase_3",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "pcc.ac.active.power.phaseOne": SensorEntityDescription(
+        key="pcc.ac.active.power.phaseOne",
+        translation_key="grid_power_phase_1",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "pcc.ac.active.power.phaseTwo": SensorEntityDescription(
+        key="pcc.ac.active.power.phaseTwo",
+        translation_key="grid_power_phase_2",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "pcc.ac.active.power.phaseThree": SensorEntityDescription(
+        key="pcc.ac.active.power.phaseThree",
+        translation_key="grid_power_phase_3",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "pcc.ac.reactive.power.phaseOne": SensorEntityDescription(
+        key="pcc.ac.reactive.power.phaseOne",
+        translation_key="grid_reactive_power_phase_1",
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        device_class=SensorDeviceClass.REACTIVE_POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "pcc.ac.reactive.power.phaseTwo": SensorEntityDescription(
+        key="pcc.ac.reactive.power.phaseTwo",
+        translation_key="grid_reactive_power_phase_2",
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        device_class=SensorDeviceClass.REACTIVE_POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "pcc.ac.reactive.power.phaseThree": SensorEntityDescription(
+        key="pcc.ac.reactive.power.phaseThree",
+        translation_key="grid_reactive_power_phase_3",
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        device_class=SensorDeviceClass.REACTIVE_POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    # Whether the PV system produces; its value is a state, not a sensor
+    # connection.
+    "photovoltaic.status.status": SensorEntityDescription(
+        key="photovoltaic.status.status",
+        translation_key="pv_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=PV_STATUS_OPTIONS,
     ),
     "photovoltaic.production.cumulated.lifeCycle": SensorEntityDescription(
         key="photovoltaic.production.cumulated.lifeCycle",
@@ -1404,6 +1576,55 @@ READ_ONLY_FALLBACK_EXCLUSIONS: tuple[re.Pattern[str], ...] = (
 )
 
 
+# PV string readings, named after the string name the device reports.
+PV_STRING_PATTERN = re.compile(
+    r"^photovoltaic\.string\.(\d+)\.(electricity|power|voltage)$"
+)
+PV_STRING_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
+    "electricity": SensorEntityDescription(
+        key="placeholder",
+        translation_key="pv_string_current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "power": SensorEntityDescription(
+        key="placeholder",
+        translation_key="pv_string_power",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "voltage": SensorEntityDescription(
+        key="placeholder",
+        translation_key="pv_string_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+}
+
+
+def _get_pv_string_description(
+    feature_name: str, device: Device
+) -> tuple[SensorEntityDescription, dict[str, str]] | None:
+    """Return the description and string name of a PV string reading.
+
+    The device names its strings, for example "A" and "B", and their indices
+    can have gaps. Without a reported name, the 1-based index names the string.
+    """
+    match = PV_STRING_PATTERN.match(feature_name)
+    if match is None:
+        return None
+    index, reading = match.groups()
+    name_feature = device.get_feature(f"photovoltaic.string.{index}.name")
+    name = get_feature_string_value(name_feature.value) if name_feature else None
+    description = dataclasses.replace(PV_STRING_DESCRIPTIONS[reading], key=feature_name)
+    return description, {"name": name or str(int(index) + 1)}
+
+
 def _get_sensor_entity_description(
     feature_name: str, device: Device
 ) -> tuple[SensorEntityDescription, dict[str, str]] | None:
@@ -1412,6 +1633,8 @@ def _get_sensor_entity_description(
     Returns:
         tuple: (description, translation_placeholders) or None
     """
+    if pv_string := _get_pv_string_description(feature_name, device):
+        return pv_string
     for template in SENSOR_TEMPLATES:
         match = template.pattern.match(feature_name)
         if match:
@@ -1455,12 +1678,6 @@ def _get_auto_discovery_unit(
 def _get_auto_discovery_description(feature: Feature) -> SensorEntityDescription:
     """Create a sensor description based on feature unit/type."""
     device_class, native_unit, state_class = _get_auto_discovery_unit(feature)
-
-    if (
-        device_class is SensorDeviceClass.ENERGY
-        and feature.name in AUTO_DISCOVERED_TOTAL_INCREASING_ENERGY_FEATURES
-    ):
-        state_class = SensorStateClass.TOTAL_INCREASING
 
     # Fallback for generic numbers
     if (
@@ -1631,7 +1848,7 @@ class ViClimateSensor(ViClimateFeatureEntity, SensorEntity):
         so the options can be extended.
         """
         api_value = get_feature_string_value(feature.value)
-        if api_value is None:
+        if api_value is None or api_value in ENUM_PLACEHOLDER_VALUES:
             return None
         option = api_value_to_option_key(api_value)
         if option in (self.entity_description.options or ()):

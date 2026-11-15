@@ -26,42 +26,6 @@ from custom_components.vi_climate_devices.utils import is_feature_ignored
 
 FIXTURE_NAMES = FixtureViClient.get_available_fixture_devices()
 
-AUTO_DISCOVERED_TOTAL_INCREASING_ENERGY_FEATURES = frozenset(
-    {
-        "ess.transfer.charge.cumulated.currentDay",
-        "ess.transfer.charge.cumulated.currentWeek",
-        "ess.transfer.charge.cumulated.currentMonth",
-        "ess.transfer.charge.cumulated.currentYear",
-        "ess.transfer.discharge.cumulated.currentDay",
-        "ess.transfer.discharge.cumulated.currentWeek",
-        "ess.transfer.discharge.cumulated.currentMonth",
-        "ess.transfer.discharge.cumulated.currentYear",
-        "photovoltaic.production.cumulated.currentDay",
-        "photovoltaic.production.cumulated.currentWeek",
-        "photovoltaic.production.cumulated.currentMonth",
-        "photovoltaic.production.cumulated.currentYear",
-    }
-)
-
-# Usable energy per battery module, reported by every energy storage system.
-SIX_MODULE_USABLE_ENERGY_FEATURES = frozenset(
-    {
-        "ess.battery.usedAverage.averageUsableSystemEnergy",
-        "ess.battery.usedAverage.usableEnergyModuleOne",
-        "ess.battery.usedAverage.usableEnergyModuleTwo",
-        "ess.battery.usedAverage.usableEnergyModuleThree",
-        "ess.battery.usedAverage.usableEnergyModuleFour",
-        "ess.battery.usedAverage.usableEnergyModuleFive",
-        "ess.battery.usedAverage.usableEnergyModuleSix",
-    }
-)
-
-# Larger storage systems such as the Vitocharge Evolution 08 add two modules.
-EIGHT_MODULE_USABLE_ENERGY_FEATURES = SIX_MODULE_USABLE_ENERGY_FEATURES | {
-    "ess.battery.usedAverage.usableEnergyModuleSeven",
-    "ess.battery.usedAverage.usableEnergyModuleEight",
-}
-
 WEEKLY_COMPRESSOR_ENERGY_FEATURES = frozenset(
     {
         "heating.compressors.0.heat.production.cooling.week",
@@ -70,10 +34,6 @@ WEEKLY_COMPRESSOR_ENERGY_FEATURES = frozenset(
         "heating.compressors.0.power.consumption.dhw.week",
         "heating.compressors.0.power.consumption.heating.week",
     }
-)
-
-AUTO_DISCOVERED_NON_CUMULATIVE_ENERGY_FEATURES = (
-    EIGHT_MODULE_USABLE_ENERGY_FEATURES | WEEKLY_COMPRESSOR_ENERGY_FEATURES
 )
 
 EXPECTED_AUTO_DISCOVERED_ENERGY_FEATURES = {
@@ -87,14 +47,8 @@ EXPECTED_AUTO_DISCOVERED_ENERGY_FEATURES = {
     "Vitocal262A-T2H-R290": frozenset(),
     "Vitocal300G-CU401B": frozenset(),
     "Vitocal333G-with-Vitovent300F": WEEKLY_COMPRESSOR_ENERGY_FEATURES,
-    "Vitocharge03": (
-        AUTO_DISCOVERED_TOTAL_INCREASING_ENERGY_FEATURES
-        | SIX_MODULE_USABLE_ENERGY_FEATURES
-    ),
-    "VitochargeEvolution08": (
-        AUTO_DISCOVERED_TOTAL_INCREASING_ENERGY_FEATURES
-        | EIGHT_MODULE_USABLE_ENERGY_FEATURES
-    ),
+    "Vitocharge03": frozenset(),
+    "VitochargeEvolution08": frozenset(),
     "Vitodens100W": frozenset(),
     "Vitodens200W": frozenset(),
     "Vitodens300W-B3HF-19": frozenset(),
@@ -609,12 +563,7 @@ async def test_fixture_auto_discovered_energy_state_classes(
         assert state.attributes["unit_of_measurement"] == (
             "kWh" if feature.unit == "kilowattHour" else "Wh"
         )
-        expected_state_class = (
-            SensorStateClass.TOTAL_INCREASING
-            if feature_name in AUTO_DISCOVERED_TOTAL_INCREASING_ENERGY_FEATURES
-            else None
-        )
-        assert state.attributes.get("state_class") == expected_state_class
+        assert state.attributes.get("state_class") is None
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     await hass.config_entries.async_unload(entry.entry_id)
@@ -628,7 +577,6 @@ async def test_fixture_auto_discovered_energy_state_classes(
             "Vitocal333G-with-Vitovent300F",
             "heating.compressors.0.power.consumption.current",
         ),
-        ("VitochargeEvolution08", "photovoltaic.string.0.power"),
     ],
 )
 @pytest.mark.asyncio
@@ -1174,15 +1122,6 @@ async def test_successor_entry_of_another_config_entry_is_kept(
             id="temperature-difference",
         ),
         pytest.param(
-            "VitochargeEvolution08",
-            "photovoltaic.string.0.voltage",
-            "V",
-            "voltage",
-            SensorStateClass.MEASUREMENT,
-            False,
-            id="voltage",
-        ),
-        pytest.param(
             "Vitocal250A-TwoCircuits",
             "heating.dhw.hygiene.trigger.startHour",
             None,
@@ -1242,6 +1181,9 @@ async def test_auto_discovered_units_follow_the_api_unit(  # noqa: PLR0913, PLR0
         ),
         pytest.param(
             "custom.fan.current", "rotationPerMinute", "rpm", None, True, id="fan-speed"
+        ),
+        pytest.param(
+            "custom.string.voltage", "volt", "V", "voltage", False, id="voltage"
         ),
         pytest.param(
             "custom.runtime.remainingHours",

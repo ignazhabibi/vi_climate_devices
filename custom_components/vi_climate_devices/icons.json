@@ -362,6 +362,78 @@
             },
             "dhw_hysteresis_off": {
                 "default": "mdi:thermometer-minus"
+            },
+            "battery_usable_energy": {
+                "default": "mdi:battery-high"
+            },
+            "ess_inverter_power": {
+                "default": "mdi:flash"
+            },
+            "ess_inverter_reactive_power": {
+                "default": "mdi:sine-wave"
+            },
+            "battery_operation_state": {
+                "default": "mdi:battery-sync"
+            },
+            "battery_charge_current_day": {
+                "default": "mdi:battery-arrow-up"
+            },
+            "battery_charge_current_year": {
+                "default": "mdi:battery-arrow-up"
+            },
+            "battery_discharge_current_day": {
+                "default": "mdi:battery-arrow-down"
+            },
+            "battery_discharge_current_year": {
+                "default": "mdi:battery-arrow-down"
+            },
+            "pv_production_current_day": {
+                "default": "mdi:solar-power"
+            },
+            "pv_production_current_year": {
+                "default": "mdi:solar-power"
+            },
+            "grid_current": {
+                "default": "mdi:transmission-tower"
+            },
+            "pv_status": {
+                "default": "mdi:solar-panel"
+            },
+            "pv_string_current": {
+                "default": "mdi:solar-panel"
+            },
+            "pv_string_power": {
+                "default": "mdi:solar-power"
+            },
+            "pv_string_voltage": {
+                "default": "mdi:solar-panel"
+            },
+            "grid_current_phase_1": {
+                "default": "mdi:transmission-tower"
+            },
+            "grid_power_phase_1": {
+                "default": "mdi:transmission-tower"
+            },
+            "grid_reactive_power_phase_1": {
+                "default": "mdi:sine-wave"
+            },
+            "grid_current_phase_2": {
+                "default": "mdi:transmission-tower"
+            },
+            "grid_power_phase_2": {
+                "default": "mdi:transmission-tower"
+            },
+            "grid_reactive_power_phase_2": {
+                "default": "mdi:sine-wave"
+            },
+            "grid_current_phase_3": {
+                "default": "mdi:transmission-tower"
+            },
+            "grid_power_phase_3": {
+                "default": "mdi:transmission-tower"
+            },
+            "grid_reactive_power_phase_3": {
+                "default": "mdi:sine-wave"
             }
         },
         "switch": {
@@ -421,6 +493,11 @@
                         }
                     }
                 }
+            }
+        },
+        "select": {
+            "battery_control_mode": {
+                "default": "mdi:battery-sync"
             }
         }
     }

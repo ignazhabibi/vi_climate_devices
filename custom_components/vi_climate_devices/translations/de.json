@@ -854,6 +854,93 @@
             },
             "dhw_hysteresis_off": {
                 "name": "Warmwasser Hysterese Aus"
+            },
+            "battery_usable_energy": {
+                "name": "Batterie nutzbare Energie"
+            },
+            "ess_inverter_power": {
+                "name": "Wechselrichter AC-Leistung"
+            },
+            "ess_inverter_reactive_power": {
+                "name": "Wechselrichter Blindleistung"
+            },
+            "battery_operation_state": {
+                "name": "Batterie Betriebszustand",
+                "state": {
+                    "charge": "Laden",
+                    "discharge": "Entladen",
+                    "initialization": "Initialisierung",
+                    "off": "Aus",
+                    "precharge": "Vorladen",
+                    "ready": "Bereit",
+                    "safety_check": "Sicherheitsprüfung",
+                    "shut_down": "Herunterfahren",
+                    "standby": "Standby"
+                }
+            },
+            "battery_charge_current_day": {
+                "name": "Batterie Ladung Heute"
+            },
+            "battery_charge_current_year": {
+                "name": "Batterie Ladung Dieses Jahr"
+            },
+            "battery_discharge_current_day": {
+                "name": "Batterie Entladung Heute"
+            },
+            "battery_discharge_current_year": {
+                "name": "Batterie Entladung Dieses Jahr"
+            },
+            "pv_production_current_day": {
+                "name": "PV Ertrag Heute"
+            },
+            "pv_production_current_year": {
+                "name": "PV Ertrag Dieses Jahr"
+            },
+            "grid_current": {
+                "name": "Netz Strom"
+            },
+            "pv_status": {
+                "name": "PV Status",
+                "state": {
+                    "production": "Produktion",
+                    "ready": "Standby"
+                }
+            },
+            "pv_string_current": {
+                "name": "PV String {name} Strom"
+            },
+            "pv_string_power": {
+                "name": "PV String {name} Leistung"
+            },
+            "pv_string_voltage": {
+                "name": "PV String {name} Spannung"
+            },
+            "grid_current_phase_1": {
+                "name": "Netz Strom Phase 1"
+            },
+            "grid_power_phase_1": {
+                "name": "Netz Leistung Phase 1"
+            },
+            "grid_reactive_power_phase_1": {
+                "name": "Netz Blindleistung Phase 1"
+            },
+            "grid_current_phase_2": {
+                "name": "Netz Strom Phase 2"
+            },
+            "grid_power_phase_2": {
+                "name": "Netz Leistung Phase 2"
+            },
+            "grid_reactive_power_phase_2": {
+                "name": "Netz Blindleistung Phase 2"
+            },
+            "grid_current_phase_3": {
+                "name": "Netz Strom Phase 3"
+            },
+            "grid_power_phase_3": {
+                "name": "Netz Leistung Phase 3"
+            },
+            "grid_reactive_power_phase_3": {
+                "name": "Netz Blindleistung Phase 3"
             }
         },
         "switch": {
@@ -916,6 +1003,16 @@
                             "standard": "Standard"
                         }
                     }
+                }
+            }
+        },
+        "select": {
+            "battery_control_mode": {
+                "name": "Batteriesteuerung",
+                "state": {
+                    "nothing": "Intern",
+                    "pcc_control_mode": "Vorgabe am Netzanschlusspunkt",
+                    "power_control_mode": "Leistungsvorgabe"
                 }
             }
         }

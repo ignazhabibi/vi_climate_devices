@@ -24,13 +24,16 @@ from vi_api_client import (
 
 from custom_components.vi_climate_devices.const import DOMAIN
 from custom_components.vi_climate_devices.exceptions import config_entry_auth_failed
-from custom_components.vi_climate_devices.select import ViClimateSelect
+from custom_components.vi_climate_devices.select import (
+    ViClimateSelect,
+    _discover_selects,
+)
 
 # Heating circuit, DHW, and ventilation modes have no select; the battery
-# control mode of the Vitocharge Evolution 08 is an auto-discovered select.
+# control mode of the Vitocharge Evolution 08 is a defined select.
 SELECT_FIXTURE = "VitochargeEvolution08"
 SELECT_FEATURE = "ess.battery.control.mode.active"
-SELECT_ENTITY = "select.e3_vitocharge_evolution_08_ess_battery_control_mode_active"
+SELECT_ENTITY = "select.e3_vitocharge_evolution_08_battery_control_mode"
 
 
 async def _setup_integration(hass: HomeAssistant, client: FixtureViClient) -> None:
@@ -117,7 +120,7 @@ async def test_heating_and_dhw_modes_have_no_select(hass: HomeAssistant, mock_cl
 
 @pytest.mark.asyncio
 async def test_select_creation_and_services(hass: HomeAssistant):
-    """Create an auto-discovered select and write the selected option."""
+    """Translate the options of a defined select and write the API value."""
     # Arrange: Spy on writes of the energy storage fixture client.
     client = FixtureViClient(SELECT_FIXTURE)
     client.set_feature = AsyncMock(wraps=client.set_feature)
@@ -128,16 +131,16 @@ async def test_select_creation_and_services(hass: HomeAssistant):
     assert state is not None
     assert state.state == "nothing"
     assert state.attributes["options"] == [
-        "powerControlMode",
+        "power_control_mode",
         "nothing",
-        "pccControlMode",
+        "pcc_control_mode",
     ]
 
     # Act: Select another option.
     await hass.services.async_call(
         "select",
         SERVICE_SELECT_OPTION,
-        {"entity_id": SELECT_ENTITY, "option": "powerControlMode"},
+        {"entity_id": SELECT_ENTITY, "option": "power_control_mode"},
         blocking=True,
     )
 
@@ -148,7 +151,7 @@ async def test_select_creation_and_services(hass: HomeAssistant):
     assert args[2] == "powerControlMode"
     state = hass.states.get(SELECT_ENTITY)
     assert state is not None
-    assert state.state == "powerControlMode"
+    assert state.state == "power_control_mode"
 
 
 @pytest.mark.asyncio
@@ -164,7 +167,7 @@ async def test_select_error_handling(hass: HomeAssistant):
         await hass.services.async_call(
             "select",
             SERVICE_SELECT_OPTION,
-            {"entity_id": SELECT_ENTITY, "option": "powerControlMode"},
+            {"entity_id": SELECT_ENTITY, "option": "power_control_mode"},
             blocking=True,
         )
 
@@ -194,7 +197,7 @@ async def test_select_api_rejection(hass: HomeAssistant):
         await hass.services.async_call(
             "select",
             SERVICE_SELECT_OPTION,
-            {"entity_id": SELECT_ENTITY, "option": "powerControlMode"},
+            {"entity_id": SELECT_ENTITY, "option": "power_control_mode"},
             blocking=True,
         )
 
@@ -205,6 +208,28 @@ async def test_select_api_rejection(hass: HomeAssistant):
     state = hass.states.get(SELECT_ENTITY)
     assert state is not None
     assert state.state == "nothing"
+
+
+@pytest.mark.asyncio
+async def test_fallback_select_keeps_the_api_options() -> None:
+    """Offer the raw API values of an auto-discovered select."""
+    # Arrange: Load the fixture whose system interface mode has no definition.
+    device = (
+        await FixtureViClient(SELECT_FIXTURE).get_full_installation_status("99999")
+    )[0]
+
+    # Act: Discover the fixture's selects.
+    entities = {
+        entity.entity_description.key: entity
+        for entity in _discover_selects(MagicMock(data={"device": device}))
+    }
+
+    # Assert: The fallback keeps the API values and starts disabled.
+    fallback = entities["ess.systemInterface.mode.active"]
+    assert fallback.entity_description.translation_key is None
+    assert fallback.options == ["timeToLive", "heartbeat"]
+    assert fallback.current_option == "heartbeat"
+    assert fallback.entity_registry_enabled_default is False
 
 
 @pytest.mark.asyncio
