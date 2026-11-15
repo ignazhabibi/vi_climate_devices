@@ -5,6 +5,9 @@ from unittest.mock import MagicMock
 import pytest
 from vi_api_client import Feature, FixtureViClient
 
+from custom_components.vi_climate_devices.binary_sensor import (
+    _discover_binary_sensors,
+)
 from custom_components.vi_climate_devices.sensor import (
     _discover_realtime_sensors,
     _get_auto_discovery_description,
@@ -58,6 +61,47 @@ async def test_vitocal_262a_defines_cylinder_and_comfort_sensors() -> None:
         comfort.entity_description.translation_key == "dhw_minimum_comfort_temperature"
     )
     assert "heating.dhw.configuration.temperature.minimumComfort" not in entities
+
+
+@pytest.mark.asyncio
+async def test_vitocal_262a_defines_dhw_binary_sensors() -> None:
+    """Name the cylinder frost protection and the circulation pump flags."""
+    # Arrange: Load the Vitocal 262-A domestic hot water heat pump fixture.
+    device = (
+        await FixtureViClient("Vitocal262A-T2H-R290").get_full_installation_status(
+            "99999"
+        )
+    )[0]
+
+    # Act: Discover the fixture's binary sensors.
+    entities = {
+        entity.entity_description.key: entity
+        for entity in _discover_binary_sensors(MagicMock(data={"device": device}))
+    }
+
+    # Assert: The cylinder frost protection is a running binary sensor.
+    frost = entities["heating.dhw.dhwCylinder.frostprotection.status"]
+    assert frost.entity_description.translation_key == "dhw_frost_protection"
+    assert frost.entity_description.device_class == "running"
+    assert frost.is_on is False
+
+    # Assert: The circulation pump flags are diagnostic binary sensors.
+    for feature_name, translation_key in {
+        "heating.dhw.configuration.pumps.circulation.parallelDhwHeating.active": (
+            "dhw_circulation_pump_parallel_dhw_heating"
+        ),
+        "heating.dhw.configuration.pumps.circulation.parallelHygiene.active": (
+            "dhw_circulation_pump_parallel_hygiene"
+        ),
+    }.items():
+        flag = entities[feature_name]
+        assert flag.entity_description.translation_key == translation_key
+        assert flag.entity_description.entity_category == "diagnostic"
+        assert flag.is_on is False
+
+    # Assert: The compressor phase and the ventilation flag create no fallback.
+    assert "heating.compressors.0.phase" not in entities
+    assert "ventilation.active" not in entities
 
 
 def test_unknown_milliampere_feature_gets_the_current_unit() -> None:

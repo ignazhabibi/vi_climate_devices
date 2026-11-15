@@ -270,6 +270,15 @@
             },
             "burner_active_numbered": {
                 "name": "Burner {number}"
+            },
+            "dhw_frost_protection": {
+                "name": "DHW Frost Protection"
+            },
+            "dhw_circulation_pump_parallel_dhw_heating": {
+                "name": "Circulation Pump During DHW Heating"
+            },
+            "dhw_circulation_pump_parallel_hygiene": {
+                "name": "Circulation Pump During Hygiene"
             }
         },
         "climate": {

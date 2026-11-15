@@ -14,6 +14,7 @@ IGNORED_DEVICES = ["gateway", "RoomControl-1"]
 TESTED_DEVICES = [
     "E3_Vitocal_16",
     "E3_Vitocal_17",
+    "E3_Vitocal_262_02",
 ]
 
 # Successors Viessmann announces for deprecated features that back defined
@@ -186,6 +187,9 @@ IGNORED_FEATURES = [
     re.compile(r"^heating\.operating\.programs\.holiday(AtHome)?\.(start|end)$"),
     re.compile(r"^heating\.primaryCircuit\.sensors\.temperature\..*\.status$"),
     re.compile(r"^heating\.sensors\..*\.status$"),
+    # Static capability flag: True on ventilation devices, whose fan entity
+    # shows whether they ventilate, and False on devices without ventilation.
+    "ventilation.active",
     re.compile(r"^ventilation\.quickmodes\.holiday\.(start|end)$"),
     # Set through the fan entity only.
     "ventilation.operating.modes.active",
