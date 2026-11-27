@@ -596,6 +596,7 @@ async def test_reauth_flow_shows_confirm_form_and_redirects_to_oauth(
     assert callback_result.get("type") is FlowResultType.EXTERNAL_STEP_DONE
     assert creation_result.get("type") is FlowResultType.ABORT
     assert creation_result.get("reason") == "reauth_successful"
+    assert creation_result.get("translation_domain") == "homeassistant"
     assert entry.data["auth_implementation"] == "fake-provider"
     assert entry.data["retained_setting"] == "keep-me"
     assert entry.data["token"]["access_token"] == "token"
