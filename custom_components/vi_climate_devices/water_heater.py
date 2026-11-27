@@ -121,7 +121,7 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):  # pyright: igno
     """Representation of a Viessmann Water Heater."""
 
     _attr_translation_key = "dhw_water_heater"
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
@@ -211,7 +211,7 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):  # pyright: igno
     # --- Properties ---
 
     @property
-    def current_temperature(self) -> float | None:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def native_current_temperature(self) -> float | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the current temperature."""
         feat = self._get_feature(FEATURE_CURRENT_TEMP)
         if feat is None:
@@ -220,7 +220,7 @@ class ViClimateWaterHeater(ViClimateEntity, WaterHeaterEntity):  # pyright: igno
         return float(number) if number is not None else None
 
     @property
-    def target_temperature(self) -> float | None:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def native_target_temperature(self) -> float | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the temperature we try to reach."""
         # Return optimistic value if set
         if hasattr(self, "_optimistic_temp") and self._optimistic_temp is not None:

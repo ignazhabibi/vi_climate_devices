@@ -9,7 +9,7 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 from vi_api_client import FeatureValue, FixtureViClient, ViCommandRejectedError
 
 from custom_components.vi_climate_devices.const import DOMAIN

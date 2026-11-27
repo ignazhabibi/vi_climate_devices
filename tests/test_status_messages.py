@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 from vi_api_client import Device, FeatureValue, FixtureViClient, JsonValue
 
 from custom_components.vi_climate_devices.binary_sensor import (

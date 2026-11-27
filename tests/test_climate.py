@@ -17,7 +17,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 from vi_api_client import (
     Device,
     Feature,
@@ -519,7 +519,7 @@ async def test_climate_requires_writable_active_program_temperature(
     # Act: Resolve the entity's state and advertised capabilities.
     hvac_mode = entity.hvac_mode
     supported_features = entity.supported_features
-    target_temperature = entity.target_temperature
+    target_temperature = entity.native_target_temperature
 
     # Assert: Keep HVAC state but neither expose nor accept target-temperature control.
     assert hvac_mode == HVACMode.HEAT
@@ -758,7 +758,7 @@ async def test_climate_handles_device_removed_by_refresh() -> None:
 
     # Assert: Public entity values fall back and the entity becomes unavailable.
     assert not entity.available
-    assert entity.current_temperature is None
+    assert entity.native_current_temperature is None
     assert entity.hvac_mode is None
     assert entity.hvac_modes == [HVACMode.HEAT, HVACMode.OFF]
     assert entity.extra_state_attributes == {}
@@ -946,7 +946,7 @@ async def test_climate_program_setpoint_matches_direction(
     assert feature is not None
     assert feature.name == f"{PROGRAM_PREFIX}{expected_program}.temperature"
     if expected_setpoint is not None:
-        assert entity.target_temperature == expected_setpoint
+        assert entity.native_target_temperature == expected_setpoint
 
 
 @pytest.mark.parametrize(
@@ -960,7 +960,7 @@ async def test_climate_special_programs_have_no_setpoint(active_program: str) ->
 
     # Act and assert: No setpoint and no target-temperature capability.
     assert entity._get_program_temperature_feature(active_program) is None
-    assert entity.target_temperature is None
+    assert entity.native_target_temperature is None
     assert not entity.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE
 
 
@@ -994,7 +994,7 @@ async def test_climate_reports_unknown_temperature_for_malformed_values(
     )
 
     # Act: Read the malformed temperature alongside the unaffected controls.
-    current_temperature = entity.current_temperature
+    current_temperature = entity.native_current_temperature
     hvac_mode = entity.hvac_mode
     hvac_modes = entity.hvac_modes
 
@@ -1056,7 +1056,7 @@ async def test_climate_reports_unknown_program_for_malformed_values(
     attributes = entity.extra_state_attributes
 
     # Assert: The program never becomes a string; the mode control stays intact.
-    assert entity.target_temperature is None
+    assert entity.native_target_temperature is None
     assert "active_program" not in attributes
     assert attributes["heating_curve_slope"] == 0.6
     assert attributes["heating_curve_shift"] == 6.0

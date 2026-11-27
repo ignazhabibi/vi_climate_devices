@@ -125,7 +125,7 @@ def _discover_climate_entities(
 class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """Representation of a Viessmann climate circuit."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "heating_circuit"
     _attr_supported_features = ClimateEntityFeature(0)
 
@@ -366,7 +366,7 @@ class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncomp
         return supported_features
 
     @property
-    def current_temperature(self) -> float | None:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def native_current_temperature(self) -> float | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the current room temperature."""
         room_temp_feature = self._get_feature(
             f"heating.circuits.{self._circuit_index}.sensors.temperature.room"
@@ -377,7 +377,7 @@ class ViClimate(ViClimateEntity, ClimateEntity):  # pyright: ignore[reportIncomp
         return float(number) if number is not None else None
 
     @property
-    def target_temperature(self) -> float | None:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def native_target_temperature(self) -> float | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the temperature we try to reach."""
         if hasattr(self, "_optimistic_temp") and self._optimistic_temp is not None:
             return self._optimistic_temp
