@@ -1,5 +1,5 @@
 import pytest
-from pytest_homeassistant_custom_component.syrupy import HomeAssistantSnapshotExtension
+from pytest_homeassistant.syrupy import HomeAssistantSnapshotExtension
 from vi_api_client import FixtureViClient
 
 

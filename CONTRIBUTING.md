@@ -66,5 +66,5 @@
   auto-discovered features on a device in `TESTED_DEVICES` fail
   `tests/test_tested_devices.py`; define, ignore, or accept each of them before
   committing.
-- When snapshots or `pytest-homeassistant-custom-component` change, a green
+- When snapshots or `pytest-homeassistant` change, a green
   Linux CI run is required in addition to local validation.

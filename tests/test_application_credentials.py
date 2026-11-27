@@ -139,7 +139,7 @@ async def test_refresh_request_omits_application_credential_secret(
     session.post = AsyncMock(return_value=response)
 
     with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_clientsession",
+        "homeassistant.helpers.oauth2.async_get_clientsession",
         return_value=session,
     ):
         # Act: Refresh an expired access token through Home Assistant's helper.
@@ -153,13 +153,12 @@ async def test_refresh_request_omits_application_credential_secret(
         )
 
     # Assert: The request matches Viessmann's public-client refresh contract.
-    session.post.assert_awaited_once_with(
-        ENDPOINT_TOKEN,
-        data={
-            "client_id": "client-id",
-            "grant_type": "refresh_token",
-            "refresh_token": "refresh-token",
-        },
-    )
+    session.post.assert_awaited_once()
+    assert session.post.await_args.args == (ENDPOINT_TOKEN,)
+    assert session.post.await_args.kwargs["data"] == {
+        "client_id": "client-id",
+        "grant_type": "refresh_token",
+        "refresh_token": "refresh-token",
+    }
     assert refreshed_token["access_token"] == "fresh-access-token"
     assert refreshed_token["refresh_token"] == "refresh-token"

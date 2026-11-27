@@ -19,7 +19,7 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 from vi_api_client import (
     Device,
     Feature,
@@ -55,8 +55,8 @@ async def test_water_heater_handles_missing_controls_after_refresh() -> None:
 
     # Assert: Read state falls back safely and writes explain the unavailable control.
     assert not entity.available
-    assert entity.current_temperature is None
-    assert entity.target_temperature is None
+    assert entity.native_current_temperature is None
+    assert entity.native_target_temperature is None
     assert entity.current_operation is None
     assert entity.operation_list == [STATE_OFF, STATE_ECO, STATE_PERFORMANCE]
 
@@ -689,8 +689,8 @@ async def test_water_heater_reports_unknown_temperature_for_malformed_values(
     )
 
     # Act: Read the malformed temperature alongside the unaffected controls.
-    current_temperature = entity.current_temperature
-    target_temperature = entity.target_temperature
+    current_temperature = entity.native_current_temperature
+    target_temperature = entity.native_target_temperature
     current_operation = entity.current_operation
 
     # Assert: Only the malformed property is unknown; the controls stay intact.
@@ -728,7 +728,7 @@ async def test_water_heater_reports_unknown_operation_for_malformed_mode_values(
     args = await_args.args
     assert args[1] == FEATURE_TARGET_TEMP
     assert args[2] == 45.0
-    assert entity.current_temperature == 46.3
+    assert entity.native_current_temperature == 46.3
     assert entity.operation_list == [STATE_ECO, STATE_OFF, STATE_PERFORMANCE]
 
 
@@ -752,9 +752,9 @@ async def test_water_heater_reports_unknown_target_for_malformed_values(
         await entity.async_set_temperature(temperature=45.0)
 
     # Assert: The malformed read is unknown while the control wrote its value.
-    assert entity.target_temperature is None
+    assert entity.native_target_temperature is None
     entity.coordinator.async_set_feature.assert_awaited_once()
-    assert entity.current_temperature == 46.3
+    assert entity.native_current_temperature == 46.3
     assert entity.current_operation == STATE_ECO
 
 
@@ -770,7 +770,7 @@ async def test_water_heater_reads_successor_temperature_and_falls_back(
     )
 
     # Act: Read the current temperature while both features are reported.
-    successor_temperature = entity.current_temperature
+    successor_temperature = entity.native_current_temperature
 
     # Assert: The successor wins.
     assert successor_temperature == 50.0
@@ -787,4 +787,4 @@ async def test_water_heater_reads_successor_temperature_and_falls_back(
     }
 
     # Assert: The deprecated feature is read as the fallback.
-    assert entity.current_temperature == 40.0
+    assert entity.native_current_temperature == 40.0

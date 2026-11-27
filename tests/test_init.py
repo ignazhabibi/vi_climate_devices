@@ -10,12 +10,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
+    HomeAssistantError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from pytest_homeassistant_custom_component.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
 )
@@ -323,7 +324,7 @@ async def test_config_entry_lifecycle_keeps_runtime_data_when_platform_unload_fa
         await hass.async_block_till_done()
         runtime_data = entry.runtime_data
         number_component = hass.data["number"]
-        unload_platform = AsyncMock(return_value=False)
+        unload_platform = AsyncMock(side_effect=HomeAssistantError("unload failed"))
 
         with patch.object(number_component, "async_unload_entry", unload_platform):
             # Act: Attempt to unload the config entry through Home Assistant.
