@@ -1,14 +1,15 @@
 # Viessmann Climate Devices
 
-[![HACS](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+[![Marketplace](https://img.shields.io/badge/Marketplace-available-41BDF5.svg)](https://www.home-assistant.io/integrations/marketplace)
 
 Viessmann Climate Devices connects Home Assistant to compatible Viessmann
 heating systems through the official Viessmann IoT API. It uses OAuth 2.0 with
 PKCE and the Home Assistant Application Credentials framework; no Viessmann
 password is stored by the integration.
 
-This is a custom integration distributed through HACS. It is not affiliated
-with, maintained by, or supported by Viessmann or Home Assistant.
+This is a custom integration available in the Home Assistant Marketplace. It
+is not affiliated with, maintained by, or supported by Viessmann or Home
+Assistant.
 
 > [!WARNING]
 > Do not run this integration together with the official Home Assistant
@@ -64,14 +65,18 @@ placeholder such as `123` when Home Assistant asks for it.
 
 ## Installation
 
-### HACS installation
+### Marketplace installation
 
-1. In Home Assistant, open HACS.
-2. Select the three-dot menu, then **Custom repositories**.
-3. Add `https://github.com/ignazhabibi/vi_climate_devices` with category
-   **Integration**.
-4. Search for **Viessmann Climate Devices** and install it.
-5. Restart Home Assistant.
+[![Open your Home Assistant instance and open this repository in the Marketplace.](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=ignazhabibi&repository=vi_climate_devices&category=integration)
+
+1. Select the button above, or go to **Settings** > **Marketplace** and search
+   for **Viessmann Climate Devices**.
+2. Install the integration.
+3. Restart Home Assistant when the Marketplace asks you to.
+
+The Marketplace is part of Home Assistant 2026.11 and newer and is available
+to administrators. Browsing and installing do not require a GitHub
+account.
 
 ### Manual installation
 
@@ -83,9 +88,9 @@ placeholder such as `123` when Home Assistant asks for it.
 
 ### Pre-releases
 
-If a pre-release is available, enable beta versions for this repository in
-HACS before installing it. Pre-releases are intended for testing before a
-stable release.
+If a pre-release is available, turn on the **Pre-release** switch of this
+repository in the Marketplace before installing it. Pre-releases are intended
+for testing before a stable release.
 
 ## Configuration
 
@@ -307,9 +312,9 @@ To remove an integration entry:
 
 This removes the integration entry and its entities from Home Assistant. To
 revoke access completely, also remove the OAuth application from the Viessmann
-Developer Portal. To uninstall the custom integration, remove it in HACS (or
-delete `custom_components/vi_climate_devices` after removing all entries) and
-restart Home Assistant.
+Developer Portal. To uninstall the custom integration, remove it in the
+Marketplace (or delete `custom_components/vi_climate_devices` after removing
+all entries) and restart Home Assistant.
 
 ## Development
 
@@ -340,8 +345,8 @@ mode for `custom_components/vi_climate_devices` and `scripts`, while tests
 remain in standard type-checking mode.
 
 CI additionally validates the integration with Home Assistant's `hassfest`
-and the HACS action. Both run only on GitHub and fail the workflow on any
-finding.
+and the Marketplace validation action (`hacs/action`). Both run only on
+GitHub and fail the workflow on any finding.
 
 For Python and test standards, read [CONTRIBUTING.md](CONTRIBUTING.md).
 Automated coding agents must also follow [AGENTS.md](AGENTS.md).
